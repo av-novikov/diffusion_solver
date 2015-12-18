@@ -9,7 +9,7 @@
 #include "model/cells/RadialCell.hpp"
 #include "model/AbstractModel.hpp"
 
-namespace gas1d
+namespace gas1D
 {
 	typedef RadialCell<Var1phase> Cell;
 
@@ -55,6 +55,8 @@ namespace gas1d
 		double dens_stc;
 		// Z-factor ( supercompressibility factor )
 		Interpolate* z;
+		// Volume factor for well pipe
+		double b_bore;
 	};
 
 	struct Properties
@@ -102,7 +104,6 @@ namespace gas1d
 		std::vector< std::pair<double,double> > z_factor;
 	};
 
-
 	class Gas1D : public AbstractModel<Var1phase, Properties, RadialCell>
 	{
 		template<typename> friend class Snapshotter;
@@ -113,21 +114,20 @@ namespace gas1d
 
 	protected:
 		// Continuum properties
-		int skeletonsNum = 1;
+		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
 		Gas_Props props_gas;
 
 		// Number of cells in radial direction
 		int cellsNum_r;
 		// Number of cells in vertical direction
-		int cellsNum_z = 1;
+		int cellsNum_z;
 
 		// BHP will be converted to the depth
 		double depth_point;
 		// During the time flow rate decreases 'e' times in well test [sec] 
 		double alpha;
 
-		void setInitialState();
 		// Set all properties
 		void setProps(Properties& props);
 		// Make all properties dimensionless
@@ -136,10 +136,58 @@ namespace gas1d
 		void buildGridLog();
 		// Set perforated cells
 		void setPerforated();
-		// Set some deviation to rate distribution
-		void setRateDeviation(int num, double ratio);
-		// Check formations properties
-		void checkSkeletons(const std::vector<Skeleton_Props>& props);
+		// Set initial state
+		void setInitialState();
+
+		inline double getPdivZ(double p) const
+		{
+			return p / props_gas.z->Solve(p);
+		};
+		inline double getPdivZ(const Cell& cell1, const Cell& cell2) const
+		{
+			return ( getPdivZ(cell1.u_next.p) * cell2.hr + getPdivZ(cell2.u_next.p) * cell1.hr ) / (cell1.hr + cell2.hr);
+		};
+		inline double getPdivZ_dp(double p) const
+		{
+			const double z = props_gas.z->Solve(p);
+			return (1.0 - p / z * props_gas.z->DSolve(p)) / z;
+		};
+		inline double getPdivZ_dp(const Cell& cell, const Cell& beta) const
+		{
+			return ( getPdivZ_dp(cell.u_next.p) * beta.hr ) / (cell.hr + beta.hr);
+		};
+		inline double getPdivZ_dp_beta(const Cell& cell, const Cell& beta) const
+		{
+			return ( getPdivZ_dp(beta.u_next.p) * cell.hr ) / (cell.hr + beta.hr);
+		};
+		inline double getTrans(Cell& cell, Cell& beta) const
+		{
+			double k1, k2;
+			k1 = (cell.r > props_sk[0].radius_eff ? props_sk[0].perm_r : props_sk[0].perm_eff);
+			k2 = (beta.r > props_sk[0].radius_eff ? props_sk[0].perm_r : props_sk[0].perm_eff);
+			return 4.0 * M_PI * k1 * k2 * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0) * props_sk[0].height / (k2 * cell.hr + k1 * beta.hr);
+		};
+		inline double getBoreB_gas(double p) const
+		{
+			//return props_gas.b_bore;
+			return 101325.0 / P_dim / p;
+		};
+
+		Snapshotter<Gas1D>* snapshotter;
+		void snapshot(int i);
+		void snapshot_all(int i);
+
+		double solve_eq(int i);
+		double solve_eq_dp(int i);
+		double solve_eq_dp_beta(int i, int beta);
+		
+		double solve_eqLeft();
+		double solve_eqLeft_dp();
+		double solve_eqLeft_dp_beta();
+		
+		double solve_eqRight();
+		double solve_eqRight_dp();
+		double solve_eqRight_dp_beta();
 
 	public:
 		Gas1D();

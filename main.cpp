@@ -8,6 +8,7 @@
 #include "method/mcmath.h"
 #include "Scene.h"
 #include "model/Oil1D/Oil1D.h"
+#include "model/Gas1D/Gas1D.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -313,7 +314,7 @@ void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
 	return props;
 }*/
 
-gasOil_rz::Properties* getProps()
+/*gasOil_rz::Properties* getProps()
 {
 	gasOil_rz::Properties* props = new gasOil_rz::Properties();
 
@@ -377,7 +378,7 @@ gasOil_rz::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
-}
+}*/
 
 /*gasOil_rz::Properties* getProps()
 {
@@ -669,6 +670,54 @@ gasOil_rz::Properties* getProps()
 
 */
 
+gas1D::Properties* getProps()
+{
+	gas1D::Properties* props = new gas1D::Properties();
+
+	props->cellsNum_r = 100;
+
+	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
+	
+	props->leftBoundIsRate = true;
+	props->rightBoundIsPres = false;
+	props->rates.push_back(5000.0);
+
+	props->ht = 1000.0;
+	props->ht_min = 100.0;
+	props->ht_max  = 5000000.0;
+	
+	props->alpha = 7200.0;
+
+	props->perfIntervals.push_back( make_pair(0, 0) );
+
+	props->r_w = 0.1;
+	props->r_e = 2500.0;
+
+	gas1D::Skeleton_Props tmp;
+	tmp.cellsNum_z = 1;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = 160.0 * 1.0e+5;
+	tmp.h1 = 1500.0;
+	tmp.h2 = 1503.0;
+	tmp.height = 3.0;
+	tmp.perm_r = 1.0;
+	tmp.perm_z = 0.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back( tmp );
+
+	props->depth_point = 1500.0;
+
+	props->props_gas.visc = 0.02833;
+
+	// Defining relative permeabilities
+	setDataFromFile(props->z_factor, "props/koil.txt");
+
+	return props;
+}
+
 int main(int argc, char* argv[])
 {
 	/*gasOil_rz_NIT::Properties* props = getProps();
@@ -683,8 +732,14 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	gasOil_rz::Properties* props = getProps();
+	/*gasOil_rz::Properties* props = getProps();
 	Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
+
+	gas1D::Properties* props = getProps();
+	Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

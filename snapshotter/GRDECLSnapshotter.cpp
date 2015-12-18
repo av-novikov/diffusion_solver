@@ -2,6 +2,7 @@
 #include "model/AbstractModel.hpp"
 
 #include "model/Oil1D/Oil1D.h"
+#include "model/Gas1D/Gas1D.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -256,6 +257,7 @@ void GRDECLSnapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>::dump_all(int i)
 }
 
 template class GRDECLSnapshotter<oil1D::Oil1D>;
+template class GRDECLSnapshotter<gas1D::Gas1D>;
 template class GRDECLSnapshotter<oil1D_NIT::Oil1D_NIT>;
 template class GRDECLSnapshotter<oil_rz::Oil_RZ>;
 template class GRDECLSnapshotter<gasOil_rz::GasOil_RZ>;

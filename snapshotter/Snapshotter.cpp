@@ -2,6 +2,7 @@
 #include "util/utils.h"
 
 #include "model/Oil1D/Oil1D.h"
+#include "model/Gas1D/Gas1D.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -101,6 +102,7 @@ string Snapshotter<modelType>::getFileName(int i)
 }
 
 template class Snapshotter<oil1D::Oil1D>;
+template class Snapshotter<gas1D::Gas1D>;
 template class Snapshotter<oil1D_NIT::Oil1D_NIT>;
 template class Snapshotter<oil_rz::Oil_RZ>;
 template class Snapshotter<gasOil_rz::GasOil_RZ>;

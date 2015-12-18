@@ -2,6 +2,7 @@
 #include "model/cells/Variables.hpp"
 
 #include "model/Oil1D/Oil1D.h"
+#include "model/Gas1D/Gas1D.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -52,6 +53,7 @@ int AbstractModel<varType, propsType, cellType>::getCellsNum()
 }
 
 template class AbstractModel<Var1phase, oil1D::Properties, RadialCell>;
+template class AbstractModel<Var1phase, gas1D::Properties, RadialCell>;
 template class AbstractModel<Var1phaseNIT, oil1D_NIT::Properties, RadialCell>;
 template class AbstractModel<Var1phase, oil_rz::Properties, CylCell>;
 template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell>;

@@ -3,6 +3,9 @@
 #include "model/Oil1D/Oil1D.h"
 #include "model/Oil1D/Oil1DSolver.h"
 
+#include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1DSolver.h"
+
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil1D_NIT/Oil1DNITSolver.h"
 
@@ -50,6 +53,7 @@ void Scene<modelType, methodType, propsType>::start()
 }
 
 template class Scene<oil1D::Oil1D, oil1D::Oil1DSolver, oil1D::Properties>;
+template class Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties>;
 template class Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties>;
 template class Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties>;
 template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties>;

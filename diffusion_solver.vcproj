@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\model\Gas1D\Gas1DSolver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\model\gasoil_rz_nit\GasOil2DNITSolver.h"
 				>
 			</File>
@@ -253,11 +257,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\props\Scene.h"
+				RelativePath=".\Scene.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Scene.h"
+				RelativePath=".\props\Scene.h"
 				>
 			</File>
 			<File
@@ -310,6 +314,10 @@
 			</File>
 			<File
 				RelativePath=".\model\Gas1D\Gas1D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\model\Gas1D\Gas1DSolver.cpp"
 				>
 			</File>
 			<File
