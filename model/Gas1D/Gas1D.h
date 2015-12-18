@@ -169,8 +169,8 @@ namespace gas1D
 		};
 		inline double getBoreB_gas(double p) const
 		{
-			//return props_gas.b_bore;
-			return 101325.0 / P_dim / p;
+			return props_gas.b_bore;
+			//return 101325.0 / P_dim / p;
 		};
 
 		Snapshotter<Gas1D>* snapshotter;

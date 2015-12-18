@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files (x86)\VTK\include\vtk-6.3&quot;;C:\proj\diffusion_solver"
+				AdditionalIncludeDirectories="&quot;C:\gtest\googletest-master\googletest\include&quot;;&quot;C:\Program Files (x86)\VTK\include\vtk-6.3&quot;;C:\proj\diffusion_solver"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vtkCommonCore-6.3.lib vtkCommonDataModel-6.3.lib vtkFiltersCore-6.3.lib vtkIOCore-6.3.lib vtkIOXML-6.3.lib"
+				AdditionalDependencies="vtkCommonCore-6.3.lib vtkCommonDataModel-6.3.lib vtkFiltersCore-6.3.lib vtkIOCore-6.3.lib vtkIOXML-6.3.lib gtestd.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\VTK\lib&quot;"
+				AdditionalLibraryDirectories="&quot;C:\gtest\googletest-master\googletest\msvc\gtest-md\Debug&quot;;&quot;C:\Program Files (x86)\VTK\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -132,9 +132,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vtkCommonCore-6.3.lib vtkCommonDataModel-6.3.lib vtkFiltersCore-6.3.lib vtkIOCore-6.3.lib vtkIOXML-6.3.lib"
+				AdditionalDependencies="vtkCommonCore-6.3.lib vtkCommonDataModel-6.3.lib vtkFiltersCore-6.3.lib vtkIOCore-6.3.lib vtkIOXML-6.3.lib gtest.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\VTK\lib&quot;"
+				AdditionalLibraryDirectories="&quot;C:\gtest\googletest-master\googletest\msvc\gtest-md\Release&quot;;&quot;C:\Program Files (x86)\VTK\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -310,6 +310,10 @@
 			</File>
 			<File
 				RelativePath=".\model\cells\CylindricalCell.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\first_test.cpp"
 				>
 			</File>
 			<File

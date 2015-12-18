@@ -5,6 +5,8 @@
 #include <utility>
 #include <iostream>
 
+#include "gtest/gtest.h"
+
 #include "method/mcmath.h"
 #include "Scene.h"
 #include "model/Oil1D/Oil1D.h"
@@ -711,14 +713,15 @@ gas1D::Properties* getProps()
 	props->depth_point = 1500.0;
 
 	props->props_gas.visc = 0.02833;
+	props->props_gas.b_bore = 1.0 / 160.0;
 
 	// Defining relative permeabilities
-	setDataFromFile(props->z_factor, "props/koil.txt");
+	setDataFromFile(props->z_factor, "props/z.txt");
 
 	return props;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
 	/*gasOil_rz_NIT::Properties* props = getProps();
 	Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSolver, gasOil_rz_NIT::Properties> scene;
@@ -749,6 +752,9 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
+
+	testing::InitGoogleTest(&argc, argv);
+	int res = RUN_ALL_TESTS();
 
 	return 0;
 }
