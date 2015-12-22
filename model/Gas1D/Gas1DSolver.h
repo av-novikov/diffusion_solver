@@ -25,10 +25,12 @@ namespace gas1D
 		void doNextStep();
 		void writeData();
 
-		std::ofstream plot_Pdyn;
+		std::ofstream plot_P;
+		std::ofstream plot_Q;
 
 	public:
 		Gas1DSolver(Gas1D* _model);
+		Gas1DSolver(Gas1D* _model, int i);
 		~Gas1DSolver();
 
 		void fill();

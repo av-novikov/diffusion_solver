@@ -16,9 +16,12 @@ public:
 	~Scene();
 	
 	void load(propsType& props);
+	void load(propsType& props, int i);
 	void setSnapshotterType(std::string type);
 
 	void start();
+
+	modelType* getModel() const;
 };
 
 #endif /* SCENE_H_ */

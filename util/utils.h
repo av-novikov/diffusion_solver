@@ -9,6 +9,7 @@
 #include "util/Interpolate.h"
 
 #define BAR_TO_PA 1.E5
+#define P_ATM 1.01325
 #define EQUALITY_TOLERANCE 1.E-6
 
 using std::vector;

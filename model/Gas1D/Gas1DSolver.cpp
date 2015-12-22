@@ -2,6 +2,7 @@
 
 using namespace gas1D;
 using std::ofstream;
+using std::string;
 using std::cout;
 using std::endl;
 
@@ -9,7 +10,24 @@ Gas1DSolver::Gas1DSolver(Gas1D* _model) : AbstractSolver<Gas1D>(_model)
 {
 	Initialize(model->cellsNum_r+2, 1);
 
-	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
+	if( _model->leftBoundIsRate )
+		plot_P.open("snaps/P_bhp.dat", ofstream::out);
+	else
+		plot_Q.open("snaps/Q.dat", ofstream::out);
+
+	t_dim = model->t_dim;
+
+	Tt = model->period[model->period.size()-1];
+}
+
+Gas1DSolver::Gas1DSolver(Gas1D* _model, int i) : AbstractSolver<Gas1D>(_model)
+{
+	Initialize(model->cellsNum_r+2, 1);
+
+	if( _model->leftBoundIsRate )
+		plot_P.open(("snaps/P_bhp_" + to_string(i) + ".dat").c_str(), ofstream::out);
+	else
+		plot_Q.open(("snaps/Q_" + to_string(i) + ".dat").c_str(), ofstream::out);
 
 	t_dim = model->t_dim;
 
@@ -18,12 +36,18 @@ Gas1DSolver::Gas1DSolver(Gas1D* _model) : AbstractSolver<Gas1D>(_model)
 
 Gas1DSolver::~Gas1DSolver()
 {
-	plot_Pdyn.close();
+	if( model->leftBoundIsRate )
+		plot_P.close();
+	else
+		plot_Q.close();
 }
 
 void Gas1DSolver::writeData()
 {
-	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
+	if( model->leftBoundIsRate )
+		plot_P << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
+	else
+		plot_Q << cur_t * t_dim / 3600.0 << "\t" << model->getRate() * model->Q_dim * 86400.0 << endl;
 }
 
 void Gas1DSolver::fill()

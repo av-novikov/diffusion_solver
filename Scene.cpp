@@ -41,6 +41,18 @@ void Scene<modelType, methodType, propsType>::load(propsType& props)
 }
 
 template <class modelType, class methodType, typename propsType>
+void Scene<modelType, methodType, propsType>::load(propsType& props, int i)
+{
+}
+
+template <>
+void Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties>::load(gas1D::Properties& props, int i)
+{
+	model->load(props);
+	method = new gas1D::Gas1DSolver(model, i);
+}
+
+template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::setSnapshotterType(std::string type)
 {
 	model->setSnapshotter(type);
@@ -50,6 +62,12 @@ template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::start()
 {
 	method->start();
+}
+
+template <class modelType, class methodType, typename propsType>
+modelType* Scene<modelType, methodType, propsType>::getModel() const
+{
+	return model;
 }
 
 template class Scene<oil1D::Oil1D, oil1D::Oil1DSolver, oil1D::Properties>;

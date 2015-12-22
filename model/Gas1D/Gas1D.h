@@ -139,6 +139,14 @@ namespace gas1D
 		// Set initial state
 		void setInitialState();
 
+		inline double getZ(double p)
+		{
+			return props_gas.z->Solve(p);
+		};
+		inline double getZ_dp(double p)
+		{
+			return props_gas.z->DSolve(p);
+		};
 		inline double getPdivZ(double p) const
 		{
 			return p / props_gas.z->Solve(p);
@@ -196,6 +204,7 @@ namespace gas1D
 		void setSnapshotter(std::string type);
 		void setPeriod(int period);
 
+		double getRate();
 	};
 };
 

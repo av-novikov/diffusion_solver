@@ -201,6 +201,17 @@ void Gas1D::snapshot_all(int i)
 	snapshotter->dump_all(i);
 }
 
+double Gas1D::getRate()
+{
+	if(leftBoundIsRate)
+		return Qcell[0];
+	else {
+		Cell& cell = cells[0];
+		Cell& cell1 = cells[1];
+		return getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 * (cell1.u_next.p * cell1.u_next.p - cell.u_next.p * cell.u_next.p);
+	}
+}
+
 double Gas1D::solve_eq(int i)
 {
 	Cell& cell = cells[i];
@@ -245,7 +256,7 @@ double Gas1D::solve_eqLeft()
 	Cell& cell1 = cells[1];
 
 	if( leftBoundIsRate )
-		return getTrans(cell, cell1) / props_gas.visc / getBoreB_gas(cell.u_next.p) * (cell1.u_next.p - cell.u_next.p) - Qcell[0];
+		return getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 * (cell1.u_next.p * cell1.u_next.p - cell.u_next.p * cell.u_next.p) - Qcell[0];
 	else
 		return cell.u_next.p - Pwf;
 }
@@ -253,22 +264,26 @@ double Gas1D::solve_eqLeft()
 double Gas1D::solve_eqLeft_dp()
 {
 	if( leftBoundIsRate )
-		return -getTrans(cells[0], cells[1]) / props_gas.visc / getBoreB_gas(cells[0].u_next.p);
-	else
+	{
+		Cell& cell = cells[0];
+		Cell& cell1 = cells[1];
+		return -getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 *
+			( 2.0 * cell.u_next.p + getZ_dp( cell.u_next.p ) / getZ( cell.u_next.p ) );
+	} else
 		return 1.0;
 }
 
 double Gas1D::solve_eqLeft_dp_beta()
 {
 	if( leftBoundIsRate )
-		return getTrans(cells[0], cells[1]) / props_gas.visc / getBoreB_gas(cells[0].u_next.p);
+		return getTrans(cells[0], cells[1]) / props_gas.visc / P_ATM / getZ( cells[0].u_next.p ) * cells[1].u_next.p;
 	else
-		return -1.0;
+		return 0.0;
 }
 
 double Gas1D::solve_eqRight()
 {
-	const Cell& cell = cells[cellsNum-1];
+	Cell& cell = cells[cellsNum-1];
 
 	if( rightBoundIsPres )
 		return cell.u_next.p - props_sk[0].p_out;

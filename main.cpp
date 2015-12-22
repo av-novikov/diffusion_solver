@@ -680,13 +680,14 @@ gas1D::Properties* getProps()
 
 	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
 	
-	props->leftBoundIsRate = true;
-	props->rightBoundIsPres = false;
-	props->rates.push_back(5000.0);
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	//props->rates.push_back(5000.0);
+	props->pwf.push_back(140.0 * 100000.0);
 
-	props->ht = 1000.0;
-	props->ht_min = 100.0;
-	props->ht_max  = 5000000.0;
+	props->ht = 20000.0;
+	props->ht_min = 10000.0;
+	props->ht_max  = 10000000.0;
 	
 	props->alpha = 7200.0;
 
@@ -742,10 +743,18 @@ int main(int argc, char** argv)
 	scene.start();*/
 
 	gas1D::Properties* props = getProps();
-	Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties> scene;
-	scene.load(*props);
-	scene.setSnapshotterType("VTK");
-	scene.start();
+	const double p_bhp [7] = {80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0};
+
+	for(int i = 0; i < 7; i++)
+	{
+		props->pwf.clear();
+		props->pwf.push_back( p_bhp[i] * 100000.0 );
+		Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties> scene;	
+		scene.load(*props, i);
+		scene.setSnapshotterType("VTK");
+		scene.start();
+	}
+
 
 	/*oil_rz::Properties* props = getProps();
 	Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties> scene;
@@ -753,8 +762,8 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	testing::InitGoogleTest(&argc, argv);
-	int res = RUN_ALL_TESTS();
+	//testing::InitGoogleTest(&argc, argv);
+	//int res = RUN_ALL_TESTS();
 
 	return 0;
 }
