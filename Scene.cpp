@@ -4,6 +4,7 @@
 #include "model/Oil1D/Oil1DSolver.h"
 
 #include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
 #include "model/Gas1D/Gas1DSolver.h"
 
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
@@ -46,10 +47,10 @@ void Scene<modelType, methodType, propsType>::load(propsType& props, int i)
 }
 
 template <>
-void Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties>::load(gas1D::Properties& props, int i)
+void Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties>::load(gas1D::Properties& props, int i)
 {
 	model->load(props);
-	method = new gas1D::Gas1DSolver(model, i);
+	method = new gas1D::Gas1DSolver<gas1D::Gas1D>(model, i);
 }
 
 template <class modelType, class methodType, typename propsType>
@@ -71,7 +72,8 @@ modelType* Scene<modelType, methodType, propsType>::getModel() const
 }
 
 template class Scene<oil1D::Oil1D, oil1D::Oil1DSolver, oil1D::Properties>;
-template class Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties>;
+template class Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties>;
+template class Scene<gas1D::Gas1D_simple, gas1D::Gas1DSolSimp, gas1D::Properties>;
 template class Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties>;
 template class Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties>;
 template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties>;

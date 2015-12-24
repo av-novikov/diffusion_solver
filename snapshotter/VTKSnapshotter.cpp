@@ -13,6 +13,7 @@
 
 #include "model/Oil1D/Oil1D.h"
 #include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -516,6 +517,83 @@ void VTKSnapshotter<gas1D::Gas1D>::dump(int i)
 	writer->Write();
 }
 
+template <>
+void VTKSnapshotter<gas1D::Gas1D_simple>::dump(int i)
+{
+	using gas1D::Cell;
+
+	// Grid
+	vtkSmartPointer<vtkPolyData> grid =
+		vtkSmartPointer<vtkPolyData>::New();
+
+	// Points
+	vtkSmartPointer<vtkPoints> points =
+		vtkSmartPointer<vtkPoints>::New();
+	for(int k = 1; k < nx; k++)
+	{
+		Cell& cell = model->cells[k];
+		points->InsertNextPoint(r_dim * (cell.r-cell.hr/2.0), 0.0, 0.0);
+	}
+	for(int k = 1; k < nx; k++)
+	{
+		Cell& cell = model->cells[k];
+		points->InsertNextPoint(r_dim * (cell.r-cell.hr/2.0), -r_dim * model->props_sk[0].height, 0.0);
+	}
+
+	grid->SetPoints(points);
+
+	// Data
+	vtkSmartPointer<vtkCellArray> polygons =
+		vtkSmartPointer<vtkCellArray>::New();
+
+	vtkSmartPointer<vtkPolygon> polygon = 
+		vtkSmartPointer<vtkPolygon>::New();
+	polygon->GetPointIds()->SetNumberOfIds(4);
+
+	vtkSmartPointer<vtkDoubleArray> pres = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+
+	/*vtkSmartPointer<vtkDoubleArray> vel_oil = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	vel_oil->SetName("oilVelocity");
+	vel_oil->SetNumberOfComponents(3);*/
+
+	//double vel [3];
+
+	// Middle cells
+	for(int k = 0; k < nx-2; k++)
+	{
+			Cell& cell = model->cells[k+1];
+
+			polygon->GetPointIds()->SetId(0, k);
+			polygon->GetPointIds()->SetId(1, k+1);
+			polygon->GetPointIds()->SetId(2, k+nx);
+			polygon->GetPointIds()->SetId(3, k+nx-1);
+			polygons->InsertNextCell(polygon);
+
+			pres->InsertNextValue(cell.u_next.p);
+			/*vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);	
+			vel[2] = 0.0;
+			vel_oil->InsertNextTuple(vel);*/
+	}
+
+	grid->SetPolys(polygons);
+
+	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(pres);
+	//fd->AddArray(vel_oil);
+
+	// Writing
+	vtkSmartPointer<vtkXMLPolyDataWriter> writer =
+		vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+	
+	writer->SetFileName( getFileName(i).c_str() );
+	writer->SetInputData(grid);
+	writer->Write();
+}
+
 template <class modelType>
 void VTKSnapshotter<modelType>::dump_all(int i)
 {
@@ -903,6 +981,7 @@ void VTKSnapshotter<oil_rz::Oil_RZ>::dump_all(int i)
 
 template class VTKSnapshotter<oil1D::Oil1D>;
 template class VTKSnapshotter<gas1D::Gas1D>;
+template class VTKSnapshotter<gas1D::Gas1D_simple>;
 template class VTKSnapshotter<oil1D_NIT::Oil1D_NIT>;
 template class VTKSnapshotter<oil_rz::Oil_RZ>;
 template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;

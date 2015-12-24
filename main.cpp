@@ -11,6 +11,8 @@
 #include "Scene.h"
 #include "model/Oil1D/Oil1D.h"
 #include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
+#include "model/Gas1D/Gas1DSolver.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -669,7 +671,6 @@ void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
 	props->b_oil_bore = 1.56;
 	return props;
 }
-
 */
 
 gas1D::Properties* getProps()
@@ -683,7 +684,7 @@ gas1D::Properties* getProps()
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(5000.0);
-	props->pwf.push_back(140.0 * 100000.0);
+	props->pwf.push_back(100.0 * 100000.0);
 
 	props->ht = 20000.0;
 	props->ht_min = 10000.0;
@@ -694,30 +695,30 @@ gas1D::Properties* getProps()
 	props->perfIntervals.push_back( make_pair(0, 0) );
 
 	props->r_w = 0.1;
-	props->r_e = 2500.0;
+	props->r_e = 1000.0;
 
 	gas1D::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
-	tmp.m = 0.1;
-	tmp.p_init = tmp.p_out = 160.0 * 1.0e+5;
+	tmp.m = 0.2;
+	tmp.p_init = tmp.p_out = 150.0 * 1.0e+5;
 	tmp.h1 = 1500.0;
-	tmp.h2 = 1503.0;
-	tmp.height = 3.0;
-	tmp.perm_r = 1.0;
+	tmp.h2 = 1510.0;
+	tmp.height = 10.0;
+	tmp.perm_r = 10.0 / 0.986923;
 	tmp.perm_z = 0.0;
 	tmp.dens_stc = 2000.0;
-	tmp.beta = 4.35113e-10;
+	tmp.beta = 0.0;//3.0e-10;
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	props->props_sk.push_back( tmp );
 
 	props->depth_point = 1500.0;
 
-	props->props_gas.visc = 0.02833;
-	props->props_gas.b_bore = 1.0 / 160.0;
+	//props->props_gas.visc = 0.01;
 
 	// Defining relative permeabilities
 	setDataFromFile(props->z_factor, "props/z.txt");
+	setDataFromFile(props->visc_gas, "props/gas_visc.txt");
 
 	return props;
 }
@@ -743,18 +744,17 @@ int main(int argc, char** argv)
 	scene.start();*/
 
 	gas1D::Properties* props = getProps();
-	const double p_bhp [7] = {80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0};
+	const double p_bhp [3] = {90.0, 100.0, 110.0};
 
-	for(int i = 0; i < 7; i++)
+	for(int i = 0; i < 3; i++)
 	{
 		props->pwf.clear();
 		props->pwf.push_back( p_bhp[i] * 100000.0 );
-		Scene<gas1D::Gas1D, gas1D::Gas1DSolver, gas1D::Properties> scene;	
+		Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties> scene;	
 		scene.load(*props, i);
 		scene.setSnapshotterType("VTK");
 		scene.start();
 	}
-
 
 	/*oil_rz::Properties* props = getProps();
 	Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties> scene;

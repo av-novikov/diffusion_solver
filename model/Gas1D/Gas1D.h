@@ -51,12 +51,11 @@ namespace gas1D
 	{
 		// Viscosity [cP]
 		double visc;
+		Interpolate* visc_table;
 		// Density of fluid in STC [kg/m3]
 		double dens_stc;
 		// Z-factor ( supercompressibility factor )
 		Interpolate* z;
-		// Volume factor for well pipe
-		double b_bore;
 	};
 
 	struct Properties
@@ -102,6 +101,7 @@ namespace gas1D
 
 		// Data set (saturation, relative oil permeability)
 		std::vector< std::pair<double,double> > z_factor;
+		std::vector< std::pair<double,double> > visc_gas;
 	};
 
 	class Gas1D : public AbstractModel<Var1phase, Properties, RadialCell>
@@ -110,7 +110,7 @@ namespace gas1D
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-		friend class Gas1DSolver;	
+		template<typename> friend class Gas1DSolver;	
 
 	protected:
 		// Continuum properties
@@ -139,17 +139,70 @@ namespace gas1D
 		// Set initial state
 		void setInitialState();
 
-		inline double getZ(double p)
+		inline double getVisc(double p) const
 		{
-			return props_gas.z->Solve(p);
+			//return props_gas.visc_table->Solve(p);
+			if (leftBoundIsRate)
+				return 0.00001 / P_dim / t_dim * p / cells[0].u_next.p;
+			else
+				return 0.00001 / P_dim / t_dim * p / Pwf;
 		};
-		inline double getZ_dp(double p)
+		inline double getVisc_dp(double p) const
 		{
-			return props_gas.z->DSolve(p);
+			//return props_gas.visc_table->DSolve(p);
+			if (leftBoundIsRate)
+				return 0.00001 / P_dim / t_dim / cells[0].u_next.p;
+			else
+				return 0.00001 / P_dim / t_dim / Pwf;
 		};
-		inline double getPdivZ(double p) const
+		inline double getZ(double p) const
 		{
-			return p / props_gas.z->Solve(p);
+			//return props_gas.z->Solve(p);
+			if (leftBoundIsRate)
+				return sqrt( p / cells[0].u_next.p );
+			else
+				return sqrt( p / Pwf );
+		};
+		inline double getZ_dp(double p) const
+		{
+			//return props_gas.z->DSolve(p);
+			if (leftBoundIsRate)
+				return 1.0 / 2.0 / sqrt( p * cells[0].u_next.p );
+			else
+				return 1.0 / 2.0 / sqrt( p * Pwf );
+		};
+		inline double getPoro(double p) const
+		{
+			return props_sk[0].m * (1.0 + props_sk[0].beta * (p - props_sk[0].p_init));
+		};
+		inline double getPoro_dp() const
+		{
+			return props_sk[0].m * props_sk[0].beta;
+		};
+
+		inline double getCoeff(const Cell& cell, const Cell& beta) const
+		{
+			const double p = cell.u_next.p;
+			const double p_beta = beta.u_next.p;
+			return (p / getZ(p) / getVisc(p) * beta.hr +
+					p_beta / getZ(p_beta) / getVisc(p_beta) * cell.hr) / (cell.hr + beta.hr);
+		};
+		inline double getCoeff_dp(const Cell& cell, const Cell& beta) const
+		{
+			const double p = cell.u_next.p;
+			return ( 1.0 - 1.0 / getZ(p) * getZ_dp(p) - 1.0 / getVisc(p) * getVisc_dp(p) ) * 
+				 beta.hr / getZ(p) / getVisc(p) / (cell.hr + beta.hr);
+		};
+		inline double getCoeff_dp_beta(const Cell& cell, const Cell& beta) const
+		{
+			const double p = beta.u_next.p;
+			return ( 1.0 - 1.0 / getZ(p) * getZ_dp(p) - 1.0 / getVisc(p) * getVisc_dp(p) ) * 
+				 cell.hr / getZ(p) / getVisc(p) / (cell.hr + beta.hr);
+		};
+
+		/*inline double getPdivZ(double p) const
+		{
+			return p / getZ(p);
 		};
 		inline double getPdivZ(const Cell& cell1, const Cell& cell2) const
 		{
@@ -157,8 +210,8 @@ namespace gas1D
 		};
 		inline double getPdivZ_dp(double p) const
 		{
-			const double z = props_gas.z->Solve(p);
-			return (1.0 - p / z * props_gas.z->DSolve(p)) / z;
+			const double z = getZ(p);
+			return (1.0 - p / z * getZ_dp(p) ) / z;
 		};
 		inline double getPdivZ_dp(const Cell& cell, const Cell& beta) const
 		{
@@ -167,18 +220,13 @@ namespace gas1D
 		inline double getPdivZ_dp_beta(const Cell& cell, const Cell& beta) const
 		{
 			return ( getPdivZ_dp(beta.u_next.p) * cell.hr ) / (cell.hr + beta.hr);
-		};
+		};*/
 		inline double getTrans(Cell& cell, Cell& beta) const
 		{
 			double k1, k2;
 			k1 = (cell.r > props_sk[0].radius_eff ? props_sk[0].perm_r : props_sk[0].perm_eff);
 			k2 = (beta.r > props_sk[0].radius_eff ? props_sk[0].perm_r : props_sk[0].perm_eff);
 			return 4.0 * M_PI * k1 * k2 * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0) * props_sk[0].height / (k2 * cell.hr + k1 * beta.hr);
-		};
-		inline double getBoreB_gas(double p) const
-		{
-			return props_gas.b_bore;
-			//return 101325.0 / P_dim / p;
 		};
 
 		Snapshotter<Gas1D>* snapshotter;

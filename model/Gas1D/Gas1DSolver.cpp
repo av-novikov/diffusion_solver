@@ -1,4 +1,6 @@
 #include "model/Gas1D/Gas1DSolver.h"
+#include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
 
 using namespace gas1D;
 using std::ofstream;
@@ -6,7 +8,8 @@ using std::string;
 using std::cout;
 using std::endl;
 
-Gas1DSolver::Gas1DSolver(Gas1D* _model) : AbstractSolver<Gas1D>(_model)
+template <class modelType>
+Gas1DSolver<modelType>::Gas1DSolver(modelType* _model) : AbstractSolver<modelType>(_model)
 {
 	Initialize(model->cellsNum_r+2, 1);
 
@@ -20,7 +23,8 @@ Gas1DSolver::Gas1DSolver(Gas1D* _model) : AbstractSolver<Gas1D>(_model)
 	Tt = model->period[model->period.size()-1];
 }
 
-Gas1DSolver::Gas1DSolver(Gas1D* _model, int i) : AbstractSolver<Gas1D>(_model)
+template <class modelType>
+Gas1DSolver<modelType>::Gas1DSolver(modelType* _model, int i) : AbstractSolver<modelType>(_model)
 {
 	Initialize(model->cellsNum_r+2, 1);
 
@@ -34,7 +38,8 @@ Gas1DSolver::Gas1DSolver(Gas1D* _model, int i) : AbstractSolver<Gas1D>(_model)
 	Tt = model->period[model->period.size()-1];
 }
 
-Gas1DSolver::~Gas1DSolver()
+template <class modelType>
+Gas1DSolver<modelType>::~Gas1DSolver()
 {
 	if( model->leftBoundIsRate )
 		plot_P.close();
@@ -42,7 +47,8 @@ Gas1DSolver::~Gas1DSolver()
 		plot_Q.close();
 }
 
-void Gas1DSolver::writeData()
+template <class modelType>
+void Gas1DSolver<modelType>::writeData()
 {
 	if( model->leftBoundIsRate )
 		plot_P << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
@@ -50,11 +56,13 @@ void Gas1DSolver::writeData()
 		plot_Q << cur_t * t_dim / 3600.0 << "\t" << model->getRate() * model->Q_dim * 86400.0 << endl;
 }
 
-void Gas1DSolver::fill()
+template <class modelType>
+void Gas1DSolver<modelType>::fill()
 {
 }
 
-void Gas1DSolver::control()
+template <class modelType>
+void Gas1DSolver<modelType>::control()
 {
 	writeData();
 
@@ -76,7 +84,8 @@ void Gas1DSolver::control()
 	cur_t += model->ht;
 }
 
-void Gas1DSolver::start()
+template <class modelType>
+void Gas1DSolver<modelType>::start()
 {
 	int counter = 0;
 	iterations = 8;
@@ -89,9 +98,11 @@ void Gas1DSolver::start()
 		doNextStep();
 		copyTimeLayer();
 	}
+	writeData();
 }
 
-void Gas1DSolver::doNextStep()
+template <class modelType>
+void Gas1DSolver<modelType>::doNextStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
@@ -121,11 +132,13 @@ void Gas1DSolver::doNextStep()
 	cout << "Newton Iterations = " << iterations << endl;
 }
 
-void Gas1DSolver::construct_solution()
+template <class modelType>
+void Gas1DSolver<modelType>::construct_solution()
 {
 }
 
-void Gas1DSolver::construction_from_fz(int N, int n, int key)
+template <class modelType>
+void Gas1DSolver<modelType>::construction_from_fz(int N, int n, int key)
 {
 	vector<Cell>::iterator it;
 	if (key == PRES)
@@ -133,7 +146,8 @@ void Gas1DSolver::construction_from_fz(int N, int n, int key)
 			 model->cells[i].u_next.p += fz[i][1];
 }
 
-void Gas1DSolver::LeftBoundAppr(int MZ, int key)
+template <class modelType>
+void Gas1DSolver<modelType>::LeftBoundAppr(int MZ, int key)
 {
 	C[0][0] = model->solve_eqLeft_dp();
 	B[0][0] = model->solve_eqLeft_dp_beta();
@@ -143,7 +157,8 @@ void Gas1DSolver::LeftBoundAppr(int MZ, int key)
 	construction_bz(MZ, 2);
 }
 
-void Gas1DSolver::RightBoundAppr(int MZ, int key)
+template <class modelType>
+void Gas1DSolver<modelType>::RightBoundAppr(int MZ, int key)
 {
 	C[0][0] = 0.0;
 	B[0][0] = model->solve_eqRight_dp_beta();
@@ -153,7 +168,8 @@ void Gas1DSolver::RightBoundAppr(int MZ, int key)
 	construction_bz(MZ, 1);
 }
 
-void Gas1DSolver::MiddleAppr(int current, int MZ, int key)
+template <class modelType>
+void Gas1DSolver<modelType>::MiddleAppr(int current, int MZ, int key)
 {
 	C[0][0] = model->solve_eq_dp_beta(current, current-1);
 	B[0][0] = model->solve_eq_dp(current);
@@ -162,3 +178,6 @@ void Gas1DSolver::MiddleAppr(int current, int MZ, int key)
 
 	construction_bz(MZ, 2);
 }
+
+template class Gas1DSolver<Gas1D>;
+template class Gas1DSolver<Gas1D_simple>;

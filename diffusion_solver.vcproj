@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\model\Gas1D\Gas1D_simple.h"
+				>
+			</File>
+			<File
 				RelativePath=".\model\Gas1D\Gas1DSolver.h"
 				>
 			</File>
@@ -318,6 +322,10 @@
 			</File>
 			<File
 				RelativePath=".\model\Gas1D\Gas1D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\model\Gas1D\Gas1D_simple.cpp"
 				>
 			</File>
 			<File

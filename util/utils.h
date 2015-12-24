@@ -9,7 +9,7 @@
 #include "util/Interpolate.h"
 
 #define BAR_TO_PA 1.E5
-#define P_ATM 1.01325
+#define P_ATM 1.0
 #define EQUALITY_TOLERANCE 1.E-6
 
 using std::vector;
@@ -42,7 +42,12 @@ inline double M2toMilliDarcy(double perm)
 
 inline double cPToPaSec(double visc)
 {
- return visc/1000.0;
+	return visc / 1000.0;
+};
+
+inline double PaSec2cP(double visc)
+{
+	return visc * 1000.0;
 };
 
 template <typename T>

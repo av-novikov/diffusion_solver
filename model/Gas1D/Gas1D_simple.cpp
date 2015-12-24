@@ -1,4 +1,4 @@
-#include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
 #include "util/utils.h"
 
 #include <cassert>
@@ -8,17 +8,17 @@ using std::string;
 using std::vector;
 using namespace gas1D;
 
-Gas1D::Gas1D()
+Gas1D_simple::Gas1D_simple()
 {
 	skeletonsNum = 1;
 	cellsNum_z = 1;
 }
 
-Gas1D::~Gas1D()
+Gas1D_simple::~Gas1D_simple()
 {
 }
 
-void Gas1D::setProps(Properties& props)
+void Gas1D_simple::setProps(Properties& props)
 {
 	leftBoundIsRate = props.leftBoundIsRate;
 	rightBoundIsPres = props.rightBoundIsPres;
@@ -58,18 +58,18 @@ void Gas1D::setProps(Properties& props)
 
 	// Gas properties
 	props_gas = props.props_gas;
-	//props_gas.visc = cPToPaSec( props_gas.visc );
+	props_gas.visc = cPToPaSec( props_gas.visc );
 
 	alpha = props.alpha;
 	depth_point = props.depth_point;
 
 	makeDimLess();
 
-	props_gas.visc_table = setDataset(props.visc_gas, P_dim / BAR_TO_PA, PaSec2cP(1.0) * P_dim * t_dim);
+	//props_gas.visc = setDataset(props.visc_gas, P_dim / BAR_TO_PA, PaSec2cP(1.0) * P_dim * t_dim);
 	props_gas.z = setDataset(props.z_factor, P_dim / BAR_TO_PA, 1.0);
 }
 
-void Gas1D::makeDimLess()
+void Gas1D_simple::makeDimLess()
 {
 	// Main units
 	R_dim = r_w;
@@ -117,7 +117,7 @@ void Gas1D::makeDimLess()
 	}
 
 	// Gas properties
-	//props_gas.visc /= (P_dim * t_dim);
+	props_gas.visc /= (P_dim * t_dim);
 	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 
 	// Rest properties
@@ -125,7 +125,7 @@ void Gas1D::makeDimLess()
 	//depth_point = 0.0;
 }
 
-void Gas1D::buildGridLog()
+void Gas1D_simple::buildGridLog()
 {
 	cells.reserve( cellsNum );
 	
@@ -153,32 +153,32 @@ void Gas1D::buildGridLog()
 	cells.push_back( Cell(counter++, r_e, 0.0, props_sk[0].height) );
 }
 
-void Gas1D::setInitialState()
+void Gas1D_simple::setInitialState()
 {
 	vector<Cell>::iterator it;
 	for(it = cells.begin(); it != cells.end(); ++it)
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props_sk[0].p_init;
 }
 
-void Gas1D::setSnapshotter(string type)
+void Gas1D_simple::setSnapshotter(string type)
 {
 	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<Gas1D>();
+		snapshotter = new VTKSnapshotter<Gas1D_simple>();
 	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<Gas1D>();
+		snapshotter = new GRDECLSnapshotter<Gas1D_simple>();
 	else
-		snapshotter = new GRDECLSnapshotter<Gas1D>();
+		snapshotter = new GRDECLSnapshotter<Gas1D_simple>();
 
 	snapshotter->setModel(this);
 }
 
-void Gas1D::setPerforated()
+void Gas1D_simple::setPerforated()
 {
 	Qcell[0] = 0.0;
 	height_perf = props_sk[0].height;
 }
 
-void Gas1D::setPeriod(int period)
+void Gas1D_simple::setPeriod(int period)
 {
 	if(leftBoundIsRate)
 		Q_sum = rate[period];
@@ -192,106 +192,97 @@ void Gas1D::setPeriod(int period)
 	props_sk[0].skin = props_sk[0].skins[period];
 }
 
-void Gas1D::snapshot(int i)
+void Gas1D_simple::snapshot(int i)
 {
 	snapshotter->dump(i);
 }
 
-void Gas1D::snapshot_all(int i)
+void Gas1D_simple::snapshot_all(int i)
 {
 	snapshotter->dump_all(i);
 }
 
-double Gas1D::getRate()
+double Gas1D_simple::getRate()
 {
 	if(leftBoundIsRate)
 		return Qcell[0];
 	else {
 		Cell& cell = cells[0];
 		Cell& cell1 = cells[1];
-		double temp = getTrans(cell, cell1) / P_ATM * getCoeff(cell, cell1) * (cell1.u_next.p - cell.u_next.p);
-		return getTrans(cell, cell1) / P_ATM * getCoeff(cell, cell1) * (cell1.u_next.p - cell.u_next.p);
+		return getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 * (cell1.u_next.p * cell1.u_next.p - cell.u_next.p * cell.u_next.p);;
 	}
 }
 
-double Gas1D::solve_eq(int i)
+double Gas1D_simple::solve_eq(int i)
 {
 	Cell& cell = cells[i];
-	double p_next = cell.u_next.p;
-	double p_prev = cell.u_next.p;
-
-	double H = getPoro(p_next) * p_next / getZ(p_next) - getPoro(p_prev) * p_prev / getZ(p_prev);
+	double H = props_sk[0].m * ( getPdivZ(cell.u_next.p) - getPdivZ(cell.u_prev.p) );
 
 	for(int k = i-1; k < i+2; k += 2)
 	{
 		Cell& cell1 = cells[k];
-		H += ht / cell.V * getTrans(cell, cell1) * (cell.u_next.p - cell1.u_next.p) * getCoeff(cell, cell1);
+		H += ht / cell.V / props_gas.visc * getTrans(cell, cell1) * (cell.u_next.p - cell1.u_next.p) * getPdivZ(cell, cell1);
 	}
 	
 	return H;
 }
 
-double Gas1D::solve_eq_dp(int i)
+double Gas1D_simple::solve_eq_dp(int i)
 {
 	Cell& cell = cells[i];
-	double p = cell.u_next.p;
-	double H = (p * getPoro_dp() + getPoro(p) * (1.0 - p / getZ(p) * getZ_dp(p))) / getZ(p);
+	double H = props_sk[0].m * getPdivZ_dp( cell.u_next.p );
 	
 	for(int k = i-1; k < i+2; k += 2)
 	{
 		Cell& cell1 = cells[k];
-		H += ht / cell.V * getTrans(cell, cell1) * 
-			( (cell.u_next.p - cell1.u_next.p) * getCoeff_dp(cell, cell1) + getCoeff(cell, cell1) );
+		H += ht / cell.V / props_gas.visc * getTrans(cell, cell1) * 
+			( (cell.u_next.p - cell1.u_next.p) * getPdivZ_dp(cell, cell1) + getPdivZ(cell, cell1) );
 	}
 	
 	return H;
 }
 
-double Gas1D::solve_eq_dp_beta(int i, int beta)
+double Gas1D_simple::solve_eq_dp_beta(int i, int beta)
 {
 	Cell& cell = cells[i];
 	Cell& cell1 = cells[beta];
 	
-	return ht / cell.V * getTrans(cell, cell1) * 
-			( (cell.u_next.p - cell1.u_next.p) * getCoeff_dp_beta(cell, cell1) - getCoeff(cell, cell1) );
+	return ht / cell.V / props_gas.visc * getTrans(cell, cell1) * 
+			( (cell.u_next.p - cell1.u_next.p) * getPdivZ_dp_beta(cell, cell1) - getPdivZ(cell, cell1) );
 }
 
-double Gas1D::solve_eqLeft()
+double Gas1D_simple::solve_eqLeft()
 {
 	Cell& cell = cells[0];
 	Cell& cell1 = cells[1];
 
 	if( leftBoundIsRate )
-		return getTrans(cell, cell1) / P_ATM * getCoeff(cell, cell1) * (cell1.u_next.p - cell.u_next.p) - Qcell[0];
+		return getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 * (cell1.u_next.p * cell1.u_next.p - cell.u_next.p * cell.u_next.p) - Qcell[0];
 	else
 		return cell.u_next.p - Pwf;
 }
 
-double Gas1D::solve_eqLeft_dp()
+double Gas1D_simple::solve_eqLeft_dp()
 {
 	if( leftBoundIsRate )
 	{
 		Cell& cell = cells[0];
 		Cell& cell1 = cells[1];
-		return getTrans(cell, cell1) / P_ATM * 
-				( (cell1.u_next.p - cell.u_next.p) * getCoeff_dp(cell, cell1) - getCoeff(cell, cell1) );
+		return -getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 *
+			( 2.0 * cell.u_next.p + getZ_dp( cell.u_next.p ) / getZ( cell.u_next.p ) );
 	} else
 		return 1.0;
 }
 
-double Gas1D::solve_eqLeft_dp_beta()
+double Gas1D_simple::solve_eqLeft_dp_beta()
 {
 	if( leftBoundIsRate )
-	{
-		Cell& cell = cells[0];
-		Cell& cell1 = cells[1];
-		return getTrans(cell, cell1) / P_ATM * 
-				( (cell1.u_next.p - cell.u_next.p) * getCoeff_dp_beta(cell, cell1) + getCoeff(cell, cell1) );
-	} else
+		return getTrans(cells[0], cells[1]) / props_gas.visc / P_ATM / getZ( cells[0].u_next.p ) * cells[1].u_next.p;
+	else
 		return 0.0;
 }
 
-double Gas1D::solve_eqRight()
+double Gas1D_simple::solve_eqRight()
 {
 	Cell& cell = cells[cellsNum-1];
 
@@ -301,7 +292,7 @@ double Gas1D::solve_eqRight()
 		return cell.u_next.p - cells[cellsNum-2].u_next.p;
 }
 
-double Gas1D::solve_eqRight_dp()
+double Gas1D_simple::solve_eqRight_dp()
 {
 	if( rightBoundIsPres )
 		return 1.0;
@@ -309,7 +300,7 @@ double Gas1D::solve_eqRight_dp()
 		return 1.0;
 }
 
-double Gas1D::solve_eqRight_dp_beta()
+double Gas1D_simple::solve_eqRight_dp_beta()
 {
 	if( rightBoundIsPres )
 		return 0.0;

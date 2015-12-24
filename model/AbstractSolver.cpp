@@ -3,6 +3,7 @@
 
 #include "model/Oil1D/Oil1D.h"
 #include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -114,6 +115,7 @@ double AbstractSolver<modelType>::averValue(int varInd)
 
 template class AbstractSolver<oil1D::Oil1D>;
 template class AbstractSolver<gas1D::Gas1D>;
+template class AbstractSolver<gas1D::Gas1D_simple>;
 template class AbstractSolver<oil1D_NIT::Oil1D_NIT>;
 template class AbstractSolver<oil_rz::Oil_RZ>;
 template class AbstractSolver<gasOil_rz_NIT::GasOil_RZ_NIT>;

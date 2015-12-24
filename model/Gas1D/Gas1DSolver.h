@@ -7,11 +7,14 @@
 
 #include "model/AbstractSolver.hpp"
 #include "method/sweep.h"
-#include "model/Gas1D/Gas1D.h"
 
 namespace gas1D
 {
-	class Gas1DSolver : public AbstractSolver<Gas1D>, public Sweep
+	class Gas1D;
+	class Gas1D_simple;
+
+	template <class modelType>
+	class Gas1DSolver : public AbstractSolver<modelType>, public Sweep
 	{
 	private:
 		void MiddleAppr(int current, int MZ, int key);
@@ -29,13 +32,16 @@ namespace gas1D
 		std::ofstream plot_Q;
 
 	public:
-		Gas1DSolver(Gas1D* _model);
-		Gas1DSolver(Gas1D* _model, int i);
+		Gas1DSolver(modelType* _model);
+		Gas1DSolver(modelType* _model, int i);
 		~Gas1DSolver();
 
 		void fill();
 		void start();
 	};
+
+	typedef Gas1DSolver<Gas1D> Gas1DSol;
+	typedef Gas1DSolver<Gas1D_simple> Gas1DSolSimp;
 };
 
 #endif /* GAS1DSOLVER_H_ */
