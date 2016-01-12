@@ -19,7 +19,7 @@ namespace gas1D
 	private:
 		void MiddleAppr(int current, int MZ, int key);
 		void LeftBoundAppr(int MZ, int key);
-		void RightBoundAppr (int MZ, int key);
+		void RightBoundAppr(int MZ, int key);
 
 	protected:		
 		void construct_solution();

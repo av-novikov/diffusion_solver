@@ -1,6 +1,8 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include <utility>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -16,6 +18,8 @@ using std::vector;
 using std::pair;
 using std::string;
 using std::sort;
+using std::ifstream;
+using std::make_pair;
 
 inline bool IsNan(double a)
 {
@@ -105,5 +109,23 @@ inline Interpolate* setInvDataset(vector< pair<double,double> >& vec, const doub
 
 	return new Interpolate(x, y, N);
 };
+
+inline void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
+{
+	ifstream file;
+	file.open(fileName.c_str(), ifstream::in);
+	
+	double temp1, temp2;
+	while( !file.eof() )
+	{
+		file >> temp1;
+		if( file.eof() )
+			break;
+		file >> temp2;
+		vec.push_back(make_pair(temp1, temp2));
+	}
+
+	file.close();
+}
 
 #endif /* UTILS_H_ */
