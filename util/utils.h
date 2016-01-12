@@ -2,6 +2,7 @@
 #define UTILS_H_
 
 #include <sstream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -16,6 +17,26 @@ using std::vector;
 using std::pair;
 using std::string;
 using std::sort;
+using std::make_pair;
+using std::ifstream;
+
+inline void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
+{
+	ifstream file;
+	file.open(fileName.c_str(), ifstream::in);
+	
+	double temp1, temp2;
+	while( !file.eof() )
+	{
+		file >> temp1;
+		if( file.eof() )
+			break;
+		file >> temp2;
+		vec.push_back(make_pair(temp1, temp2));
+	}
+
+	file.close();
+};
 
 inline bool IsNan(double a)
 {

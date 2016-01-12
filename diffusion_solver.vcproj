@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="vtkCommonCore-6.3.lib vtkCommonDataModel-6.3.lib vtkFiltersCore-6.3.lib vtkIOCore-6.3.lib vtkIOXML-6.3.lib gtestd.lib"
+				AdditionalDependencies="vtkCommonCore-6.3.lib vtkCommonDataModel-6.3.lib vtkFiltersCore-6.3.lib vtkIOCore-6.3.lib vtkIOXML-6.3.lib gtestd.lib gtest_main-mdd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\gtest\googletest-master\googletest\msvc\gtest-md\Debug&quot;;&quot;C:\Program Files (x86)\VTK\lib&quot;"
 				GenerateDebugInformation="true"
@@ -185,7 +185,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\base-test.h"
+				>
+			</File>
+			<File
 				RelativePath=".\model\cells\CylindricalCell.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\gas1D-test.h"
 				>
 			</File>
 			<File
@@ -194,6 +202,10 @@
 			</File>
 			<File
 				RelativePath=".\model\Gas1D\Gas1D_simple.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\gas1Dsimple-test.h"
 				>
 			</File>
 			<File
@@ -261,11 +273,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Scene.h"
+				RelativePath=".\props\Scene.h"
 				>
 			</File>
 			<File
-				RelativePath=".\props\Scene.h"
+				RelativePath=".\Scene.h"
 				>
 			</File>
 			<File
@@ -313,11 +325,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\base-test.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\model\cells\CylindricalCell.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\tests\first_test.cpp"
+				RelativePath=".\tests\gas1D-test.cpp"
 				>
 			</File>
 			<File
@@ -326,6 +342,10 @@
 			</File>
 			<File
 				RelativePath=".\model\Gas1D\Gas1D_simple.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\gas1Dsimple-test.cpp"
 				>
 			</File>
 			<File
@@ -402,6 +422,10 @@
 			</File>
 			<File
 				RelativePath=".\method\sweep.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\tester.cpp"
 				>
 			</File>
 			<File

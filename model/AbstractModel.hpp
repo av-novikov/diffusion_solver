@@ -19,13 +19,6 @@ class AbstractModel
 	template<typename> friend class Snapshotter;
 	
 	protected:
-		// Dimensions
-		double t_dim;
-		double R_dim;
-		double P_dim;
-		double T_dim;
-		double Q_dim;
-
 		varType varInit;
 		std::vector<cellType<varType> > cells;
 		
@@ -72,6 +65,13 @@ class AbstractModel
 		AbstractModel();
 		virtual ~AbstractModel();		
 	
+		// Dimensions
+		double t_dim;
+		double R_dim;
+		double P_dim;
+		double T_dim;
+		double Q_dim;
+
 		void load(propsType& props);
 		virtual void setSnapshotter(std::string type) = 0;
 		virtual void setPeriod(int period) = 0;
