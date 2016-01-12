@@ -317,11 +317,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\model\Gas1D\Gas1D.cpp"
+				RelativePath=".\tests\first_test.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\tests\gas1D_simple.cpp"
+				RelativePath=".\model\Gas1D\Gas1D.cpp"
 				>
 			</File>
 			<File

@@ -1,12 +1,12 @@
 #include <new>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <utility>
 #include <iostream>
-#include <valarray>
 
 #include "gtest/gtest.h"
 
-/*#include "util/utils.h"
 #include "method/mcmath.h"
 #include "Scene.h"
 #include "model/Oil1D/Oil1D.h"
@@ -16,9 +16,27 @@
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
-#include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"*/
+#include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
 using namespace std;
+
+void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
+{
+	ifstream file;
+	file.open(fileName.c_str(), ifstream::in);
+	
+	double temp1, temp2;
+	while( !file.eof() )
+	{
+		file >> temp1;
+		if( file.eof() )
+			break;
+		file >> temp2;
+		vec.push_back(make_pair(temp1, temp2));
+	}
+
+	file.close();
+}
 
 /*gasOil_rz_NIT::Properties* getProps()
 {
@@ -655,7 +673,7 @@ using namespace std;
 }
 */
 
-/*gas1D::Properties* getProps()
+gas1D::Properties* getProps()
 {
 	gas1D::Properties* props = new gas1D::Properties();
 
@@ -703,7 +721,7 @@ using namespace std;
 	setDataFromFile(props->visc_gas, "props/gas_visc.txt");
 
 	return props;
-}*/
+}
 
 int main(int argc, char** argv)
 {
@@ -725,10 +743,8 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-/*	gas1D::Properties* props = getProps();
-	double p_c = props->props_sk[0].p_out / 100000.0;
-	double p_bhp [] = {90.0, 100.0, 110.0};
-	double rate [] = {0.0, 0.0, 0.0}; 
+	gas1D::Properties* props = getProps();
+	const double p_bhp [3] = {90.0, 100.0, 110.0};
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -736,34 +752,18 @@ int main(int argc, char** argv)
 		props->pwf.push_back( p_bhp[i] * 100000.0 );
 		Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties> scene;	
 		scene.load(*props, i);
-		
-		gas1D::Gas1D* model = scene.getModel();
-		
 		scene.setSnapshotterType("VTK");
 		scene.start();
-
-		rate[i] = model->getRate() * model->Q_dim * 86400.0;
 	}
 
-	valarray<double> P_bhp (p_bhp, 3);
-	valarray<double> Rate (rate, 3);
-
-	double a = (Rate * Rate).sum();
-	double b = (Rate * Rate * Rate).sum();
-	double c = b;
-	double d = (Rate * Rate * Rate * Rate).sum();
-
-	double A = (d * (Rate * (p_c * p_c - P_bhp * P_bhp)).sum() - b * (Rate * Rate * (p_c * p_c - P_bhp * P_bhp)).sum() ) / (a * d - b * c);
-	double B = (-c * (Rate * (p_c * p_c - P_bhp * P_bhp)).sum() + a * (Rate * Rate * (p_c * p_c - P_bhp * P_bhp)).sum() ) / (a * d - b * c);
-*/
 	/*oil_rz::Properties* props = getProps();
 	Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	testing::InitGoogleTest(&argc, argv);
-	int res = RUN_ALL_TESTS();
+	//testing::InitGoogleTest(&argc, argv);
+	//int res = RUN_ALL_TESTS();
 
 	return 0;
 }

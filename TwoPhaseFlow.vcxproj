@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{749B7C00-0C23-4778-A9F5-82A85C2F4287}</ProjectGuid>
+    <RootNamespace>TwoPhaseFlow</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+    <OutDir>Debug\</OutDir>
+    <IntDir>Debug\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>C:\Windows\System32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ReferencePath>..\..\Program Files (x86)\VTK\bin;$(ReferencePath)</ReferencePath>
+    <OutDir>Release\</OutDir>
+    <IntDir>Release\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\VTK\include\vtk-6.3;E:\Temperature\ready\GasOilFlow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Windows\System32;C:\Program Files (x86)\VTK\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\VTK\include\vtk-6.3;E:\Temperature\ready\GasOilFlow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\VTK\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="model\AbstractMethod.hpp" />
+    <ClInclude Include="model\AbstractModel.hpp" />
+    <ClInclude Include="model\cells\AbstractCell.hpp" />
+    <ClInclude Include="model\cells\CylindricalCell.h" />
+    <ClInclude Include="model\cells\RadialCell.hpp" />
+    <ClInclude Include="model\cells\Variables.hpp" />
+    <ClInclude Include="model\GasOil_RZ_NIT\GasOil2DNITSolver.h" />
+    <ClInclude Include="model\GasOil_RZ_NIT\GasOil_RZ_NIT.h" />
+    <ClInclude Include="model\Oil1D\Oil1D.h" />
+    <ClInclude Include="snapshotter\GRDECLSnapshotter.h" />
+    <ClInclude Include="util\Interpolate.h" />
+    <ClInclude Include="solver\mcmath.h" />
+    <ClInclude Include="solver\pointers.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="snapshotter\Snapshotter.h" />
+    <ClInclude Include="solver\sweep.h" />
+    <ClInclude Include="util\utils.h" />
+    <ClInclude Include="snapshotter\VTKSnapshotter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="model\AbstractMethod.cpp" />
+    <ClCompile Include="model\AbstractModel.cpp" />
+    <ClCompile Include="model\cells\AbstractCell.cpp" />
+    <ClCompile Include="model\cells\CylindricalCell.cpp" />
+    <ClCompile Include="model\GasOil_RZ_NIT\GasOil2DNITSolver.cpp" />
+    <ClCompile Include="model\GasOil_RZ_NIT\GasOil_RZ_NIT.cpp" />
+    <ClCompile Include="snapshotter\GRDECLSnapshotter.cpp" />
+    <ClCompile Include="util\Interpolate.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="solver\mcmath.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="snapshotter\Snapshotter.cpp" />
+    <ClCompile Include="solver\sweep.cpp" />
+    <ClCompile Include="snapshotter\VTKSnapshotter.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
