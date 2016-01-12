@@ -57,11 +57,6 @@ void Gas1DSolver<modelType>::writeData()
 }
 
 template <class modelType>
-void Gas1DSolver<modelType>::fill()
-{
-}
-
-template <class modelType>
 void Gas1DSolver<modelType>::control()
 {
 	writeData();
@@ -82,23 +77,6 @@ void Gas1DSolver<modelType>::control()
 		model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
-}
-
-template <class modelType>
-void Gas1DSolver<modelType>::start()
-{
-	int counter = 0;
-	iterations = 8;
-
-	model->setPeriod(curTimePeriod);
-	while(cur_t < Tt)
-	{
-		control();
-		model->snapshot(counter++);
-		doNextStep();
-		copyTimeLayer();
-	}
-	writeData();
 }
 
 template <class modelType>
@@ -124,17 +102,8 @@ void Gas1DSolver<modelType>::doNextStep()
 		dAverPres = fabs(averPres - averPresPrev);
 		averPresPrev = averPres;
 
-		//cout << "BadPresValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.p << endl;
-
 		iterations++;
 	}
-
-	cout << "Newton Iterations = " << iterations << endl;
-}
-
-template <class modelType>
-void Gas1DSolver<modelType>::construct_solution()
-{
 }
 
 template <class modelType>

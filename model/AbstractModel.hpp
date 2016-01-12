@@ -10,7 +10,7 @@
 #include "snapshotter/Snapshotter.h"
 
 template <typename varType, typename propsType,
-template <typename varType> class cellType>
+template <typename varType> class cellType, class modelType>
 class AbstractModel
 {
 	template<typename> friend class AbstractSolver;
@@ -61,6 +61,11 @@ class AbstractModel
 		virtual void setPerforated() = 0;
 		virtual void setInitialState();
 		
+		Snapshotter<modelType>* snapshotter;
+		void snapshot(int i);
+		void snapshot_all(int i);
+		bool isWriteSnaps;
+
 	public:
 		AbstractModel();
 		virtual ~AbstractModel();		
@@ -72,8 +77,9 @@ class AbstractModel
 		double T_dim;
 		double Q_dim;
 
+		void setSnapshotter(std::string type, modelType* model);
+
 		void load(propsType& props);
-		virtual void setSnapshotter(std::string type) = 0;
 		virtual void setPeriod(int period) = 0;
 		int getCellsNum();
 };

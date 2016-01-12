@@ -287,28 +287,6 @@ void Oil_RZ::setRateDeviation(int num, double ratio)
 	Qcell[num] += Q_sum * ratio;
 }
 
-void Oil_RZ::setSnapshotter(string type)
-{
-	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<Oil_RZ>();
-	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<Oil_RZ>();
-	else
-		snapshotter = new GRDECLSnapshotter<Oil_RZ>();
-
-	snapshotter->setModel(this);
-}
-
-void Oil_RZ::snapshot(int i)
-{
-	snapshotter->dump(i);
-}
-
-void Oil_RZ::snapshot_all(int i)
-{
-	snapshotter->dump_all(i);
-}
-
 double Oil_RZ::solve_eq(int cur)
 {
 	int neighbor [4];

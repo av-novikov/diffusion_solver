@@ -20,7 +20,6 @@ namespace gasOil_rz_NIT
 		void TopAppr(int i, int key);
 		void BottomAppr(int i, int key);
 		
-		void construct_solution();
 		void construction_from_fz(int N, int n, int key);
 		void control();
 		void doNextStep();
@@ -35,9 +34,6 @@ namespace gasOil_rz_NIT
 	public:
 		GasOil2DNITSolver(GasOil_RZ_NIT* _model);
 		~GasOil2DNITSolver();
-
-		void fill();
-		void start();
 	};
 
 };

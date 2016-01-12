@@ -1,7 +1,8 @@
 #include "tests/base-test.h"
 
 #include "Scene.h"
-#include "model/Gas1D/Gas1D.h"
+//#include "model/Gas1D/Gas1D.h"
+#include "tests/gas1D-test.h"
 #include "model/Gas1D/Gas1D_simple.h"
 #include "model/Gas1D/Gas1DSolver.h"
 
@@ -21,9 +22,9 @@ void BaseTest<propsType, sceneType>::run()
 	propsType* props = getProps();
 	sceneType scene;
 	scene.load(*props);
-	scene.setSnapshotterType("VTK");
+	scene.setSnapshotterType("none");
 	scene.start();
 }
 
 template class BaseTest<gas1D::Properties, Scene<gas1D::Gas1D_simple, gas1D::Gas1DSolSimp, gas1D::Properties> >;
-template class BaseTest<gas1D::Properties, Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties> >;
+template class BaseTest<gas1D::Properties, Scene<Gas1D_Wrapped, gas1D::Gas1DSol, gas1D::Properties> >;

@@ -314,28 +314,6 @@ void GasOil_RZ::setRateDeviation(int num, double ratio)
 	Qcell[num] += Q_sum * ratio;
 }
 
-void GasOil_RZ::setSnapshotter(string type)
-{
-	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<GasOil_RZ>();
-	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<GasOil_RZ>();
-	else
-		snapshotter = new GRDECLSnapshotter<GasOil_RZ>();
-
-	snapshotter->setModel(this);
-}
-
-void GasOil_RZ::snapshot(int i)
-{
-	snapshotter->dump(i);
-}
-
-void GasOil_RZ::snapshot_all(int i)
-{
-	snapshotter->dump_all(i);
-}
-
 double GasOil_RZ::solve_eq1(int cur)
 {
 	int neighbor [4];

@@ -75,7 +75,7 @@ namespace oil_rz
 		
 		Oil_Props props_oil;
 	};
-	class Oil_RZ : public AbstractModel<Var1phase, Properties, CylCell>
+	class Oil_RZ : public AbstractModel<Var1phase, Properties, CylCell, Oil_RZ>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -246,10 +246,6 @@ namespace oil_rz
 			}
 		};
 
-		Snapshotter<Oil_RZ>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
-
 		double solve_eq(int cur);
 		double solve_eq_dp(int cur);
 		double solve_eq_dp_beta(int cur, int beta);
@@ -269,7 +265,6 @@ namespace oil_rz
 		~Oil_RZ();
 
 		void setPeriod(int period);
-		void setSnapshotter(std::string type);
 	};
 
 };

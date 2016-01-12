@@ -22,7 +22,6 @@ namespace oil_rz
 		void TopAppr(int i, int key);
 		void BottomAppr(int i, int key);
 		
-		void construct_solution();
 		void construction_from_fz(int N, int n, int key);
 		void control();
 		void doNextStep();
@@ -65,9 +64,6 @@ namespace oil_rz
 	public:
 		OilRZSolver(Oil_RZ* _model);
 		~OilRZSolver();
-
-		void fill();
-		void start();
 	};
 };
 

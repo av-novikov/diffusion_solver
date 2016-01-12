@@ -104,7 +104,7 @@ namespace gas1D
 		std::vector< std::pair<double,double> > visc_gas;
 	};
 
-	class Gas1D : public AbstractModel<Var1phase, Properties, RadialCell>
+	class Gas1D : public AbstractModel<Var1phase, Properties, RadialCell, Gas1D>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -139,37 +139,21 @@ namespace gas1D
 		// Set initial state
 		void setInitialState();
 
-		inline double getVisc(double p) const
+		virtual inline double getVisc(double p) const
 		{
-			//return props_gas.visc_table->Solve(p);
-			if (leftBoundIsRate)
-				return 0.00001 / P_dim / t_dim * p / cells[0].u_next.p;
-			else
-				return 0.00001 / P_dim / t_dim * p / Pwf;
+			return props_gas.visc_table->Solve(p);
 		};
-		inline double getVisc_dp(double p) const
+		virtual inline double getVisc_dp(double p) const
 		{
-			//return props_gas.visc_table->DSolve(p);
-			if (leftBoundIsRate)
-				return 0.00001 / P_dim / t_dim / cells[0].u_next.p;
-			else
-				return 0.00001 / P_dim / t_dim / Pwf;
+			return props_gas.visc_table->DSolve(p);
 		};
-		inline double getZ(double p) const
+		virtual inline double getZ(double p) const
 		{
-			//return props_gas.z->Solve(p);
-			if (leftBoundIsRate)
-				return sqrt( p / cells[0].u_next.p );
-			else
-				return sqrt( p / Pwf );
+			return props_gas.z->Solve(p);
 		};
-		inline double getZ_dp(double p) const
+		virtual inline double getZ_dp(double p) const
 		{
-			//return props_gas.z->DSolve(p);
-			if (leftBoundIsRate)
-				return 1.0 / 2.0 / sqrt( p * cells[0].u_next.p );
-			else
-				return 1.0 / 2.0 / sqrt( p * Pwf );
+			return props_gas.z->DSolve(p);
 		};
 		inline double getPoro(double p) const
 		{
@@ -199,28 +183,6 @@ namespace gas1D
 			return ( 1.0 - 1.0 / getZ(p) * getZ_dp(p) - 1.0 / getVisc(p) * getVisc_dp(p) ) * 
 				 cell.hr / getZ(p) / getVisc(p) / (cell.hr + beta.hr);
 		};
-
-		/*inline double getPdivZ(double p) const
-		{
-			return p / getZ(p);
-		};
-		inline double getPdivZ(const Cell& cell1, const Cell& cell2) const
-		{
-			return ( getPdivZ(cell1.u_next.p) * cell2.hr + getPdivZ(cell2.u_next.p) * cell1.hr ) / (cell1.hr + cell2.hr);
-		};
-		inline double getPdivZ_dp(double p) const
-		{
-			const double z = getZ(p);
-			return (1.0 - p / z * getZ_dp(p) ) / z;
-		};
-		inline double getPdivZ_dp(const Cell& cell, const Cell& beta) const
-		{
-			return ( getPdivZ_dp(cell.u_next.p) * beta.hr ) / (cell.hr + beta.hr);
-		};
-		inline double getPdivZ_dp_beta(const Cell& cell, const Cell& beta) const
-		{
-			return ( getPdivZ_dp(beta.u_next.p) * cell.hr ) / (cell.hr + beta.hr);
-		};*/
 		inline double getTrans(Cell& cell, Cell& beta) const
 		{
 			double k1, k2;
@@ -228,10 +190,6 @@ namespace gas1D
 			k2 = (beta.r > props_sk[0].radius_eff ? props_sk[0].perm_r : props_sk[0].perm_eff);
 			return 4.0 * M_PI * k1 * k2 * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0) * props_sk[0].height / (k2 * cell.hr + k1 * beta.hr);
 		};
-
-		Snapshotter<Gas1D>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
 
 		double solve_eq(int i);
 		double solve_eq_dp(int i);
@@ -249,7 +207,6 @@ namespace gas1D
 		Gas1D();
 		~Gas1D();
 	
-		void setSnapshotter(std::string type);
 		void setPeriod(int period);
 
 		double getRate();

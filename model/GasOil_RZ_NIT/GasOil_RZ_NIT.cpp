@@ -279,28 +279,6 @@ void GasOil_RZ_NIT::setPeriod(int period)
 	}
 }
 
-void GasOil_RZ_NIT::setSnapshotter(string type)
-{
-	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<GasOil_RZ_NIT>();
-	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<GasOil_RZ_NIT>();
-	else
-		snapshotter = new GRDECLSnapshotter<GasOil_RZ_NIT>();
-
-	snapshotter->setModel(this);
-}
-
-void GasOil_RZ_NIT::snapshot(int i)
-{
-	snapshotter->dump(i);
-}
-
-void GasOil_RZ_NIT::snapshot_all(int i)
-{
-	snapshotter->dump_all(i);
-}
-
 double GasOil_RZ_NIT::solve_eq1(int cur)
 {
 	int neighbor [4];

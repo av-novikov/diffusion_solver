@@ -160,18 +160,6 @@ void Gas1D_simple::setInitialState()
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props_sk[0].p_init;
 }
 
-void Gas1D_simple::setSnapshotter(string type)
-{
-	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<Gas1D_simple>();
-	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<Gas1D_simple>();
-	else
-		snapshotter = new GRDECLSnapshotter<Gas1D_simple>();
-
-	snapshotter->setModel(this);
-}
-
 void Gas1D_simple::setPerforated()
 {
 	Qcell[0] = 0.0;
@@ -192,24 +180,14 @@ void Gas1D_simple::setPeriod(int period)
 	props_sk[0].skin = props_sk[0].skins[period];
 }
 
-void Gas1D_simple::snapshot(int i)
-{
-	snapshotter->dump(i);
-}
-
-void Gas1D_simple::snapshot_all(int i)
-{
-	snapshotter->dump_all(i);
-}
-
 double Gas1D_simple::getRate()
 {
 	if(leftBoundIsRate)
-		return Qcell[0];
+		return Q_sum;
 	else {
 		Cell& cell = cells[0];
 		Cell& cell1 = cells[1];
-		return getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 * (cell1.u_next.p * cell1.u_next.p - cell.u_next.p * cell.u_next.p);;
+		return getTrans(cell, cell1) / props_gas.visc / P_ATM / getZ( cell.u_next.p ) / 2.0 * (cell1.u_next.p * cell1.u_next.p - cell.u_next.p * cell.u_next.p);
 	}
 }
 

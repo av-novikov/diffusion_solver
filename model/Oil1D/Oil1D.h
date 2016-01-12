@@ -69,7 +69,7 @@ namespace oil1D
 		double b_bore;
 	};
 
-	class Oil1D : public AbstractModel<Var1phase, Properties, RadialCell>
+	class Oil1D : public AbstractModel<Var1phase, Properties, RadialCell, Oil1D>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -134,10 +134,6 @@ namespace oil1D
 			return varInit.p - Qcell[0] * props_oil.b_bore * props_oil.visc * log(r_e / r_w) / 2.0 / M_PI / props_sk.height / props_sk.perm;
 		};
 
-		Snapshotter<Oil1D>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
-
 		double solve_eq(int i);
 		double solve_eq_dp(int i);
 		double solve_eq_dp_beta(int i, int beta);
@@ -155,7 +151,6 @@ namespace oil1D
 		~Oil1D();
 
 		void setPeriod(int period);
-		void setSnapshotter(std::string type);
 	};
 
 };

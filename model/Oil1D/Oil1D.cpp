@@ -138,28 +138,6 @@ void Oil1D::setPeriod(int period)
 	skin = props_sk.skin[period];
 }
 
-void Oil1D::setSnapshotter(string type)
-{
-	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<Oil1D>();
-	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<Oil1D>();
-	else
-		snapshotter = new GRDECLSnapshotter<Oil1D>();
-
-	snapshotter->setModel(this);
-}
-
-void Oil1D::snapshot(int i)
-{
-	snapshotter->dump(i);
-}
-
-void Oil1D::snapshot_all(int i)
-{
-	snapshotter->dump_all(i);
-}
-
 double Oil1D::solve_eq(int i)
 {
 	Cell& cell = cells[i];

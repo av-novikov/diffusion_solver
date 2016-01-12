@@ -123,7 +123,7 @@ namespace gasOil_rz
 		std::vector< std::pair<double,double> > Rs;
 	};
 
-	class GasOil_RZ : public AbstractModel<Var2phase, Properties, CylCell>
+	class GasOil_RZ : public AbstractModel<Var2phase, Properties, CylCell, GasOil_RZ>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -464,15 +464,10 @@ namespace gasOil_rz
 		// Finds functional
 		double solveH();
 
-		Snapshotter<GasOil_RZ>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
-
 	public:
 		GasOil_RZ();
 		~GasOil_RZ();
 	
-		void setSnapshotter(std::string type);
 		void setPeriod(int period);
 	};
 };

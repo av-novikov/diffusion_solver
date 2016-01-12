@@ -67,7 +67,7 @@ namespace oil1D_NIT
 		double beta;
 	};
 
-	class Oil1D_NIT : public AbstractModel<Var1phaseNIT, Properties, RadialCell>
+	class Oil1D_NIT : public AbstractModel<Var1phaseNIT, Properties, RadialCell, Oil1D_NIT>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -132,10 +132,6 @@ namespace oil1D_NIT
 			return varInit.p - Qcell[0] * props_oil.visc * log(r_e / r_w) / 2.0 / M_PI / props_sk.height / props_sk.perm;
 		};
 
-		Snapshotter<Oil1D_NIT>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
-
 		double solve_eq(int i);
 		double solve_eq_dp(int i);
 		double solve_eq_dp_beta(int i, int beta);
@@ -153,7 +149,6 @@ namespace oil1D_NIT
 		~Oil1D_NIT();
 
 		void setPeriod(int period);
-		void setSnapshotter(std::string type);
 	};
 
 };

@@ -12,7 +12,7 @@
 
 namespace gas1D
 {
-	class Gas1D_simple : public AbstractModel<Var1phase, Properties, RadialCell>
+	class Gas1D_simple : public AbstractModel<Var1phase, Properties, RadialCell, Gas1D_simple>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -84,10 +84,6 @@ namespace gas1D
 			return 4.0 * M_PI * k1 * k2 * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0) * props_sk[0].height / (k2 * cell.hr + k1 * beta.hr);
 		};
 
-		Snapshotter<Gas1D_simple>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
-
 		double solve_eq(int i);
 		double solve_eq_dp(int i);
 		double solve_eq_dp_beta(int i, int beta);
@@ -104,7 +100,6 @@ namespace gas1D
 		Gas1D_simple();
 		~Gas1D_simple();
 	
-		void setSnapshotter(std::string type);
 		void setPeriod(int period);
 
 		double getRate();

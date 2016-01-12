@@ -42,10 +42,6 @@ void OilRZSolver::writeData()
 	plot_qcells << endl;
 }
 
-void OilRZSolver::fill()
-{
-}
-
 void OilRZSolver::control()
 {
 	writeData();
@@ -69,21 +65,6 @@ void OilRZSolver::control()
 		model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
-}
-
-void OilRZSolver::start()
-{
-	int counter = 0;
-	iterations = 8;
-
-	model->setPeriod(curTimePeriod);
-	while(cur_t < Tt)
-	{
-		control();
-		model->snapshot_all(counter++);
-		doNextStep();
-		copyTimeLayer();
-	}
 }
 
 void OilRZSolver::doNextStep()
@@ -261,10 +242,6 @@ void OilRZSolver::solveStep()
 	}
 
 	cout << "Newton Iterations = " << iterations << endl;
-}
-
-void OilRZSolver::construct_solution()
-{
 }
 
 void OilRZSolver::construction_from_fz(int N, int n, int key)

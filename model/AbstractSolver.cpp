@@ -29,6 +29,29 @@ AbstractSolver<modelType>::~AbstractSolver()
 }
 
 template <class modelType>
+void AbstractSolver<modelType>::start()
+{
+	int counter = 0;
+	iterations = 8;
+
+	model->setPeriod(curTimePeriod);
+	while(cur_t < Tt)
+	{
+		control();
+		if( model->isWriteSnaps )
+			model->snapshot(counter++);
+		doNextStep();
+		copyTimeLayer();
+	}
+	writeData();
+}
+
+template <class modelType>
+void AbstractSolver<modelType>::fill()
+{
+}
+
+template <class modelType>
 void AbstractSolver<modelType>::copyIterLayer()
 {
 	for(int i = 0; i < model->cells.size(); i++)
@@ -111,6 +134,11 @@ double AbstractSolver<modelType>::averValue(int varInd)
 	}
 	
 	return tmp / model->Volume;
+}
+
+template <class modelType>
+void AbstractSolver<modelType>::construct_solution()
+{
 }
 
 template class AbstractSolver<oil1D::Oil1D>;

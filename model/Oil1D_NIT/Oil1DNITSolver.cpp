@@ -24,10 +24,6 @@ void Oil1DNITSolver::writeData()
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
 }
 
-void Oil1DNITSolver::fill()
-{
-}
-
 void Oil1DNITSolver::control()
 {	
 	writeData();
@@ -48,21 +44,6 @@ void Oil1DNITSolver::control()
 		model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
-}
-
-void Oil1DNITSolver::start()
-{
-	int counter = 0;
-	iterations = 8;
-		
-	model->setPeriod(curTimePeriod);
-		
-	while(cur_t < Tt)
-	{
-		control();
-		model->snapshot(counter++);
-		doNextStep();
-	}
 }
 
 void Oil1DNITSolver::doNextStep()
@@ -91,15 +72,6 @@ void Oil1DNITSolver::doNextStep()
 
 		iterations++;
 	}
-
-	copyTimeLayer();
-
-	cout << "Newton Iterations = " << iterations << endl;
-	cout << "Pwf = " << model->getPwf() << endl;
-}
-
-void Oil1DNITSolver::construct_solution()
-{
 }
 
 void Oil1DNITSolver::construction_from_fz(int N, int n, int key)

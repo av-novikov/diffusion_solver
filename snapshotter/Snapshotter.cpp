@@ -56,6 +56,17 @@ void Snapshotter<gas1D::Gas1D>::setModel(gas1D::Gas1D* _model)
 }
 
 template <>
+void Snapshotter<gas1D::Gas1D_simple>::setModel(gas1D::Gas1D_simple* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+
+	nx = model->cellsNum_r + 2;
+}
+
+template <>
 void Snapshotter<oil_rz::Oil_RZ>::setModel(oil_rz::Oil_RZ* _model)
 {
 	model = _model;

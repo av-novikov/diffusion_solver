@@ -19,6 +19,8 @@
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 #include "model/GasOil_RZ_NIT/GasOil2DNITSolver.h"
 
+#include "tests/gas1D-test.h"
+
 using namespace std;
 
 template <class modelType, class methodType, typename propsType>
@@ -56,7 +58,7 @@ void Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties>::load(gas1D::Proper
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::setSnapshotterType(std::string type)
 {
-	model->setSnapshotter(type);
+	model->setSnapshotter(type, model);
 }
 
 template <class modelType, class methodType, typename propsType>
@@ -78,3 +80,5 @@ template class Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT:
 template class Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties>;
 template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties>;
 template class Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSolver, gasOil_rz_NIT::Properties>;
+
+template class Scene<Gas1D_Wrapped, gas1D::Gas1DSol, gas1D::Properties>;

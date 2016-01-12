@@ -15,7 +15,6 @@ namespace oil1D
 		void RightBoundAppr (int MZ, int key);
 
 	protected:
-		void construct_solution();
 		void construction_from_fz(int N, int n, int key);
 		void control();
 		void doNextStep();
@@ -26,9 +25,6 @@ namespace oil1D
 	public:
 		Oil1DSolver(Oil1D* _model);
 		~Oil1DSolver();
-
-		void fill();
-		void start();
 	};
 };
 

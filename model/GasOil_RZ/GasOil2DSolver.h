@@ -21,8 +21,7 @@ namespace gasOil_rz
 	protected:
 		void TopAppr(int i, int key);
 		void BottomAppr(int i, int key);
-		
-		void construct_solution();
+
 		void construction_from_fz(int N, int n, int key);
 		void control();
 		void doNextStep();
@@ -68,9 +67,6 @@ namespace gasOil_rz
 	public:
 		GasOil2DSolver(GasOil_RZ* _model);
 		~GasOil2DSolver();
-
-		void fill();
-		void start();
 	};
 };
 

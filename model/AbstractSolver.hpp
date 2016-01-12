@@ -31,7 +31,7 @@ class AbstractSolver {
 		double convergance(int& ind, int& varInd);
 		double averValue(int varInd);
 		
-		virtual void construct_solution() = 0;
+		virtual void construct_solution();
 		virtual void writeData() = 0;
 		virtual void control() = 0;
 		virtual void doNextStep() = 0;
@@ -40,8 +40,8 @@ class AbstractSolver {
 		AbstractSolver(modelType* _model);
 		virtual ~AbstractSolver();
 		
-		virtual void fill() = 0;
-		virtual void start() = 0;
+		virtual void fill();
+		virtual void start();
 	
 };
 

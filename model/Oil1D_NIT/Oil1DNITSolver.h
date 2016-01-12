@@ -15,7 +15,6 @@ namespace oil1D_NIT
 		void RightBoundAppr (int MZ, int key);
 
 	protected:
-		void construct_solution();
 		void construction_from_fz(int N, int n, int key);
 		void control();
 		void doNextStep();
@@ -26,9 +25,6 @@ namespace oil1D_NIT
 	public:
 		Oil1DNITSolver(Oil1D_NIT* _model);
 		~Oil1DNITSolver();
-
-		void fill();
-		void start();
 	};
 };
 

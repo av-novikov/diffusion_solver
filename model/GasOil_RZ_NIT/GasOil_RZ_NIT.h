@@ -190,7 +190,7 @@ namespace gasOil_rz_NIT
 		double ad;
 	};
 
-	class GasOil_RZ_NIT : public AbstractModel<Var2phaseNIT, Properties, CylCell>
+	class GasOil_RZ_NIT : public AbstractModel<Var2phaseNIT, Properties, CylCell, GasOil_RZ_NIT>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -596,15 +596,10 @@ namespace gasOil_rz_NIT
 		// Solves intensity of phase transition
 		double solve_eq3(int cur);
 
-		Snapshotter<GasOil_RZ_NIT>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
-
 	public:
 		GasOil_RZ_NIT();
 		~GasOil_RZ_NIT();
 	
-		void setSnapshotter(std::string type);
 		void setPeriod(int period);
 	};
 };

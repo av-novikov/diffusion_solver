@@ -31,10 +31,6 @@ void GasOil2DNITSolver::writeData()
 	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.s << endl; 
 }
 
-void GasOil2DNITSolver::fill()
-{
-}
-
 void GasOil2DNITSolver::control()
 {
 	writeData();
@@ -55,22 +51,6 @@ void GasOil2DNITSolver::control()
 		model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
-}
-
-void GasOil2DNITSolver::start()
-{
-	int counter = 0;
-	iterations = 8;
-		
-	model->setPeriod(curTimePeriod);
-	
-	while(cur_t < Tt)
-	{
-		control();
-		model->snapshot_all(counter++);
-		doNextStep();		
-		copyTimeLayer();
-	}
 }
 
 void GasOil2DNITSolver::doNextStep()
@@ -109,10 +89,6 @@ void GasOil2DNITSolver::doNextStep()
 	construction_from_fz(model->cellsNum_r+2, model->cellsNum_z+2, TEMP);
 
 	cout << "Newton Iterations = " << iterations << endl;
-}
-
-void GasOil2DNITSolver::construct_solution()
-{
 }
 
 void GasOil2DNITSolver::construction_from_fz(int N, int n, int key)

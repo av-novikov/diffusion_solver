@@ -22,7 +22,6 @@ namespace gas1D
 		void RightBoundAppr (int MZ, int key);
 
 	protected:		
-		void construct_solution();
 		void construction_from_fz(int N, int n, int key);
 		void control();
 		void doNextStep();
@@ -35,9 +34,6 @@ namespace gas1D
 		Gas1DSolver(modelType* _model);
 		Gas1DSolver(modelType* _model, int i);
 		~Gas1DSolver();
-
-		void fill();
-		void start();
 	};
 
 	typedef Gas1DSolver<Gas1D> Gas1DSol;

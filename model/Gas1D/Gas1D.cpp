@@ -160,18 +160,6 @@ void Gas1D::setInitialState()
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props_sk[0].p_init;
 }
 
-void Gas1D::setSnapshotter(string type)
-{
-	if(type == "VTK")
-		snapshotter = new VTKSnapshotter<Gas1D>();
-	else if(type == "GRDECL")
-		snapshotter = new GRDECLSnapshotter<Gas1D>();
-	else
-		snapshotter = new GRDECLSnapshotter<Gas1D>();
-
-	snapshotter->setModel(this);
-}
-
 void Gas1D::setPerforated()
 {
 	Qcell[0] = 0.0;
@@ -190,16 +178,6 @@ void Gas1D::setPeriod(int period)
 	props_sk[0].radius_eff = props_sk[0].radiuses_eff[period];
 	props_sk[0].perm_eff = props_sk[0].perms_eff[period];
 	props_sk[0].skin = props_sk[0].skins[period];
-}
-
-void Gas1D::snapshot(int i)
-{
-	snapshotter->dump(i);
-}
-
-void Gas1D::snapshot_all(int i)
-{
-	snapshotter->dump_all(i);
 }
 
 double Gas1D::getRate()

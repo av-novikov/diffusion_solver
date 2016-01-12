@@ -45,10 +45,6 @@ void GasOil2DSolver::writeData()
 	plot_qcells << endl;
 }
 
-void GasOil2DSolver::fill()
-{
-}
-
 void GasOil2DSolver::control()
 {
 	writeData();
@@ -72,21 +68,6 @@ void GasOil2DSolver::control()
 		model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
-}
-
-void GasOil2DSolver::start()
-{
-	int counter = 0;
-	iterations = 8;
-
-	model->setPeriod(curTimePeriod);
-	while(cur_t < Tt)
-	{
-		control();
-		model->snapshot_all(counter++);
-		doNextStep();
-		copyTimeLayer();
-	}
 }
 
 void GasOil2DSolver::doNextStep()
@@ -377,10 +358,6 @@ void GasOil2DSolver::solveStep()
 	}
 
 	cout << "Newton Iterations = " << iterations << endl;
-}
-
-void GasOil2DSolver::construct_solution()
-{
 }
 
 void GasOil2DSolver::construction_from_fz(int N, int n, int key)

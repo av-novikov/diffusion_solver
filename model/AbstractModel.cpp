@@ -3,6 +3,7 @@
 
 #include "model/Oil1D/Oil1D.h"
 #include "model/Gas1D/Gas1D.h"
+#include "model/Gas1D/Gas1D_simple.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
@@ -11,20 +12,21 @@
 using namespace std;
 
 template <typename varType, typename propsType,
-template <typename varType> class cellType>
-AbstractModel<varType, propsType, cellType>::AbstractModel()
+template <typename varType> class cellType, class modelType>
+AbstractModel<varType, propsType, cellType, modelType>::AbstractModel()
+{
+	isWriteSnaps = false;
+}
+
+template <typename varType, typename propsType,
+template <typename varType> class cellType, class modelType>
+AbstractModel<varType, propsType, cellType, modelType>::~AbstractModel()
 {
 }
 
 template <typename varType, typename propsType,
-template <typename varType> class cellType>
-AbstractModel<varType, propsType, cellType>::~AbstractModel()
-{
-}
-
-template <typename varType, typename propsType,
-template <typename varType> class cellType>
-void AbstractModel<varType, propsType, cellType>::setInitialState()
+template <typename varType> class cellType, class modelType>
+void AbstractModel<varType, propsType, cellType, modelType>::setInitialState()
 {
 	vector<cellType<varType> >::iterator it;
 	for(it = cells.begin(); it != cells.end(); ++it)
@@ -35,8 +37,8 @@ void AbstractModel<varType, propsType, cellType>::setInitialState()
 }
 
 template <typename varType, typename propsType,
-template <typename varType> class cellType>
-void AbstractModel<varType, propsType, cellType>::load(propsType& props)
+template <typename varType> class cellType, class modelType>
+void AbstractModel<varType, propsType, cellType, modelType>::load(propsType& props)
 {
 	setProps(props);
 
@@ -46,15 +48,47 @@ void AbstractModel<varType, propsType, cellType>::load(propsType& props)
 }
 
 template <typename varType, typename propsType,
-template <typename varType> class cellType>
-int AbstractModel<varType, propsType, cellType>::getCellsNum()
+template <typename varType> class cellType, class modelType>
+int AbstractModel<varType, propsType, cellType, modelType>::getCellsNum()
 {
 	return cellsNum;
 }
 
-template class AbstractModel<Var1phase, oil1D::Properties, RadialCell>;
-template class AbstractModel<Var1phase, gas1D::Properties, RadialCell>;
-template class AbstractModel<Var1phaseNIT, oil1D_NIT::Properties, RadialCell>;
-template class AbstractModel<Var1phase, oil_rz::Properties, CylCell>;
-template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell>;
-template class AbstractModel<Var2phase, gasOil_rz::Properties, CylCell>;
+template <typename varType, typename propsType,
+template <typename varType> class cellType, class modelType>
+void AbstractModel<varType, propsType, cellType, modelType>::setSnapshotter(string type, modelType* model)
+{
+	if(type == "VTK") {
+		snapshotter = new VTKSnapshotter<modelType>();
+		snapshotter->setModel(model);
+		isWriteSnaps = true;
+	} else if(type == "GRDECL") {
+		snapshotter = new GRDECLSnapshotter<modelType>();
+		snapshotter->setModel(model);
+		isWriteSnaps = true;
+	} else {
+		isWriteSnaps = false;
+	}
+}
+
+template <typename varType, typename propsType,
+template <typename varType> class cellType, class modelType>
+void AbstractModel<varType, propsType, cellType, modelType>::snapshot(int i)
+{
+	snapshotter->dump(i);
+}
+
+template <typename varType, typename propsType,
+template <typename varType> class cellType, class modelType>
+void AbstractModel<varType, propsType, cellType, modelType>::snapshot_all(int i)
+{
+	snapshotter->dump_all(i);
+}
+
+template class AbstractModel<Var1phase, oil1D::Properties, RadialCell, oil1D::Oil1D>;
+template class AbstractModel<Var1phase, gas1D::Properties, RadialCell, gas1D::Gas1D>;
+template class AbstractModel<Var1phase, gas1D::Properties, RadialCell, gas1D::Gas1D_simple>;
+template class AbstractModel<Var1phaseNIT, oil1D_NIT::Properties, RadialCell, oil1D_NIT::Oil1D_NIT>;
+template class AbstractModel<Var1phase, oil_rz::Properties, CylCell, oil_rz::Oil_RZ>;
+template class AbstractModel<Var2phase, gasOil_rz::Properties, CylCell, gasOil_rz::GasOil_RZ>;
+template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell, gasOil_rz_NIT::GasOil_RZ_NIT>;
