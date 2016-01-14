@@ -8,6 +8,7 @@
 
 class Gas1D_Wrapped : public gas1D::Gas1D
 {
+	friend class Gas1D_Test;
 protected:
 	inline double getVisc(double p) const
 	{
@@ -43,6 +44,8 @@ class Gas1D_Test : public BaseTest<gas1D::Properties, Scene<Gas1D_Wrapped, gas1D
 {
 protected:
 	gas1D::Properties* getProps();
+
+	double getStatRate() const;
 
 public:
 	void test();

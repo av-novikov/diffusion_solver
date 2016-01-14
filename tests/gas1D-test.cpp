@@ -55,7 +55,18 @@ Properties* Gas1D_Test::getProps()
 	return props;
 }
 
+double Gas1D_Test::getStatRate() const
+{
+	const Skeleton_Props& pr_sk = props->props_sk[0];
+	double p_w = *(--props->pwf.end());
+	Gas1D_Wrapped* model = scene.getModel();
+
+	return 4.0 * M_PI * pr_sk.perm_r * 0.986923 * 1.E-15 * pr_sk.height * p_w * p_w * (sqrt(pr_sk.p_out / p_w) - 1.0) / 
+			model->P_dim / model->t_dim / model->getVisc(p_w / model->P_dim) / log(props->r_e / props->r_w) / 1.E+5;
+}
+
 void Gas1D_Test::test()
 {
-	
+	Gas1D* model = scene.getModel();
+	ASSERT_NEAR( model->getRate() * model->Q_dim * 86400.0, getStatRate() * 86400.0, getStatRate() * RATE_REL_TOL * 86400.0);
 }

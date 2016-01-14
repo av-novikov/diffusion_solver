@@ -110,7 +110,7 @@ namespace gas1D
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-		template<typename> friend class Gas1DSolver;	
+		template<typename> friend class Gas1DSolver;
 
 	protected:
 		// Continuum properties

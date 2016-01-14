@@ -19,8 +19,7 @@ BaseTest<propsType, sceneType>::~BaseTest()
 template <typename propsType, typename sceneType>
 void BaseTest<propsType, sceneType>::run()
 {
-	propsType* props = getProps();
-	sceneType scene;
+	props = getProps();
 	scene.load(*props);
 	scene.setSnapshotterType("none");
 	scene.start();
