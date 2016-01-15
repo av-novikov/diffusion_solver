@@ -61,7 +61,7 @@ double Gas1D_Simple_Test::getStatRate() const
 	double p_w = *(--props->pwf.end());
 
 	return M_PI * pr_sk.perm_r * 0.986923 * 1.E-15 * pr_sk.height * (pr_sk.p_out * pr_sk.p_out - p_w * p_w) / 
-			props->props_gas.visc / log(props->r_e / props->r_w) / 1.E+5;
+			cPToPaSec(props->props_gas.visc) / log(props->r_e / props->r_w) / 1.E+5;
 }
 
 void Gas1D_Simple_Test::test()
