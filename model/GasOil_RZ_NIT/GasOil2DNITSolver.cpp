@@ -10,9 +10,18 @@ GasOil2DNITSolver::GasOil2DNITSolver(GasOil_RZ_NIT* _model) : AbstractSolver<Gas
 	plot_Tdyn.open("snaps/T_dyn.dat", ofstream::out);
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
 	plot_Sdyn.open("snaps/S_dyn.dat", ofstream::out);
+	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
 
 	t_dim = model->t_dim;
 	T_dim = model->T_dim;
+
+	n = model->Qcell.size();
+	dq.Initialize(n);
+	q.Initialize(n);
+
+	dpdq.Initialize(n, n-1);
+	mat.Initialize(n-1, n-1);
+	b.Initialize(n-1);
 
 	Tt = model->period[model->period.size()-1];
 }
@@ -22,13 +31,21 @@ GasOil2DNITSolver::~GasOil2DNITSolver()
 	plot_Tdyn.close();
 	plot_Pdyn.close();
 	plot_Sdyn.close();
+	plot_qcells.close();
 }
 
 void GasOil2DNITSolver::writeData()
 {
 	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.t * T_dim << endl;
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
-	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.s << endl; 
+	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.s << endl;
+
+	plot_qcells << cur_t * t_dim / 3600.0;
+	map<int,double>::iterator it;
+	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
+		plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+
+	plot_qcells << endl;
 }
 
 void GasOil2DNITSolver::control()
@@ -55,6 +72,44 @@ void GasOil2DNITSolver::control()
 
 void GasOil2DNITSolver::doNextStep()
 {
+	solveStep();
+
+	if(n > 1 && model->Q_sum > EQUALITY_TOLERANCE)
+	{
+		double H0 = fabs( model->solveH() );
+		if( H0 > 0.1 )
+		{
+			printWellRates();
+			fillq();
+
+			double mult = 0.9;
+			double H = H0;			
+
+			while(H > H0 / 50.0 || H > 0.05)
+			{
+				solveDq(mult);
+
+				int i = 0;
+				map<int,double>::iterator it = model->Qcell.begin();
+
+				while(it != model->Qcell.end())
+				{
+					q[i] += mult * dq[i];
+					it->second = q[i];
+					i++;	++it;
+				}
+				
+				solveStep();
+				printWellRates();
+
+				H = fabs( model->solveH() );
+			}
+		}
+	}
+}
+
+void GasOil2DNITSolver::solveStep()
+{
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
 	double averPresPrev = averValue(1);
@@ -77,18 +132,125 @@ void GasOil2DNITSolver::doNextStep()
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
 
-		if(varIdx == PRES)
+		/*if(varIdx == PRES)
 			cout << "BadPresValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.p << endl;
 		else if(varIdx == SAT)
-			cout << "BadSatValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.s << endl;
+			cout << "BadSatValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.s << endl;*/
 
 		iterations++;
 	}
+	cout << "Newton Iterations = " << iterations << endl;
 	
 	Solve(model->cellsNum_r+1, model->cellsNum_z+2, TEMP);
 	construction_from_fz(model->cellsNum_r+2, model->cellsNum_z+2, TEMP);
+}
 
-	cout << "Newton Iterations = " << iterations << endl;
+void GasOil2DNITSolver::fillq()
+{
+	int i = 0;
+	map<int,double>::iterator it = model->Qcell.begin();
+	while(it != model->Qcell.end())
+	{
+		q[i++] = it->second;
+		++it;
+	}
+}
+
+void GasOil2DNITSolver::fillDq()
+{
+	for(int i = 0; i < n; i++)
+		dq[i] = 0.0;
+}
+
+void GasOil2DNITSolver::solveDq(double mult)
+{
+	fillDq();
+	filldPdQ(mult);
+	solveStep();
+	solveSystem();
+
+	int i = 0;
+	map<int,double>::iterator it;
+	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
+	{
+		cout << "dq[" << it->first << "] = " << dq[i++] * model->Q_dim * 86400.0 << endl;
+	}
+	cout << endl;
+}
+
+void GasOil2DNITSolver::filldPdQ(double mult)
+{
+	double p1, p2, ratio;
+	ratio = mult * 0.001 / (double)(n);
+	
+	int i = 0, j = 0;
+	map<int,double>::iterator it0 = model->Qcell.begin();
+	map<int,double>::iterator it1 = model->Qcell.begin();
+	map<int,double>::iterator it2 = it1;	++it2;
+	while(it1 != model->Qcell.end())
+	{
+		j = 0;
+		it2 = model->Qcell.begin();		++it2;
+		while(it2 != model->Qcell.end())
+		{
+			model->setRateDeviation(it2->first, -ratio);
+			model->setRateDeviation(it0->first, ratio);
+			solveStep();
+			p1 = model->cells[ it1->first ].u_next.p;
+
+			model->setRateDeviation(it2->first, 2.0 * ratio);
+			model->setRateDeviation(it0->first, -2.0 * ratio);
+			solveStep();
+			p2 = model->cells[ it1->first ].u_next.p;
+
+			model->setRateDeviation(it2->first, -ratio);
+			model->setRateDeviation(it0->first, ratio);
+
+			dpdq[i][j++] = (p2 - p1) / ( 2.0 * ratio * model->Q_sum);
+
+			++it2;
+		}
+		i++;
+		++it1;
+	}
+}
+
+void GasOil2DNITSolver::solveSystem()
+{
+	double s = 0.0, p1, p2;
+	map<int,double>::iterator it;
+
+	for(int i = 0; i < n-1; i++)
+	{
+		for(int j = 0; j < n-1; j++)
+		{
+			s = 0.0;
+			for(int k = 0; k < n-1; k++)
+				s += ( dpdq[k+1][j] - dpdq[k][j] ) * ( dpdq[k+1][i] - dpdq[k][i] );
+			mat[i][j] = s;
+		}
+		
+		s = 0.0;
+		it = model->Qcell.begin();
+		for(int k = 0; k < n-1; k++)
+		{
+			p1 = model->cells[ it->first ].u_next.p;
+			p2 = model->cells[ (++it)->first ].u_next.p;
+			s += ( p2 - p1 ) * ( dpdq[k+1][i] - dpdq[k][i] );
+		}
+		b[i] = -s;
+	}
+
+	MC_LU rateSystem(mat, b);
+	rateSystem.LU_Solve();
+
+	s = 0.0;
+	for(int i = 0; i < n-1; i++)
+	{
+		dq[i+1] = rateSystem.ptResult[i];
+		s += rateSystem.ptResult[i];
+	}
+	dq[0] = - s;
 }
 
 void GasOil2DNITSolver::construction_from_fz(int N, int n, int key)

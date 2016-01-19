@@ -114,7 +114,7 @@ void GasOil_RZ_NIT::setProps(Properties& props)
 
 void GasOil_RZ_NIT::makeDimLess()
 {
-		// Main units
+	// Main units
 	R_dim = r_w;
 	t_dim = 3600.0;
 	P_dim = BAR_TO_PA;
@@ -267,16 +267,27 @@ void GasOil_RZ_NIT::setPeriod(int period)
 {
 	Q_sum = rate[period];
 
-	map<int,double>::iterator it;
-	for(it = Qcell.begin(); it != Qcell.end(); ++it)
-		it->second = Q_sum * cells[ it->first ].hz / height_perf;
-	
+	if(period == 0 || rate[period-1] < EQUALITY_TOLERANCE ) {
+		map<int,double>::iterator it;
+		for(it = Qcell.begin(); it != Qcell.end(); ++it)
+			it->second = Q_sum * cells[ it->first ].hz / height_perf;
+	} else {
+		map<int,double>::iterator it;
+		for(it = Qcell.begin(); it != Qcell.end(); ++it)
+			it->second = it->second * Q_sum / rate[period-1];
+	}
+
 	for(int i = 0; i < cellsNum_z+2; i++)
 	{
 		r_eff[i] = props_sk.r_eff[i][period];
 		Perm_eff[i] = props_sk.perm_eff[i][period];
 		skin[i] = props_sk.skin[i][period];
 	}
+}
+
+void GasOil_RZ_NIT::setRateDeviation(int num, double ratio)
+{
+	Qcell[num] += Q_sum * ratio;
 }
 
 double GasOil_RZ_NIT::solve_eq1(int cur)
@@ -558,6 +569,23 @@ double GasOil_RZ_NIT::solve_eq3(int cur)
 
 		H += 1.0 / cell.V * getTrans(cur, neighbor[i]) * (next.p - cells[ neighbor[i] ].u_next.p) *
 			getKr_oil(upwd.s) / props_oil.visc * getRho_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+	}
+
+	return H;
+}
+
+double GasOil_RZ_NIT::solveH()
+{
+	double H = 0.0;
+	double p1, p0;
+
+	map<int,double>::iterator it = Qcell.begin();
+	for(int i = 0; i < Qcell.size()-1; i++)	
+	{
+		p0 = cells[ it->first ].u_next.p;
+		p1 = cells[ (++it)->first ].u_next.p;
+
+		H += (p1 - p0) * (p1 - p0) / 2.0;
 	}
 
 	return H;

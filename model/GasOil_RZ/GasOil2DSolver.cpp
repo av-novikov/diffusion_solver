@@ -54,10 +54,7 @@ void GasOil2DSolver::control()
 		curTimePeriod++;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
-		isChange = true;
 	}
-	else
-		isChange = false;
 
 	if(model->ht <= model->ht_max && iterations < 6)
 		model->ht = model->ht * 1.5;
@@ -94,10 +91,7 @@ void GasOil2DSolver::doNextStep()
 
 				while(it != model->Qcell.end())
 				{
-					//if(isChange)
-					//	q[i] += 5.0 * mult * H * dq[i];
-					//else
-						q[i] += mult * dq[i];
+					q[i] += mult * dq[i];
 					it->second = q[i];
 					i++;	++it;
 				}

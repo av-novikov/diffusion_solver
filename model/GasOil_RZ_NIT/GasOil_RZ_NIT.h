@@ -232,6 +232,8 @@ namespace gasOil_rz_NIT
 		void buildGridLog();
 		// Set perforated cells
 		void setPerforated();
+		// Set some deviation to rate distribution
+		void setRateDeviation(int num, double ratio);
 
 		// Service functions
 		inline double upwindIsCur(int cur, int beta)
@@ -328,8 +330,8 @@ namespace gasOil_rz_NIT
 		};
 		inline double getBoreB_oil(double p, double p_bub, bool SATUR)
 		{
-			//return props_oil.b_bore;
-			return getB_oil(p, p_bub, SATUR);
+			return props_oil.b_bore;
+			//return getB_oil(p, p_bub, SATUR);
 		};
 		inline double getB_oil_dp(double p, double p_bub, bool SATUR)
 		{
@@ -595,6 +597,9 @@ namespace gasOil_rz_NIT
 
 		// Solves intensity of phase transition
 		double solve_eq3(int cur);
+
+		// Finds functional
+		double solveH();
 
 	public:
 		GasOil_RZ_NIT();
