@@ -132,14 +132,14 @@ gasOil_rz_NIT::Properties* getProps()
 	gasOil_rz_NIT::Properties* props = new gasOil_rz_NIT::Properties();
 
 	props->cellsNum_r = 100;
-	props->cellsNum_z = 25;
+	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(2000000);
-	props->timePeriods.push_back(4000000.0);
+	props->timePeriods.push_back(6000000);
 	
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(30.0);
+	props->rates.push_back(10.0);
 	props->rates.push_back(0.0);
 
 	props->ht = 1000.0;
@@ -148,32 +148,29 @@ gasOil_rz_NIT::Properties* getProps()
 	
 	props->alpha = 7200.0;
 
-	props->perfIntervals.push_back( make_pair(9, 9) );
-	props->perfIntervals.push_back( make_pair(11, 11) );
-	props->perfIntervals.push_back( make_pair(13, 13) );
-	props->perfIntervals.push_back( make_pair(15, 15) );
+	props->perfIntervals.push_back( make_pair(1, 1) );
 
 	props->r_w = 0.1524;
-	props->r_e = 3000.0;
+	props->r_e = 1000.0;
 
 	gasOil_rz_NIT::Skeleton_Props tmp;
-	tmp.cellsNum_z = 25;
-	tmp.m = 0.01;
-	tmp.p_init = tmp.p_out = tmp.p_bub = 160.0 * 1.0e+5;
+	tmp.cellsNum_z = 1;
+	tmp.m = 0.2;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
 	tmp.s_init = 0.999;
 	tmp.t_init = 302.0;
 	tmp.h1 = 1500.0;
-	tmp.h2 = 1505.0;
-	tmp.height = 5.0;
-	tmp.perm_r = 50.0;
-	tmp.perm_z = 1.0;
-	tmp.dens_stc = 2000.0;
-	tmp.beta = 6.41*1.E-10;
-	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.c = 800.0;
+	tmp.h2 = 1501.0;
+	tmp.height = 1.0;
+	tmp.perm_r = 200.0;
+	tmp.perm_z = 0.0;
+	tmp.dens_stc = 2200.0;
+	tmp.beta = 0.0;
+	tmp.skins.push_back(5.0);
+	tmp.skins.push_back(5.0);
+	tmp.radiuses_eff.push_back(2.0 * props->r_w);
+	tmp.radiuses_eff.push_back(2.0 * props->r_w);
+	tmp.c = 1800.0;
 	tmp.kappa_eff = 0.0;
 	tmp.lambda_r = tmp.lambda_z = 6.0;
 	props->props_sk.push_back( tmp );
@@ -181,21 +178,21 @@ gasOil_rz_NIT::Properties* getProps()
 	props->depth_point = 1500.0;
 
 	// Thermal properties
-	props->props_oil.visc = 0.25137;
-	props->props_oil.b_bore = 1.56;
-	props->props_oil.dens_stc = 855.0;
-	props->props_oil.beta = 1.24703e-09;
-	props->props_oil.jt = 4.5 * 1.e-6;
-	props->props_oil.ad = 2.0 * 1.e-6;
-	props->props_oil.c = 1600.0;
-	props->props_oil.lambda = 0.16;
+	props->props_oil.visc = 5.0;
+	props->props_oil.b_bore = 1.2;
+	props->props_oil.dens_stc = 800.0;
+	props->props_oil.beta = 0.0;
+	props->props_oil.jt = 4.0 * 1.e-7;
+	props->props_oil.ad = 0.0;
+	props->props_oil.c = 1880.0;
+	props->props_oil.lambda = 0.0;
 
 	props->props_gas.visc = 0.02833;
-	props->props_gas.dens_stc = 0.72275;
-	props->props_gas.jt = -1.4 * 1.e-5;
-	props->props_gas.ad = 2.0 * 1.e-6;
-	props->props_gas.c = 2000.0;
-	props->props_gas.lambda = 0.05;
+	props->props_gas.dens_stc = 0.8;
+	props->props_gas.jt = -4.0 * 1.e-6;
+	props->props_gas.ad = 0.0;
+	props->props_gas.c = 3200.0;
+	props->props_gas.lambda = 0.0;
 
 	props->L = -50.0*1.e3;
 	
@@ -693,8 +690,8 @@ gasOil_rz_NIT::Properties* getProps()
 	//props->props_gas.visc = 0.01;
 
 	// Defining relative permeabilities
-	setDataFromFile(props->z_factor, "props/z.txt");
-	setDataFromFile(props->visc_gas, "props/gas_visc.txt");
+	setDataFromFile(props->z_factor, "props/z_real.txt");
+	setDataFromFile(props->visc_gas, "props/gas_visc_real.txt");
 
 	return props;
 }*/
@@ -721,10 +718,10 @@ int main(int argc, char** argv)
 
 	/*gas1D::Properties* props = getProps();
 	double p_c = props->props_sk[0].p_out / 100000.0;
-	double p_bhp [] = {90.0, 100.0, 110.0};
-	double rate [] = {0.0, 0.0, 0.0}; 
+	double p_bhp [] = {80.0, 90.0, 100.0, 110.0, 120.0};
+	double rate [] = {0.0, 0.0, 0.0, 0.0, 0.0}; 
 
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 5; i++)
 	{
 		props->pwf.clear();
 		props->pwf.push_back( p_bhp[i] * 100000.0 );
@@ -739,8 +736,8 @@ int main(int argc, char** argv)
 		rate[i] = model->getRate() * model->Q_dim * 86400.0;
 	}
 
-	valarray<double> P_bhp (p_bhp, 3);
-	valarray<double> Rate (rate, 3);
+	valarray<double> P_bhp (p_bhp, 5);
+	valarray<double> Rate (rate, 5);
 
 	double a = (Rate * Rate).sum();
 	double b = (Rate * Rate * Rate).sum();
@@ -750,6 +747,7 @@ int main(int argc, char** argv)
 	double A = (d * (Rate * (p_c * p_c - P_bhp * P_bhp)).sum() - b * (Rate * Rate * (p_c * p_c - P_bhp * P_bhp)).sum() ) / (a * d - b * c);
 	double B = (-c * (Rate * (p_c * p_c - P_bhp * P_bhp)).sum() + a * (Rate * Rate * (p_c * p_c - P_bhp * P_bhp)).sum() ) / (a * d - b * c);
 */
+
 	/*oil_rz::Properties* props = getProps();
 	Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties> scene;
 	scene.load(*props);

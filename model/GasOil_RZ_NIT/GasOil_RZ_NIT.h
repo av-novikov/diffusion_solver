@@ -493,10 +493,10 @@ namespace gasOil_rz_NIT
 			{
 			case R_AXIS:
 				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0-cell.u_next.s) * props_gas.lambda) + 
-					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_r;
+					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_r * 2.0;
 			case Z_AXIS:
 				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0-cell.u_next.s) * props_gas.lambda) + 
-					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_z;
+					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_z * 2.0;
 			}
 		};
 		inline double getLambda(Cell& cell1, Cell& cell2)
@@ -504,13 +504,13 @@ namespace gasOil_rz_NIT
 			double cm;
 			if( abs(cell1.num - cell2.num) == 1) {
 				cm = cell1.r;
-				if(cm > 0.2524 / R_dim)
+				if(cm > 0.1724 / R_dim)
 					return ( cell1.hz * getLambda(cell2, Z_AXIS) + cell2.hz * getLambda(cell1, Z_AXIS) ) / (cell1.hz + cell2.hz);
 				else 
 					return ( cell1.hz * getLambdaWorse(cell2, Z_AXIS) + cell2.hz * getLambdaWorse(cell1, Z_AXIS) ) / (cell1.hz + cell2.hz);
 			} else {
 				cm = (cell1.r + sign(cell2.num - cell1.num) * cell1.hr / 2.0);
-				if(cm > 0.2524 / R_dim)
+				if(cm > 0.1724 / R_dim)
 					return ( cell1.hr * getLambda(cell2, R_AXIS) + cell2.hr * getLambda(cell1, R_AXIS) ) / (cell1.hr + cell2.hr);
 				else 
 					return ( cell1.hr * getLambdaWorse(cell2, R_AXIS) + cell2.hr * getLambdaWorse(cell1, R_AXIS) ) / (cell1.hr + cell2.hr);
@@ -593,6 +593,7 @@ namespace gasOil_rz_NIT
 		GasOil_RZ_NIT();
 		~GasOil_RZ_NIT();
 	
+		double getRate(int cur);
 		void setPeriod(int period);
 	};
 };

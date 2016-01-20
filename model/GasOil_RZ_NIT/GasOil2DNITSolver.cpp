@@ -42,8 +42,13 @@ void GasOil2DNITSolver::writeData()
 
 	plot_qcells << cur_t * t_dim / 3600.0;
 	map<int,double>::iterator it;
-	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
-		plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+	if(model->leftBoundIsRate)
+		for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
+			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+	else
+		for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
+			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+
 
 	plot_qcells << endl;
 }
