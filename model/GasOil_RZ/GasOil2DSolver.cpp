@@ -33,13 +33,23 @@ GasOil2DSolver::~GasOil2DSolver()
 
 void GasOil2DSolver::writeData()
 {
-	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
-	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.s << endl; 
-	
+	double p = 0.0, s = 0.0;
+
 	plot_qcells << cur_t * t_dim / 3600.0;
+
 	map<int,double>::iterator it;
 	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
-		plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+	{
+		p += model->cells[it->first].u_next.p;
+		s += model->cells[it->first].u_next.s;
+		if( model->leftBoundIsRate )
+			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+		else
+			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+	}
+
+	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
+	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 
 	plot_qcells << endl;
 }

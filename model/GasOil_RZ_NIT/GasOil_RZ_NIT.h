@@ -493,10 +493,10 @@ namespace gasOil_rz_NIT
 			{
 			case R_AXIS:
 				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0-cell.u_next.s) * props_gas.lambda) + 
-					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_r * 2.0;
+					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_r * 1.0;
 			case Z_AXIS:
 				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0-cell.u_next.s) * props_gas.lambda) + 
-					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_z * 2.0;
+					(1.0-getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_z * 1.0;
 			}
 		};
 		inline double getLambda(Cell& cell1, Cell& cell2)

@@ -469,6 +469,7 @@ namespace gasOil_rz
 		~GasOil_RZ();
 	
 		void setPeriod(int period);
+		double getRate(int cur);
 	};
 };
 

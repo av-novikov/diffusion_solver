@@ -648,3 +648,11 @@ double GasOil_RZ::solveH()
 
 	return H;
 }
+
+double GasOil_RZ::getRate(int cur)
+{
+	int neighbor = cur + cellsNum_z + 2;
+	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phase& next = cells[cur].u_next;
+	return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p);
+}
