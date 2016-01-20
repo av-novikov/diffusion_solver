@@ -127,27 +127,23 @@ using namespace std;
 	return props;
 }*/
 
-/*gasOil_rz_NIT::Properties* getProps()
+gasOil_rz_NIT::Properties* getProps()
 {
 	gasOil_rz_NIT::Properties* props = new gasOil_rz_NIT::Properties();
 
 	props->cellsNum_r = 100;
 	props->cellsNum_z = 25;
 
-	props->timePeriods.push_back(1296000.0);
-	props->timePeriods.push_back(2000000.0);
+	props->timePeriods.push_back(2000000);
+	props->timePeriods.push_back(4000000.0);
 	
+	props->leftBoundIsRate = true;
+	props->rightBoundIsPres = true;
 	props->rates.push_back(30.0);
 	props->rates.push_back(0.0);
- 
-	props->skins.push_back(0.0); 
-	props->skins.push_back(0.0); 
 
-	props->radius.push_back(0.1524);
-	props->radius.push_back(0.1524);
-
-	props->ht = 10.0;
-	props->ht_min = 1.0;
+	props->ht = 1000.0;
+	props->ht_min = 100.0;
 	props->ht_max  = 100000.0;
 	
 	props->alpha = 7200.0;
@@ -160,52 +156,48 @@ using namespace std;
 	props->r_w = 0.1524;
 	props->r_e = 3000.0;
 
-	props->p_init = 160.0 * 1.0e+5;
-	props->p_sat = 160.0 * 1.0e+5;
-	props->T_init = 302.058;
-	props->s_init = 0.999;
-	props->h1 = 1500.0;
-	props->h2 = 1505.0;
+	gasOil_rz_NIT::Skeleton_Props tmp;
+	tmp.cellsNum_z = 25;
+	tmp.m = 0.01;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 160.0 * 1.0e+5;
+	tmp.s_init = 0.999;
+	tmp.t_init = 302.0;
+	tmp.h1 = 1500.0;
+	tmp.h2 = 1505.0;
+	tmp.height = 5.0;
+	tmp.perm_r = 50.0;
+	tmp.perm_z = 1.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 6.41*1.E-10;
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.c = 800.0;
+	tmp.kappa_eff = 0.0;
+	tmp.lambda_r = tmp.lambda_z = 6.0;
+	props->props_sk.push_back( tmp );
+		
 	props->depth_point = 1500.0;
 
-	props->perm_r.reserve(props->cellsNum_z+2);
-	props->perm_z.reserve(props->cellsNum_z+2);
-	double perm = 50.0;
-	for(int i = 0; i < props->cellsNum_z+2; i++)
-	{
-		/*if(i < 10)
-			perm = 50.0;
-		else
-			perm = 1000.0;
-		props->perm_r.push_back( perm );
-		props->perm_z.push_back( perm / 50.0 );
-	}
-
-	props->m = 0.01;
-	props->visc_gas = 0.02833;
-	props->visc_oil = 0.25137;
-	props->b_oil_bore = 1.1;
-	props->dens_oil_stc = 800.026;
-	props->dens_gas_stc = 0.72275;
-	props->dens_sk_stc = 2000.0;
-	props->beta_oil = 4.0*1.E-9;
-	props->beta_sk = 0.0;
-
 	// Thermal properties
-	props->jt_oil = 4.5*1.e-6;
-	props->jt_gas = -1.4*1.e-5;
-	props->ad_oil = 2.e-6;
-	props->ad_gas = 2.e-6;
-	props->c_oil = 1600.0;
-	props->c_gas = 2000.0;
-	props->c_sk = 800.0;
-	props->kappa_eff = 0.0;//5.5*1e-6;
-	props->L = -50.0*1.e3;
+	props->props_oil.visc = 0.25137;
+	props->props_oil.b_bore = 1.56;
+	props->props_oil.dens_stc = 855.0;
+	props->props_oil.beta = 1.24703e-09;
+	props->props_oil.jt = 4.5 * 1.e-6;
+	props->props_oil.ad = 2.0 * 1.e-6;
+	props->props_oil.c = 1600.0;
+	props->props_oil.lambda = 0.16;
 
-	props->lambda_sk_r = 7.0;
-	props->lambda_sk_z = 5.0;
-	props->lambda_oil = 0.4;
-	props->lambda_gas = 0.05;
+	props->props_gas.visc = 0.02833;
+	props->props_gas.dens_stc = 0.72275;
+	props->props_gas.jt = -1.4 * 1.e-5;
+	props->props_gas.ad = 2.0 * 1.e-6;
+	props->props_gas.c = 2000.0;
+	props->props_gas.lambda = 0.05;
+
+	props->L = -50.0*1.e3;
 	
 	// Defining relative permeabilities
 	setDataFromFile(props->kr_oil, "props/koil.txt");
@@ -221,7 +213,7 @@ using namespace std;
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
-}*/
+}
 
 /*gasOil_rz::Properties* getProps()
 {
@@ -709,11 +701,11 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	/*gasOil_rz_NIT::Properties* props = getProps();
+	gasOil_rz_NIT::Properties* props = getProps();
 	Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSolver, gasOil_rz_NIT::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 
 	/*oil1D::Properties* props = getProps();
 	Scene<oil1D::Oil1D, oil1D::Oil1DSolver, oil1D::Properties> scene;
@@ -764,8 +756,8 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	testing::InitGoogleTest(&argc, argv);
-	int res = RUN_ALL_TESTS();
+	//testing::InitGoogleTest(&argc, argv);
+	//int res = RUN_ALL_TESTS();
 
 	return 0;
 }

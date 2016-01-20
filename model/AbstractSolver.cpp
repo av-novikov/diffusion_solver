@@ -39,9 +39,10 @@ void AbstractSolver<modelType>::start()
 	{
 		control();
 		if( model->isWriteSnaps )
-			model->snapshot(counter++);
+			model->snapshot_all(counter++);
 		doNextStep();
 		copyTimeLayer();
+		cout << "---------------------NEW TIME STEP---------------------" << endl;
 	}
 	writeData();
 }

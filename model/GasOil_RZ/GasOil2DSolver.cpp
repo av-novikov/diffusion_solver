@@ -13,7 +13,6 @@ GasOil2DSolver::GasOil2DSolver(GasOil_RZ* _model) : AbstractSolver<GasOil_RZ>(_m
 
 	t_dim = model->t_dim;
 
-	isChange = false;
 	n = model->Qcell.size();
 	dq.Initialize(n);
 	q.Initialize(n);

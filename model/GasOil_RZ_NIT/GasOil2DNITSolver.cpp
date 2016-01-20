@@ -350,19 +350,35 @@ void GasOil2DNITSolver::RightBoundAppr(int MZ, int key)
 
 	if(key == PRES)
 	{
-		int idx;
+		int idx = 0;
 		
-		for(int i = 0; i < model->cellsNum_z+2; i++)
+		for(int i = (model->cellsNum_r+1)*(model->cellsNum_z+2); i < (model->cellsNum_r+2)*(model->cellsNum_z+2); i++)
 		{
-			idx = 2 * i;
+			Cell& curr = model->cells[i];
+			Cell& nebr = model->cells[i-model->cellsNum_z-2];
 
 			// First eqn
-			A[idx][idx] = 1.0;
-			RightSide[idx][0] = model->varInit.p;
+			A[idx][idx] = model->solve_eqRight_dp(i);
+			A[idx][idx+1] = model->solve_eqRight_ds(i);
+			B[idx][idx] = model->solve_eqRight_dp_beta(i);
+			B[idx][idx+1] = model->solve_eqRight_ds_beta(i);
+			RightSide[idx][0] = -model->solve_eqRight(i) + 
+								A[idx][idx] * curr.u_next.p + A[idx][idx+1] * curr.u_next.s +
+								B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
 
-			// Second eqn
-			A[idx+1][idx+1] = 1.0;
-			RightSide[idx+1][0] = model->varInit.s;
+			if( model->rightBoundIsPres )
+			{
+				// Second eqn
+				A[idx+1][idx+1] = 1.0;
+				RightSide[idx+1][0] = model->props_sk[ model->getSkeletonIdx(model->cells[i]) ].s_init;
+			} else {
+				// Second eqn
+				A[idx+1][idx+1] = 1.0;
+				B[idx+1][idx+1] = -1.0;
+				RightSide[idx+1][0] = 0.0;
+			}
+
+			idx += 2;
 		}
 	}
 	else if(key == TEMP)
@@ -370,7 +386,7 @@ void GasOil2DNITSolver::RightBoundAppr(int MZ, int key)
 		for(int i = 0; i < model->cellsNum_z+2; i++)
 		{
 			A[i][i] = 1.0;
-			RightSide[i][0] = model->varInit.t;
+			RightSide[i][0] = model->props_sk[ model->getSkeletonIdx(model->cells[i]) ].t_init;
 		}
 	}
 	construction_bz(MZ,1);
@@ -469,10 +485,10 @@ void GasOil2DNITSolver::MiddleAppr(int current, int MZ, int key)
 							model->getLambda(cell, cell1) / cell.hz ) / (cell.hz + cell1.hz);
 			A[idx][idx] = 2.0 * ( min(model->getA(cell, NEXT, R_AXIS), 0.0) -
 							model->getLambda(cell, cell_next) * (cell.r + cell.hr / 2.0) / cell.r / cell.hr ) / (cell.hr + cell_next.hr);
-			B[idx][idx] = model->getCn(cell.u_next) / model->ht - C[idx][idx] - B[idx][idx-1] - B[idx][idx+1] - A[idx][idx];
+			B[idx][idx] = model->getCn(cell) / model->ht - C[idx][idx] - B[idx][idx-1] - B[idx][idx+1] - A[idx][idx];
 			
-			RightSide[idx][0] = model->getCn(cell.u_next) * cell.u_prev.t / model->ht + 
-								model->getAd(cell.u_next) * (cell.u_next.p - cell.u_prev.p) / model->ht -
+			RightSide[idx][0] = model->getCn(cell) * cell.u_prev.t / model->ht + 
+								model->getAd(cell) * (cell.u_next.p - cell.u_prev.p) / model->ht -
 								model->getJT(cell, NEXT, R_AXIS) * model->getNablaP(cell, NEXT, R_AXIS) - 
 								model->getJT(cell, NEXT, Z_AXIS) * model->getNablaP(cell, NEXT, Z_AXIS) - 
 								model->solve_eq3(i) * model->L;

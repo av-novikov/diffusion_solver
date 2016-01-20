@@ -342,11 +342,11 @@ namespace gasOil_rz
 		};
 
 		// Thermal functions
-		inline double getRho_oil(double p, double p_bub, bool SATUR)
+		inline double getRho_oil(double p, double p_bub, bool SATUR) const
 		{
 			return (props_oil.dens_stc + getRs(p, p_bub, SATUR) * props_gas.dens_stc) / getB_oil(p, p_bub, SATUR);
 		};
-		inline double getRho_gas(double p)
+		inline double getRho_gas(double p) const
 		{
 			return props_gas.dens_stc / getB_gas(p);
 		};
