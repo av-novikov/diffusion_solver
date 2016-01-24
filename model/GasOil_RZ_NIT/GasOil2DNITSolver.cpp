@@ -23,6 +23,7 @@ GasOil2DNITSolver::GasOil2DNITSolver(GasOil_RZ_NIT* _model) : AbstractSolver<Gas
 	mat.Initialize(n-1, n-1);
 	b.Initialize(n-1);
 
+	isWellboreAffect = false;
 	Tt = model->period[model->period.size()-1];
 }
 
@@ -68,6 +69,33 @@ void GasOil2DNITSolver::control()
 		curTimePeriod++;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
+		
+		if(curTimePeriod == 1)
+		{
+			isWellboreAffect = true;
+			wellboreDuration = 30.0 * 3600.0 / model->t_dim;
+		}
+		if(curTimePeriod == 3)
+		{
+			isWellboreAffect = true;
+			wellboreDuration = 65.0 * 3600.0 / model->t_dim;
+		}
+		if(curTimePeriod == 4)
+		{
+			isWellboreAffect = true;
+			wellboreDuration = 60.0 * 3600.0 / model->t_dim;
+		}
+	}
+
+	if( isWellboreAffect )
+	{
+		if(cur_t > model->period[curTimePeriod-1] + wellboreDuration) {
+			isWellboreAffect = false;
+			model->setRate( model->rate[curTimePeriod] );
+		} else {
+			double rate = model->rate[curTimePeriod] + ((model->rate[curTimePeriod-1] - model->rate[curTimePeriod]) / (exp((cur_t - model->period[curTimePeriod-1]) / (wellboreDuration / 20.0)) + 1.0) );
+			model->setRate( rate );
+		}
 	}
 
 	if(model->ht <= model->ht_max && iterations < 6)

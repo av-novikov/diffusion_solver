@@ -595,6 +595,7 @@ namespace gasOil_rz_NIT
 	
 		double getRate(int cur);
 		void setPeriod(int period);
+		void setRate(double _rate);
 	};
 };
 

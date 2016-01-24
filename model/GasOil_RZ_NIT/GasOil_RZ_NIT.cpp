@@ -329,6 +329,13 @@ void GasOil_RZ_NIT::setPeriod(int period)
 	}
 }
 
+void GasOil_RZ_NIT::setRate(double _rate)
+{
+	map<int,double>::iterator it;
+	for(it = Qcell.begin(); it != Qcell.end(); ++it)
+		it->second = _rate * cells[ it->first ].hz / height_perf;
+}
+
 void GasOil_RZ_NIT::setRateDeviation(int num, double ratio)
 {
 	Qcell[num] += Q_sum * ratio;

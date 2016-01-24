@@ -37,6 +37,10 @@ class AbstractSolver {
 		virtual void control() = 0;
 		virtual void doNextStep() = 0;
 
+		// Wellbore storage effect
+		double wellboreDuration;
+		bool isWellboreAffect;
+
 	public:
 		AbstractSolver(modelType* _model);
 		virtual ~AbstractSolver();
