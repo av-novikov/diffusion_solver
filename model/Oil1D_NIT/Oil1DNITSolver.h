@@ -20,7 +20,11 @@ namespace oil1D_NIT
 		void doNextStep();
 		void writeData();
 
+		double T_dim;
+
 		std::ofstream plot_Pdyn;
+		std::ofstream plot_Tdyn;
+		std::ofstream plot_qcells;
 
 	public:
 		Oil1DNITSolver(Oil1D_NIT* _model);

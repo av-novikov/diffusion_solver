@@ -187,7 +187,6 @@ double Gas1D::getRate()
 	else {
 		Cell& cell = cells[0];
 		Cell& cell1 = cells[1];
-		double temp = getTrans(cell, cell1) / P_ATM * getCoeff(cell, cell1) * (cell1.u_next.p - cell.u_next.p);
 		return getTrans(cell, cell1) / P_ATM * getCoeff(cell, cell1) * (cell1.u_next.p - cell.u_next.p);
 	}
 }
