@@ -210,20 +210,6 @@ namespace oil1D_NIT
 		};
 		inline double getOilVelocity(Cell& cell, int varNum)
 		{
-			Var1phaseNIT* var;
-			switch(varNum)
-			{
-			case PREV:
-				var = &cell.u_prev;
-				break;
-			case ITER:
-				var = &cell.u_iter;
-				break;
-			case NEXT:
-				var = &cell.u_next;
-				break;
-			}
-
 			return -getPerm_r(cell) / props_oil.visc * getNablaP(cell, varNum);
 		};
 		inline double getCn(Cell& cell) const

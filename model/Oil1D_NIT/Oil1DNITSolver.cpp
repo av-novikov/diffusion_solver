@@ -96,7 +96,7 @@ void Oil1DNITSolver::construction_from_fz(int N, int n, int key)
 			model->cells[i].u_next.p += fz[i][1];
 	else if(key == TEMP)
 		for(int i = 0; i < N; i++)
-			model->cells[i].u_next.t += fz[i][1];
+			model->cells[i].u_next.t = fz[i][1];
 }
 
 void Oil1DNITSolver::LeftBoundAppr(int MZ, int key)
@@ -163,7 +163,8 @@ void Oil1DNITSolver::MiddleAppr(int current, int MZ, int key)
 							model->getLambda(cell, cell_next) * (cell.r + cell.hr / 2.0) / cell.r / cell.hr ) / (cell.hr + cell_next.hr);
 		B[0][0] = model->getCn(cell) / model->ht - C[0][0] - A[0][0];
 		
-		RightSide[0][0] = model->getAd(cell) * (cell.u_next.p - cell.u_prev.p) / model->ht -
+		RightSide[0][0] = model->getCn(cell) * cell.u_prev.t / model->ht + 
+							model->getAd(cell) * (cell.u_next.p - cell.u_prev.p) / model->ht -
 							model->getJT(cell, NEXT) * model->getNablaP(cell, NEXT);
 	}
 	construction_bz(MZ, 2);
