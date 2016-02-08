@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <fstream>
 
-#include "model/cells/CylindricalCell.h"
+#include "model/cells/CylindricalCell2D.h"
 
 template <class modelType>
 class Snapshotter {

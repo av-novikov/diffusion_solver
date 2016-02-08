@@ -89,6 +89,6 @@ template class AbstractModel<Var1phase, oil1D::Properties, RadialCell, oil1D::Oi
 template class AbstractModel<Var1phase, gas1D::Properties, RadialCell, gas1D::Gas1D>;
 template class AbstractModel<Var1phase, gas1D::Properties, RadialCell, gas1D::Gas1D_simple>;
 template class AbstractModel<Var1phaseNIT, oil1D_NIT::Properties, RadialCell, oil1D_NIT::Oil1D_NIT>;
-template class AbstractModel<Var1phase, oil_rz::Properties, CylCell, oil_rz::Oil_RZ>;
-template class AbstractModel<Var2phase, gasOil_rz::Properties, CylCell, gasOil_rz::GasOil_RZ>;
-template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell, gasOil_rz_NIT::GasOil_RZ_NIT>;
+template class AbstractModel<Var1phase, oil_rz::Properties, CylCell2D, oil_rz::Oil_RZ>;
+template class AbstractModel<Var2phase, gasOil_rz::Properties, CylCell2D, gasOil_rz::GasOil_RZ>;
+template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell2D, gasOil_rz_NIT::GasOil_RZ_NIT>;

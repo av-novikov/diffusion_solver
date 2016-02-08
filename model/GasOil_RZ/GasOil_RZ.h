@@ -6,14 +6,14 @@
 #include <string>
 
 #include "model/cells/Variables.hpp"
-#include "model/cells/CylindricalCell.h"
+#include "model/cells/CylindricalCell2D.h"
 #include "model/AbstractModel.hpp"
 #include "util/Interpolate.h"
 #include "util/utils.h"
 
 namespace gasOil_rz
 {
-	typedef CylCell<Var2phase> Cell;
+	typedef CylCell2D<Var2phase> Cell;
 
 	struct Skeleton_Props
 	{
@@ -123,7 +123,7 @@ namespace gasOil_rz
 		std::vector< std::pair<double,double> > Rs;
 	};
 
-	class GasOil_RZ : public AbstractModel<Var2phase, Properties, CylCell, GasOil_RZ>
+	class GasOil_RZ : public AbstractModel<Var2phase, Properties, CylCell2D, GasOil_RZ>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;

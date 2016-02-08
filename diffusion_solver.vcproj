@@ -189,7 +189,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\model\cells\CylindricalCell.h"
+				RelativePath=".\model\cells\CylindricalCell2D.h"
 				>
 			</File>
 			<File
@@ -238,6 +238,10 @@
 			</File>
 			<File
 				RelativePath=".\method\mcmath.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\oil1D-test.h"
 				>
 			</File>
 			<File
@@ -329,7 +333,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\model\cells\CylindricalCell.cpp"
+				RelativePath=".\model\cells\CylindricalCell2D.cpp"
 				>
 			</File>
 			<File
@@ -382,6 +386,10 @@
 			</File>
 			<File
 				RelativePath=".\method\mcmath.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\oil1D-test.cpp"
 				>
 			</File>
 			<File

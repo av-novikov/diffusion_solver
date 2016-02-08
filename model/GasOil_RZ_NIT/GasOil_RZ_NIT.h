@@ -6,14 +6,14 @@
 #include <string>
 
 #include "model/cells/Variables.hpp"
-#include "model/cells/CylindricalCell.h"
+#include "model/cells/CylindricalCell2D.h"
 #include "model/AbstractModel.hpp"
 #include "util/Interpolate.h"
 #include "util/utils.h"
 
 namespace gasOil_rz_NIT
 {
-	typedef CylCell<Var2phaseNIT> Cell;
+	typedef CylCell2D<Var2phaseNIT> Cell;
 
 	struct Skeleton_Props
 	{
@@ -150,7 +150,7 @@ namespace gasOil_rz_NIT
 		double L;
 	};
 
-	class GasOil_RZ_NIT : public AbstractModel<Var2phaseNIT, Properties, CylCell, GasOil_RZ_NIT>
+	class GasOil_RZ_NIT : public AbstractModel<Var2phaseNIT, Properties, CylCell2D, GasOil_RZ_NIT>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;

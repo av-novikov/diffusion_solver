@@ -1,5 +1,5 @@
-#ifndef CYLINDRICALCELL_H_
-#define CYLINDRICALCELL_H_
+#ifndef CYLINDRICALCELL2D_H_
+#define CYLINDRICALCELL2D_H_
 
 #define VAR_NUM 4
 #define PREV 0
@@ -12,7 +12,7 @@
 #include "model/cells/AbstractCell.hpp"
 
 template <typename varType>
-class CylCell : public AbstractCell<varType>
+class CylCell2D : public AbstractCell<varType>
 {
 public:
 	double r;
@@ -21,14 +21,14 @@ public:
 	double hr;
 	double hz;
 
-	CylCell();
-	CylCell(int _num, double _r, double _z, double _hr, double _hz);
-	~CylCell();
+	CylCell2D();
+	CylCell2D(int _num, double _r, double _z, double _hr, double _hz);
+	~CylCell2D();
 };
 
 namespace std {
 	template <typename varType>
-	inline std::ostream& operator<<(std::ostream& os, const CylCell<varType>& cell)
+	inline std::ostream& operator<<(std::ostream& os, const CylCell2D<varType>& cell)
 	{
 		os << "\nCell number:\t" << cell.num << std::endl;
 		os << "Mass center:\t" << cell.r << "\t" << cell.z << std::endl;
@@ -41,4 +41,4 @@ namespace std {
 	}
 }
 
-#endif /* CYLINDRICALCELL_H_ */
+#endif /* CYLINDRICALCELL2D_H_ */

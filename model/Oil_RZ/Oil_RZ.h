@@ -7,12 +7,12 @@
 
 #include "util/utils.h"
 #include "model/cells/Variables.hpp"
-#include "model/cells/CylindricalCell.h"
+#include "model/cells/CylindricalCell2D.h"
 #include "model/AbstractModel.hpp"
 
 namespace oil_rz
 {
-	typedef CylCell<Var1phase> Cell;
+	typedef CylCell2D<Var1phase> Cell;
 
 	struct Skeleton_Props
 	{
@@ -75,7 +75,7 @@ namespace oil_rz
 		
 		Oil_Props props_oil;
 	};
-	class Oil_RZ : public AbstractModel<Var1phase, Properties, CylCell, Oil_RZ>
+	class Oil_RZ : public AbstractModel<Var1phase, Properties, CylCell2D, Oil_RZ>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
