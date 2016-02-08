@@ -189,7 +189,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\model\cells\CylindricalCell2D.h"
+				RelativePath=".\model\cells\CylCell2D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\model\cells\CylCell3D.h"
 				>
 			</File>
 			<File
@@ -333,7 +337,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\model\cells\CylindricalCell2D.cpp"
+				RelativePath=".\model\cells\CylCell2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\model\cells\CylCell3D.cpp"
 				>
 			</File>
 			<File

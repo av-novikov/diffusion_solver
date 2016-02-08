@@ -7,7 +7,7 @@
 
 #include "util/utils.h"
 #include "model/cells/Variables.hpp"
-#include "model/cells/CylindricalCell2D.h"
+#include "model/cells/CylCell2D.h"
 #include "model/AbstractModel.hpp"
 
 namespace oil_rz

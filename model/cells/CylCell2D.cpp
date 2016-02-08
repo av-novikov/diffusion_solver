@@ -1,4 +1,4 @@
-#include "model/cells/CylindricalCell2D.h"
+#include "model/cells/CylCell2D.h"
 #include "model/cells/Variables.hpp"
 
 template <typename varType>
