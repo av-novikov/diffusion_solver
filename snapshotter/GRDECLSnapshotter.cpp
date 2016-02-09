@@ -9,6 +9,8 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
+#include "model/3D/GasOil_3D/GasOil_3D.h"
+
 using namespace std;
 
 template <class modelType>
@@ -264,3 +266,5 @@ template class GRDECLSnapshotter<oil1D_NIT::Oil1D_NIT>;
 template class GRDECLSnapshotter<oil_rz::Oil_RZ>;
 template class GRDECLSnapshotter<gasOil_rz::GasOil_RZ>;
 template class GRDECLSnapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>;
+
+template class GRDECLSnapshotter<gasOil_3d::GasOil_3D>;

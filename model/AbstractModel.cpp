@@ -9,6 +9,8 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
+#include "model/3D/GasOil_3D/GasOil_3D.h"
+
 using namespace std;
 
 template <typename varType, typename propsType,
@@ -92,3 +94,5 @@ template class AbstractModel<Var1phaseNIT, oil1D_NIT::Properties, RadialCell, oi
 template class AbstractModel<Var1phase, oil_rz::Properties, CylCell2D, oil_rz::Oil_RZ>;
 template class AbstractModel<Var2phase, gasOil_rz::Properties, CylCell2D, gasOil_rz::GasOil_RZ>;
 template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell2D, gasOil_rz_NIT::GasOil_RZ_NIT>;
+
+template class AbstractModel<Var2phase, gasOil_3d::Properties, CylCell3D, gasOil_3d::GasOil_3D>;

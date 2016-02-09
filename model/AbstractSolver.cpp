@@ -9,6 +9,8 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
+#include "model/3D/GasOil_3D/GasOil_3D.h"
+
 using namespace std;
 
 template <class modelType>
@@ -149,3 +151,5 @@ template class AbstractSolver<oil1D_NIT::Oil1D_NIT>;
 template class AbstractSolver<oil_rz::Oil_RZ>;
 template class AbstractSolver<gasOil_rz_NIT::GasOil_RZ_NIT>;
 template class AbstractSolver<gasOil_rz::GasOil_RZ>;
+
+template class AbstractSolver<gasOil_3d::GasOil_3D>;

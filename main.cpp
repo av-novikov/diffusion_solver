@@ -20,6 +20,8 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
+#include "model/3D/GasOil_3D/GasOil_3D.h"
+
 using namespace std;
 
 /*gasOil_rz_NIT::Properties* getProps()
@@ -709,7 +711,7 @@ using namespace std;
 	return props;
 }*/
 
-oil1D_NIT::Properties* getProps()
+/*oil1D_NIT::Properties* getProps()
 {
 	oil1D_NIT::Properties* props = new oil1D_NIT::Properties();
 
@@ -773,7 +775,7 @@ oil1D_NIT::Properties* getProps()
 	props->props_oil.lambda = 0.16;
 
 	return props;
-}
+}*/
 
 /*gasOil_rz_NIT::Properties* getProps()
 {
@@ -914,6 +916,73 @@ oil1D_NIT::Properties* getProps()
 	return props;
 }*/
 
+gasOil_3d::Properties* getProps()
+{
+	gasOil_3d::Properties* props = new gasOil_3d::Properties();
+
+	props->cellsNum_r = 100;
+	props->cellsNum_phi = 30;
+	props->cellsNum_z = 10;
+
+	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
+	
+	props->leftBoundIsRate = true;
+	props->rightBoundIsPres = false;
+	props->rates.push_back(5.0);
+
+	props->ht = 1000.0;
+	props->ht_min = 100.0;
+	props->ht_max  = 5000000.0;
+	
+	props->alpha = 7200.0;
+
+	props->perfIntervals.push_back( make_pair(1, 3) );
+
+	props->r_w = 0.1;
+	props->r_e = 500.0;
+
+	gasOil_3d::Skeleton_Props tmp;
+	tmp.cellsNum_z = 10;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 160.0 * 1.0e+5;
+	tmp.s_init = 0.999;
+	tmp.h1 = 1500.0;
+	tmp.h2 = 1510.0;
+	tmp.height = 10.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 0.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back( tmp );
+
+	props->depth_point = 1500.0;
+
+	props->props_oil.visc = 0.62807;
+	props->props_oil.b_bore = 1.09754;
+	props->props_oil.dens_stc = 800.026;
+	props->props_oil.beta = 1.24703e-09;
+
+	props->props_gas.visc = 0.02833;
+	props->props_gas.dens_stc = 0.72275;
+
+	// Defining relative permeabilities
+	setDataFromFile(props->kr_oil, "props/koil.txt");
+	setDataFromFile(props->kr_gas, "props/kgas.txt");
+	
+	// Defining volume factors
+	//props->byDefault.B_oil = true;
+	setDataFromFile(props->B_oil, "props/Boil.txt");
+	//props->byDefault.B_gas = false;
+	setDataFromFile(props->B_gas, "props/Bgas.txt");
+
+	//props->byDefault.Rs = true;
+	setDataFromFile(props->Rs, "props/Rs.txt");
+
+	return props;
+}
+
 int main(int argc, char** argv)
 {
 	/*gasOil_rz_NIT::Properties* props = getProps();
@@ -922,11 +991,17 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	oil1D_NIT::Properties* props = getProps();
+	gasOil_3d::Properties* props = getProps();
+	Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.getModel()->snapshot_all(0);
+	
+	/*oil1D_NIT::Properties* props = getProps();
 	Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	/*gasOil_rz::Properties* props = getProps();
 	Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties> scene;

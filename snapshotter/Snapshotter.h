@@ -19,7 +19,7 @@ protected:
 	double t_dim;
 	double T_dim;
 
-	int nx, ny;
+	int nx, ny, nz;
 
 	std::string replace(std::string filename, std::string from, std::string to);
 	std::string getFileName(int i);

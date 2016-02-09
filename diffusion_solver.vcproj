@@ -225,6 +225,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\model\3D\GasOil_3D\GasOil3DSolver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\model\3D\GasOil_3D\GasOil_3D.h"
+				>
+			</File>
+			<File
 				RelativePath=".\model\GasOil_RZ\GasOil_RZ.h"
 				>
 			</File>
@@ -281,11 +289,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\props\Scene.h"
+				RelativePath=".\Scene.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Scene.h"
+				RelativePath=".\props\Scene.h"
 				>
 			</File>
 			<File
@@ -370,6 +378,14 @@
 			</File>
 			<File
 				RelativePath=".\model\GasOil_RZ\GasOil2DSolver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\model\3D\GasOil_3D\GasOil3DSolver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\model\3D\GasOil_3D\GasOil_3D.cpp"
 				>
 			</File>
 			<File

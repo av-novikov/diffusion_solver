@@ -62,8 +62,6 @@ class AbstractModel
 		virtual void setInitialState();
 		
 		Snapshotter<modelType>* snapshotter;
-		void snapshot(int i);
-		void snapshot_all(int i);
 		bool isWriteSnaps;
 
 	public:
@@ -82,6 +80,9 @@ class AbstractModel
 		void load(propsType& props);
 		virtual void setPeriod(int period) = 0;
 		int getCellsNum();
+
+		void snapshot(int i);
+		void snapshot_all(int i);
 };
 
 #endif /* ABSTRACTMODEL_HPP_ */
