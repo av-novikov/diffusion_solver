@@ -28,7 +28,7 @@ void Oil1DNITSolver::writeData()
 {
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
 	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.t * T_dim << endl;
-	plot_qcells << cur_t * t_dim;
+	plot_qcells << cur_t * t_dim / 3600.0;
 	if( model->leftBoundIsRate )
 		plot_qcells << "\t" << model->Qcell[0] * model->Q_dim * 86400.0 << endl;
 	else
