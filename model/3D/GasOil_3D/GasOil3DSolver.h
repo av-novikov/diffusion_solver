@@ -63,6 +63,15 @@ namespace gasOil_3d
 			std::cout << "Summary rate deviation = " << DQ * model->Q_dim * 86400.0 << std::endl;
 			std::cout << std::endl;
 		};
+		inline int getCalcIdx(int idx)
+		{
+			if(idx < 0)
+				return 2 * model->cellsNum_phi * (model->cellsNum_z+2) + idx;
+			else if(idx > 2 * model->cellsNum_phi * (model->cellsNum_z+2) )
+				return idx - 2 * model->cellsNum_phi * (model->cellsNum_z+2);
+			else
+				return idx;
+		};
 
 	public:
 		GasOil3DSolver(GasOil_3D* _model);

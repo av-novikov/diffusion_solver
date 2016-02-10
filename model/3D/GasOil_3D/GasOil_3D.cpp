@@ -8,7 +8,7 @@ using namespace gasOil_3d;
 
 GasOil_3D::GasOil_3D()
 {
-	isWriteSnaps = true;
+	isWriteSnaps = false;
 }
 
 GasOil_3D::~GasOil_3D()
@@ -299,7 +299,7 @@ void GasOil_3D::setPerforated()
 		{
 			Qcell[i] = 0.0;
 			Cell& cell = cells[i];
-			height_perf += cell.hphi * cell.hr * cell.hz;
+			height_perf += cell.hphi * cell.r * cell.hz;
 		}
 	}
 }
@@ -314,7 +314,10 @@ void GasOil_3D::setPeriod(int period)
 	if(period == 0 || rate[period-1] < EQUALITY_TOLERANCE ) {
 		map<int,double>::iterator it;
 		for(it = Qcell.begin(); it != Qcell.end(); ++it)
-			it->second = Q_sum * cells[ it->first ].hz / height_perf;
+		{
+			Cell& cell = cells[ it->first ];
+			it->second = Q_sum * cell.hphi * cell.r * cell.hz / height_perf;
+		}
 	} else {
 		map<int,double>::iterator it;
 		for(it = Qcell.begin(); it != Qcell.end(); ++it)

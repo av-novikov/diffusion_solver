@@ -386,56 +386,76 @@ void GasOil3DSolver::MiddleAppr(int current, int MZ, int key)
 	if(key == PRES)
 	{
 		int idx = 0;
-		int i = current * (model->cellsNum_z+2);
 		
-		// Top cell
-		TopAppr(i, key);
-		idx+=2;
-
 		// Middle cells
-		for(i = current * (model->cellsNum_z+2) + 1; i < (current+1) * (model->cellsNum_z+2) - 1; i++)
+		for(int k = 0; k < model->cellsNum_phi; k++)
 		{
-			Var2phase& next = model->cells[i].u_next;
+			// Top cells		
+			TopAppr(idx, key);
+			idx+=2;
+			
+			for(int i = k*(model->cellsNum_z+2)*(model->cellsNum_r+2) + current*(model->cellsNum_z+2) + 1; i < k*(model->cellsNum_z+2)*(model->cellsNum_r+2) + (current+1)*(model->cellsNum_z+2) - 1; i++)
+			{
+				Var2phase& next = model->cells[i].u_next;
+				int neighbor [6];
+				model->getNeighborIdx(i, neighbor);
 
-			// First eqn
-			C[idx][idx] = model->solve_eq1_dp_beta(i, i - model->cellsNum_z - 2);
-			C[idx][idx+1] = model->solve_eq1_ds_beta(i, i - model->cellsNum_z - 2);
-			B[idx][idx-2] = model->solve_eq1_dp_beta(i, i-1);
-			B[idx][idx-1] = model->solve_eq1_ds_beta(i, i-1);
-			B[idx][idx] = model->solve_eq1_dp(i);
-			B[idx][idx+1] = model->solve_eq1_ds(i);
-			B[idx][idx+2] = model->solve_eq1_dp_beta(i, i+1);
-			B[idx][idx+3] = model->solve_eq1_ds_beta(i, i+1);
-			A[idx][idx] = model->solve_eq1_dp_beta(i, i + model->cellsNum_z + 2);
-			A[idx][idx+1] = model->solve_eq1_ds_beta(i, i + model->cellsNum_z + 2);
-			RightSide[idx][0] = -model->solve_eq1(i) + 
-								C[idx][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
-								B[idx][idx-2] * model->cells[i-1].u_next.p + B[idx][idx-1] * model->cells[i-1].u_next.s +
-								B[idx][idx] * model->cells[i].u_next.p + B[idx][idx+1] * model->cells[i].u_next.s + 
-								B[idx][idx+2] * model->cells[i+1].u_next.p + B[idx][idx+3] * model->cells[i+1].u_next.s + 
-								A[idx][idx] * model->cells[i+model->cellsNum_z+2].u_next.p + A[idx][idx+1] * model->cells[i+model->cellsNum_z+2].u_next.s;			
-			// Second eqn
-			C[idx+1][idx] = model->solve_eq2_dp_beta(i, i - model->cellsNum_z - 2);
-			C[idx+1][idx+1] = model->solve_eq2_ds_beta(i, i - model->cellsNum_z - 2);
-			B[idx+1][idx-2] = model->solve_eq2_dp_beta(i, i-1);
-			B[idx+1][idx-1] = model->solve_eq2_ds_beta(i, i-1);
-			B[idx+1][idx] = model->solve_eq2_dp(i);
-			B[idx+1][idx+1] = model->solve_eq2_ds(i);
-			B[idx+1][idx+2] = model->solve_eq2_dp_beta(i, i+1);
-			B[idx+1][idx+3] = model->solve_eq2_ds_beta(i, i+1);
-			A[idx+1][idx] = model->solve_eq2_dp_beta(i, i + model->cellsNum_z + 2);
-			A[idx+1][idx+1] = model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2);
-			RightSide[idx+1][0] = -model->solve_eq2(i) + 
-								C[idx+1][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx+1][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
-								B[idx+1][idx-2] * model->cells[i-1].u_next.p + B[idx+1][idx-1] * model->cells[i-1].u_next.s +
-								B[idx+1][idx] * model->cells[i].u_next.p + B[idx+1][idx+1] * model->cells[i].u_next.s + 
-								B[idx+1][idx+2] * model->cells[i+1].u_next.p + B[idx+1][idx+3] * model->cells[i+1].u_next.s + 
-								A[idx+1][idx] * model->cells[i+model->cellsNum_z+2].u_next.p + A[idx+1][idx+1] * model->cells[i+model->cellsNum_z+2].u_next.s;
+				const int phi_prev = getCalcIdx(idx-2*(model->cellsNum_z+2));
+				const int phi_next = getCalcIdx(idx+2*(model->cellsNum_z+2));
+
+				// First eqn
+				C[idx][idx] = model->solve_eq1_dp_beta(i, neighbor[0]);
+				C[idx][idx+1] = model->solve_eq1_ds_beta(i, neighbor[0]);
+				B[idx][idx-2] = model->solve_eq1_dp_beta(i, neighbor[2]);
+				B[idx][idx-1] = model->solve_eq1_ds_beta(i, neighbor[2]);
+				B[idx][phi_prev] = model->solve_eq1_dp_beta(i, neighbor[4]);
+				B[idx][phi_prev+1] = model->solve_eq1_ds_beta(i, neighbor[4]);
+				B[idx][idx] = model->solve_eq1_dp(i);
+				B[idx][idx+1] = model->solve_eq1_ds(i);
+				B[idx][idx+2] = model->solve_eq1_dp_beta(i, neighbor[3]);
+				B[idx][idx+3] = model->solve_eq1_ds_beta(i, neighbor[3]);
+				B[idx][phi_next] = model->solve_eq1_dp_beta(i, neighbor[5]);
+				B[idx][phi_next+1] = model->solve_eq1_ds_beta(i, neighbor[5]);
+				A[idx][idx] = model->solve_eq1_dp_beta(i, neighbor[1]);
+				A[idx][idx+1] = model->solve_eq1_ds_beta(i, neighbor[1]);
+				RightSide[idx][0] = -model->solve_eq1(i) + 
+					C[idx][idx] * model->cells[ neighbor[0] ].u_next.p + C[idx][idx+1] * model->cells[ neighbor[0] ].u_next.s + 
+					B[idx][idx-2] * model->cells[ neighbor[2] ].u_next.p + B[idx][idx-1] * model->cells[ neighbor[2] ].u_next.s +
+					B[idx][phi_prev] * model->cells[ neighbor[4] ].u_next.p + B[idx][phi_prev+1] * model->cells[ neighbor[4] ].u_next.s +
+					B[idx][idx] * model->cells[i].u_next.p + B[idx][idx+1] * model->cells[i].u_next.s + 
+					B[idx][idx+2] * model->cells[ neighbor[3] ].u_next.p + B[idx][idx+3] * model->cells[ neighbor[3] ].u_next.s + 
+					B[idx][phi_next] * model->cells[ neighbor[5] ].u_next.p + B[idx][phi_next+1] * model->cells[ neighbor[5] ].u_next.s +
+					A[idx][idx] * model->cells[ neighbor[1] ].u_next.p + A[idx][idx+1] * model->cells[ neighbor[1] ].u_next.s;			
+				// Second eqn
+				C[idx+1][idx] = model->solve_eq2_dp_beta(i, neighbor[0]);
+				C[idx+1][idx+1] = model->solve_eq2_ds_beta(i, neighbor[0]);
+				B[idx+1][idx-2] = model->solve_eq2_dp_beta(i, neighbor[2]);
+				B[idx+1][idx-1] = model->solve_eq2_ds_beta(i, neighbor[2]);
+				B[idx+1][phi_prev] = model->solve_eq2_dp_beta(i, neighbor[4]);
+				B[idx+1][phi_prev+1] = model->solve_eq2_ds_beta(i, neighbor[4]);
+				B[idx+1][idx] = model->solve_eq2_dp(i);
+				B[idx+1][idx+1] = model->solve_eq2_ds(i);
+				B[idx+1][idx+2] = model->solve_eq2_dp_beta(i, i+1);
+				B[idx+1][idx+3] = model->solve_eq2_ds_beta(i, i+1);
+				B[idx+1][phi_next] = model->solve_eq2_dp_beta(i, neighbor[5]);
+				B[idx+1][phi_next+1] = model->solve_eq2_ds_beta(i, neighbor[5]);
+				A[idx+1][idx] = model->solve_eq2_dp_beta(i, i + model->cellsNum_z + 2);
+				A[idx+1][idx+1] = model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2);
+				RightSide[idx+1][0] = -model->solve_eq2(i) + 
+					C[idx+1][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx+1][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
+					B[idx+1][idx-2] * model->cells[i-1].u_next.p + B[idx+1][idx-1] * model->cells[i-1].u_next.s +
+					B[idx+1][phi_prev] * model->cells[ neighbor[4] ].u_next.p + B[idx+1][phi_prev+1] * model->cells[ neighbor[4] ].u_next.s +
+					B[idx+1][idx] * model->cells[i].u_next.p + B[idx+1][idx+1] * model->cells[i].u_next.s + 
+					B[idx+1][idx+2] * model->cells[i+1].u_next.p + B[idx+1][idx+3] * model->cells[i+1].u_next.s + 
+					B[idx+1][phi_next] * model->cells[ neighbor[5] ].u_next.p + B[idx+1][phi_next+1] * model->cells[ neighbor[5] ].u_next.s +
+					A[idx+1][idx] * model->cells[i+model->cellsNum_z+2].u_next.p + A[idx+1][idx+1] * model->cells[i+model->cellsNum_z+2].u_next.s;
+				idx += 2;
+			}
+
+			// Bottom cells
+			BottomAppr(idx, key);
 			idx += 2;
 		}
-
-		// Bottom cell
-		BottomAppr(i, key);
 	}
 
 	construction_bz(MZ,2);
@@ -445,16 +465,13 @@ void GasOil3DSolver::TopAppr(int i, int key)
 {
 	if(key == PRES)
 	{
-		for(int i = 0; i < 2 * (model->cellsNum_z+2) * model->cellsNum_phi; i += 2 * (model->cellsNum_z+2) )
-		{
-			// First eqn
-			B[i][i] = 1.0;
-			B[i][i+2] = -1.0;
+		// First eqn
+		B[i][i] = 1.0;
+		B[i][i+2] = -1.0;
 
-			// Second eqn
-			B[i+1][i+1] = 1.0;
-			B[i+1][i+3] = -1.0;
-		}
+		// Second eqn
+		B[i+1][i+1] = 1.0;
+		B[i+1][i+3] = -1.0;
 	}
 }
 
@@ -462,15 +479,12 @@ void GasOil3DSolver::BottomAppr(int i, int key)
 {
 	if(key == PRES)
 	{
-		for(int i = 2*(model->cellsNum_z+1); i < 2 * (model->cellsNum_z+2) * model->cellsNum_phi; i += 2 * (model->cellsNum_z+2) )
-		{
-			// First eqn
-			B[i][i] = 1.0;
-			B[i][i-2] = -1.0;
+		// First eqn
+		B[i][i] = 1.0;
+		B[i][i-2] = -1.0;
 
-			// Second eqn
-			B[i+1][i+1] = 1.0;
-			B[i+1][i-1] = -1.0;
-		}
+		// Second eqn
+		B[i+1][i+1] = 1.0;
+		B[i+1][i-1] = -1.0;
 	}
 }

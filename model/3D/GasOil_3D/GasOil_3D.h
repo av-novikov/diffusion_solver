@@ -189,11 +189,26 @@ namespace gasOil_3d
 		{
 			neighbor[0] = cur - cellsNum_z - 2; 
 			neighbor[1] = cur + cellsNum_z + 2;
-			neighbor[2] = cur - (cellsNum_r + 2) * (cellsNum_z + 2);
-			neighbor[3] = cur + (cellsNum_r + 2) * (cellsNum_z + 2);
-			neighbor[4] = cur - 1;
-			neighbor[5] = cur + 1;
+			neighbor[2] = cur - 1;
+			neighbor[3] = cur + 1;
+			if(cur < (cellsNum_r + 2) * (cellsNum_z + 2))
+				neighbor[4] = cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+			else
+				neighbor[4] = cur - (cellsNum_r + 2) * (cellsNum_z + 2);
+			if(cur < (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1))
+				neighbor[5] = cur + (cellsNum_r + 2) * (cellsNum_z + 2);
+			else
+				neighbor[5] = cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
 		};
+		inline int getIdx(int i)
+		{
+			if( i < 0 )
+				return cellsNum + i;
+			else if( i > cellsNum)
+				return i - cellsNum;
+			else
+				return i;
+		}
 		inline int getSkeletonIdx(const Cell& cell) const
 		{
 			int idx = 0;
