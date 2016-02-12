@@ -24,6 +24,7 @@
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
 #include "model/3D/GasOil_3D/GasOil_3D.h"
+#include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
 #include <cmath>
 
@@ -41,6 +42,11 @@ VTKSnapshotter<gasOil_3d::GasOil_3D>::VTKSnapshotter()
 	pattern = prefix + "snap_%{STEP}.vtu";
 }
 
+template <>
+VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::VTKSnapshotter()
+{
+	pattern = prefix + "snap_%{STEP}.vtu";
+}
 
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()
@@ -584,8 +590,8 @@ void VTKSnapshotter<oil1D_NIT::Oil1D_NIT>::dump(int i)
 			polygon->GetPointIds()->SetId(3, k+nx-1);
 			polygons->InsertNextCell(polygon);
 
-			pres->InsertNextValue(cell.u_next.p * model->P_dim / BAR_TO_PA);
 			temp->InsertNextValue(cell.u_next.t * T_dim);
+			pres->InsertNextValue(cell.u_next.p * model->P_dim / BAR_TO_PA);
 			vel_oil->InsertNextValue(model->getOilVelocity(cell, NEXT));
 	}
 
@@ -1185,6 +1191,237 @@ void VTKSnapshotter<gasOil_3d::GasOil_3D>::dump_all(int i)
 }
 
 template <>
+void VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::dump_all(int i)
+{
+	using gasOil_3d_NIT::Cell;
+	
+	// Grid
+	vtkSmartPointer<vtkUnstructuredGrid> grid =
+		vtkSmartPointer<vtkUnstructuredGrid>::New();
+
+	// Points
+	vtkSmartPointer<vtkPoints> points =
+		vtkSmartPointer<vtkPoints>::New();
+
+	for(int m = 0; m < ny; m++)
+	{
+		for(int j = 1; j < nz; j++)
+		{
+			Cell& cell = model->cells[ j + m * nx * nz ];
+			points->InsertNextPoint(r_dim * (0.99 * cell.r) * cos(cell.phi - cell.hphi / 2.0), r_dim * (0.99 * cell.r) * sin(cell.phi - cell.hphi / 2.0), -r_dim * (cell.z-cell.hz/2.0));
+		}
+	
+		for(int k = 1; k < nx; k++)
+		{
+			for(int j = 1; j < nz; j++)
+			{
+				Cell& cell = model->cells[ j + k * nz + m * nx * nz];
+				points->InsertNextPoint(r_dim * (cell.r-cell.hr/2.0) * cos(cell.phi - cell.hphi / 2.0), r_dim * (cell.r-cell.hr/2.0) * sin(cell.phi - cell.hphi / 2.0), -r_dim * (cell.z-cell.hz/2.0));
+			}
+		}
+	}
+	grid->SetPoints(points);
+
+	// Data
+	vtkSmartPointer<vtkDoubleArray> temp = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	temp->SetName("temperature");
+
+	vtkSmartPointer<vtkDoubleArray> pres = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+
+	vtkSmartPointer<vtkDoubleArray> sat_oil = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	sat_oil->SetName("oilSaturation");
+
+	vtkSmartPointer<vtkDoubleArray> sat_gas = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	sat_gas->SetName("gasSaturation");
+
+	vtkSmartPointer<vtkDoubleArray> vel_oil = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	vel_oil->SetName("oilVelocity");
+	vel_oil->SetNumberOfComponents(3);
+
+	vtkSmartPointer<vtkDoubleArray> vel_gas = 
+		vtkSmartPointer<vtkDoubleArray>::New();
+	vel_gas->SetName("gasVelocity");
+	vel_gas->SetNumberOfComponents(3);
+
+	double vel [3];
+
+	vtkSmartPointer<vtkCellArray> hexs = 
+		vtkSmartPointer<vtkCellArray>::New();
+	
+	int l, j, k;
+	for(l = 0; l < ny-1; l++)
+	{
+		for(j = 0; j < nz-2; j++)
+		{	
+			Cell& cell = model->cells[ l*nx*nz + j + 1 ];
+
+			vtkSmartPointer<vtkHexahedron> hex =
+				vtkSmartPointer<vtkHexahedron>::New();
+			hex->GetPointIds()->SetId(0, j + l * nx * (nz-1));
+			hex->GetPointIds()->SetId(1, j + (l+1) * nx * (nz-1) );
+			hex->GetPointIds()->SetId(2, j + (l+1) * nx * (nz-1) + 1);
+			hex->GetPointIds()->SetId(3, j + l * nx * (nz-1) + 1);
+
+			hex->GetPointIds()->SetId(4, j + l * nx * (nz-1) + (nz-1) );
+			hex->GetPointIds()->SetId(5, j + (l+1) * nx * (nz-1) + (nz-1) );
+			hex->GetPointIds()->SetId(6, j + (l+1) * nx * (nz-1) + 1 + (nz-1) );
+			hex->GetPointIds()->SetId(7, j + l * nx * (nz-1) + 1 + (nz-1) );
+
+			hexs->InsertNextCell(hex);
+
+			temp->InsertNextValue(cell.u_next.t * T_dim);
+			pres->InsertNextValue(cell.u_next.p);
+			sat_oil->InsertNextValue(cell.u_next.s);
+			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
+			vel[0] = 0.0;
+			vel[1] = 0.0;	
+			vel[2] = 0.0;
+			vel_oil->InsertNextTuple(vel);
+			vel[0] = 0.0;
+			vel[1] = 0.0;	
+			vel[2] = 0.0;	
+			vel_gas->InsertNextTuple(vel);
+			//vel[0] = model->getOilVelocity(cell, NEXT, R_AXIS);	vel[1] = model->getOilVelocity(cell, NEXT, Z_AXIS);	
+			//vel_oil->InsertNextValue(vel);
+		}
+
+		// Middle cells
+		for(k = 1; k < nx-1; k++)
+		{
+			for(j = 0; j < nz-2; j++)
+			{		
+				Cell& cell = model->cells[ l*nx*nz + k*nz + j + 1 ];
+
+				vtkSmartPointer<vtkHexahedron> hex =
+					vtkSmartPointer<vtkHexahedron>::New();
+				hex->GetPointIds()->SetId(0, j + k*(nz-1) + l * nx * (nz-1));
+				hex->GetPointIds()->SetId(1, j + k*(nz-1) + (l+1) * nx * (nz-1) );
+				hex->GetPointIds()->SetId(2, j + k*(nz-1) + (l+1) * nx * (nz-1) + 1);
+				hex->GetPointIds()->SetId(3, j + k*(nz-1) + l * nx * (nz-1) + 1);
+
+				hex->GetPointIds()->SetId(4, j + (k+1)*(nz-1) + l * nx * (nz-1) );
+				hex->GetPointIds()->SetId(5, j + (k+1)*(nz-1) + (l+1) * nx * (nz-1) );
+				hex->GetPointIds()->SetId(6, j + (k+1)*(nz-1) + (l+1) * nx * (nz-1) + 1);
+				hex->GetPointIds()->SetId(7, j + (k+1)*(nz-1) + l * nx * (nz-1) + 1);
+
+				hexs->InsertNextCell(hex);
+
+				temp->InsertNextValue(cell.u_next.t * T_dim);
+				pres->InsertNextValue(cell.u_next.p);
+				sat_oil->InsertNextValue(cell.u_next.s);
+				sat_gas->InsertNextValue(1.0 - cell.u_next.s);
+				vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
+				vel[1] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);	
+				vel[2] = 0.0;
+				vel_oil->InsertNextTuple(vel);
+				vel[0] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, R_AXIS);
+				vel[1] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, Z_AXIS);	
+				vel[2] = 0.0;	
+				vel_gas->InsertNextTuple(vel);
+				//vel[0] = model->getOilVelocity(cell, NEXT, R_AXIS);	vel[1] = model->getOilVelocity(cell, NEXT, Z_AXIS);	
+				//vel_oil->InsertNextValue(vel);
+			}
+		}
+	}
+
+	for(j = 0; j < nz-2; j++)
+	{	
+		Cell& cell = model->cells[ l*nx*nz + j + 1 ];
+
+		vtkSmartPointer<vtkHexahedron> hex =
+			vtkSmartPointer<vtkHexahedron>::New();
+		hex->GetPointIds()->SetId(0, j + l * nx * (nz-1));
+		hex->GetPointIds()->SetId(1, j);
+		hex->GetPointIds()->SetId(2, j + 1);
+		hex->GetPointIds()->SetId(3, j + l * nx * (nz-1) + 1);
+
+		hex->GetPointIds()->SetId(4, j + l * nx * (nz-1) + (nz-1) );
+		hex->GetPointIds()->SetId(5, j + (nz-1) );
+		hex->GetPointIds()->SetId(6, j + 1 + (nz-1) );
+		hex->GetPointIds()->SetId(7, j + l * nx * (nz-1) + 1 + (nz-1) );
+
+		hexs->InsertNextCell(hex);
+
+		temp->InsertNextValue(cell.u_next.t * T_dim);
+		pres->InsertNextValue(cell.u_next.p);
+		sat_oil->InsertNextValue(cell.u_next.s);
+		sat_gas->InsertNextValue(1.0 - cell.u_next.s);
+		vel[0] = 0.0;
+		vel[1] = 0.0;	
+		vel[2] = 0.0;
+		vel_oil->InsertNextTuple(vel);
+		vel[0] = 0.0;
+		vel[1] = 0.0;	
+		vel[2] = 0.0;	
+		vel_gas->InsertNextTuple(vel);
+		//vel[0] = model->getOilVelocity(cell, NEXT, R_AXIS);	vel[1] = model->getOilVelocity(cell, NEXT, Z_AXIS);	
+		//vel_oil->InsertNextValue(vel);
+	}
+	
+	for(k = 1; k < nx-1; k++)
+	{
+		for(j = 0; j < nz-2; j++)
+		{		
+			Cell& cell = model->cells[ l*nx*nz + k*nz + j + 1 ];
+
+			vtkSmartPointer<vtkHexahedron> hex =
+				vtkSmartPointer<vtkHexahedron>::New();
+			hex->GetPointIds()->SetId(0, j + k*(nz-1) + l * nx * (nz-1));
+			hex->GetPointIds()->SetId(1, j + k*(nz-1) );
+			hex->GetPointIds()->SetId(2, j + k*(nz-1) + 1);
+			hex->GetPointIds()->SetId(3, j + k*(nz-1) + l * nx * (nz-1) + 1);
+
+			hex->GetPointIds()->SetId(4, j + (k+1)*(nz-1) + l * nx * (nz-1) );
+			hex->GetPointIds()->SetId(5, j + (k+1)*(nz-1) );
+			hex->GetPointIds()->SetId(6, j + (k+1)*(nz-1) + 1 );
+			hex->GetPointIds()->SetId(7, j + (k+1)*(nz-1) + l * nx * (nz-1) + 1 );
+
+			hexs->InsertNextCell(hex);
+
+			temp->InsertNextValue(cell.u_next.t * T_dim);
+			pres->InsertNextValue(cell.u_next.p);
+			sat_oil->InsertNextValue(cell.u_next.s);
+			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
+			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);	
+			vel[2] = 0.0;
+			vel_oil->InsertNextTuple(vel);
+			vel[0] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, Z_AXIS);	
+			vel[2] = 0.0;	
+			vel_gas->InsertNextTuple(vel);
+			//vel[0] = model->getOilVelocity(cell, NEXT, R_AXIS);	vel[1] = model->getOilVelocity(cell, NEXT, Z_AXIS);	
+			//vel_oil->InsertNextValue(vel);
+		}
+	}
+
+
+	grid->SetCells(VTK_HEXAHEDRON, hexs);
+
+	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(temp);
+	fd->AddArray(pres);
+	fd->AddArray(sat_oil);
+	fd->AddArray(sat_gas);
+	fd->AddArray(vel_oil);
+	fd->AddArray(vel_gas);
+
+	// Writing
+	vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer =
+		vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+	
+	writer->SetFileName( getFileName(i).c_str() );
+	writer->SetInputData(grid);
+	writer->Write();
+}
+
+template <>
 void VTKSnapshotter<oil_rz::Oil_RZ>::dump_all(int i)
 {
 	using oil_rz::Cell;
@@ -1299,3 +1536,4 @@ template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;
 template class VTKSnapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>;
 
 template class VTKSnapshotter<gasOil_3d::GasOil_3D>;
+template class VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;

@@ -1,21 +1,21 @@
-#include "model/3D/GasOil_3D/GasOil_3D.h"
+#include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 #include "util/utils.h"
 
 #include <cassert>
 
 using namespace std;
-using namespace gasOil_3d;
+using namespace gasOil_3d_NIT;
 
-GasOil_3D::GasOil_3D()
+GasOil_3D_NIT::GasOil_3D_NIT()
 {
 	isWriteSnaps = false;
 }
 
-GasOil_3D::~GasOil_3D()
+GasOil_3D_NIT::~GasOil_3D_NIT()
 {
 }
 
-void GasOil_3D::setProps(Properties& props)
+void GasOil_3D_NIT::setProps(Properties& props)
 {
 	leftBoundIsRate = props.leftBoundIsRate;
 	rightBoundIsPres = props.rightBoundIsPres;
@@ -72,6 +72,7 @@ void GasOil_3D::setProps(Properties& props)
 
 	alpha = props.alpha;
 	depth_point = props.depth_point;
+	L = props.L;
 
 	makeDimLess();
 	
@@ -85,13 +86,13 @@ void GasOil_3D::setProps(Properties& props)
 	Prs = setInvDataset(props.Rs, 1.0, P_dim / BAR_TO_PA);
 }
 
-void GasOil_3D::checkSkeletons(const vector<Skeleton_Props>& props)
+void GasOil_3D_NIT::checkSkeletons(const vector<Skeleton_Props>& props)
 {
 	vector<Skeleton_Props>::const_iterator it = props.begin();
 	double tmp;
 	int indxs = 0;
 
-//	assert( it->h2 - it->h1 == it->height );
+	assert( it->h2 - it->h1 == it->height );
 	indxs += it->cellsNum_z;
 	tmp = it->h2;
 	++it;
@@ -107,12 +108,14 @@ void GasOil_3D::checkSkeletons(const vector<Skeleton_Props>& props)
 	assert( indxs == cellsNum_z );
 }
 
-void GasOil_3D::makeDimLess()
+void GasOil_3D_NIT::makeDimLess()
 {
 	// Main units
 	R_dim = r_w;
 	t_dim = 3600.0;
 	P_dim = BAR_TO_PA;
+	T_dim = props_sk[0].t_init;
+
 
 	// Temporal properties
 	ht /= t_dim;
@@ -137,6 +140,11 @@ void GasOil_3D::makeDimLess()
 		props_sk[i].p_init /= P_dim;
 		props_sk[i].p_out /= P_dim;
 		props_sk[i].p_bub /= P_dim;
+		props_sk[i].t_init /= T_dim;
+
+		props_sk[i].c = props_sk[i].c / R_dim / R_dim * T_dim * t_dim * t_dim;
+		props_sk[i].lambda_r = props_sk[i].lambda_r * T_dim * t_dim / P_dim / R_dim / R_dim;
+		props_sk[i].lambda_z = props_sk[i].lambda_z * T_dim * t_dim / P_dim / R_dim / R_dim;
 
 		for(int j = 0; j < periodsNum; j++)
 		{
@@ -160,16 +168,27 @@ void GasOil_3D::makeDimLess()
 	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
 
+	props_oil.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_oil.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_oil.jt = props_oil.jt * P_dim / T_dim;
+	props_oil.ad = props_oil.ad * P_dim / T_dim;
+
 	// Gas properties
 	props_gas.visc /= (P_dim * t_dim);
 	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 
+	props_gas.c = props_gas.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_gas.lambda = props_gas.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_gas.jt = props_gas.jt * P_dim / T_dim;
+	props_gas.ad = props_gas.ad * P_dim / T_dim;
+
 	// Rest properties
 	alpha /= t_dim;
 	//depth_point = 0.0;
+	L = L / R_dim / R_dim * t_dim * t_dim;
 }
 
-void GasOil_3D::buildGridLog()
+void GasOil_3D_NIT::buildGridLog()
 {
 	cells.reserve( cellsNum );
 
@@ -273,7 +292,7 @@ void GasOil_3D::buildGridLog()
 	}
 }
 
-void GasOil_3D::setInitialState()
+void GasOil_3D_NIT::setInitialState()
 {
 	vector<Cell>::iterator it;
 	for(it = cells.begin(); it != cells.end(); ++it)
@@ -282,6 +301,7 @@ void GasOil_3D::setInitialState()
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
 		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_bub;
 		it->u_prev.s = it->u_iter.s = it->u_next.s = props.s_init;
+		it->u_prev.t = it->u_iter.t = it->u_next.t = props.t_init;
 		if(props.p_bub > props.p_init)
 			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
 		else
@@ -289,7 +309,7 @@ void GasOil_3D::setInitialState()
 	}
 }
 
-void GasOil_3D::setPerforated()
+void GasOil_3D_NIT::setPerforated()
 {
 	height_perf = 0.0;
 	vector<pair<int,int> >::iterator it;
@@ -304,7 +324,7 @@ void GasOil_3D::setPerforated()
 	}
 }
 
-void GasOil_3D::setPeriod(int period)
+void GasOil_3D_NIT::setPeriod(int period)
 {
 	if(leftBoundIsRate)
 		Q_sum = rate[period];
@@ -335,19 +355,19 @@ void GasOil_3D::setPeriod(int period)
 	}
 }
 
-void GasOil_3D::setRateDeviation(int num, double ratio)
+void GasOil_3D_NIT::setRateDeviation(int num, double ratio)
 {
 	Qcell[num] += Q_sum * ratio;
 }
 
-double GasOil_3D::solve_eq1(int cur)
+double GasOil_3D_NIT::solve_eq1(int cur)
 {
 	int neighbor [6];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var2phase& next = cell.u_next;
-	Var2phase& prev = cell.u_prev;
+	Var2phaseNIT& next = cell.u_next;
+	Var2phaseNIT& prev = cell.u_prev;
 	
 	double H = 0.0;
 	H = ( getPoro(next.p, cell) * next.s / getB_oil(next.p, next.p_bub, next.SATUR) - 
@@ -356,7 +376,7 @@ double GasOil_3D::solve_eq1(int cur)
 	for(int i = 0; i < 6; i++)
 	{
 		Cell& beta = cells[ neighbor[i] ];
-		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 
 		H += ht / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) *
 			getKr_oil(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
@@ -365,14 +385,14 @@ double GasOil_3D::solve_eq1(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq1_dp(int cur)
+double GasOil_3D_NIT::solve_eq1_dp(int cur)
 {
 	double upwind;
 	int neighbor [6];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var2phase& next = cell.u_next;
+	Var2phaseNIT& next = cell.u_next;
 	double Boil_upwd;
 	double Boil = getB_oil(next.p, next.p_bub, next.SATUR);
 	
@@ -383,7 +403,7 @@ double GasOil_3D::solve_eq1_dp(int cur)
 	for(int i = 0; i < 6; i++)
 	{
 		upwind = upwindIsCur(cur, neighbor[i]);
-		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Boil_upwd = getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
 		Cell& beta = cells[ neighbor[i] ];
 
@@ -394,14 +414,14 @@ double GasOil_3D::solve_eq1_dp(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq1_ds(int cur)
+double GasOil_3D_NIT::solve_eq1_ds(int cur)
 {
 	double upwind;	
 	int neighbor [6];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var2phase& next = cell.u_next;
+	Var2phaseNIT& next = cell.u_next;
 	
 	double H = 0.0;
 	H = getPoro(next.p, cell) / getB_oil(next.p, next.p_bub, next.SATUR);
@@ -409,7 +429,7 @@ double GasOil_3D::solve_eq1_ds(int cur)
 	for(int i = 0; i < 6; i++)
 	{
 		upwind = upwindIsCur(cur, neighbor[i]);
-		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Cell& beta = cells[ neighbor[i] ];
 
 		H += ht / cell.V * getTrans(cell, beta) * 
@@ -419,12 +439,12 @@ double GasOil_3D::solve_eq1_ds(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq1_dp_beta(int cur, int beta)
+double GasOil_3D_NIT::solve_eq1_dp_beta(int cur, int beta)
 {
 	Cell& cell = cells[cur];
 
 	double upwind = upwindIsCur(cur, beta);
-	Var2phase& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
 	double Boil_upwd = getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
 
 	return -ht / cell.V * getTrans(cell, cells[beta]) * 
@@ -432,25 +452,25 @@ double GasOil_3D::solve_eq1_dp_beta(int cur, int beta)
 			(1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) * getKr_oil(upwd.s) / props_oil.visc / Boil_upwd / Boil_upwd * getB_oil_dp(upwd.p, upwd.p_bub, upwd.SATUR) );
 }
 
-double GasOil_3D::solve_eq1_ds_beta(int cur, int beta)
+double GasOil_3D_NIT::solve_eq1_ds_beta(int cur, int beta)
 {
 	Cell& cell = cells[cur];
 
 	double upwind = upwindIsCur(cur, beta);
-	Var2phase& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
 
 	return ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
 			getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
 }
 
-double GasOil_3D::solve_eq2(int cur)
+double GasOil_3D_NIT::solve_eq2(int cur)
 {
 	int neighbor [6];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var2phase& next = cell.u_next;
-	Var2phase& prev = cell.u_prev;
+	Var2phaseNIT& next = cell.u_next;
+	Var2phaseNIT& prev = cell.u_prev;
 
 	double H = 0.0;
 	H = getPoro(next.p, cell) * ( (1.0 - next.s) / getB_gas(next.p) + next.s * getRs(next.p, next.p_bub, next.SATUR) / getB_oil(next.p, next.p_bub, next.SATUR) ) -
@@ -458,7 +478,7 @@ double GasOil_3D::solve_eq2(int cur)
 
 	for(int i = 0; i < 6; i++)
 	{
-		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Cell& beta = cells[ neighbor[i] ];
 
 		H += ht / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) * 
@@ -469,14 +489,14 @@ double GasOil_3D::solve_eq2(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq2_dp(int cur)
+double GasOil_3D_NIT::solve_eq2_dp(int cur)
 {
 	double upwind;	
 	int neighbor [6];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var2phase& next = cell.u_next;
+	Var2phaseNIT& next = cell.u_next;
 	double Boil_upwd, Bgas_upwd, rs_upwd;
 	double Boil = getB_oil(next.p, next.p_bub, next.SATUR);
 	double Bgas = getB_gas(next.p);
@@ -491,7 +511,7 @@ double GasOil_3D::solve_eq2_dp(int cur)
 	for(int i = 0; i < 6; i++)
 	{
 		upwind = upwindIsCur(cur, neighbor[i]);
-		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Boil_upwd = getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
 		Bgas_upwd = getB_gas(upwd.p);
 		rs_upwd = getRs(upwd.p, upwd.p_bub, upwd.SATUR);
@@ -507,14 +527,14 @@ double GasOil_3D::solve_eq2_dp(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq2_ds(int cur)
+double GasOil_3D_NIT::solve_eq2_ds(int cur)
 {
 	double upwind;	
 	int neighbor [6];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var2phase& next = cell.u_next;
+	Var2phaseNIT& next = cell.u_next;
 	
 	double H = 0.0;
 	H = getPoro(next.p, cell) * ( getRs(next.p, next.p_bub, next.SATUR) / getB_oil(next.p, next.p_bub, next.SATUR) - 1.0 / getB_gas(next.p) );
@@ -522,7 +542,7 @@ double GasOil_3D::solve_eq2_ds(int cur)
 	for(int i = 0; i < 6; i++)
 	{
 		upwind = upwindIsCur(cur, neighbor[i]);
-		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Cell& beta = cells[ neighbor[i] ];
 
 		H += ht / cell.V * getTrans(cell, beta) * upwind * (next.p - beta.u_next.p) * 
@@ -533,12 +553,12 @@ double GasOil_3D::solve_eq2_ds(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq2_dp_beta(int cur, int beta)
+double GasOil_3D_NIT::solve_eq2_dp_beta(int cur, int beta)
 {
 	Cell& cell = cells[cur];
 
 	double upwind = upwindIsCur(cur, beta);
-	Var2phase& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
 	double Boil_upwd = getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
 	double Bgas_upwd = getB_gas(upwd.p);
 	double rs_upwd = getRs(upwd.p, upwd.p_bub, upwd.SATUR);
@@ -550,23 +570,23 @@ double GasOil_3D::solve_eq2_dp_beta(int cur, int beta)
 			getKr_gas(upwd.s) / props_gas.visc / Bgas_upwd / Bgas_upwd * getB_gas_dp(upwd.p) ));
 }
 
-double GasOil_3D::solve_eq2_ds_beta(int cur, int beta)
+double GasOil_3D_NIT::solve_eq2_ds_beta(int cur, int beta)
 {
 	Cell& cell = cells[cur];
 
 	double upwind = upwindIsCur(cur, beta);
-	Var2phase& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
 
 	return ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
 		( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) +
 		getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
 }
 
-double GasOil_3D::solve_eqLeft(int cur)
+double GasOil_3D_NIT::solve_eqLeft(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phaseNIT& next = cells[cur].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
 	if( leftBoundIsRate )
 		return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p) - Qcell[cur];
@@ -574,11 +594,11 @@ double GasOil_3D::solve_eqLeft(int cur)
 		return next.p - Pwf;
 }
 
-double GasOil_3D::solve_eqLeft_dp(int cur)
+double GasOil_3D_NIT::solve_eqLeft_dp(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phaseNIT& next = cells[cur].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
 	if( leftBoundIsRate )
 		return -getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
@@ -586,11 +606,11 @@ double GasOil_3D::solve_eqLeft_dp(int cur)
 		return 1.0;
 }
 
-double GasOil_3D::solve_eqLeft_ds(int cur)
+double GasOil_3D_NIT::solve_eqLeft_ds(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phaseNIT& next = cells[cur].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
 	if( leftBoundIsRate )
 		return getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
@@ -598,11 +618,11 @@ double GasOil_3D::solve_eqLeft_ds(int cur)
 		return 0.0;
 }
 
-double GasOil_3D::solve_eqLeft_dp_beta(int cur)
+double GasOil_3D_NIT::solve_eqLeft_dp_beta(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phaseNIT& next = cells[cur].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
 	if( leftBoundIsRate )
 		return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
@@ -610,11 +630,11 @@ double GasOil_3D::solve_eqLeft_dp_beta(int cur)
 		return 0.0;
 }
 
-double GasOil_3D::solve_eqLeft_ds_beta(int cur)
+double GasOil_3D_NIT::solve_eqLeft_ds_beta(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phaseNIT& next = cells[cur].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
 	if( leftBoundIsRate )
 		return getTrans(cells[cur], cells[neighbor]) * (1.0-upwindIsCur(cur, neighbor)) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
@@ -622,7 +642,7 @@ double GasOil_3D::solve_eqLeft_ds_beta(int cur)
 		return 0.0;
 }
 
-double GasOil_3D::solve_eqRight(int cur)
+double GasOil_3D_NIT::solve_eqRight(int cur)
 {
 	const Cell& cell = cells[cur];
 
@@ -632,7 +652,7 @@ double GasOil_3D::solve_eqRight(int cur)
 		return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
 }
 
-double GasOil_3D::solve_eqRight_dp(int cur)
+double GasOil_3D_NIT::solve_eqRight_dp(int cur)
 {
 	if( rightBoundIsPres )
 		return 1.0;
@@ -640,12 +660,12 @@ double GasOil_3D::solve_eqRight_dp(int cur)
 		return 1.0;
 }
 
-double GasOil_3D::solve_eqRight_ds(int cur)
+double GasOil_3D_NIT::solve_eqRight_ds(int cur)
 {
 	return 0.0;
 }
 
-double GasOil_3D::solve_eqRight_dp_beta(int cur)
+double GasOil_3D_NIT::solve_eqRight_dp_beta(int cur)
 {
 	if( rightBoundIsPres )
 		return 0.0;
@@ -653,12 +673,37 @@ double GasOil_3D::solve_eqRight_dp_beta(int cur)
 		return -1.0;
 }
 
-double GasOil_3D::solve_eqRight_ds_beta(int cur)
+double GasOil_3D_NIT::solve_eqRight_ds_beta(int cur)
 {
 	return 0.0;
 }
 
-double GasOil_3D::solveH()
+double GasOil_3D_NIT::solve_eq3(int cur)
+{
+	int neighbor [6];
+	getNeighborIdx(cur, neighbor);
+
+	Cell& cell = cells[cur];
+	Var2phaseNIT& next = cell.u_next;
+	Var2phaseNIT& prev = cell.u_prev;
+	
+	double H = 0.0;
+	H = ( getPoro(next.p, cell) * next.s * getRho_oil(next.p, next.p_bub, next.SATUR) - 
+		getPoro(prev.p, cell) * prev.s * getRho_oil(prev.p, prev.p_bub, prev.SATUR) ) / ht;
+
+	for(int i = 0; i < 6; i++)
+	{
+		Cell& beta = cells[ neighbor[i] ];
+		Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
+
+		H += 1.0 / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) *
+			getKr_oil(upwd.s) / props_oil.visc * getRho_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+	}
+
+	return H;
+}
+
+double GasOil_3D_NIT::solveH()
 {
 	double H = 0.0;
 	double p1, p0;
@@ -675,10 +720,10 @@ double GasOil_3D::solveH()
 	return H;
 }
 
-double GasOil_3D::getRate(int cur)
+double GasOil_3D_NIT::getRate(int cur)
 {
 	int neighbor = cur + cellsNum_z + 2;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
-	Var2phase& next = cells[cur].u_next;
+	Var2phaseNIT& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phaseNIT& next = cells[cur].u_next;
 	return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p);
 }

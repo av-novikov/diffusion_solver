@@ -21,6 +21,7 @@
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
 #include "model/3D/GasOil_3D/GasOil_3D.h"
+#include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
 using namespace std;
 
@@ -718,16 +719,14 @@ using namespace std;
 	props->cellsNum_r = 100;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(279216.0);
-	props->timePeriods.push_back(1800000.0);
+	props->timePeriods.push_back(3600.0 * 100.0);
 	
-	props->leftBoundIsRate = true;
+	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 
-	props->rates.push_back(45.0);
-	props->rates.push_back(0.0);
+	props->pwf.push_back(100.0 * 1.E+5);
 
-	props->ht = 100.0;
+	props->ht = 10.0;
 	props->ht_min = 100.0;
 	props->ht_max  = 100000.0;
 	
@@ -735,44 +734,42 @@ using namespace std;
 
 	props->perfIntervals.push_back( make_pair(0, 0) );
 
-	props->r_w = 0.1524;
-	props->r_e = 570.0;
+	props->r_w = 0.11;
+	props->r_e = 500.0;
 
 	oil1D_NIT::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
-	tmp.m = 0.186;
-	tmp.p_init = tmp.p_out = 250.807 * 100000.0;
-	tmp.t_init = 329.92;
+	tmp.m = 0.2;
+	tmp.p_init = tmp.p_out = 200.0 * 100000.0;
+	tmp.t_init = 320.0;
 	tmp.h1 = 1500.0;
-	tmp.h2 = 1514.0;
-	tmp.height = 14.0;
-	tmp.perm_r = 460.0;
+	tmp.h2 = 1501.0;
+	tmp.height = 1.0;
+	tmp.perm_r = 25.0;
 	tmp.perm_z = 0.0;
 	tmp.dens_stc = 2200.0;
-	tmp.beta = 6.0 * 1.0e-10;
+	tmp.beta = 0.0 * 1.0e-10;
 	
-	tmp.skins.push_back(2.7);
-	tmp.skins.push_back(2.7);
+	tmp.skins.push_back(0.0);
+	
+	tmp.radiuses_eff.push_back(0.11);
 
-	tmp.radiuses_eff.push_back(0.5);
-	tmp.radiuses_eff.push_back(0.5);
-
-	tmp.c = 1800.0;
+	tmp.c = 800.0;
 	tmp.kappa_eff = 0.0;
-	tmp.lambda = 5.0;
+	tmp.lambda = 0.0;
 	props->props_sk.push_back( tmp );
 
 	props->depth_point = 1500.0;
 
 	// Thermal properties
-	props->props_oil.visc = 1.64;
-	props->props_oil.b_bore = 1.245;
-	props->props_oil.dens_stc = 736.0;
-	props->props_oil.beta = 5.0 * 1.e-9;
-	props->props_oil.jt = 4.0 * 1.e-7;
-	props->props_oil.ad = 2.1 * 1.e-7;
-	props->props_oil.c = 1880.0;
-	props->props_oil.lambda = 0.16;
+	props->props_oil.visc = 0.847;
+	props->props_oil.b_bore = 1.0;
+	props->props_oil.dens_stc = 753.0;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.jt = 3.89 * 1.e-7;
+	props->props_oil.ad = 2.16 * 1.e-7;
+	props->props_oil.c = 2196.0;
+	props->props_oil.lambda = 0.0;
 
 	return props;
 }*/
@@ -782,16 +779,14 @@ using namespace std;
 	gasOil_rz_NIT::Properties* props = new gasOil_rz_NIT::Properties();
 
 	props->cellsNum_r = 100;
-	props->cellsNum_z = 1;
+	props->cellsNum_z = 10;
 
-	props->timePeriods.push_back(279216.0);
-	props->timePeriods.push_back(1800000.0);
+	props->timePeriods.push_back(100.0 * 3600.0);
 	
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
 
-	props->rates.push_back(45.0);
-	props->rates.push_back(0.0);
+	props->rates.push_back(145.0);
 
 	props->ht = 100.0;
 	props->ht_min = 100.0;
@@ -799,30 +794,29 @@ using namespace std;
 	
 	props->alpha = 7200.0;
 
-	props->perfIntervals.push_back( make_pair(1, 1) );
+	props->perfIntervals.push_back( make_pair(2, 4) );
+	props->perfIntervals.push_back( make_pair(6, 8) );
 
 	props->r_w = 0.1524;
 	props->r_e = 570.0;
 
 	gasOil_rz_NIT::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 10;
 	tmp.m = 0.186;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 250.807 * 100000.0;
 	tmp.s_init = 0.9999;
-	tmp.t_init = 302.058;
+	tmp.t_init = 320.0;
 	tmp.h1 = 1500.0;
 	tmp.h2 = 1514.0;
 	tmp.height = 14.0;
 	tmp.perm_r = 460.0;
-	tmp.perm_z = 0.0;
+	tmp.perm_z = 5.0;
 	tmp.dens_stc = 2200.0;
 	tmp.beta = 6.0 * 1.0e-10;
 	
-	tmp.skins.push_back(2.7);
-	tmp.skins.push_back(2.7);
+	tmp.skins.push_back(0.0);
 
-	tmp.radiuses_eff.push_back(0.5);
-	tmp.radiuses_eff.push_back(0.5);
+	tmp.radiuses_eff.push_back(0.1524);
 
 	tmp.c = 1800.0;
 	tmp.kappa_eff = 0.0;
@@ -848,7 +842,7 @@ using namespace std;
 	props->props_gas.c = 3200.0;
 	props->props_gas.lambda = 0.06;
 
-	props->L = 0.0*1.e3;
+	props->L = 50.0*1.e3;
 	
 	// Defining relative permeabilities
 	setDataFromFile(props->kr_oil, "props/koil.txt");
@@ -916,28 +910,31 @@ using namespace std;
 	return props;
 }*/
 
-gasOil_3d::Properties* getProps()
+gasOil_3d_NIT::Properties* getProps()
 {
-	gasOil_3d::Properties* props = new gasOil_3d::Properties();
+	gasOil_3d_NIT::Properties* props = new gasOil_3d_NIT::Properties();
 
-	props->cellsNum_r = 10;
-	props->cellsNum_phi = 30;
-	props->cellsNum_z = 10;
+	props->cellsNum_r = 30;
+	props->cellsNum_phi = 20;
+	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
+	props->timePeriods.push_back(1000.0 * 3600.0);
 	
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	props->pwf.push_back(100.0 * 100000.0);
 
-	props->ht = 1000.0;
-	props->ht_min = 100.0;
+	props->ht = 10.0;
+	props->ht_min = 10.0;
 	props->ht_max  = 5000000.0;
 	
 	props->alpha = 7200.0;
 
 	props->perfIntervals.push_back( make_pair(1, 1) );
-	props->perfIntervals.push_back( make_pair(2+3*(props->cellsNum_r+2)*(props->cellsNum_z+2), 2+3*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(1+5*(props->cellsNum_r+2)*(props->cellsNum_z+2), 1+5*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(1+10*(props->cellsNum_r+2)*(props->cellsNum_z+2), 1+10*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(1+15*(props->cellsNum_r+2)*(props->cellsNum_z+2), 1+15*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	/*props->perfIntervals.push_back( make_pair(2+3*(props->cellsNum_r+2)*(props->cellsNum_z+2), 2+3*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(3+6*(props->cellsNum_r+2)*(props->cellsNum_z+2), 3+6*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(4+9*(props->cellsNum_r+2)*(props->cellsNum_z+2), 4+9*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(5+12*(props->cellsNum_r+2)*(props->cellsNum_z+2), 5+12*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
@@ -945,16 +942,17 @@ gasOil_3d::Properties* getProps()
 	props->perfIntervals.push_back( make_pair(7+18*(props->cellsNum_r+2)*(props->cellsNum_z+2), 7+18*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(8+21*(props->cellsNum_r+2)*(props->cellsNum_z+2), 8+21*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(9+24*(props->cellsNum_r+2)*(props->cellsNum_z+2), 9+24*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(10+27*(props->cellsNum_r+2)*(props->cellsNum_z+2), 10+27*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(10+27*(props->cellsNum_r+2)*(props->cellsNum_z+2), 10+27*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );*/
 
 	props->r_w = 0.1;
 	props->r_e = 500.0;
 
-	gasOil_3d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 10;
+	gasOil_3d_NIT::Skeleton_Props tmp;
+	tmp.cellsNum_z = 1;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 150.0 * 1.0e+5;
 	tmp.s_init = 0.999;
+	tmp.t_init = 320.0;
 	tmp.h1 = 1500.0;
 	tmp.h2 = 1501.0;
 	tmp.height = 1.0;
@@ -962,19 +960,38 @@ gasOil_3d::Properties* getProps()
 	tmp.perm_z = 2.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
+
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
+	
+	tmp.c = 1800.0;
+	tmp.kappa_eff = 0.0;
+	tmp.lambda_r = tmp.lambda_z = 5.0;
+
 	props->props_sk.push_back( tmp );
 
 	props->depth_point = 1500.0;
 
-	props->props_oil.visc = 0.62807;
-	props->props_oil.b_bore = 1.09754;
-	props->props_oil.dens_stc = 800.026;
-	props->props_oil.beta = 1.24703e-09;
+	props->props_oil.visc = 1.64;
+	props->props_oil.b_bore = 1.245;
+	props->props_oil.dens_stc = 736.0;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.jt = 4.0 * 1.e-7;
+	props->props_oil.ad = 2.1 * 1.e-7;
+	props->props_oil.c = 2200.0;
+	props->props_oil.lambda = 0.16;
 
 	props->props_gas.visc = 0.02833;
 	props->props_gas.dens_stc = 0.72275;
+
+	props->props_gas.visc = 0.02833;
+	props->props_gas.dens_stc = 0.8;
+	props->props_gas.jt = -1.73 * 1.e-6;
+	props->props_gas.ad = 3.76 * 1.e-6;
+	props->props_gas.c = 3400.0;
+	props->props_gas.lambda = 0.06;
+
+	props->L = 0.0*1.e3;
 
 	// Defining relative permeabilities
 	setDataFromFile(props->kr_oil, "props/koil.txt");
@@ -999,9 +1016,9 @@ int main(int argc, char** argv)
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
-	gasOil_3d::Properties* props = getProps();
-	Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties> scene;
+	
+	gasOil_3d_NIT::Properties* props = getProps();
+	Scene<gasOil_3d_NIT::GasOil_3D_NIT, gasOil_3d_NIT::GasOil3DNITSolver, gasOil_3d_NIT::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

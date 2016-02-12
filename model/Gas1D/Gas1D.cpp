@@ -171,7 +171,10 @@ void Gas1D::setPeriod(int period)
 	if(leftBoundIsRate)
 		Q_sum = rate[period];
 	else
+	{
 		Pwf = pwf[period];
+		Q_sum = 0.0;
+	}
 	
 	Qcell[0] = Q_sum;
 

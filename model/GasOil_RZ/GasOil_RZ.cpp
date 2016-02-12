@@ -289,7 +289,10 @@ void GasOil_RZ::setPeriod(int period)
 	if(leftBoundIsRate)
 		Q_sum = rate[period];
 	else
+	{
 		Pwf = pwf[period];
+		Q_sum = 0.0;
+	}
 	
 	if(period == 0 || rate[period-1] < EQUALITY_TOLERANCE ) {
 		map<int,double>::iterator it;

@@ -10,6 +10,7 @@
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
 #include "model/3D/GasOil_3D/GasOil_3D.h"
+#include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
 using namespace std;
 
@@ -107,6 +108,19 @@ void Snapshotter<gasOil_3d::GasOil_3D>::setModel(gasOil_3d::GasOil_3D* _model)
 	nz = model->cellsNum_z + 2;
 }
 
+template <>
+void Snapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::setModel(gasOil_3d_NIT::GasOil_3D_NIT* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_phi;
+	nz = model->cellsNum_z + 2;
+}
 
 template <>
 void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
@@ -162,3 +176,4 @@ template class Snapshotter<gasOil_rz::GasOil_RZ>;
 template class Snapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>;
 
 template class Snapshotter<gasOil_3d::GasOil_3D>;
+template class Snapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;

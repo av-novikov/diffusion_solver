@@ -22,6 +22,9 @@
 #include "model/3D/GasOil_3D/GasOil_3D.h"
 #include "model/3D/GasOil_3D/GasOil3DSolver.h"
 
+#include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
+#include "model/3D/GasOil_3D_NIT/GasOil3DNITSolver.h"
+
 #include "tests/gas1D-test.h"
 
 using namespace std;
@@ -84,5 +87,6 @@ template class Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties>;
 template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties>;
 template class Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSolver, gasOil_rz_NIT::Properties>;
 template class Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties>;
+template class Scene<gasOil_3d_NIT::GasOil_3D_NIT, gasOil_3d_NIT::GasOil3DNITSolver, gasOil_3d_NIT::Properties>;
 
 template class Scene<Gas1D_Wrapped, gas1D::Gas1DSol, gas1D::Properties>;
