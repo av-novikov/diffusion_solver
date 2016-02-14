@@ -395,6 +395,8 @@ namespace gasOil_3d
 				nebr1 = &cells[ getIdx(cell.num - (cellsNum_r + 2) * (cellsNum_z + 2)) ];
 				nebr2 = &cells[ getIdx(cell.num + (cellsNum_r + 2) * (cellsNum_z + 2)) ];
 				h = nebr1->r * (nebr2->phi - nebr1->phi);
+				if(abs(nebr2->phi - nebr1->phi) > 2.0 * cell.hphi + EQUALITY_TOLERANCE)
+					h = nebr1->r * (nebr2->phi - nebr1->phi + 2.0 * M_PI);
 				break;
 			case Z_AXIS:
 				nebr1 = &cells[cell.num - 1];

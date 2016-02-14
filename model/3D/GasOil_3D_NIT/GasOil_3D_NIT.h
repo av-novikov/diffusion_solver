@@ -233,7 +233,7 @@ namespace gasOil_3d_NIT
 			if( i < 0 )
 				return cellsNum + i;
 			else if( i > cellsNum)
-				return i - cellsNum;
+				return i % cellsNum;
 			else
 				return i;
 		}
@@ -285,7 +285,7 @@ namespace gasOil_3d_NIT
 				if(k1 == 0.0)
 					return 0.0;
 				S = cell.hr * cell.hz;
-				return 2.0 * k1 * S / (beta.hr + cell.hr);
+				return 2.0 * k1 * S / cell.r / (beta.hphi + cell.hphi);
 			}
 		};
 		inline double getPerm_r(const Cell& cell) const
@@ -423,6 +423,8 @@ namespace gasOil_3d_NIT
 				nebr1 = &cells[ getIdx(cell.num - (cellsNum_r + 2) * (cellsNum_z + 2)) ];
 				nebr2 = &cells[ getIdx(cell.num + (cellsNum_r + 2) * (cellsNum_z + 2)) ];
 				h = nebr1->r * (nebr2->phi - nebr1->phi);
+				if(abs(nebr2->phi - nebr1->phi) > 2.0 * cell.hphi + EQUALITY_TOLERANCE)
+					h = cell.r * (nebr2->phi - nebr1->phi + 2.0 * M_PI);
 				break;
 			case Z_AXIS:
 				nebr1 = &cells[cell.num - 1];
@@ -462,9 +464,9 @@ namespace gasOil_3d_NIT
 			switch(axis)
 			{
 			case R_AXIS:
-				return -getPerm_r(cell) * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
+				return -getPerm_r(cell) * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, R_AXIS);
 			case PHI_AXIS:
-				return -getPerm_r(cell) * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
+				return -getPerm_r(cell) * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, PHI_AXIS);
 			case Z_AXIS:
 				return -props_sk[idx].perm_z * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
 			}

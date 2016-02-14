@@ -207,9 +207,10 @@ void GasOil_3D_NIT::buildGridLog()
 	double hr = r_prev * (exp(logStep) - 1.0);
 	double cm_r = r_w;
 
+	counter = 0;
 	for(int k = 0; k < cellsNum_phi; k++)
 	{
-		counter = 0;	skel_idx = 0;	cells_z = 0;
+		skel_idx = 0;	cells_z = 0;
 
 		r_prev = r_w;
 		logMax = log(r_e / r_w);
@@ -317,8 +318,8 @@ void GasOil_3D_NIT::setPerforated()
 	{
 		for(int i = it->first; i <= it->second; i++)
 		{
-			Qcell[i] = 0.0;
-			Cell& cell = cells[i];
+			Qcell[getIdx(i)] = 0.0;
+			Cell& cell = cells[getIdx(i)];
 			height_perf += cell.hphi * cell.r * cell.hz;
 		}
 	}
