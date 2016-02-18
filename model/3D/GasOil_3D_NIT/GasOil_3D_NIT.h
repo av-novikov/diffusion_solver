@@ -232,7 +232,7 @@ namespace gasOil_3d_NIT
 		{
 			if( i < 0 )
 				return cellsNum + i;
-			else if( i > cellsNum)
+			else if( i >= cellsNum)
 				return i % cellsNum;
 			else
 				return i;

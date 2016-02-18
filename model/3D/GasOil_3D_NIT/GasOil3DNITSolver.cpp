@@ -194,35 +194,34 @@ void GasOil3DNITSolver::filldPdQ(double mult)
 {
 	double p1, p2, ratio;
 	ratio = mult * 0.001 / (double)(n);
-	
-	int i = 0, j = 0;
-	map<int,double>::iterator it0 = model->Qcell.begin();
-	map<int,double>::iterator it1 = model->Qcell.begin();
-	map<int,double>::iterator it2 = it1;	++it2;
-	while(it1 != model->Qcell.end())
+
+	const int n = model->Qcell.size();
+	map<int, double>::iterator it0 = model->Qcell.begin();
+	map<int, double>::iterator it1 = model->Qcell.begin();
+	map<int, double>::iterator it2 = it1;	++it2;
+
+	for (int i = 0; i < n; i++)
 	{
-		j = 0;
 		it2 = model->Qcell.begin();		++it2;
-		while(it2 != model->Qcell.end())
+		for (int j = 0; j < n-1; j++)
 		{
 			model->setRateDeviation(it2->first, -ratio);
 			model->setRateDeviation(it0->first, ratio);
 			solveStep();
-			p1 = model->cells[ it1->first ].u_next.p;
+			p1 = model->cells[it1->first].u_next.p;
 
 			model->setRateDeviation(it2->first, 2.0 * ratio);
 			model->setRateDeviation(it0->first, -2.0 * ratio);
 			solveStep();
-			p2 = model->cells[ it1->first ].u_next.p;
+			p2 = model->cells[it1->first].u_next.p;
 
 			model->setRateDeviation(it2->first, -ratio);
 			model->setRateDeviation(it0->first, ratio);
 
-			dpdq[i][j++] = (p2 - p1) / ( 2.0 * ratio * model->Q_sum);
+			dpdq[i][j] = (p2 - p1) / (2.0 * ratio * model->Q_sum);
 
 			++it2;
 		}
-		i++;
 		++it1;
 	}
 }
