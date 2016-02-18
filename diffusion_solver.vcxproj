@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C5AC415B-C226-423D-B85C-777DE7975B99}</ProjectGuid>
+    <RootNamespace>diffusion_solver</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.24720.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>Debug\</OutDir>
+    <IntDir>Debug\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>Release\</OutDir>
+    <IntDir>Release\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\gtest\googletest-master\googletest\include;C:\Program Files (x86)\VTK\include\vtk-6.3;C:\proj\diffusion_solver;C:\paralution-1.1.0\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;paralution.lib;gtestd.lib;gtest_main-mdd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\gtest\googletest-master\googletest\msvc\gtest-md\Debug;C:\Program Files (x86)\VTK\lib;C:\paralution-1.1.0\visualstudio\paralution_omp\Win32\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <AdditionalIncludeDirectories>C:\gtest\googletest-master\googletest\include;C:\Program Files (x86)\VTK\include\vtk-6.3;C:\proj\diffusion_solver;C:\paralution-1.1.0\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;paralution.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\gtest\googletest-master\googletest\msvc\gtest-md\Release;C:\Program Files (x86)\VTK\lib;C:\paralution-1.1.0\visualstudio\paralution_omp\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="method\mcmath.h" />
+    <ClInclude Include="method\ParalutionInterface.h" />
+    <ClInclude Include="method\pointers.h" />
+    <ClInclude Include="method\sweep.h" />
+    <ClInclude Include="model\3D\GasOil_3D\GasOil3DSolver.h" />
+    <ClInclude Include="model\3D\GasOil_3D\GasOil_3D.h" />
+    <ClInclude Include="model\3D\GasOil_3D\Par3DSolver.h" />
+    <ClInclude Include="model\3D\GasOil_3D_NIT\GasOil3DNITSolver.h" />
+    <ClInclude Include="model\3D\GasOil_3D_NIT\GasOil_3D_NIT.h" />
+    <ClInclude Include="model\AbstractModel.hpp" />
+    <ClInclude Include="model\AbstractSolver.hpp" />
+    <ClInclude Include="model\cells\AbstractCell.hpp" />
+    <ClInclude Include="model\cells\CylCell2D.h" />
+    <ClInclude Include="model\cells\CylCell3D.h" />
+    <ClInclude Include="model\cells\RadialCell.hpp" />
+    <ClInclude Include="model\cells\Variables.hpp" />
+    <ClInclude Include="model\Gas1D\Gas1D.h" />
+    <ClInclude Include="model\Gas1D\Gas1DSolver.h" />
+    <ClInclude Include="model\Gas1D\Gas1D_simple.h" />
+    <ClInclude Include="model\GasOil_RZ\GasOil2DSolver.h" />
+    <ClInclude Include="model\GasOil_RZ\GasOil_RZ.h" />
+    <ClInclude Include="model\gasoil_rz_nit\GasOil2DNITSolver.h" />
+    <ClInclude Include="model\gasoil_rz_nit\GasOil_RZ_NIT.h" />
+    <ClInclude Include="model\oil1d\Oil1D.h" />
+    <ClInclude Include="model\Oil1D\Oil1DSolver.h" />
+    <ClInclude Include="model\Oil1D_NIT\Oil1DNITSolver.h" />
+    <ClInclude Include="model\Oil1D_NIT\Oil1D_NIT.h" />
+    <ClInclude Include="model\Oil_RZ\OilRZSolver.h" />
+    <ClInclude Include="model\Oil_RZ\Oil_RZ.h" />
+    <ClInclude Include="props\Scene.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="Scene_OMP.h" />
+    <ClInclude Include="snapshotter\GRDECLSnapshotter.h" />
+    <ClInclude Include="snapshotter\Snapshotter.h" />
+    <ClInclude Include="snapshotter\VTKSnapshotter.h" />
+    <ClInclude Include="tests\base-test.h" />
+    <ClInclude Include="tests\gas1D-test.h" />
+    <ClInclude Include="tests\gas1Dsimple-test.h" />
+    <ClInclude Include="tests\oil1D-test.h" />
+    <ClInclude Include="util\Interpolate.h" />
+    <ClInclude Include="util\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="method\mcmath.cpp" />
+    <ClCompile Include="method\ParalutionInterface.cpp" />
+    <ClCompile Include="method\sweep.cpp" />
+    <ClCompile Include="model\3D\GasOil_3D\GasOil3DSolver.cpp" />
+    <ClCompile Include="model\3D\GasOil_3D\GasOil_3D.cpp" />
+    <ClCompile Include="model\3D\GasOil_3D\Par3DSolver.cpp" />
+    <ClCompile Include="model\3D\GasOil_3D_NIT\GasOil3DNITSolver.cpp" />
+    <ClCompile Include="model\3D\GasOil_3D_NIT\GasOil_3D_NIT.cpp" />
+    <ClCompile Include="model\AbstractModel.cpp" />
+    <ClCompile Include="model\AbstractSolver.cpp" />
+    <ClCompile Include="model\cells\AbstractCell.cpp" />
+    <ClCompile Include="model\cells\CylCell2D.cpp" />
+    <ClCompile Include="model\cells\CylCell3D.cpp" />
+    <ClCompile Include="model\cells\RadialCell.cpp" />
+    <ClCompile Include="model\Gas1D\Gas1D.cpp" />
+    <ClCompile Include="model\Gas1D\Gas1DSolver.cpp" />
+    <ClCompile Include="model\Gas1D\Gas1D_simple.cpp" />
+    <ClCompile Include="model\GasOil_RZ\GasOil2DSolver.cpp" />
+    <ClCompile Include="model\GasOil_RZ\GasOil_RZ.cpp" />
+    <ClCompile Include="model\gasoil_rz_nit\GasOil2DNITSolver.cpp" />
+    <ClCompile Include="model\gasoil_rz_nit\GasOil_RZ_NIT.cpp" />
+    <ClCompile Include="model\Oil1D\Oil1D.cpp" />
+    <ClCompile Include="model\Oil1D\Oil1DSolver.cpp" />
+    <ClCompile Include="model\Oil1D_NIT\Oil1DNITSolver.cpp" />
+    <ClCompile Include="model\Oil1D_NIT\Oil1D_NIT.cpp" />
+    <ClCompile Include="model\Oil_RZ\OilRZSolver.cpp" />
+    <ClCompile Include="model\Oil_RZ\Oil_RZ.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="snapshotter\GRDECLSnapshotter.cpp" />
+    <ClCompile Include="snapshotter\Snapshotter.cpp" />
+    <ClCompile Include="snapshotter\VTKSnapshotter.cpp" />
+    <ClCompile Include="tests\base-test.cpp" />
+    <ClCompile Include="tests\gas1D-test.cpp" />
+    <ClCompile Include="tests\gas1Dsimple-test.cpp" />
+    <ClCompile Include="tests\oil1D-test.cpp" />
+    <ClCompile Include="tests\tester.cpp" />
+    <ClCompile Include="util\Interpolate.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="debug\BuildLog.htm" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

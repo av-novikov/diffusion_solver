@@ -131,7 +131,8 @@ namespace gasOil_3d
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-		friend class GasOil3DSolver;	
+		friend class GasOil3DSolver;
+		friend class Par3DSolver;
 
 	protected:
 		// Continuum properties

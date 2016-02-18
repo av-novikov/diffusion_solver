@@ -113,7 +113,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;C:\Program Files (x86)\VTK\include\vtk-6.3&quot;;C:\proj\GasOilFlow"
+				Optimization="3"
+				AdditionalIncludeDirectories="&quot;C:\gtest\googletest-master\googletest\include&quot;;&quot;C:\Program Files (x86)\VTK\include\vtk-6.3&quot;;C:\proj\diffusion_solver"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -136,7 +137,7 @@
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\gtest\googletest-master\googletest\msvc\gtest-md\Release&quot;;&quot;C:\Program Files (x86)\VTK\lib&quot;"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -225,11 +226,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\model\3D\GasOil_3D_NIT\GasOil3DNITSolver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\model\3D\GasOil_3D\GasOil3DSolver.h"
 				>
 			</File>
 			<File
 				RelativePath=".\model\3D\GasOil_3D\GasOil_3D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\model\3D\GasOil_3D_NIT\GasOil_3D_NIT.h"
 				>
 			</File>
 			<File
@@ -289,11 +298,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\props\Scene.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Scene.h"
 				>
 			</File>
 			<File
-				RelativePath=".\props\Scene.h"
+				RelativePath=".\Scene_OMP.h"
 				>
 			</File>
 			<File
@@ -381,11 +394,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\model\3D\GasOil_3D_NIT\GasOil3DNITSolver.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\model\3D\GasOil_3D\GasOil3DSolver.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\model\3D\GasOil_3D\GasOil_3D.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\model\3D\GasOil_3D_NIT\GasOil_3D_NIT.cpp"
 				>
 			</File>
 			<File
