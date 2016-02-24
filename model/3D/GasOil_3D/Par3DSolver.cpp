@@ -1,5 +1,7 @@
 #include "model/3D/GasOil_3D/Par3DSolver.h"
 
+#include <algorithm>
+
 using namespace std;
 using namespace gasOil_3d;
 
@@ -21,12 +23,16 @@ Par3DSolver::Par3DSolver(GasOil_3D* _model) : AbstractSolver<GasOil_3D>(_model)
 
 	Tt = model->period[model->period.size() - 1];
 
-	ind_i = new int[ 7 * 2 * model->cellsNum ];
-	ind_j = new int[ 7 * 2 * model->cellsNum ];
-	a = new double[ 7 * 2 * model->cellsNum ];
+	stencils = new UsedStencils<GasOil_3D>(model);
+
+	ind_i = new int[ 7 * 4 * model->cellsNum ];
+	ind_j = new int[ 7 * 4 * model->cellsNum ];
+	a = new double[ 7 * 4 * model->cellsNum ];
 
 	ind_rhs = new int[ 2 * model->cellsNum ];
 	rhs = new double[ 2 * model->cellsNum ];
+
+	stencils->setStorages(a, ind_i, ind_j, rhs);
 }
 
 Par3DSolver::~Par3DSolver()
@@ -81,6 +87,29 @@ void Par3DSolver::control()
 	cur_t += model->ht;
 }
 
+void Par3DSolver::start()
+{
+	int counter = 0;
+	iterations = 8;
+
+	fillIndices();
+	x.Allocate("x", 2 * model->cellsNum);
+
+	model->setPeriod(curTimePeriod);
+	while (cur_t < Tt)
+	{
+		control();
+		if (model->isWriteSnaps)
+			model->snapshot_all(counter++);
+		doNextStep();
+		copyTimeLayer();
+		cout << "---------------------NEW TIME STEP---------------------" << endl;
+	}
+	if (model->isWriteSnaps)
+		model->snapshot_all(counter++);
+	writeData();
+}
+
 void Par3DSolver::doNextStep()
 {
 	solveStep();
@@ -119,6 +148,15 @@ void Par3DSolver::doNextStep()
 	}
 }
 
+void Par3DSolver::copySolution()
+{
+	for (int i = 0; i < model->cellsNum; i++)
+	{
+		model->cells[i].u_next.p += x[2 * i];
+		model->cells[i].u_next.s += x[2 * i + 1];
+	}
+}
+
 void Par3DSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -133,7 +171,9 @@ void Par3DSolver::solveStep()
 	{
 		copyIterLayer();
 
+		fill();
 		Solve();
+		copySolution();
 
 		model->solveP_bub();
 
@@ -154,92 +194,157 @@ void Par3DSolver::solveStep()
 	cout << "Newton Iterations = " << iterations << endl;
 }
 
-void Par3DSolver::Solve()
+void Par3DSolver::fillIndices()
 {
-	Rhs.Zeros();
-
+	int idx, nebr;
 	int counter = 0;
+	map<int, double>::iterator it;
 
-	// Left cells
-	fillLeft();
-
-	// Middle cells
-	fillMiddle();
-
-	// Right cells
-	fillRight();
-	
-	Mat.Assemble(ind_i, ind_j, a, counter, "A", 2 * model->cellsNum, 2 * model->cellsNum);
-
-}
-
-void Par3DSolver::fillLeft()
-{
-	for (auto it : model->Qcell)
+	// Left
+	for (int i = 0; i < model->cellsNum_phi; i++)
 	{
-		Cell& curr = model->cells[it.first];
-		Cell& nebr = model->cells[it.first + model->cellsNum_z + 2];
-		int idx = 2 * ((it.first % ((model->cellsNum_z + 2) * (model->cellsNum_r + 2))) + int(it.first / ((model->cellsNum_z + 2) * (model->cellsNum_r + 2))) * (model->cellsNum_z + 2));
+		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2);
+		for (int j = 0; j < model->cellsNum_z + 2; j++)
+		{
+			it = model->Qcell.find(idx);
+			if (it == model->Qcell.end())
+			{
+				nebr = idx + model->cellsNum_z + 2;
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * idx;
 
-		// First eqn
-		ind_i[counter] = 2 * it.first;
-		ind_j[counter] = 2 * it.first;
-		a[counter++] = model->solve_eqLeft_dp(it.first);
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * idx + 1;
 
-		ind_i[counter] = 2 * it.first;
-		ind_j[counter] = 2 * it.first + 1;
-		a[counter++] = model->solve_eqLeft_ds(it.first);
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * nebr;
 
-		ind_i[counter] = 2 * it.first;
-		ind_j[counter] = 2 * (it.first + model->cellsNum_z + 2);
-		a[counter++] = model->solve_eqLeft_dp_beta(it.first);
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * nebr + 1;
 
-		ind_i[counter] = 2 * it.first;
-		ind_j[counter] = 2 * (it.first + model->cellsNum_z + 2) + 1;
-		a[counter++] = model->solve_eqLeft_ds_beta(it.first);
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * idx;
 
-		rhs[2 * it.first] = -model->solve_eqLeft(it.first) +
-			a[counter - 4] * curr.u_next.p + a[counter - 3] * curr.u_next.s +
-			a[counter - 2] * nebr.u_next.p + a[counter - 1] * nebr.u_next.s;
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * idx + 1;
 
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * nebr;
 
-		// Second eqn
-		ind_i[counter] = 2 * it.first + 1;
-		ind_j[counter] = 2 * it.first + 1;
-		a[counter++] = 1.0;
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * nebr + 1;
+			}
+			else
+				stencils->left->fillIndex(idx, &counter);
 
-		ind_i[counter] = 2 * it.first + 1;
-		ind_j[counter] = 2 * (it.first + model->cellsNum_z + 2) + 1;
-		a[counter++] = (curr.r - nebr.r) / (model->cells[it.first + 2 * model->cellsNum_z + 4].r - nebr.r) - 1.0;
-
-		ind_i[counter] = 2 * it.first + 1;
-		ind_j[counter] = 2 * (it.first + 2 * (model->cellsNum_z + 2)) + 1;
-		a[counter++] = -(curr.r - nebr.r) / (model->cells[it.first + 2 * model->cellsNum_z + 4].r - nebr.r);
-
-		rhs[2 * it.first + 1] = 0.0;
+			idx++;
+		}
 	}
+
+	// Middle
+	for (int i = 0; i < model->cellsNum_phi; i++)
+	{
+		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2) + model->cellsNum_z + 2;
+		for (int j = 1; j < model->cellsNum_r + 1; j++)
+		{
+			stencils->top->fillIndex(idx, &counter);
+			idx++;
+			for (int k = 1; k < model->cellsNum_z + 1; k++)
+			{
+				stencils->middle->fillIndex(idx, &counter);
+				idx++;
+			}
+			stencils->bot->fillIndex(idx, &counter);
+			idx++;
+		}
+	}
+
+	// Right
+	for (int i = 0; i < model->cellsNum_phi; i++)
+	{
+		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2) + (model->cellsNum_r + 1) * (model->cellsNum_z + 2);
+		for (int j = 0; j < model->cellsNum_z + 2; j++)
+		{
+			stencils->right->fillIndex(idx, &counter);
+			idx++;
+		}
+	}
+
+	for (int i = 0; i < 2*model->cellsNum; i++)
+		ind_rhs[i] = i;
 }
 
-void Par3DSolver::fillMiddle()
+void Par3DSolver::fill()
 {
+	int idx;
+	int counter = 0;
+	map<int, double>::iterator it;
 
+	// Left
+	for (int i = 0; i < model->cellsNum_phi; i++)
+	{
+		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2);
+		for (int j = 0; j < model->cellsNum_z + 2; j++)
+		{
+			it = model->Qcell.find(idx);
+			if (it == model->Qcell.end())
+			{
+				a[counter++] = 1.0;
+				a[counter++] = 0.0;
+				a[counter++] = -1.0;
+				a[counter++] = 0.0;
+
+				a[counter++] = 1.0;
+				a[counter++] = 0.0;
+				a[counter++] = -1.0;
+				a[counter++] = 0.0;
+
+				rhs[2 * idx] = 0.0;
+				rhs[2 * idx + 1] = 0.0;
+			}
+			else
+				stencils->left->fill(idx, &counter);
+
+			idx++;
+		}
+	}
+
+	// Middle
+	for (int i = 0; i < model->cellsNum_phi; i++)
+	{
+		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2) + model->cellsNum_z + 2;
+		for (int j = 1; j < model->cellsNum_r + 1; j++)
+		{
+			stencils->top->fill(idx, &counter);
+			idx++;
+			for (int k = 1; k < model->cellsNum_z + 1; k++)
+			{	
+				stencils->middle->fill(idx, &counter);
+				idx++;
+			}
+			stencils->bot->fill(idx, &counter);
+			idx++;
+		}
+	}
+
+	// Right
+	for (int i = 0; i < model->cellsNum_phi; i++)
+	{
+		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2) + (model->cellsNum_r + 1) * (model->cellsNum_z + 2);
+		for (int j = 0; j < model->cellsNum_z + 2; j++)
+		{
+			stencils->right->fill(idx, &counter);
+			idx++;
+		}
+	}
+
+	if (cur_t == model->ht && iterations == 0)
+		Mat.Assemble(ind_i, ind_j, a, counter, "A", 2 * model->cellsNum, 2 * model->cellsNum);
+	else
+		Mat.AssembleUpdate(a);
+
+	Rhs.Assemble(ind_rhs, rhs, 2 * model->cellsNum, "rhs");
 }
-
-void Par3DSolver::fillRight()
-{
-
-}
-
-void Par3DSolver::fillTop(int i)
-{
-
-}
-
-void Par3DSolver::fillBottom(int i)
-{
-
-}
-
 
 void Par3DSolver::fillq()
 {

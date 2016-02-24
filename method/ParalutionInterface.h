@@ -5,7 +5,7 @@
 
 class ParSolver
 {
-protected:
+public:
 	paralution::LocalVector<double> x;
 	paralution::LocalVector<double> Rhs;
 	paralution::LocalMatrix<double> Mat;
@@ -17,7 +17,9 @@ protected:
 	int* ind_rhs;
 	double* rhs;
 
-public:
+	virtual void Solve();
+	virtual void copySolution() = 0;
+
 	ParSolver();
 	~ParSolver();
 };

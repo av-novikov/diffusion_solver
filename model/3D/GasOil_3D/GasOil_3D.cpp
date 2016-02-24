@@ -4,11 +4,110 @@
 #include <cassert>
 
 using namespace std;
+using namespace std::placeholders;
 using namespace gasOil_3d;
+
 
 GasOil_3D::GasOil_3D()
 {
 	isWriteSnaps = false;
+
+	// Middle
+	middleFoo.mat.resize(2);
+
+	middleFoo.rhs.push_back(bind(&GasOil_3D::solve_eq1, this, _1));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_dp_beta, this, _1, _2));
+	middleFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1_ds_beta, this, _1, _2));
+
+	middleFoo.rhs.push_back(bind(&GasOil_3D::solve_eq2, this, _1));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_dp_beta, this, _1, _2));
+	middleFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2_ds_beta, this, _1, _2));
+
+	// Left
+	leftFoo.mat.resize(2);
+
+	leftFoo.rhs.push_back(bind(&GasOil_3D::solve_eq1Left, this, _1));
+	leftFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Left_dp, this, _1, _2));
+	leftFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Left_ds, this, _1, _2));
+	leftFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Left_dp_beta, this, _1, _2));
+	leftFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Left_ds_beta, this, _1, _2));
+
+	leftFoo.rhs.push_back(bind(&GasOil_3D::solve_eq2Left, this, _1));
+	leftFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Left_dp, this, _1, _2));
+	leftFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Left_ds, this, _1, _2));
+	leftFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Left_dp_beta, this, _1, _2));
+	leftFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Left_ds_beta, this, _1, _2));
+	leftFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Left_dp_beta, this, _1, _2));
+	leftFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Left_ds_beta, this, _1, _2));
+
+	// Right
+	rightFoo.mat.resize(2);
+
+	rightFoo.rhs.push_back(bind(&GasOil_3D::solve_eq1Right, this, _1));
+	rightFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Right_dp, this, _1, _2));
+	rightFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Right_ds, this, _1, _2));
+	rightFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Right_dp_beta, this, _1, _2));
+	rightFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Right_ds_beta, this, _1, _2));
+
+	rightFoo.rhs.push_back(bind(&GasOil_3D::solve_eq2Right, this, _1));
+	rightFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Right_dp, this, _1, _2));
+	rightFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Right_ds, this, _1, _2));
+	rightFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Right_dp_beta, this, _1, _2));
+	rightFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Right_ds_beta, this, _1, _2));
+
+	// Top
+	topFoo.mat.resize(2);
+
+	topFoo.rhs.push_back(bind(&GasOil_3D::solve_eq1Top, this, _1));
+	topFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Top_dp, this, _1, _2));
+	topFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Top_ds, this, _1, _2));
+	topFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Top_dp_beta, this, _1, _2));
+	topFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Top_ds_beta, this, _1, _2));
+
+	topFoo.rhs.push_back(bind(&GasOil_3D::solve_eq2Top, this, _1));
+	topFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Top_dp, this, _1, _2));
+	topFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Top_ds, this, _1, _2));
+	topFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Top_dp_beta, this, _1, _2));
+	topFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Top_ds_beta, this, _1, _2));
+
+	// Bot
+	botFoo.mat.resize(2);
+
+	botFoo.rhs.push_back(bind(&GasOil_3D::solve_eq1Bot, this, _1));
+	botFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Bot_dp, this, _1, _2));
+	botFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Bot_ds, this, _1, _2));
+	botFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Bot_dp_beta, this, _1, _2));
+	botFoo.mat[0].push_back(bind(&GasOil_3D::solve_eq1Bot_ds_beta, this, _1, _2));
+
+	botFoo.rhs.push_back(bind(&GasOil_3D::solve_eq2Bot, this, _1));
+	botFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Bot_dp, this, _1, _2));
+	botFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Bot_ds, this, _1, _2));
+	botFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Bot_dp_beta, this, _1, _2));
+	botFoo.mat[1].push_back(bind(&GasOil_3D::solve_eq2Bot_ds_beta, this, _1, _2));
 }
 
 GasOil_3D::~GasOil_3D()
@@ -341,6 +440,8 @@ void GasOil_3D::setRateDeviation(int num, double ratio)
 	Qcell[num] += Q_sum * ratio;
 }
 
+/*-------------- Middle cells ------------------*/
+
 double GasOil_3D::solve_eq1(int cur)
 {
 	int neighbor [6];
@@ -366,7 +467,7 @@ double GasOil_3D::solve_eq1(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq1_dp(int cur)
+double GasOil_3D::solve_eq1_dp(int cur, int beta)
 {
 	double upwind;
 	int neighbor [6];
@@ -395,7 +496,7 @@ double GasOil_3D::solve_eq1_dp(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq1_ds(int cur)
+double GasOil_3D::solve_eq1_ds(int cur, int beta)
 {
 	double upwind;	
 	int neighbor [6];
@@ -470,7 +571,7 @@ double GasOil_3D::solve_eq2(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq2_dp(int cur)
+double GasOil_3D::solve_eq2_dp(int cur, int beta)
 {
 	double upwind;	
 	int neighbor [6];
@@ -508,7 +609,7 @@ double GasOil_3D::solve_eq2_dp(int cur)
 	return H;
 }
 
-double GasOil_3D::solve_eq2_ds(int cur)
+double GasOil_3D::solve_eq2_ds(int cur, int beta)
 {
 	double upwind;	
 	int neighbor [6];
@@ -561,102 +662,6 @@ double GasOil_3D::solve_eq2_ds_beta(int cur, int beta)
 	return ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
 		( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) +
 		getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
-}
-
-double GasOil_3D::solve_eqLeft(int cur)
-{
-	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
-
-	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p) - Qcell[cur];
-	else
-		return next.p - Pwf;
-}
-
-double GasOil_3D::solve_eqLeft_dp(int cur)
-{
-	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
-
-	if( leftBoundIsRate )
-		return -getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
-	else
-		return 1.0;
-}
-
-double GasOil_3D::solve_eqLeft_ds(int cur)
-{
-	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
-
-	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
-	else
-		return 0.0;
-}
-
-double GasOil_3D::solve_eqLeft_dp_beta(int cur)
-{
-	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
-
-	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
-	else
-		return 0.0;
-}
-
-double GasOil_3D::solve_eqLeft_ds_beta(int cur)
-{
-	const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
-
-	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * (1.0-upwindIsCur(cur, neighbor)) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
-	else
-		return 0.0;
-}
-
-double GasOil_3D::solve_eqRight(int cur)
-{
-	const Cell& cell = cells[cur];
-
-	if( rightBoundIsPres )
-		return cell.u_next.p - props_sk[getSkeletonIdx(cell)].p_out;
-	else
-		return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
-}
-
-double GasOil_3D::solve_eqRight_dp(int cur)
-{
-	if( rightBoundIsPres )
-		return 1.0;
-	else
-		return 1.0;
-}
-
-double GasOil_3D::solve_eqRight_ds(int cur)
-{
-	return 0.0;
-}
-
-double GasOil_3D::solve_eqRight_dp_beta(int cur)
-{
-	if( rightBoundIsPres )
-		return 0.0;
-	else
-		return -1.0;
-}
-
-double GasOil_3D::solve_eqRight_ds_beta(int cur)
-{
-	return 0.0;
 }
 
 double GasOil_3D::solveH()

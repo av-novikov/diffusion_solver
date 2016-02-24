@@ -301,11 +301,11 @@ void GasOil3DSolver::LeftBoundAppr(int MZ, int key)
 			idx = 2 * ((it->first % ((model->cellsNum_z+2) * (model->cellsNum_r + 2)) ) + int(it->first / ((model->cellsNum_z+2) * (model->cellsNum_r + 2)) ) * (model->cellsNum_z+2) );
 			
 			// First eqn
-			C[idx][idx] = model->solve_eqLeft_dp(it->first);
-			C[idx][idx+1] = model->solve_eqLeft_ds(it->first);
-			B[idx][idx] = model->solve_eqLeft_dp_beta(it->first);
-			B[idx][idx+1] = model->solve_eqLeft_ds_beta(it->first);
-			RightSide[idx][0] = -model->solve_eqLeft(it->first) + 
+			C[idx][idx] = model->solve_eq1Left_dp(it->first, it->first);
+			C[idx][idx+1] = model->solve_eq1Left_ds(it->first, it->first);
+			B[idx][idx] = model->solve_eq1Left_dp_beta(it->first, nebr.num);
+			B[idx][idx+1] = model->solve_eq1Left_ds_beta(it->first, nebr.num);
+			RightSide[idx][0] = -model->solve_eq1Left(it->first) + 
 								C[idx][idx] * curr.u_next.p + C[idx][idx+1] * curr.u_next.s +
 								B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
 
@@ -343,11 +343,11 @@ void GasOil3DSolver::RightBoundAppr(int MZ, int key)
 				Cell& nebr = model->cells[i-model->cellsNum_z-2];
 
 				// First eqn
-				A[idx][idx] = model->solve_eqRight_dp(i);
-				A[idx][idx+1] = model->solve_eqRight_ds(i);
-				B[idx][idx] = model->solve_eqRight_dp_beta(i);
-				B[idx][idx+1] = model->solve_eqRight_ds_beta(i);
-				RightSide[idx][0] = -model->solve_eqRight(i) + 
+				A[idx][idx] = model->solve_eq1Right_dp(i, i);
+				A[idx][idx+1] = model->solve_eq1Right_ds(i, i);
+				B[idx][idx] = model->solve_eq1Right_dp_beta(i, nebr.num);
+				B[idx][idx+1] = model->solve_eq1Right_ds_beta(i, nebr.num);
+				RightSide[idx][0] = -model->solve_eq1Right(i) + 
 									A[idx][idx] * curr.u_next.p + A[idx][idx+1] * curr.u_next.s +
 									B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
 
@@ -410,8 +410,8 @@ void GasOil3DSolver::MiddleAppr(int current, int MZ, int key)
 				B[idx][idx-1] = model->solve_eq1_ds_beta(i, neighbor[2]);
 				B[idx][phi_prev] = model->solve_eq1_dp_beta(i, neighbor[4]);
 				B[idx][phi_prev+1] = model->solve_eq1_ds_beta(i, neighbor[4]);
-				B[idx][idx] = model->solve_eq1_dp(i);
-				B[idx][idx+1] = model->solve_eq1_ds(i);
+				B[idx][idx] = model->solve_eq1_dp(i, i);
+				B[idx][idx+1] = model->solve_eq1_ds(i, i);
 				B[idx][idx+2] = model->solve_eq1_dp_beta(i, neighbor[3]);
 				B[idx][idx+3] = model->solve_eq1_ds_beta(i, neighbor[3]);
 				B[idx][phi_next] = model->solve_eq1_dp_beta(i, neighbor[5]);
@@ -433,8 +433,8 @@ void GasOil3DSolver::MiddleAppr(int current, int MZ, int key)
 				B[idx+1][idx-1] = model->solve_eq2_ds_beta(i, neighbor[2]);
 				B[idx+1][phi_prev] = model->solve_eq2_dp_beta(i, neighbor[4]);
 				B[idx+1][phi_prev+1] = model->solve_eq2_ds_beta(i, neighbor[4]);
-				B[idx+1][idx] = model->solve_eq2_dp(i);
-				B[idx+1][idx+1] = model->solve_eq2_ds(i);
+				B[idx+1][idx] = model->solve_eq2_dp(i, i);
+				B[idx+1][idx+1] = model->solve_eq2_ds(i, i);
 				B[idx+1][idx+2] = model->solve_eq2_dp_beta(i, i+1);
 				B[idx+1][idx+3] = model->solve_eq2_ds_beta(i, i+1);
 				B[idx+1][phi_next] = model->solve_eq2_dp_beta(i, neighbor[5]);

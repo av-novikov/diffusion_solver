@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <functional>
 
 #include "util/Interpolate.h"
 
@@ -19,6 +20,21 @@ using std::string;
 using std::sort;
 using std::make_pair;
 using std::ifstream;
+using std::function;
+
+struct FillFoo
+{
+	std::vector<vector<function<double(int, int)> > > mat;
+	std::vector<function<double(int)> > rhs;
+
+	FillFoo& operator=(const FillFoo& a)
+	{
+		mat = a.mat;
+		rhs = a.rhs;
+
+		return *this;
+	}
+};
 
 inline void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
 {

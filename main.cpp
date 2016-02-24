@@ -912,7 +912,7 @@ using namespace std;
 	return props;
 }*/
 
-gasOil_3d_NIT::Properties* getProps()
+/*gasOil_3d_NIT::Properties* getProps()
 {
 	gasOil_3d_NIT::Properties* props = new gasOil_3d_NIT::Properties();
 	
@@ -955,7 +955,7 @@ gasOil_3d_NIT::Properties* getProps()
 	props->perfIntervals.push_back( make_pair(34+80*(props->cellsNum_r+2)*(props->cellsNum_z+2), 34+80*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(36+85*(props->cellsNum_r+2)*(props->cellsNum_z+2), 36+85*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(38+90*(props->cellsNum_r+2)*(props->cellsNum_z+2), 38+90*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(36+95*(props->cellsNum_r+2)*(props->cellsNum_z+2), 40+95*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );*/
+	props->perfIntervals.push_back( make_pair(36+95*(props->cellsNum_r+2)*(props->cellsNum_z+2), 40+95*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 
 	props->r_w = 0.1;
 	props->r_e = 500.0;
@@ -1055,6 +1055,129 @@ gasOil_3d_NIT::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
+}*/
+
+gasOil_3d::Properties* getProps()
+{
+	gasOil_3d::Properties* props = new gasOil_3d::Properties();
+
+	props->cellsNum_r = 5;
+	props->cellsNum_phi = 4;
+	props->cellsNum_z = 1;
+
+	props->timePeriods.push_back(1000.0 * 3600.0);
+
+	props->leftBoundIsRate = true;
+	props->rightBoundIsPres = true;
+	props->rates.push_back(0.1);
+
+	props->ht = 10.0;
+	props->ht_min = 10.0;
+	props->ht_max = 5000000.0;
+
+	props->alpha = 7200.0;
+
+	props->perfIntervals.push_back(make_pair(1, 1));
+	/*props->perfIntervals.push_back(make_pair(17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	props->perfIntervals.push_back(make_pair(18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	props->perfIntervals.push_back(make_pair(19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	props->perfIntervals.push_back(make_pair(20 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 20 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));*/
+
+	/*props->perfIntervals.push_back( make_pair(6+10*(props->cellsNum_r+2)*(props->cellsNum_z+2), 6+10*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(8+15*(props->cellsNum_r+2)*(props->cellsNum_z+2), 8+15*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(10+20*(props->cellsNum_r+2)*(props->cellsNum_z+2), 10+20*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(12+25*(props->cellsNum_r+2)*(props->cellsNum_z+2), 12+25*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(14+30*(props->cellsNum_r+2)*(props->cellsNum_z+2), 14+30*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(16+35*(props->cellsNum_r+2)*(props->cellsNum_z+2), 16+35*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(18+40*(props->cellsNum_r+2)*(props->cellsNum_z+2), 18+40*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(20+45*(props->cellsNum_r+2)*(props->cellsNum_z+2), 20+45*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(22+50*(props->cellsNum_r+2)*(props->cellsNum_z+2), 22+50*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(24+55*(props->cellsNum_r+2)*(props->cellsNum_z+2), 24+55*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(26+60*(props->cellsNum_r+2)*(props->cellsNum_z+2), 26+60*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(28+65*(props->cellsNum_r+2)*(props->cellsNum_z+2), 28+65*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(30+70*(props->cellsNum_r+2)*(props->cellsNum_z+2), 30+70*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(32+75*(props->cellsNum_r+2)*(props->cellsNum_z+2), 32+75*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(34+80*(props->cellsNum_r+2)*(props->cellsNum_z+2), 34+80*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(36+85*(props->cellsNum_r+2)*(props->cellsNum_z+2), 36+85*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(38+90*(props->cellsNum_r+2)*(props->cellsNum_z+2), 38+90*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(36+95*(props->cellsNum_r+2)*(props->cellsNum_z+2), 40+95*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );*/
+
+	props->r_w = 0.1;
+	props->r_e = 500.0;
+
+	gasOil_3d::Skeleton_Props tmp;
+	tmp.cellsNum_z = 1;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
+	tmp.s_init = 0.999;
+	tmp.h1 = 1500.0;
+	tmp.h2 = 1501.0;
+	tmp.height = 1.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 5.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back(tmp);
+
+	/*tmp.cellsNum_z = 25;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
+	tmp.s_init = 0.999;
+	tmp.h1 = 1500.25;
+	tmp.h2 = 1500.75;
+	tmp.height = 0.5;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 5.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back(tmp);
+
+	tmp.cellsNum_z = 5;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
+	tmp.s_init = 0.999;
+	tmp.h1 = 1500.75;
+	tmp.h2 = 1501.0;
+	tmp.height = 0.25;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 5.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back(tmp);*/
+
+	props->depth_point = 1500.0;
+
+	props->props_oil.visc = 1.64;
+	props->props_oil.b_bore = 1.245;
+	props->props_oil.dens_stc = 736.0;
+	props->props_oil.beta = 1.0 * 1.e-9;
+
+	props->props_gas.visc = 0.02833;
+	props->props_gas.dens_stc = 0.72275;
+
+	props->props_gas.visc = 0.02833;
+	props->props_gas.dens_stc = 0.8;
+
+	// Defining relative permeabilities
+	setDataFromFile(props->kr_oil, "props/koil.txt");
+	setDataFromFile(props->kr_gas, "props/kgas.txt");
+
+	// Defining volume factors
+	//props->byDefault.B_oil = true;
+	setDataFromFile(props->B_oil, "props/Boil.txt");
+	//props->byDefault.B_gas = false;
+	setDataFromFile(props->B_gas, "props/Bgas.txt");
+
+	//props->byDefault.Rs = true;
+	setDataFromFile(props->Rs, "props/Rs.txt");
+
+	return props;
 }
 
 /*gas1D::Properties* getProps()
@@ -1115,8 +1238,8 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 	
-	gasOil_3d_NIT::Properties* props = getProps();
-	Scene_OMP<1, gasOil_3d_NIT::GasOil_3D_NIT, gasOil_3d_NIT::GasOil3DNITSolver, gasOil_3d_NIT::Properties> scene;
+	gasOil_3d::Properties* props = getProps();
+	Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

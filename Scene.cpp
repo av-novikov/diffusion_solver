@@ -21,13 +21,17 @@
 
 #include "model/3D/GasOil_3D/GasOil_3D.h"
 #include "model/3D/GasOil_3D/GasOil3DSolver.h"
+#include "model/3D/GasOil_3D/Par3DSolver.h"
 
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 #include "model/3D/GasOil_3D_NIT/GasOil3DNITSolver.h"
 
 #include "tests/gas1D-test.h"
 
+#include "paralution.hpp"
+
 using namespace std;
+using namespace paralution;
 
 template <class modelType, class methodType, typename propsType>
 Scene<modelType, methodType, propsType>::Scene()
@@ -42,12 +46,30 @@ Scene<modelType, methodType, propsType>::~Scene()
 	delete method;
 }
 
+template <>
+Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties>::~Scene()
+{
+	stop_paralution();
+
+	delete model;
+	delete method;
+}
+
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::load(propsType& props)
 {
 	model->load(props);
 	method = new methodType(model);
 }
+
+template <>
+void Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties>::load(gasOil_3d::Properties& props)
+{
+	model->load(props);
+	init_paralution();
+	method = new gasOil_3d::Par3DSolver(model);
+}
+
 
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::load(propsType& props, int i)
@@ -87,6 +109,7 @@ template class Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties>;
 template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties>;
 template class Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSolver, gasOil_rz_NIT::Properties>;
 template class Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties>;
+template class Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties>;
 template class Scene<gasOil_3d_NIT::GasOil_3D_NIT, gasOil_3d_NIT::GasOil3DNITSolver, gasOil_3d_NIT::Properties>;
 
 template class Scene<Gas1D_Wrapped, gas1D::Gas1DSol, gas1D::Properties>;

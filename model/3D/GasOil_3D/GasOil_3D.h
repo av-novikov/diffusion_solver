@@ -133,6 +133,12 @@ namespace gasOil_3d
 		template<typename> friend class AbstractMethod;
 		friend class GasOil3DSolver;
 		friend class Par3DSolver;
+		template<typename> friend class MidStencil;
+		template<typename> friend class LeftStencil;
+		template<typename> friend class RightStencil;
+		template<typename> friend class TopStencil;
+		template<typename> friend class BotStencil;
+		template<typename> friend class UsedStencils;
 
 	protected:
 		// Continuum properties
@@ -200,6 +206,22 @@ namespace gasOil_3d
 				neighbor[5] = cur + (cellsNum_r + 2) * (cellsNum_z + 2);
 			else
 				neighbor[5] = cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+		};
+		inline void getStencilIdx(int cur, int* const neighbor)
+		{
+			neighbor[0] = cur;
+			neighbor[1] = cur - cellsNum_z - 2;
+			neighbor[2] = cur + cellsNum_z + 2;
+			neighbor[3] = cur - 1;
+			neighbor[4] = cur + 1;
+			if (cur < (cellsNum_r + 2) * (cellsNum_z + 2))
+				neighbor[5] = cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+			else
+				neighbor[5] = cur - (cellsNum_r + 2) * (cellsNum_z + 2);
+			if (cur < (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1))
+				neighbor[6] = cur + (cellsNum_r + 2) * (cellsNum_z + 2);
+			else
+				neighbor[6] = cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
 		};
 		inline int getIdx(int i)
 		{
@@ -475,34 +497,306 @@ namespace gasOil_3d
 
 		// First eqn
 		double solve_eq1(int cur);
-		double solve_eq1_dp(int cur);
-		double solve_eq1_ds(int cur);
+		double solve_eq1_dp(int cur, int beta);
+		double solve_eq1_ds(int cur, int beta);
 		double solve_eq1_dp_beta(int cur, int beta);
 		double solve_eq1_ds_beta(int cur, int beta);
 
 		// Second eqn
 		double solve_eq2(int cur);
-		double solve_eq2_dp(int cur);
-		double solve_eq2_ds(int cur);
+		double solve_eq2_dp(int cur, int beta);
+		double solve_eq2_ds(int cur, int beta);
 		double solve_eq2_dp_beta(int cur, int beta);
 		double solve_eq2_ds_beta(int cur, int beta);
 
-		// Left boundary condition
-		double solve_eqLeft(int cur);
-		double solve_eqLeft_dp(int cur);
-		double solve_eqLeft_ds(int cur);
-		double solve_eqLeft_dp_beta(int cur);
-		double solve_eqLeft_ds_beta(int cur);
+		/*-------------- Left cells ------------------*/
 
-		// Right boundary condition
-		double solve_eqRight(int cur);
-		double solve_eqRight_dp(int cur);
-		double solve_eqRight_ds(int cur);
-		double solve_eqRight_dp_beta(int cur);
-		double solve_eqRight_ds_beta(int cur);
+		inline double solve_eq1Left(int cur)
+		{
+			const int neighbor = cur + cellsNum_z + 2;
+			Var2phase& next = cells[cur].u_next;
+			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+
+			if (leftBoundIsRate)
+				return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p) - Qcell[cur];
+			else
+				return next.p - Pwf;
+		}
+
+		inline double solve_eq1Left_dp(int cur, int beta)
+		{
+			const int neighbor = cur + cellsNum_z + 2;
+			Var2phase& next = cells[cur].u_next;
+			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+
+			if (leftBoundIsRate)
+				return -getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
+			else
+				return 1.0;
+		}
+
+		inline double solve_eq1Left_ds(int cur, int beta)
+		{
+			const int neighbor = cur + cellsNum_z + 2;
+			Var2phase& next = cells[cur].u_next;
+			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+
+			if (leftBoundIsRate)
+				return getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
+			else
+				return 0.0;
+		}
+
+		inline double solve_eq1Left_dp_beta(int cur, int beta)
+		{
+			const int neighbor = cur + cellsNum_z + 2;
+			Var2phase& next = cells[cur].u_next;
+			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+
+			if (leftBoundIsRate)
+				return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
+			else
+				return 0.0;
+		}
+
+		inline double solve_eq1Left_ds_beta(int cur, int beta)
+		{
+			const int neighbor = cur + cellsNum_z + 2;
+			Var2phase& next = cells[cur].u_next;
+			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+
+			if (leftBoundIsRate)
+				return getTrans(cells[cur], cells[neighbor]) * (1.0 - upwindIsCur(cur, neighbor)) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
+			else
+				return 0.0;
+		}
+
+		inline double solve_eq2Left(int cur)
+		{
+			Cell& curr = cells[cur];
+			Cell& nebr1 = cells[cur + cellsNum_z + 2];
+			Cell& nebr2 = cells[cur + 2 * cellsNum_z + 4];
+
+			return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.r - nebr1.r) - (nebr1.u_next.s - curr.u_next.s) / (nebr1.r - curr.r);
+		}
+
+		inline double solve_eq2Left_dp(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Left_ds(int cur, int beta)
+		{
+			Cell& curr = cells[cur];
+			Cell& nebr = cells[cur + cellsNum_z + 2];
+
+			return 1.0 / (nebr.r - curr.r);
+		}
+
+		inline double solve_eq2Left_dp_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Left_ds_beta(int cur, int beta)
+		{
+			Cell& curr = cells[cur];
+			Cell& nebr1 = cells[cur + cellsNum_z + 2];
+			Cell& nebr2 = cells[cur + 2 * cellsNum_z + 4];
+
+			if (beta == cur + cellsNum_z + 2)
+				return -1.0 / (nebr2.r - nebr1.r) - 1.0 / (nebr1.r - curr.r);
+			else
+				return 1.0 / (nebr2.r - nebr1.r);
+		}
+
+		/*-------------- Right cells ------------------*/
+
+		inline double solve_eq1Right(int cur)
+		{
+			const Cell& cell = cells[cur];
+
+			if (rightBoundIsPres)
+				return cell.u_next.p - props_sk[getSkeletonIdx(cell)].p_out;
+			else
+				return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
+		}
+
+		inline double solve_eq1Right_dp(int cur, int beta)
+		{
+			if (rightBoundIsPres)
+				return 1.0;
+			else
+				return 1.0;
+		}
+
+		inline double solve_eq1Right_ds(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq1Right_dp_beta(int cur, int beta)
+		{
+			if (rightBoundIsPres)
+				return 0.0;
+			else
+				return -1.0;
+		}
+
+		inline double solve_eq1Right_ds_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Right(int cur)
+		{
+			if (rightBoundIsPres)
+			{
+				return cells[cur].u_next.s - props_sk[getSkeletonIdx(cells[cur])].s_init;
+			}
+			else {
+				return cells[cur].u_next.s - cells[cur - cellsNum_z - 2].u_next.s;
+			}
+		}
+
+		inline double solve_eq2Right_dp(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Right_ds(int cur, int beta)
+		{
+			return 1.0;
+		}
+
+		inline double solve_eq2Right_dp_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Right_ds_beta(int cur, int beta)
+		{
+			if (rightBoundIsPres)
+			{
+				return 0.0;
+			}
+			else {
+				return -1.0;
+			}
+		}
+
+		/*-------------- Top cells ------------------*/
+
+		inline double solve_eq1Top(int cur)
+		{
+			return cells[cur].u_next.p - cells[cur + 1].u_next.p;
+		}
+
+		inline double solve_eq1Top_dp(int cur, int beta)
+		{
+			return 1.0;
+		}
+
+		inline double solve_eq1Top_ds(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq1Top_dp_beta(int cur, int beta)
+		{
+			return -1.0;
+		}
+
+		inline double solve_eq1Top_ds_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Top(int cur)
+		{
+			return cells[cur].u_next.s - cells[cur + 1].u_next.s;
+		}
+
+		inline double solve_eq2Top_dp(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Top_ds(int cur, int beta)
+		{
+			return 1.0;
+		}
+
+		inline double solve_eq2Top_dp_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Top_ds_beta(int cur, int beta)
+		{
+			return -1.0;
+		}
+
+		/*-------------- Bot cells ------------------*/
+
+		inline double solve_eq1Bot(int cur)
+		{
+			return cells[cur].u_next.p - cells[cur - 1].u_next.p;
+		}
+
+		inline double solve_eq1Bot_dp(int cur, int beta)
+		{
+			return 1.0;
+		}
+
+		inline double solve_eq1Bot_ds(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq1Bot_dp_beta(int cur, int beta)
+		{
+			return -1.0;
+		}
+
+		inline double solve_eq1Bot_ds_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Bot(int cur)
+		{
+			return cells[cur].u_next.s - cells[cur - 1].u_next.s;
+		}
+
+		inline double solve_eq2Bot_dp(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Bot_ds(int cur, int beta)
+		{
+			return 1.0;
+		}
+
+		inline double solve_eq2Bot_dp_beta(int cur, int beta)
+		{
+			return 0.0;
+		}
+
+		inline double solve_eq2Bot_ds_beta(int cur, int beta)
+		{
+			return -1.0;
+		}
 
 		// Finds functional
 		double solveH();
+
+		FillFoo middleFoo;
+		FillFoo rightFoo;
+		FillFoo leftFoo;
+		FillFoo topFoo;
+		FillFoo botFoo;
 
 	public:
 		GasOil_3D();

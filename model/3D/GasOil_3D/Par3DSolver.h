@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <map>
 
+#include "model/cells/stencils/Stencil.h"
 #include "model/AbstractSolver.hpp"
 #include "method/ParalutionInterface.h"
 #include "method/sweep.h"
@@ -55,17 +56,17 @@ namespace gasOil_3d
 			std::cout << std::endl;
 		};
 
-		int counter;
-		void Solve();
-		void fillLeft();
-		void fillMiddle();
-		void fillRight();
-		void fillTop(int i);
-		void fillBottom(int i);
+		void fill();
+		void fillIndices();
+		void copySolution();
+
+		UsedStencils<GasOil_3D>* stencils;
 
 	public:
 		Par3DSolver(GasOil_3D* _model);
 		~Par3DSolver();
+
+		void start();
 	};
 }
 
