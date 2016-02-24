@@ -12,15 +12,10 @@ ParSolver::~ParSolver()
 
 void ParSolver::Solve()
 {
-	BiCGStab<LocalMatrix<double>, LocalVector<double>, double > ls;
-
 	double tick, tack;
-
-	ls.SetOperator(Mat);
-	Mat.WriteFileMTX("snaps/mat.mtx");
-	//std::cout << Mat.get_ncol() << " " << Mat.get_nrow() << std::endl;
-	Rhs.WriteFileASCII("snaps/rhs.dat");
-	//std::cout << Rhs.get_size() << std::endl;
+	
+//	Mat.WriteFileMTX("snaps/mat.mtx");
+//	Rhs.WriteFileASCII("snaps/rhs.dat");
 	ls.Build();
 
 	//Mat.info();
@@ -28,6 +23,8 @@ void ParSolver::Solve()
 	tick = paralution_time();
 	ls.Solve(Rhs, &x);
 	tack = paralution_time();
+
+	//x.WriteFileASCII("snaps/x.dat");
 
 	std::cout << "Solver execution:" << (tack - tick) / 1000000 << " sec" << std::endl;
 }

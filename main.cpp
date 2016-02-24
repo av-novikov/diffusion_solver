@@ -1061,15 +1061,15 @@ gasOil_3d::Properties* getProps()
 {
 	gasOil_3d::Properties* props = new gasOil_3d::Properties();
 
-	props->cellsNum_r = 5;
-	props->cellsNum_phi = 4;
-	props->cellsNum_z = 1;
+	props->cellsNum_r = 30;
+	props->cellsNum_phi = 30;
+	props->cellsNum_z = 30;
 
-	props->timePeriods.push_back(1000.0 * 3600.0);
+	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(0.1);
+	props->rates.push_back(0.001);
 
 	props->ht = 10.0;
 	props->ht_min = 10.0;
@@ -1106,7 +1106,7 @@ gasOil_3d::Properties* getProps()
 	props->r_e = 500.0;
 
 	gasOil_3d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 30;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
 	tmp.s_init = 0.999;

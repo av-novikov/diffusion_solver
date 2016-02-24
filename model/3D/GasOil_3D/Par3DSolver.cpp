@@ -276,6 +276,10 @@ void Par3DSolver::fillIndices()
 
 void Par3DSolver::fill()
 {
+	Mat.Zeros();
+	Rhs.Zeros();
+	x.Zeros();
+
 	int idx;
 	int counter = 0;
 	map<int, double>::iterator it;
@@ -294,10 +298,10 @@ void Par3DSolver::fill()
 				a[counter++] = -1.0;
 				a[counter++] = 0.0;
 
+				a[counter++] = 0.0;
 				a[counter++] = 1.0;
 				a[counter++] = 0.0;
 				a[counter++] = -1.0;
-				a[counter++] = 0.0;
 
 				rhs[2 * idx] = 0.0;
 				rhs[2 * idx + 1] = 0.0;
@@ -339,9 +343,15 @@ void Par3DSolver::fill()
 	}
 
 	if (cur_t == model->ht && iterations == 0)
+	{
 		Mat.Assemble(ind_i, ind_j, a, counter, "A", 2 * model->cellsNum, 2 * model->cellsNum);
+		ls.SetOperator(Mat);
+	} 
 	else
+	{
 		Mat.AssembleUpdate(a);
+		ls.ResetOperator(Mat);
+	}
 
 	Rhs.Assemble(ind_rhs, rhs, 2 * model->cellsNum, "rhs");
 }
