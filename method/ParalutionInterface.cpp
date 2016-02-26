@@ -25,8 +25,10 @@ void ParSolver::Assemble(const int* ind_i, const int* ind_j, const double* a, co
 	x.Zeros();
 
 	if (isAssembled)
-		AssembleUpdate(a, ind_rhs, rhs);
-	else {
+	{
+		Mat.AssembleUpdate(a);
+		Rhs.Assemble(ind_rhs, rhs, matSize, "rhs");
+	} else {
 		Mat.Assemble(ind_i, ind_j, a, counter, "A", matSize, matSize);
 		Rhs.Assemble(ind_rhs, rhs, matSize, "rhs");
 
@@ -34,12 +36,6 @@ void ParSolver::Assemble(const int* ind_i, const int* ind_j, const double* a, co
 		Rhs.MoveToAccelerator();
 		x.MoveToAccelerator();
 	}	
-}
-
-void ParSolver::AssembleUpdate(const double* a, const int* ind_rhs, const double* rhs)
-{
-	Mat.AssembleUpdate(a);
-	Rhs.Assemble(ind_rhs, rhs, matSize, "rhs");
 }
 
 const paralution::LocalVector<double>& ParSolver::getSolution()
@@ -54,21 +50,12 @@ void ParSolver::Solve()
 	//Mat.WriteFileMTX("snaps/mat.mtx");
 	//Rhs.WriteFileASCII("snaps/rhs.dat");
 
-	/*if (isAssembled)
-	{
-		ls.ResetOperator(Mat);
-		//p.Set(1);
-		//ls.SetPreconditioner(p);
-	}
-	else
-	{*/
-		ls.SetOperator(Mat);
-		p.Set(1);
-		ls.SetPreconditioner(p);
-		ls.Build();
-		isAssembled = true;
-	//}
-
+	ls.SetOperator(Mat);
+	p.Set(1);
+	ls.SetPreconditioner(p);
+	ls.Build();
+	isAssembled = true;
+	
 	Mat.info();
 
 	tick = paralution_time();

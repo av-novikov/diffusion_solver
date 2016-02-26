@@ -18,7 +18,6 @@ protected:
 public:
 	void Init(int vecSize);
 	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
-	void AssembleUpdate(const double* a, const int* ind_rhs, const double* rhs);
 	void Solve();
 
 	const paralution::LocalVector<double>& getSolution();
