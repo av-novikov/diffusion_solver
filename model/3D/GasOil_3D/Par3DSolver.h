@@ -14,7 +14,7 @@
 
 namespace gasOil_3d
 {
-	class Par3DSolver : public AbstractSolver<GasOil_3D>, public ParSolver
+	class Par3DSolver : public AbstractSolver<GasOil_3D>
 	{
 	protected:
 		std::ofstream plot_Sdyn;
@@ -58,9 +58,22 @@ namespace gasOil_3d
 
 		void fill();
 		void fillIndices();
-		void copySolution();
+		void copySolution(const paralution::LocalVector<double>& sol);
 
+		// Numerical stencils for matrix filling
 		UsedStencils<GasOil_3D>* stencils;
+
+		// Sparse matrix solver
+		ParSolver solver;
+
+		// Coordinate form of sparse matrix & dense vector
+		int* ind_i;
+		int* ind_j;
+		double* a;
+		int* ind_rhs;
+		double* rhs;
+		// Number of non-zero elements in sparse matrix
+		int elemNum;
 
 	public:
 		Par3DSolver(GasOil_3D* _model);

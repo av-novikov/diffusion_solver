@@ -47,7 +47,7 @@ Scene<modelType, methodType, propsType>::~Scene()
 }
 
 template <>
-Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties>::~Scene()
+Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties>::~Scene()
 {
 	stop_paralution();
 
@@ -67,6 +67,8 @@ void Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties>:
 {
 	model->load(props);
 	init_paralution();
+	//set_omp_threads_paralution(1);
+	//info_paralution();
 	method = new gasOil_3d::Par3DSolver(model);
 }
 

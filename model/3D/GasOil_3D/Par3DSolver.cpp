@@ -7,36 +7,38 @@ using namespace gasOil_3d;
 
 Par3DSolver::Par3DSolver(GasOil_3D* _model) : AbstractSolver<GasOil_3D>(_model)
 {
+	// Output streams
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
 	plot_Sdyn.open("snaps/S_dyn.dat", ofstream::out);
 	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
 
-	t_dim = model->t_dim;
-
+	// Flow rate optimization structures
 	n = model->Qcell.size();
 	dq.Initialize(n);
 	q.Initialize(n);
-
 	dpdq.Initialize(n, n - 1);
 	mat.Initialize(n - 1, n - 1);
 	b.Initialize(n - 1);
 
+	// Time settings
+	t_dim = model->t_dim;
 	Tt = model->period[model->period.size() - 1];
 
+	// Memory allocating
+	ind_i = new int[7 * 4 * model->cellsNum];
+	ind_j = new int[7 * 4 * model->cellsNum];
+	a = new double[7 * 4 * model->cellsNum];
+	ind_rhs = new int[2 * model->cellsNum];
+	rhs = new double[2 * model->cellsNum];
+
+	// Stencils allocating
 	stencils = new UsedStencils<GasOil_3D>(model);
-
-	ind_i = new int[ 7 * 4 * model->cellsNum ];
-	ind_j = new int[ 7 * 4 * model->cellsNum ];
-	a = new double[ 7 * 4 * model->cellsNum ];
-
-	ind_rhs = new int[ 2 * model->cellsNum ];
-	rhs = new double[ 2 * model->cellsNum ];
-
 	stencils->setStorages(a, ind_i, ind_j, rhs);
 }
 
 Par3DSolver::~Par3DSolver()
 {
+	// Closing streams
 	plot_Pdyn.close();
 	plot_Sdyn.close();
 	plot_qcells.close();
@@ -93,7 +95,7 @@ void Par3DSolver::start()
 	iterations = 8;
 
 	fillIndices();
-	x.Allocate("x", 2 * model->cellsNum);
+	solver.Init(2 * model->cellsNum);
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -148,12 +150,12 @@ void Par3DSolver::doNextStep()
 	}
 }
 
-void Par3DSolver::copySolution()
+void Par3DSolver::copySolution(const paralution::LocalVector<double>& sol)
 {
 	for (int i = 0; i < model->cellsNum; i++)
 	{
-		model->cells[i].u_next.p += x[2 * i];
-		model->cells[i].u_next.s += x[2 * i + 1];
+		model->cells[i].u_next.p += sol[2 * i];
+		model->cells[i].u_next.s += sol[2 * i + 1];
 	}
 }
 
@@ -172,8 +174,9 @@ void Par3DSolver::solveStep()
 		copyIterLayer();
 
 		fill();
-		Solve();
-		copySolution();
+		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
+		solver.Solve();
+		copySolution( solver.getSolution() );
 
 		model->solveP_bub();
 
@@ -270,16 +273,14 @@ void Par3DSolver::fillIndices()
 		}
 	}
 
+	elemNum = counter;
+
 	for (int i = 0; i < 2*model->cellsNum; i++)
 		ind_rhs[i] = i;
 }
 
 void Par3DSolver::fill()
 {
-	Mat.Zeros();
-	Rhs.Zeros();
-	x.Zeros();
-
 	int idx;
 	int counter = 0;
 	map<int, double>::iterator it;
@@ -341,19 +342,6 @@ void Par3DSolver::fill()
 			idx++;
 		}
 	}
-
-	if (cur_t == model->ht && iterations == 0)
-	{
-		Mat.Assemble(ind_i, ind_j, a, counter, "A", 2 * model->cellsNum, 2 * model->cellsNum);
-		ls.SetOperator(Mat);
-	} 
-	else
-	{
-		Mat.AssembleUpdate(a);
-		ls.ResetOperator(Mat);
-	}
-
-	Rhs.Assemble(ind_rhs, rhs, 2 * model->cellsNum, "rhs");
 }
 
 void Par3DSolver::fillq()

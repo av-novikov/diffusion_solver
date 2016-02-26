@@ -5,21 +5,22 @@
 
 class ParSolver
 {
-public:
+protected:
 	paralution::LocalVector<double> x;
 	paralution::LocalVector<double> Rhs;
 	paralution::LocalMatrix<double> Mat;
 	paralution::GMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > ls;
 
-	int* ind_i;
-	int* ind_j;
-	double* a;
-	
-	int* ind_rhs;
-	double* rhs;
+	bool isAssembled;
+	int matSize;
 
-	virtual void Solve();
-	virtual void copySolution() = 0;
+public:
+	void Init(int vecSize);
+	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
+	void AssembleUpdate(const double* a, const int* ind_rhs, const double* rhs);
+	void Solve();
+
+	const paralution::LocalVector<double>& getSolution();
 
 	ParSolver();
 	~ParSolver();
