@@ -5,7 +5,7 @@ using namespace paralution;
 ParSolver::ParSolver()
 {
 	isAssembled = false;
-	ls.Init(1.E-8, 1.E-5, 1E+4, 100000);
+	ls.Init(1.E-6, 1.E-5, 1E+4, 100000);
 }
 
 ParSolver::~ParSolver()
@@ -51,17 +51,23 @@ void ParSolver::Solve()
 {
 	double tick, tack;
 	
-	Mat.WriteFileMTX("snaps/mat.mtx");
-	Rhs.WriteFileASCII("snaps/rhs.dat");
+	//Mat.WriteFileMTX("snaps/mat.mtx");
+	//Rhs.WriteFileASCII("snaps/rhs.dat");
 
-	if (isAssembled)
-		ls.ResetOperator(Mat);
-	else
+	/*if (isAssembled)
 	{
+		ls.ResetOperator(Mat);
+		//p.Set(1);
+		//ls.SetPreconditioner(p);
+	}
+	else
+	{*/
 		ls.SetOperator(Mat);
+		p.Set(1);
+		ls.SetPreconditioner(p);
 		ls.Build();
 		isAssembled = true;
-	}
+	//}
 
 	Mat.info();
 
@@ -74,4 +80,6 @@ void ParSolver::Solve()
 	std::cout << "Solver execution:" << (tack - tick) / 1000000 << " sec" << std::endl;
 
 	x.MoveToHost();
+
+	ls.Clear();
 }

@@ -1067,51 +1067,44 @@ gasOil_3d::Properties* getProps()
 
 	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
 
-	props->leftBoundIsRate = true;
+	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(0.001);
+	//props->rates.push_back(1.0);
+	props->pwf.push_back(200.0 * 1.E+5);
 
-	props->ht = 10.0;
-	props->ht_min = 10.0;
+	props->ht = 1000.0;
+	props->ht_min = 100.0;
 	props->ht_max = 5000000.0;
 
 	props->alpha = 7200.0;
 
-	props->perfIntervals.push_back(make_pair(1, 1));
-	/*props->perfIntervals.push_back(make_pair(17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
-	props->perfIntervals.push_back(make_pair(18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	//props->perfIntervals.push_back(make_pair(6, 1));
+	//props->perfIntervals.push_back(make_pair(17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	/*props->perfIntervals.push_back(make_pair(18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
 	props->perfIntervals.push_back(make_pair(19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
 	props->perfIntervals.push_back(make_pair(20 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 20 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));*/
 
-	/*props->perfIntervals.push_back( make_pair(6+10*(props->cellsNum_r+2)*(props->cellsNum_z+2), 6+10*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(8+15*(props->cellsNum_r+2)*(props->cellsNum_z+2), 8+15*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(10+20*(props->cellsNum_r+2)*(props->cellsNum_z+2), 10+20*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(12+25*(props->cellsNum_r+2)*(props->cellsNum_z+2), 12+25*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(14+30*(props->cellsNum_r+2)*(props->cellsNum_z+2), 14+30*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(11+10*(props->cellsNum_r+2)*(props->cellsNum_z+2), 11+10*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(12+15*(props->cellsNum_r+2)*(props->cellsNum_z+2), 12+15*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(13+20*(props->cellsNum_r+2)*(props->cellsNum_z+2), 13+20*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(14+25*(props->cellsNum_r+2)*(props->cellsNum_z+2), 14+25*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(15+30*(props->cellsNum_r+2)*(props->cellsNum_z+2), 15+30*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(16+35*(props->cellsNum_r+2)*(props->cellsNum_z+2), 16+35*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(18+40*(props->cellsNum_r+2)*(props->cellsNum_z+2), 18+40*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(20+45*(props->cellsNum_r+2)*(props->cellsNum_z+2), 20+45*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(22+50*(props->cellsNum_r+2)*(props->cellsNum_z+2), 22+50*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(24+55*(props->cellsNum_r+2)*(props->cellsNum_z+2), 24+55*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(26+60*(props->cellsNum_r+2)*(props->cellsNum_z+2), 26+60*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(28+65*(props->cellsNum_r+2)*(props->cellsNum_z+2), 28+65*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(30+70*(props->cellsNum_r+2)*(props->cellsNum_z+2), 30+70*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(32+75*(props->cellsNum_r+2)*(props->cellsNum_z+2), 32+75*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(34+80*(props->cellsNum_r+2)*(props->cellsNum_z+2), 34+80*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(36+85*(props->cellsNum_r+2)*(props->cellsNum_z+2), 36+85*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(38+90*(props->cellsNum_r+2)*(props->cellsNum_z+2), 38+90*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(36+95*(props->cellsNum_r+2)*(props->cellsNum_z+2), 40+95*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );*/
+	props->perfIntervals.push_back( make_pair(17+40*(props->cellsNum_r+2)*(props->cellsNum_z+2), 17+40*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(18+45*(props->cellsNum_r+2)*(props->cellsNum_z+2), 18+45*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(19+50*(props->cellsNum_r+2)*(props->cellsNum_z+2), 19+50*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
+	props->perfIntervals.push_back( make_pair(20+55*(props->cellsNum_r+2)*(props->cellsNum_z+2), 20+55*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 
 	props->r_w = 0.1;
 	props->r_e = 500.0;
 
 	gasOil_3d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 30;
+	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
 	tmp.s_init = 0.999;
 	tmp.h1 = 1500.0;
-	tmp.h2 = 1501.0;
+	tmp.h2 = 1500.25;
 	tmp.height = 1.0;
 	tmp.perm_r = 100.0;
 	tmp.perm_z = 5.0;
@@ -1121,7 +1114,7 @@ gasOil_3d::Properties* getProps()
 	tmp.radiuses_eff.push_back(props->r_w);
 	props->props_sk.push_back(tmp);
 
-	/*tmp.cellsNum_z = 25;
+	tmp.cellsNum_z = 20;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
 	tmp.s_init = 0.999;
@@ -1149,7 +1142,7 @@ gasOil_3d::Properties* getProps()
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);*/
+	props->props_sk.push_back(tmp);
 
 	props->depth_point = 1500.0;
 

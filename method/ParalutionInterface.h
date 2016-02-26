@@ -10,6 +10,7 @@ protected:
 	paralution::LocalVector<double> Rhs;
 	paralution::LocalMatrix<double> Mat;
 	paralution::GMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > ls;
+	paralution::ILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double> p;
 
 	bool isAssembled;
 	int matSize;
