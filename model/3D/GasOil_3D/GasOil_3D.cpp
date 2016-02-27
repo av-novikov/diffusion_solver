@@ -371,6 +371,19 @@ void GasOil_3D::buildGridLog()
 		cells.push_back( Cell(counter++, cm_r, cm_phi, cm_z+hz/2.0, 0.0, hphi, 0.0) );
 		cm_phi += hphi;
 	}
+
+	// Creating iterators
+	midIter = new Iterator(&cells[cellsNum_z + 2], { 1, 0, 0 }, { cellsNum_r, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+	midBegin = new Iterator( *midIter );
+	midEnd = new Iterator(nullptr, { 1, 0, 0 }, { cellsNum_r, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+
+	leftIter = new Iterator(&cells[0], { 0, 0, 0 }, { 0, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+	leftBegin = new Iterator(*leftIter);
+	leftEnd = new Iterator(nullptr, { 0, 0, 0 }, { 0, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+
+	rightIter = new Iterator(&cells[(cellsNum_r+1)*(cellsNum_z+2)], { cellsNum_r+1, 0, 0 }, { cellsNum_r+1, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+	rightBegin = new Iterator(*rightIter);
+	rightEnd = new Iterator(nullptr, { cellsNum_r+1, 0, 0 }, { cellsNum_r+1, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
 }
 
 void GasOil_3D::setInitialState()

@@ -56,6 +56,7 @@ void ParSolver::Solve()
 	ls.Build();
 	isAssembled = true;
 	
+	ls.Init(1.E-6, 1.E-5, 1E+4, 10000);
 	Mat.info();
 
 	tick = paralution_time();

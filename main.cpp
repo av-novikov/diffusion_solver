@@ -1078,7 +1078,7 @@ gasOil_3d::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	//props->perfIntervals.push_back(make_pair(6, 1));
+	//props->perfIntervals.push_back(make_pair(1, 1));
 	//props->perfIntervals.push_back(make_pair(17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
 	/*props->perfIntervals.push_back(make_pair(18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
 	props->perfIntervals.push_back(make_pair(19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
@@ -1293,8 +1293,9 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	//testing::InitGoogleTest(&argc, argv);
-	//int res = RUN_ALL_TESTS();
+	/*testing::InitGoogleTest(&argc, argv);
+	int res = RUN_ALL_TESTS();
+	while (true) {};*/
 
 	return 0;
 }

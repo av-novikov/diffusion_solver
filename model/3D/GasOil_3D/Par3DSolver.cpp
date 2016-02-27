@@ -201,9 +201,67 @@ void Par3DSolver::fillIndices()
 {
 	int idx, nebr;
 	int counter = 0;
-	map<int, double>::iterator it;
+	Iterator it;
+	map<int, double>::iterator itPerf;
 
 	// Left
+	for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
+	{
+		idx = it.getIdx();
+		itPerf = model->Qcell.find(idx);
+		if (itPerf == model->Qcell.end())
+		{
+			nebr = idx + model->cellsNum_z + 2;
+			ind_i[counter] = 2 * idx;
+			ind_j[counter++] = 2 * idx;
+
+			ind_i[counter] = 2 * idx;
+			ind_j[counter++] = 2 * idx + 1;
+
+			ind_i[counter] = 2 * idx;
+			ind_j[counter++] = 2 * nebr;
+
+			ind_i[counter] = 2 * idx;
+			ind_j[counter++] = 2 * nebr + 1;
+
+			ind_i[counter] = 2 * idx + 1;
+			ind_j[counter++] = 2 * idx;
+
+			ind_i[counter] = 2 * idx + 1;
+			ind_j[counter++] = 2 * idx + 1;
+
+			ind_i[counter] = 2 * idx + 1;
+			ind_j[counter++] = 2 * nebr;
+
+			ind_i[counter] = 2 * idx + 1;
+			ind_j[counter++] = 2 * nebr + 1;
+		}
+		else
+			stencils->left->fillIndex(idx, &counter);
+	}
+
+	// Middle
+	int res;
+	for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+	{
+		idx = it.getIdx();
+		res = idx % (model->cellsNum_z + 2);
+		if( res == 0 )
+			stencils->top->fillIndex(idx, &counter);
+		else if( res == model->cellsNum_z + 1)
+			stencils->bot->fillIndex(idx, &counter);
+		else
+			stencils->middle->fillIndex(idx, &counter);	
+	}
+
+	// Right
+	for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
+	{
+		idx = it.getIdx();
+		stencils->right->fillIndex(idx, &counter);
+	}
+
+	/*// Left
 	for (int i = 0; i < model->cellsNum_phi; i++)
 	{
 		idx = i * (model->cellsNum_r + 2) * (model->cellsNum_z + 2);
@@ -271,7 +329,7 @@ void Par3DSolver::fillIndices()
 			stencils->right->fillIndex(idx, &counter);
 			idx++;
 		}
-	}
+	}*/
 
 	elemNum = counter;
 
@@ -282,6 +340,56 @@ void Par3DSolver::fillIndices()
 void Par3DSolver::fill()
 {
 	int idx;
+	int counter = 0;
+	Iterator it;
+	map<int, double>::iterator itPerf;
+
+	// Left
+	for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
+	{
+		idx = it.getIdx();
+		itPerf = model->Qcell.find(idx);
+		if (itPerf == model->Qcell.end())
+		{
+			a[counter++] = 1.0;
+			a[counter++] = 0.0;
+			a[counter++] = -1.0;
+			a[counter++] = 0.0;
+
+			a[counter++] = 0.0;
+			a[counter++] = 1.0;
+			a[counter++] = 0.0;
+			a[counter++] = -1.0;
+
+			rhs[2 * idx] = 0.0;
+			rhs[2 * idx + 1] = 0.0;
+		}
+		else
+			stencils->left->fill(idx, &counter);
+	}
+
+	// Middle
+	int res;
+	for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+	{
+		idx = it.getIdx();
+		res = idx % (model->cellsNum_z + 2);
+		if (res == 0)
+			stencils->top->fill(idx, &counter);
+		else if (res == model->cellsNum_z + 1)
+			stencils->bot->fill(idx, &counter);
+		else
+			stencils->middle->fill(idx, &counter);
+	}
+
+	// Right
+	for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
+	{
+		idx = it.getIdx();
+		stencils->right->fill(idx, &counter);
+	}
+
+	/*int idx;
 	int counter = 0;
 	map<int, double>::iterator it;
 
@@ -341,7 +449,7 @@ void Par3DSolver::fill()
 			stencils->right->fill(idx, &counter);
 			idx++;
 		}
-	}
+	}*/
 }
 
 void Par3DSolver::fillq()

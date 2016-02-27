@@ -3,6 +3,7 @@
 #include "tests/oil1D-test.h"
 #include "tests/gas1D-test.h"
 #include "tests/gas1Dsimple-test.h"
+#include "tests/iterators-test.h"
 
 TEST(Gas1DTest, StationaryRate)
 {
@@ -37,4 +38,11 @@ TEST(Oil1D_NIT, JT_Temperature)
 	Oil1D_Test test;
 	test.run();
 	test.jt_temp_test();
+}
+
+TEST(Iterators, 3D_Iterators)
+{
+	Iterators_Test test;
+	test.run();
+	test.test();
 }

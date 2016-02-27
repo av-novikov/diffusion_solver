@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 
+#include "model/cells/Iterators.h"
 #include "model/cells/Variables.hpp"
 #include "model/cells/CylCell3D.h"
 #include "model/AbstractModel.hpp"
@@ -14,6 +15,7 @@
 namespace gasOil_3d
 {
 	typedef CylCell3D<Var2phase> Cell;
+	typedef Iterator<CylCell3D<Var2phase> > Iterator;
 
 	struct Skeleton_Props
 	{
@@ -141,6 +143,22 @@ namespace gasOil_3d
 		template<typename> friend class UsedStencils;
 
 	protected:
+
+		// Middle iterator
+		Iterator* midIter;
+		Iterator* midBegin;
+		Iterator* midEnd;
+
+		// Left iterator
+		Iterator* leftIter;
+		Iterator* leftBegin;
+		Iterator* leftEnd;
+
+		// Right iterator
+		Iterator* rightIter;
+		Iterator* rightBegin;
+		Iterator* rightEnd;
+
 		// Continuum properties
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
@@ -804,6 +822,47 @@ namespace gasOil_3d
 	
 		void setPeriod(int period);
 		double getRate(int cur);
+
+
+		inline Iterator getMidIter()
+		{
+			return Iterator(*midIter);
+		};
+		inline const Iterator& getMidBegin()
+		{
+			return *midBegin;
+		};
+		inline const Iterator& getMidEnd()
+		{
+			return *midEnd;
+		};
+
+		inline Iterator getLeftIter()
+		{
+			return Iterator(*leftIter);
+		};
+		inline const Iterator& getLeftBegin()
+		{
+			return *leftBegin;
+		};
+		inline const Iterator& getLeftEnd()
+		{
+			return *leftEnd;
+		};
+
+		inline Iterator getRightIter()
+		{
+			return Iterator(*rightIter);
+		};
+		inline const Iterator& getRightBegin()
+		{
+			return *rightBegin;
+		};
+		inline const Iterator& getRightEnd()
+		{
+			return *rightEnd;
+		};
+
 	};
 };
 
