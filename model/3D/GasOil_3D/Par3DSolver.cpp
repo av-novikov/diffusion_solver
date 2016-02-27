@@ -53,7 +53,7 @@ void Par3DSolver::writeData()
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		p += model->cells[it->first].u_next.p;
+		p += model->cells[it->first].u_next.p * model->P_dim;
 		s += model->cells[it->first].u_next.s;
 		if (model->leftBoundIsRate)
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;

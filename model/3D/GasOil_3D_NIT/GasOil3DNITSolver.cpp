@@ -43,7 +43,7 @@ void GasOil3DNITSolver::writeData()
 	map<int,double>::iterator it;
 	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		p += model->cells[it->first].u_next.p;
+		p += model->cells[it->first].u_next.p * model->P_dim;
 		s += model->cells[it->first].u_next.s;
 		t += model->cells[it->first].u_next.t;
 		if( model->leftBoundIsRate )

@@ -102,6 +102,7 @@ void Snapshotter<gasOil_3d::GasOil_3D>::setModel(gasOil_3d::GasOil_3D* _model)
 
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
+	P_dim = model->P_dim;
 
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_phi;
@@ -115,6 +116,7 @@ void Snapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::setModel(gasOil_3d_NIT::GasOil_3
 
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
+	P_dim = model->P_dim;
 	T_dim = model->T_dim;
 
 	nx = model->cellsNum_r + 2;

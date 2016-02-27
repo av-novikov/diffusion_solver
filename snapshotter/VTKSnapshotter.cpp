@@ -1049,7 +1049,7 @@ void VTKSnapshotter<gasOil_3d::GasOil_3D>::dump_all(int i)
 
 			hexs->InsertNextCell(hex);
 
-			pres->InsertNextValue(cell.u_next.p);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
 			sat_oil->InsertNextValue(cell.u_next.s);
 			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 			vel[0] = 0.0;
@@ -1083,7 +1083,7 @@ void VTKSnapshotter<gasOil_3d::GasOil_3D>::dump_all(int i)
 
 				hexs->InsertNextCell(hex);
 
-				pres->InsertNextValue(cell.u_next.p);
+				pres->InsertNextValue(cell.u_next.p * P_dim);
 				sat_oil->InsertNextValue(cell.u_next.s);
 				sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 				vel[0] = r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
@@ -1116,7 +1116,7 @@ void VTKSnapshotter<gasOil_3d::GasOil_3D>::dump_all(int i)
 
 		hexs->InsertNextCell(hex);
 
-		pres->InsertNextValue(cell.u_next.p);
+		pres->InsertNextValue(cell.u_next.p * P_dim);
 		sat_oil->InsertNextValue(cell.u_next.s);
 		sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 		vel[0] = 0.0;
@@ -1149,7 +1149,7 @@ void VTKSnapshotter<gasOil_3d::GasOil_3D>::dump_all(int i)
 
 			hexs->InsertNextCell(hex);
 
-			pres->InsertNextValue(cell.u_next.p);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
 			sat_oil->InsertNextValue(cell.u_next.s);
 			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 			vel[0] = r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
@@ -1268,7 +1268,7 @@ void VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::dump_all(int i)
 			hexs->InsertNextCell(hex);
 
 			temp->InsertNextValue(cell.u_next.t * T_dim);
-			pres->InsertNextValue(cell.u_next.p);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
 			sat_oil->InsertNextValue(cell.u_next.s);
 			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 			vel[0] = 0.0;
@@ -1303,7 +1303,7 @@ void VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::dump_all(int i)
 				hexs->InsertNextCell(hex);
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
-				pres->InsertNextValue(cell.u_next.p);
+				pres->InsertNextValue(cell.u_next.p * P_dim);
 				sat_oil->InsertNextValue(cell.u_next.s);
 				sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 				vel[0] = r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
@@ -1337,7 +1337,7 @@ void VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::dump_all(int i)
 		hexs->InsertNextCell(hex);
 
 		temp->InsertNextValue(cell.u_next.t * T_dim);
-		pres->InsertNextValue(cell.u_next.p);
+		pres->InsertNextValue(cell.u_next.p * P_dim);
 		sat_oil->InsertNextValue(cell.u_next.s);
 		sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 		vel[0] = 0.0;
@@ -1371,7 +1371,7 @@ void VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::dump_all(int i)
 			hexs->InsertNextCell(hex);
 
 			temp->InsertNextValue(cell.u_next.t * T_dim);
-			pres->InsertNextValue(cell.u_next.p);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
 			sat_oil->InsertNextValue(cell.u_next.s);
 			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 			vel[0] = r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));

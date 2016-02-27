@@ -17,6 +17,7 @@ protected:
 
 	double r_dim;
 	double t_dim;
+	double P_dim;
 	double T_dim;
 
 	int nx, ny, nz;

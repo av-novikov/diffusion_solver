@@ -211,7 +211,7 @@ void GasOil_3D::makeDimLess()
 	// Main units
 	R_dim = r_w;
 	t_dim = 3600.0;
-	P_dim = BAR_TO_PA;
+	P_dim = props_sk[0].p_init ;
 
 	// Temporal properties
 	ht /= t_dim;
