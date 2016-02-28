@@ -1,6 +1,7 @@
 #include "model/cells/stencils/Stencil.h"
 
 #include "model/3D/GasOil_3D/GasOil_3D.h"
+#include "model/3D/Perforation/GasOil_Perf.h"
 
 using namespace std;
 
@@ -405,3 +406,10 @@ template class RightStencil<gasOil_3d::GasOil_3D>;
 template class TopStencil<gasOil_3d::GasOil_3D>;
 template class BotStencil<gasOil_3d::GasOil_3D>;
 template class UsedStencils<gasOil_3d::GasOil_3D>;
+
+template class MidStencil<gasOil_perf::GasOil_Perf>;
+template class LeftStencil<gasOil_perf::GasOil_Perf>;
+template class RightStencil<gasOil_perf::GasOil_Perf>;
+template class TopStencil<gasOil_perf::GasOil_Perf>;
+template class BotStencil<gasOil_perf::GasOil_Perf>;
+template class UsedStencils<gasOil_perf::GasOil_Perf>;

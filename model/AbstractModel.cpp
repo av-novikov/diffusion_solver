@@ -12,6 +12,8 @@
 #include "model/3D/GasOil_3D/GasOil_3D.h"
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
+#include "model/3D/Perforation/GasOil_Perf.h"
+
 using namespace std;
 
 template <typename varType, typename propsType,
@@ -98,3 +100,5 @@ template class AbstractModel<Var2phaseNIT, gasOil_rz_NIT::Properties, CylCell2D,
 
 template class AbstractModel<Var2phase, gasOil_3d::Properties, CylCell3D, gasOil_3d::GasOil_3D>;
 template class AbstractModel<Var2phaseNIT, gasOil_3d_NIT::Properties, CylCell3D, gasOil_3d_NIT::GasOil_3D_NIT>;
+
+template class AbstractModel<Var2phase, gasOil_perf::Properties, CylCell3D, gasOil_perf::GasOil_Perf>;

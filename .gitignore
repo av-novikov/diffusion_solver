@@ -27,6 +27,7 @@ bld/
 *.DAT
 *.dat
 *.vtp
+*.vtu
 
 # Visual Studio 2015 cache/options directory
 .vs/

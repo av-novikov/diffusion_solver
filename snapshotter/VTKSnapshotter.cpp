@@ -26,6 +26,8 @@
 #include "model/3D/GasOil_3D/GasOil_3D.h"
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
+#include "model/3D/Perforation/GasOil_Perf.h"
+
 #include <cmath>
 
 using namespace std;
@@ -1521,3 +1523,5 @@ template class VTKSnapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>;
 
 template class VTKSnapshotter<gasOil_3d::GasOil_3D>;
 template class VTKSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;
+
+template class VTKSnapshotter<gasOil_perf::GasOil_Perf>;
