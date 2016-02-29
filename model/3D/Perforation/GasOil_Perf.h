@@ -179,18 +179,47 @@ namespace gasOil_perf
 		void buildTunnels();
 		void setUnused();
 		std::map<int,int> tunnelNebrMap;
-		std::map<int,int> nebrMap;
+		std::map<int,std::pair<int, int> > nebrMap;
 
-		
-		// Returns cell by its index
-		Cell& getCell(int num);
-		// Returns neighbor cell by index of requestor and expected index of neighbor cell
-		Cell& getCell(int num, int beta);
+		inline Cell& getCell(int num)
+		{
+			Cell& cell = cells[num];
+			assert(cell.isUsed);
 
-		// Returns cell by its index
-		const Cell& getCell(int num) const;
-		// Returns neighbor cell by index of requestor and expected index of neighbor cell
-		const Cell& getCell(int num, int beta) const;
+			return cell;
+		};
+
+		inline Cell& getCell(int num, int beta)
+		{
+			Cell& cell = cells[num];
+			assert(cell.isUsed);
+
+			Cell& nebr = cells[beta];
+			if (nebr.isUsed)
+				return nebr;
+			else
+				return tunnelCells[tunnelNebrMap[beta]];
+		};
+
+		inline const Cell& getCell(int num) const
+		{
+			const Cell& cell = cells[num];
+			//assert(cell.isUsed);
+
+			return cell;
+		}
+
+		inline const Cell& getCell(int num, int beta) const
+		{
+			const Cell& cell = cells[num];
+			//assert(cell.isUsed);
+
+			const Cell& nebr = cells[beta];
+			if (nebr.isUsed)
+				return nebr;
+			else
+				return tunnelCells[tunnelNebrMap[beta]];
+		}
 
 		// Gas content in oil
 		Interpolate* Rs;
@@ -579,7 +608,7 @@ namespace gasOil_perf
 		inline double solve_eq1Left(int cur)
 		{
 			Cell& cell = tunnelCells[cur];
-			Cell& nebr = getCell(nebrMap[cur]);
+			Cell& nebr = getCell(nebrMap[cur].first);
 			const Var2phase& next = cell.u_next;
 			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
@@ -592,7 +621,7 @@ namespace gasOil_perf
 		inline double solve_eq1Left_dp(int cur, int beta)
 		{
 			Cell& cell = tunnelCells[cur];
-			Cell& nebr = getCell(nebrMap[cur]);
+			Cell& nebr = getCell(nebrMap[cur].first);
 			const Var2phase& next = cell.u_next;
 			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
@@ -605,7 +634,7 @@ namespace gasOil_perf
 		inline double solve_eq1Left_ds(int cur, int beta)
 		{
 			Cell& cell = tunnelCells[cur];
-			Cell& nebr = getCell(nebrMap[cur]);
+			Cell& nebr = getCell(nebrMap[cur].first);
 			const Var2phase& next = cell.u_next;
 			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
@@ -618,7 +647,7 @@ namespace gasOil_perf
 		inline double solve_eq1Left_dp_beta(int cur, int beta)
 		{
 			Cell& cell = tunnelCells[cur];
-			Cell& nebr = getCell(nebrMap[cur]);
+			Cell& nebr = getCell(nebrMap[cur].first);
 			const Var2phase& next = cell.u_next;
 			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
@@ -631,7 +660,7 @@ namespace gasOil_perf
 		inline double solve_eq1Left_ds_beta(int cur, int beta)
 		{
 			Cell& cell = tunnelCells[cur];
-			Cell& nebr = getCell(nebrMap[cur]);
+			Cell& nebr = getCell(nebrMap[cur].first);
 			const Var2phase& next = cell.u_next;
 			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
@@ -644,10 +673,10 @@ namespace gasOil_perf
 		inline double solve_eq2Left(int cur)
 		{
 			Cell& cell = tunnelCells[cur];
-			Cell& nebr1 = getCell(nebrMap[cur]);
-			Cell& nebr2 = getCell(nebrMap[cur], );
+			Cell& nebr1 = getCell(nebrMap[cur].first);
+			Cell& nebr2 = getCell(nebrMap[cur].second);
 
-			return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.r - nebr1.r) - (nebr1.u_next.s - curr.u_next.s) / (nebr1.r - curr.r);
+			return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.r - nebr1.r) - (nebr1.u_next.s - cell.u_next.s) / (nebr1.r - cell.r);
 		}
 
 		inline double solve_eq2Left_dp(int cur, int beta)
@@ -657,10 +686,10 @@ namespace gasOil_perf
 
 		inline double solve_eq2Left_ds(int cur, int beta)
 		{
-			Cell& curr = cells[cur];
-			Cell& nebr = cells[cur + cellsNum_z + 2];
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr = getCell(nebrMap[cur].first);
 
-			return 1.0 / (nebr.r - curr.r);
+			return 1.0 / (nebr.r - cell.r);
 		}
 
 		inline double solve_eq2Left_dp_beta(int cur, int beta)
@@ -670,12 +699,12 @@ namespace gasOil_perf
 
 		inline double solve_eq2Left_ds_beta(int cur, int beta)
 		{
-			Cell& curr = cells[cur];
-			Cell& nebr1 = cells[cur + cellsNum_z + 2];
-			Cell& nebr2 = cells[cur + 2 * cellsNum_z + 4];
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr1 = getCell(nebrMap[cur].first);
+			Cell& nebr2 = getCell(nebrMap[cur].second);
 
 			if (beta == cur + cellsNum_z + 2)
-				return -1.0 / (nebr2.r - nebr1.r) - 1.0 / (nebr1.r - curr.r);
+				return -1.0 / (nebr2.r - nebr1.r) - 1.0 / (nebr1.r - cell.r);
 			else
 				return 1.0 / (nebr2.r - nebr1.r);
 		}
@@ -684,12 +713,12 @@ namespace gasOil_perf
 
 		inline double solve_eq1Right(int cur)
 		{
-			const Cell& cell = cells[cur];
+			const Cell& cell = getCell(cur);
 
 			if (rightBoundIsPres)
 				return cell.u_next.p - props_sk[getSkeletonIdx(cell)].p_out;
 			else
-				return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
+				return cell.u_next.p - getCell(cur - cellsNum_z - 2).u_next.p;
 		}
 
 		inline double solve_eq1Right_dp(int cur, int beta)
@@ -722,10 +751,10 @@ namespace gasOil_perf
 		{
 			if (rightBoundIsPres)
 			{
-				return cells[cur].u_next.s - props_sk[getSkeletonIdx(cells[cur])].s_init;
+				return getCell(cur).u_next.s - props_sk[getSkeletonIdx(getCell(cur))].s_init;
 			}
 			else {
-				return cells[cur].u_next.s - cells[cur - cellsNum_z - 2].u_next.s;
+				return getCell(cur).u_next.s - getCell(cur - cellsNum_z - 2).u_next.s;
 			}
 		}
 
@@ -759,7 +788,7 @@ namespace gasOil_perf
 
 		inline double solve_eq1Top(int cur)
 		{
-			return cells[cur].u_next.p - cells[cur + 1].u_next.p;
+			return getCell(cur).u_next.p - getCell(cur + 1).u_next.p;
 		}
 
 		inline double solve_eq1Top_dp(int cur, int beta)
@@ -784,7 +813,7 @@ namespace gasOil_perf
 
 		inline double solve_eq2Top(int cur)
 		{
-			return cells[cur].u_next.s - cells[cur + 1].u_next.s;
+			return getCell(cur).u_next.s - getCell(cur + 1).u_next.s;
 		}
 
 		inline double solve_eq2Top_dp(int cur, int beta)
@@ -811,7 +840,7 @@ namespace gasOil_perf
 
 		inline double solve_eq1Bot(int cur)
 		{
-			return cells[cur].u_next.p - cells[cur - 1].u_next.p;
+			return getCell(cur).u_next.p - getCell(cur - 1).u_next.p;
 		}
 
 		inline double solve_eq1Bot_dp(int cur, int beta)
@@ -836,7 +865,7 @@ namespace gasOil_perf
 
 		inline double solve_eq2Bot(int cur)
 		{
-			return cells[cur].u_next.s - cells[cur - 1].u_next.s;
+			return getCell(cur).u_next.s - getCell(cur - 1).u_next.s;
 		}
 
 		inline double solve_eq2Bot_dp(int cur, int beta)

@@ -441,7 +441,7 @@ void GasOil_Perf::buildTunnels()
 			hz = cell.hz;
 			tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
 			tunnelNebrMap[getIdx(cell.num - (cellsNum_z + 2)*(cellsNum_r + 2))] = counter;
-			nebrMap[counter++] = getIdx(cell.num - (cellsNum_z + 2)*(cellsNum_r + 2));
+			nebrMap[counter++] = make_pair<int,int>( getIdx(cell.num - (cellsNum_z + 2)*(cellsNum_r + 2)), getIdx(cell.num - 2*(cellsNum_z + 2)*(cellsNum_r + 2)));
 
 			// Top
 			phi = cell.phi;
@@ -450,7 +450,7 @@ void GasOil_Perf::buildTunnels()
 			hz = 0.0;
 			tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
 			tunnelNebrMap[getIdx(cell.num - 1)] = counter;
-			nebrMap[counter++] = getIdx(cell.num - 1);
+			nebrMap[counter++] = make_pair<int,int>( getIdx(cell.num - 1), getIdx(cell.num - 2));
 
 			// Left
 			phi = cell.phi + cell.hphi / 2.0;
@@ -459,7 +459,7 @@ void GasOil_Perf::buildTunnels()
 			hz = cell.hz;
 			tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
 			tunnelNebrMap[getIdx(cell.num + (cellsNum_z + 2)*(cellsNum_r + 2))] = counter;
-			nebrMap[counter++] = getIdx(cell.num + (cellsNum_z + 2)*(cellsNum_r + 2));
+			nebrMap[counter++] = make_pair<int, int>(getIdx(cell.num + (cellsNum_z + 2)*(cellsNum_r + 2)), getIdx(cell.num + 2*(cellsNum_z + 2)*(cellsNum_r + 2)));
 
 			// Bottom
 			phi = cell.phi;
@@ -468,7 +468,7 @@ void GasOil_Perf::buildTunnels()
 			hz = 0.0;
 			tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
 			tunnelNebrMap[getIdx(cell.num + 1)] = counter;
-			nebrMap[counter++] = getIdx(cell.num + 1);
+			nebrMap[counter++] = make_pair<int, int>(getIdx(cell.num + 1), getIdx(cell.num + 2));
 
 			r += cell.hr / 2.0;
 		}
@@ -483,48 +483,8 @@ void GasOil_Perf::buildTunnels()
 		hz = cell.hz;
 		tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
 		tunnelNebrMap[getIdx(cell.num + (perfTunnels[k].second + 1) * (cellsNum_z + 2))] = counter;
-		nebrMap[counter++] = getIdx(cell.num + (perfTunnels[k].second + 1) * (cellsNum_z + 2));
+		nebrMap[counter++] = make_pair<int, int>(getIdx(cell.num + (perfTunnels[k].second + 1) * (cellsNum_z + 2)), getIdx(cell.num + (perfTunnels[k].second + 2) * (cellsNum_z + 2)));
 	}
-}
-
-Cell& GasOil_Perf::getCell(int num)
-{
-	Cell& cell = cells[num];
-	assert(cell.isUsed);
-
-	return cell;
-}
-
-Cell& GasOil_Perf::getCell(int num, int beta)
-{
-	Cell& cell = cells[num];
-	assert(cell.isUsed);
-
-	Cell& nebr = cells[beta];
-	if (nebr.isUsed)
-		return nebr;
-	else
-		return tunnelCells[tunnelNebrMap[beta]];
-}
-
-const Cell& GasOil_Perf::getCell(int num) const
-{
-	const Cell& cell = cells[num];
-	//assert(cell.isUsed);
-
-	return cell;
-}
-
-const Cell& GasOil_Perf::getCell(int num, int beta) const
-{
-	const Cell& cell = cells[num];
-	//assert(cell.isUsed);
-
-	const Cell& nebr = cells[beta];
-	if (nebr.isUsed)
-		return nebr;
-	else
-		return tunnelCells[tunnelNebrMap[beta]];
 }
 
 void GasOil_Perf::setPerforated()
