@@ -7,14 +7,14 @@
 
 #include "model/cells/Iterators.h"
 #include "model/cells/Variables.hpp"
-#include "model/cells/CylCell3D.h"
+#include "model/cells/CylCellPerf.h"
 #include "model/AbstractModel.hpp"
 #include "util/Interpolate.h"
 #include "util/utils.h"
 
 namespace gasOil_perf
 {
-	typedef CylCell3D<Var2phase> Cell;
+	typedef CylCellPerf<Var2phase> Cell;
 	typedef Iterator<CylCell3D<Var2phase> > Iterator;
 
 	struct Skeleton_Props
@@ -83,8 +83,9 @@ namespace gasOil_perf
 		// If right boundary condition would be 1st type
 		bool rightBoundIsPres;
 	
-		// Perforated intervals
-		std::vector<std::pair<int,int> > perfIntervals;
+		// Perforated tunnels
+		/* Cell number && number of cells in depth */
+		std::vector<std::pair<int,int> > perfTunnels;
 		// Time step limits
 		// Initial time step [sec]
 		double ht;
@@ -127,13 +128,13 @@ namespace gasOil_perf
 		std::vector< std::pair<double,double> > Rs;
 	};
 
-	class GasOil_Perf : public AbstractModel<Var2phase, Properties, CylCell3D, GasOil_Perf>
+	class GasOil_Perf : public AbstractModel<Var2phase, Properties, CylCellPerf, GasOil_Perf>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-		friend class ParPerfSolver;
+		//friend class ParPerfSolver;
 		template<typename> friend class MidStencil;
 		template<typename> friend class LeftStencil;
 		template<typename> friend class RightStencil;
@@ -171,6 +172,26 @@ namespace gasOil_perf
 		// Number of cells in vertical direction
 		int cellsNum_z;
 
+		// Structure to construct tunnelss
+		std::vector<std::pair<int, int> > perfTunnels;
+		// Border cells in tunnels
+		std::vector<Cell> tunnelCells;
+		void buildTunnels();
+		void setUnused();
+		std::map<int,int> tunnelNebrMap;
+		std::map<int,int> nebrMap;
+
+		
+		// Returns cell by its index
+		Cell& getCell(int num);
+		// Returns neighbor cell by index of requestor and expected index of neighbor cell
+		Cell& getCell(int num, int beta);
+
+		// Returns cell by its index
+		const Cell& getCell(int num) const;
+		// Returns neighbor cell by index of requestor and expected index of neighbor cell
+		const Cell& getCell(int num, int beta) const;
+
 		// Gas content in oil
 		Interpolate* Rs;
 		Interpolate* Prs;
@@ -195,34 +216,37 @@ namespace gasOil_perf
 		void checkSkeletons(const std::vector<Skeleton_Props>& props);
 
 		// Service functions
-		inline double upwindIsCur(int cur, int beta)
+		inline double upwindIsCur(const Cell* cell, const Cell* nebr) const
 		{
-			if(cells[cur].u_next.p < cells[beta].u_next.p)
+			if(cell->u_next.p < nebr->u_next.p)
 				return 0.0;
 			else
 				return 1.0;
 		};
-		inline int getUpwindIdx(int cur, int beta)
+		inline const Cell* getUpwindIdx(const Cell* cell, const Cell* nebr) const
 		{
-			if(cells[cur].u_next.p < cells[beta].u_next.p)
-				return beta;
+			assert(cell->isUsed);
+			assert(nebr->isUsed);
+			if(cell->u_next.p < nebr->u_next.p)
+				return nebr;
 			else
-				return cur;
+				return cell;
 		};
-		inline void getNeighborIdx(int cur, int* const neighbor)
+		inline void getNeighborIdx(Cell& cur, Cell** const neighbor)
 		{
-			neighbor[0] = cur - cellsNum_z - 2; 
-			neighbor[1] = cur + cellsNum_z + 2;
-			neighbor[2] = cur - 1;
-			neighbor[3] = cur + 1;
-			if(cur < (cellsNum_r + 2) * (cellsNum_z + 2))
-				neighbor[4] = cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+			assert(cur.isUsed);
+			neighbor[0] = &getCell(cur.num, cur.num - cellsNum_z - 2);
+			neighbor[1] = &getCell(cur.num, cur.num + cellsNum_z + 2);
+			neighbor[2] = &getCell(cur.num, cur.num - 1);
+			neighbor[3] = &getCell(cur.num, cur.num + 1);
+			if (cur.num < (cellsNum_r + 2) * (cellsNum_z + 2))
+				neighbor[4] = &getCell(cur.num, cur.num + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 			else
-				neighbor[4] = cur - (cellsNum_r + 2) * (cellsNum_z + 2);
-			if(cur < (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1))
-				neighbor[5] = cur + (cellsNum_r + 2) * (cellsNum_z + 2);
+				neighbor[4] = &getCell(cur.num, cur.num - (cellsNum_r + 2) * (cellsNum_z + 2));
+			if (cur.num < (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1))
+				neighbor[5] = &getCell(cur.num, cur.num + (cellsNum_r + 2) * (cellsNum_z + 2));
 			else
-				neighbor[5] = cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+				neighbor[5] = &getCell(cur.num, cur.num - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 		};
 		inline void getStencilIdx(int cur, int* const neighbor)
 		{
@@ -251,14 +275,19 @@ namespace gasOil_perf
 		}
 		inline int getSkeletonIdx(const Cell& cell) const
 		{
-			int idx = 0;
-			while(idx < props_sk.size())
+			if (!cell.isTunnel)
 			{
-				if(cell.z <= props_sk[idx].h2 + EQUALITY_TOLERANCE)
-					return idx;
-				idx++;
+				int idx = 0;
+				while (idx < props_sk.size())
+				{
+					if (cell.z <= props_sk[idx].h2 + EQUALITY_TOLERANCE)
+						return idx;
+					idx++;
+				}
+				exit(-1);
 			}
-			exit(-1);
+			else
+				return getSkeletonIdx( getCell(perfTunnels[cell.tunNum].first) );
 		};
 
 		// Solving coefficients
@@ -383,30 +412,49 @@ namespace gasOil_perf
 			int idx;
 			double factRs, dissGas;
 
-			for(int i = 0; i < cellsNum_r+2; i++)
-				for(int j = 0; j < cellsNum_z+2; j++)
-					for(int k = 0; k < cellsNum_phi; k++)
-					{
-						idx = i * (cellsNum_z + 2) + j + k * (cellsNum_z + 2) * (cellsNum_r + 2);
+			for (auto cell: cells)
+			{
+				Var2phase& next = cell.u_next;
+				Var2phase& prev = cell.u_prev;
 
-						Var2phase& next = cells[idx].u_next;
-						Var2phase& prev = cells[idx].u_prev;
+				if (next.s > 1.0)
+					next.s = 1.0;
 
-						if(next.s > 1.0)
-							next.s = 1.0;
+				dissGas = (1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) / ((1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) + next.s * getB_gas(next.p));
+				factRs = getRs(prev.p, prev.p_bub, next.SATUR) + dissGas;
 
-						dissGas = (1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) / ( (1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) + next.s * getB_gas(next.p));
-						factRs = getRs(prev.p, prev.p_bub, next.SATUR) + dissGas;
+				if (getRs(next.p, next.p, next.SATUR) > factRs)
+				{
+					next.p_bub = getPresFromRs(factRs);
+					next.SATUR = false;
+				}
+				else {
+					next.p_bub = next.p;
+					next.SATUR = true;
+				}
+			}
 
-						if(getRs(next.p, next.p, next.SATUR) > factRs)
-						{
-							next.p_bub = getPresFromRs(factRs);
-							next.SATUR = false;
-						} else {
-							next.p_bub = next.p;
-							next.SATUR = true;
-						}
-					}
+			for (auto cell: tunnelCells)
+			{
+				Var2phase& next = cell.u_next;
+				Var2phase& prev = cell.u_prev;
+
+				if (next.s > 1.0)
+					next.s = 1.0;
+
+				dissGas = (1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) / ((1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) + next.s * getB_gas(next.p));
+				factRs = getRs(prev.p, prev.p_bub, next.SATUR) + dissGas;
+
+				if (getRs(next.p, next.p, next.SATUR) > factRs)
+				{
+					next.p_bub = getPresFromRs(factRs);
+					next.SATUR = false;
+				}
+				else {
+					next.p_bub = next.p;
+					next.SATUR = true;
+				}
+			}	
 		};
 
 		// Thermal functions
@@ -427,20 +475,20 @@ namespace gasOil_perf
 			switch(axis)
 			{
 			case R_AXIS:
-				nebr1 = &cells[cell.num - cellsNum_z - 2];
-				nebr2 = &cells[cell.num + cellsNum_z + 2];
+				nebr1 = &getCell(cell.num, cell.num - cellsNum_z - 2);
+				nebr2 = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				h = nebr2->r - nebr1->r;
 				break;
 			case PHI_AXIS:
-				nebr1 = &cells[ getIdx(cell.num - (cellsNum_r + 2) * (cellsNum_z + 2)) ];
-				nebr2 = &cells[ getIdx(cell.num + (cellsNum_r + 2) * (cellsNum_z + 2)) ];
+				nebr1 = &getCell(cell.num, getIdx(cell.num - (cellsNum_r + 2) * (cellsNum_z + 2)) );
+				nebr2 = &getCell(cell.num, getIdx(cell.num + (cellsNum_r + 2) * (cellsNum_z + 2)) );
 				h = nebr1->r * (nebr2->phi - nebr1->phi);
 				if(abs(nebr2->phi - nebr1->phi) > 2.0 * cell.hphi + EQUALITY_TOLERANCE)
 					h = nebr1->r * (nebr2->phi - nebr1->phi + 2.0 * M_PI);
 				break;
 			case Z_AXIS:
-				nebr1 = &cells[cell.num - 1];
-				nebr2 = &cells[cell.num + 1];
+				nebr1 = &getCell(cell.num, cell.num - 1);
+				nebr2 = &getCell(cell.num, cell.num + 1);
 				h = nebr2->z - nebr1->z;
 				break;
 			}
@@ -530,69 +578,74 @@ namespace gasOil_perf
 
 		inline double solve_eq1Left(int cur)
 		{
-			const int neighbor = cur + cellsNum_z + 2;
-			Var2phase& next = cells[cur].u_next;
-			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr = getCell(nebrMap[cur]);
+			const Var2phase& next = cell.u_next;
+			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
 			if (leftBoundIsRate)
-				return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p) - Qcell[cur];
+				return getTrans(cell, nebr) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (nebr.u_next.p - next.p) - Qcell[cur];
 			else
 				return next.p - Pwf;
 		}
 
 		inline double solve_eq1Left_dp(int cur, int beta)
 		{
-			const int neighbor = cur + cellsNum_z + 2;
-			Var2phase& next = cells[cur].u_next;
-			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr = getCell(nebrMap[cur]);
+			const Var2phase& next = cell.u_next;
+			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
 			if (leftBoundIsRate)
-				return -getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
+				return -getTrans(cell, nebr) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
 			else
 				return 1.0;
 		}
 
 		inline double solve_eq1Left_ds(int cur, int beta)
 		{
-			const int neighbor = cur + cellsNum_z + 2;
-			Var2phase& next = cells[cur].u_next;
-			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr = getCell(nebrMap[cur]);
+			const Var2phase& next = cell.u_next;
+			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
 			if (leftBoundIsRate)
-				return getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
+				return getTrans(cell, nebr) * upwindIsCur(&cell, &nebr) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (nebr.u_next.p - next.p);
 			else
 				return 0.0;
 		}
 
 		inline double solve_eq1Left_dp_beta(int cur, int beta)
 		{
-			const int neighbor = cur + cellsNum_z + 2;
-			Var2phase& next = cells[cur].u_next;
-			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr = getCell(nebrMap[cur]);
+			const Var2phase& next = cell.u_next;
+			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
 			if (leftBoundIsRate)
-				return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
+				return getTrans(cell, nebr) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
 			else
 				return 0.0;
 		}
 
 		inline double solve_eq1Left_ds_beta(int cur, int beta)
 		{
-			const int neighbor = cur + cellsNum_z + 2;
-			Var2phase& next = cells[cur].u_next;
-			Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr = getCell(nebrMap[cur]);
+			const Var2phase& next = cell.u_next;
+			const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 
 			if (leftBoundIsRate)
-				return getTrans(cells[cur], cells[neighbor]) * (1.0 - upwindIsCur(cur, neighbor)) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
+				return getTrans(cell, nebr) * (1.0 - upwindIsCur(&cell, &nebr)) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (nebr.u_next.p - next.p);
 			else
 				return 0.0;
 		}
 
 		inline double solve_eq2Left(int cur)
 		{
-			Cell& curr = cells[cur];
-			Cell& nebr1 = cells[cur + cellsNum_z + 2];
-			Cell& nebr2 = cells[cur + 2 * cellsNum_z + 4];
+			Cell& cell = tunnelCells[cur];
+			Cell& nebr1 = getCell(nebrMap[cur]);
+			Cell& nebr2 = getCell(nebrMap[cur], );
 
 			return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.r - nebr1.r) - (nebr1.u_next.s - curr.u_next.s) / (nebr1.r - curr.r);
 		}
