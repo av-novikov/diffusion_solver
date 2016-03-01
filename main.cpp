@@ -777,7 +777,7 @@ using namespace std;
 	return props;
 }*/
 
-gasOil_rz_NIT::Properties* getProps()
+/*gasOil_rz_NIT::Properties* getProps()
 {
 	gasOil_rz_NIT::Properties* props = new gasOil_rz_NIT::Properties();
 
@@ -860,7 +860,7 @@ gasOil_rz_NIT::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
-}
+}*/
 
 /*gas1D::Properties* getProps()
 {
@@ -1057,7 +1057,7 @@ gasOil_rz_NIT::Properties* getProps()
 	return props;
 }*/
 
-/*gasOil_perf::Properties* getProps()
+gasOil_perf::Properties* getProps()
 {
 	gasOil_perf::Properties* props = new gasOil_perf::Properties();
 
@@ -1146,7 +1146,7 @@ gasOil_rz_NIT::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
-}*/
+}
 
 /*gas1D::Properties* getProps()
 {
@@ -1200,17 +1200,17 @@ gasOil_rz_NIT::Properties* getProps()
 
 int main(int argc, char** argv)
 {
-	gasOil_rz_NIT::Properties* props = getProps();
+	/*gasOil_rz_NIT::Properties* props = getProps();
 	Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSolver, gasOil_rz_NIT::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 	
-	/*gasOil_perf::Properties* props = getProps();
+	gasOil_perf::Properties* props = getProps();
 	Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	//scene.start();*/
+	//scene.start();
 	
 	/*oil1D_NIT::Properties* props = getProps();
 	Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties> scene;

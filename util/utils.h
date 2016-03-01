@@ -36,6 +36,11 @@ struct FillFoo
 	}
 };
 
+inline constexpr double delta(const int i, const int j)
+{
+	return (i == j);
+};
+
 inline void setDataFromFile(vector< pair<double,double> >& vec, string fileName)
 {
 	ifstream file;

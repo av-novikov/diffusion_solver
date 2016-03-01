@@ -76,6 +76,58 @@ void MidStencil<gasOil_3d::GasOil_3D>::fillIndex(int cellIdx, int *counter)
 	}
 }
 
+template <>
+void MidStencil<gasOil_perf::GasOil_Perf>::fill(int cellIdx, int *counter)
+{
+	gasOil_perf::Cell* nebr[7];
+	model->getStencilIdx(cellIdx, nebr);
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			// dP
+			if (nebr[j]->isUsed)
+				matrix[(*counter)++] = foo.mat[i][2 * j](cellIdx, nebr[j]->num);
+			else
+				matrix[(*counter)++] = delta(j, 0);
+
+			// dS
+			if (nebr[j]->isUsed)
+				matrix[(*counter)++] = foo.mat[i][2 * j + 1](cellIdx, nebr[j]->num);
+			else
+				matrix[(*counter)++] = delta(j, 0);
+		}
+
+		rhs[2 * cellIdx + i] = -foo.rhs[i](cellIdx);
+	}
+}
+
+template <>
+void MidStencil<gasOil_perf::GasOil_Perf>::fillIndex(int cellIdx, int *counter)
+{
+	gasOil_perf::Cell* nebr[7];
+	model->getStencilIdx(cellIdx, nebr);
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			ind_i[*counter] = 2 * cellIdx + i;
+			if (nebr[j]->isUsed)
+				ind_j[(*counter)++] = 2 * nebr[j]->num;
+			else
+				ind_j[(*counter)++] = 2 * (model->cellsNum + nebr[j]->num);
+
+			ind_i[*counter] = 2 * cellIdx + i;
+			if (nebr[j]->isUsed)
+				ind_j[(*counter)++] = 2 * nebr[j]->num + 1;
+			else
+				ind_j[(*counter)++] = 2 * (model->cellsNum + nebr[j]->num) + 1;
+		}
+	}
+}
+
 /*--------------------LeftStencil--------------------*/
 
 template <class modelType>
