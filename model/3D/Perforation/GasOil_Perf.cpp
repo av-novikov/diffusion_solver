@@ -13,7 +13,7 @@ GasOil_Perf::GasOil_Perf()
 	isWriteSnaps = false;
 
 	// Middle
-	middleFoo.mat.resize(2);
+	/*middleFoo.mat.resize(2);
 
 	middleFoo.rhs.push_back(bind(&GasOil_Perf::solve_eq1, this, _1));
 	middleFoo.mat[0].push_back(bind(&GasOil_Perf::solve_eq1_dp, this, _1, _2));
@@ -107,7 +107,7 @@ GasOil_Perf::GasOil_Perf()
 	botFoo.mat[1].push_back(bind(&GasOil_Perf::solve_eq2Bot_dp, this, _1, _2));
 	botFoo.mat[1].push_back(bind(&GasOil_Perf::solve_eq2Bot_ds, this, _1, _2));
 	botFoo.mat[1].push_back(bind(&GasOil_Perf::solve_eq2Bot_dp_beta, this, _1, _2));
-	botFoo.mat[1].push_back(bind(&GasOil_Perf::solve_eq2Bot_ds_beta, this, _1, _2));
+	botFoo.mat[1].push_back(bind(&GasOil_Perf::solve_eq2Bot_ds_beta, this, _1, _2));*/
 }
 
 GasOil_Perf::~GasOil_Perf()
@@ -376,7 +376,7 @@ void GasOil_Perf::buildGridLog()
 	buildTunnels();
 
 	// Creating iterators
-	midIter = new Iterator(&cells[cellsNum_z + 2], { 1, 0, 0 }, { cellsNum_r, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+	/*midIter = new Iterator(&cells[cellsNum_z + 2], { 1, 0, 0 }, { cellsNum_r, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
 	midBegin = new Iterator( *midIter );
 	midEnd = new Iterator(nullptr, { 1, 0, 0 }, { cellsNum_r, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
 
@@ -386,7 +386,7 @@ void GasOil_Perf::buildGridLog()
 
 	rightIter = new Iterator(&cells[(cellsNum_r+1)*(cellsNum_z+2)], { cellsNum_r+1, 0, 0 }, { cellsNum_r+1, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
 	rightBegin = new Iterator(*rightIter);
-	rightEnd = new Iterator(nullptr, { cellsNum_r+1, 0, 0 }, { cellsNum_r+1, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });
+	rightEnd = new Iterator(nullptr, { cellsNum_r+1, 0, 0 }, { cellsNum_r+1, cellsNum_phi - 1, cellsNum_z + 1 }, { cellsNum_r + 2, cellsNum_phi, cellsNum_z + 2 });*/
 }
 
 void GasOil_Perf::setInitialState()
