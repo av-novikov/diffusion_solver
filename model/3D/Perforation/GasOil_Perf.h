@@ -277,21 +277,22 @@ namespace gasOil_perf
 			else
 				neighbor[5] = &getCell(cur.num, cur.num - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 		};
-		inline void getStencilIdx(int cur, int* const neighbor)
+		inline void getStencilIdx(int cur, Cell** const neighbor)
 		{
-			neighbor[0] = cur;
-			neighbor[1] = cur - cellsNum_z - 2;
-			neighbor[2] = cur + cellsNum_z + 2;
-			neighbor[3] = cur - 1;
-			neighbor[4] = cur + 1;
+
+			neighbor[0] = &getCell(cur);
+			neighbor[1] = &getCell(cur, cur - cellsNum_z - 2);
+			neighbor[2] = &getCell(cur, cur + cellsNum_z + 2);
+			neighbor[3] = &getCell(cur, cur - 1);
+			neighbor[4] = &getCell(cur, cur + 1);
 			if (cur < (cellsNum_r + 2) * (cellsNum_z + 2))
-				neighbor[5] = cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+				neighbor[5] = &getCell(cur, cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 			else
-				neighbor[5] = cur - (cellsNum_r + 2) * (cellsNum_z + 2);
+				neighbor[5] = &getCell(cur, cur - (cellsNum_r + 2) * (cellsNum_z + 2));
 			if (cur < (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1))
-				neighbor[6] = cur + (cellsNum_r + 2) * (cellsNum_z + 2);
+				neighbor[6] = &getCell(cur, cur + (cellsNum_r + 2) * (cellsNum_z + 2));
 			else
-				neighbor[6] = cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1);
+				neighbor[6] = &getCell(cur, cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 		};
 		inline int getIdx(int i)
 		{
