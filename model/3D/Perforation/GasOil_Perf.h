@@ -134,7 +134,7 @@ namespace gasOil_perf
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-		//friend class ParPerfSolver;
+		friend class ParPerfSolver;
 		template<typename> friend class MidStencil;
 		template<typename> friend class LeftStencil;
 		template<typename> friend class RightStencil;
@@ -201,7 +201,7 @@ namespace gasOil_perf
 				return tunnelCells[tunnelNebrMap[beta]];
 		};
 
-		inline const Cell& getCell(int num) const
+		inline const Cell& getCell(const int num) const
 		{
 			const Cell& cell = cells[num];
 			//assert(cell.isUsed);
@@ -209,7 +209,7 @@ namespace gasOil_perf
 			return cell;
 		};
 
-		inline const Cell& getCell(int num, int beta) const
+		inline const Cell& getCell(const int num, const int beta) const
 		{
 			const Cell& cell = cells[num];
 			//assert(cell.isUsed);
@@ -218,7 +218,7 @@ namespace gasOil_perf
 			if (nebr.isUsed)
 				return nebr;
 			else
-				return tunnelCells[tunnelNebrMap[beta]];
+				return tunnelCells[ tunnelNebrMap.at(beta) ];
 		};
 
 		// Gas content in oil
@@ -891,11 +891,11 @@ namespace gasOil_perf
 		// Finds functional
 		double solveH();
 
-		/*FillFoo middleFoo;
+		FillFoo middleFoo;
 		FillFoo rightFoo;
 		FillFoo leftFoo;
 		FillFoo topFoo;
-		FillFoo botFoo;*/
+		FillFoo botFoo;
 
 	public:
 		GasOil_Perf();

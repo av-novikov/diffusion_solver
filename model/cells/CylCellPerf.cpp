@@ -19,7 +19,7 @@ CylCellPerf<varType>::CylCellPerf(int _num, double _r, double _phi, double _z, d
 {
 	V = hphi * r * hr * hz;
 	isUsed = true;
-	isTunnel = true
+	isTunnel = true;
 }
 
 template <typename varType>

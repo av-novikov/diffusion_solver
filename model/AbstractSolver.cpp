@@ -27,6 +27,15 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 
 	t_dim = model->t_dim;
 }
+template <>
+AbstractSolver<gasOil_perf::GasOil_Perf>::AbstractSolver(gasOil_perf::GasOil_Perf* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
+{
+	cur_t = cur_t_log = 0.0;
+	curTimePeriod = 0;
+
+	t_dim = model->t_dim;
+}
+
 
 template <class modelType>
 AbstractSolver<modelType>::~AbstractSolver()

@@ -430,7 +430,7 @@ void GasOil_Perf::buildTunnels()
 	{
 		for (int i = 0; i < perfTunnels[k].second; i++)
 		{
-			Cell& cell = cells[perfTunnels[k].first + (i + 1) * (cellsNum + 2)];
+			Cell& cell = cells[perfTunnels[k].first + (i + 1) * (cellsNum_z + 2)];
 			r = cell.r;
 			hr = cell.hr;
 

@@ -11,7 +11,7 @@ ParPerfSolver::ParPerfSolver(GasOil_Perf* _model) : AbstractSolver<GasOil_Perf>(
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
 	plot_Sdyn.open("snaps/S_dyn.dat", ofstream::out);
 	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
-
+	
 	// Flow rate optimization structures
 	n = model->Qcell.size();
 	dq.Initialize(n);
@@ -199,7 +199,7 @@ void ParPerfSolver::solveStep()
 
 void ParPerfSolver::fillIndices()
 {
-	int idx, nebr;
+/*	int idx, nebr;
 	int counter = 0;
 	Iterator it;
 	map<int, double>::iterator itPerf;
@@ -264,12 +264,12 @@ void ParPerfSolver::fillIndices()
 	elemNum = counter;
 
 	for (int i = 0; i < 2*model->cellsNum; i++)
-		ind_rhs[i] = i;
+		ind_rhs[i] = i;*/
 }
 
 void ParPerfSolver::fill()
 {
-	int idx;
+/*	int idx;
 	int counter = 0;
 	Iterator it;
 	map<int, double>::iterator itPerf;
@@ -317,7 +317,7 @@ void ParPerfSolver::fill()
 	{
 		idx = it.getIdx();
 		stencils->right->fill(idx, &counter);
-	}
+	}*/
 }
 
 void ParPerfSolver::fillq()

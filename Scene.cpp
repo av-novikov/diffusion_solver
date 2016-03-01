@@ -26,6 +26,9 @@
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 #include "model/3D/GasOil_3D_NIT/GasOil3DNITSolver.h"
 
+#include "model/3D/Perforation/GasOil_Perf.h"
+#include "model/3D/Perforation/ParPerfSolver.h"
+
 #include "tests/gas1D-test.h"
 
 #include "paralution.hpp"
@@ -72,6 +75,15 @@ void Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties>:
 	method = new gasOil_3d::Par3DSolver(model);
 }
 
+template <>
+void Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties>::load(gasOil_perf::Properties& props)
+{
+	model->load(props);
+	init_paralution();
+	//set_omp_threads_paralution(1);
+	//info_paralution();
+	method = new gasOil_perf::ParPerfSolver(model);
+}
 
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::load(propsType& props, int i)
@@ -113,5 +125,6 @@ template class Scene<gasOil_rz_NIT::GasOil_RZ_NIT, gasOil_rz_NIT::GasOil2DNITSol
 template class Scene<gasOil_3d::GasOil_3D, gasOil_3d::GasOil3DSolver, gasOil_3d::Properties>;
 template class Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties>;
 template class Scene<gasOil_3d_NIT::GasOil_3D_NIT, gasOil_3d_NIT::GasOil3DNITSolver, gasOil_3d_NIT::Properties>;
+template class Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties>;
 
 template class Scene<Gas1D_Wrapped, gas1D::Gas1DSol, gas1D::Properties>;
