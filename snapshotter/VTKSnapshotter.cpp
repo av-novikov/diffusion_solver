@@ -1220,6 +1220,13 @@ void VTKSnapshotter<gasOil_perf::GasOil_Perf>::dump_all(int i)
 			}
 		}
 	}
+
+	/*vector<Cell>::iterator it;
+	for (it = model->tunnelCells.begin(); it != model->tunnelCells.end(); ++it)
+	{
+		points->InsertNextPoint(r_dim * )
+	}*/
+
 	grid->SetPoints(points);
 
 	// Data

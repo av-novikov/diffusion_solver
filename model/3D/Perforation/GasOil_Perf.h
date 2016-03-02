@@ -15,7 +15,7 @@
 namespace gasOil_perf
 {
 	typedef CylCellPerf<Var2phase> Cell;
-	//typedef Iterator<CylCell3D<Var2phase>> Iterator;
+	typedef Iterator<CylCellPerf<Var2phase> > Iterator;
 
 	struct Skeleton_Props
 	{
@@ -145,7 +145,7 @@ namespace gasOil_perf
 	protected:
 
 		// Middle iterator
-		/*Iterator* midIter;
+		Iterator* midIter;
 		Iterator* midBegin;
 		Iterator* midEnd;
 
@@ -157,7 +157,7 @@ namespace gasOil_perf
 		// Right iterator
 		Iterator* rightIter;
 		Iterator* rightBegin;
-		Iterator* rightEnd;*/
+		Iterator* rightEnd;
 
 		// Continuum properties
 		int skeletonsNum;
@@ -906,7 +906,7 @@ namespace gasOil_perf
 		double getRate(int cur);
 
 
-		/*inline Iterator getMidIter()
+		inline Iterator getMidIter()
 		{
 			return Iterator(*midIter);
 		};
@@ -943,7 +943,7 @@ namespace gasOil_perf
 		inline const Iterator& getRightEnd()
 		{
 			return *rightEnd;
-		};*/
+		};
 
 	};
 };

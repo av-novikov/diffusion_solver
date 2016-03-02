@@ -199,7 +199,7 @@ void ParPerfSolver::solveStep()
 
 void ParPerfSolver::fillIndices()
 {
-/*	int idx, nebr;
+	int idx, nebr;
 	int counter = 0;
 	Iterator it;
 	map<int, double>::iterator itPerf;
@@ -208,8 +208,8 @@ void ParPerfSolver::fillIndices()
 	for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
 	{
 		idx = it.getIdx();
-		itPerf = model->Qcell.find(idx);
-		if (itPerf == model->Qcell.end())
+
+		if (it->isUsed)
 		{
 			nebr = idx + model->cellsNum_z + 2;
 			ind_i[counter] = 2 * idx;
@@ -236,8 +236,13 @@ void ParPerfSolver::fillIndices()
 			ind_i[counter] = 2 * idx + 1;
 			ind_j[counter++] = 2 * nebr + 1;
 		}
-		else
-			stencils->left->fillIndex(idx, &counter);
+		else {
+			ind_i[counter] = 2 * idx;
+			ind_j[counter++] = 2 * idx;
+
+			ind_i[counter] = 2 * idx + 1;
+			ind_j[counter++] = 2 * idx + 1;
+		}
 	}
 
 	// Middle
@@ -261,15 +266,22 @@ void ParPerfSolver::fillIndices()
 		stencils->right->fillIndex(idx, &counter);
 	}
 
+	// Tunnel cells
+	vector<Cell>::iterator itr;
+	for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
+	{
+		stencils->left->fillIndex(itr->num, &counter);
+	}
+
 	elemNum = counter;
 
-	for (int i = 0; i < 2*model->cellsNum; i++)
-		ind_rhs[i] = i;*/
+	for (int i = 0; i < 2*(model->cellsNum + model->tunnelCells.size()); i++)
+		ind_rhs[i] = i;
 }
 
 void ParPerfSolver::fill()
 {
-/*	int idx;
+	int idx;
 	int counter = 0;
 	Iterator it;
 	map<int, double>::iterator itPerf;
@@ -278,8 +290,8 @@ void ParPerfSolver::fill()
 	for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
 	{
 		idx = it.getIdx();
-		itPerf = model->Qcell.find(idx);
-		if (itPerf == model->Qcell.end())
+
+		if (it->isUsed)
 		{
 			a[counter++] = 1.0;
 			a[counter++] = 0.0;
@@ -294,8 +306,13 @@ void ParPerfSolver::fill()
 			rhs[2 * idx] = 0.0;
 			rhs[2 * idx + 1] = 0.0;
 		}
-		else
-			stencils->left->fill(idx, &counter);
+		else {
+			a[counter++] = 1.0;
+			a[counter++] = 1.0;
+
+			rhs[2 * idx] = 0.0;
+			rhs[2 * idx + 1] = 0.0;
+		}
 	}
 
 	// Middle
@@ -317,7 +334,14 @@ void ParPerfSolver::fill()
 	{
 		idx = it.getIdx();
 		stencils->right->fill(idx, &counter);
-	}*/
+	}
+
+	// Tunnel cells
+	vector<Cell>::iterator itr;
+	for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
+	{
+		stencils->left->fill(itr->num, &counter);
+	}
 }
 
 void ParPerfSolver::fillq()
