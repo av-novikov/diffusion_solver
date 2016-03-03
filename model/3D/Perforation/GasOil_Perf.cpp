@@ -457,7 +457,7 @@ void GasOil_Perf::buildTunnels()
 
 			// Top
 			phi = cell.phi;
-			hphi = cell.phi;
+			hphi = cell.hphi;
 			z = cell.z + cell.hz / 2.0;
 			hz = 0.0;
 			tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
@@ -475,7 +475,7 @@ void GasOil_Perf::buildTunnels()
 
 			// Bottom
 			phi = cell.phi;
-			hphi = cell.phi;
+			hphi = cell.hphi;
 			z = cell.z - cell.hz / 2.0;
 			hz = 0.0;
 			tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
@@ -490,7 +490,7 @@ void GasOil_Perf::buildTunnels()
 		// Central
 		hr = 0.0;
 		phi = cell.phi;
-		hphi = cell.phi;
+		hphi = cell.hphi;
 		z = cell.z;
 		hz = cell.hz;
 		tunnelCells.push_back(Cell(counter, r, phi, z, hr, hphi, hz, k));
