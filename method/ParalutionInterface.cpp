@@ -5,7 +5,7 @@ using namespace paralution;
 ParSolver::ParSolver()
 {
 	isAssembled = false;
-	ls.Init(1.E-7, 1.E-6, 1E+4, 20000);
+	ls.Init(1.E-15, 1.E-8, 1E+4, 20000);
 }
 
 ParSolver::~ParSolver()
@@ -51,12 +51,12 @@ void ParSolver::Solve()
 //	Rhs.WriteFileASCII("snaps/rhs.dat");
 
 	ls.SetOperator(Mat);
-	p.Set(2);
+	p.Set(1);
 	ls.SetPreconditioner(p);
 	ls.Build();
 	isAssembled = true;
 	
-	ls.Init(1.E-7, 1.E-6, 1E+4, 5000);
+	ls.Init(1.E-15, 1.E-8, 1E+4, 5000);
 	Mat.info();
 
 	//ls.RecordResidualHistory();

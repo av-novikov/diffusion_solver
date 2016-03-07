@@ -72,6 +72,7 @@ class AbstractModel
 		// Dimensions
 		double t_dim;
 		double R_dim;
+		double Z_dim;
 		double P_dim;
 		double T_dim;
 		double Q_dim;

@@ -209,9 +209,10 @@ void GasOil_Perf::checkSkeletons(const vector<Skeleton_Props>& props)
 void GasOil_Perf::makeDimLess()
 {
 	// Main units
-	R_dim = r_w;
+	R_dim = r_w * 10.0;
+	Z_dim = props_sk[0].h2 - props_sk[0].h1;
 	t_dim = 3600.0;
-	P_dim = props_sk[0].p_init ;
+	P_dim = props_sk[0].p_init;
 
 	// Temporal properties
 	ht /= t_dim;

@@ -383,14 +383,25 @@ namespace gasOil_rz_NIT
 		{
 			Cell* nebr1;
 			Cell* nebr2;
-			double h;
+			double h, r_eff;
+			const int idx = getSkeletonIdx(cell);
 
 			switch(axis)
 			{
 			case R_AXIS:
 				nebr1 = &cells[cell.num - cellsNum_z - 2];
 				nebr2 = &cells[cell.num + cellsNum_z + 2];
+
+				r_eff = props_sk[idx].radius_eff;
+				if ((nebr1->r < r_eff) && (nebr2->r > r_eff))
+				{
+					if (cell.r > r_eff)
+						nebr1 = &cell;
+					else
+						nebr2 = &cell;
+				}
 				h = nebr2->r - nebr1->r;
+
 				break;
 			case Z_AXIS:
 				nebr1 = &cells[cell.num - 1];

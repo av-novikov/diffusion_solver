@@ -416,7 +416,7 @@ using namespace std;
 	
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = false;
-	props->rates.push_back(5.0);
+	props->rates.push_back(0.1);
 
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
@@ -424,7 +424,7 @@ using namespace std;
 	
 	props->alpha = 7200.0;
 
-	props->perfIntervals.push_back( make_pair(1, 3) );
+	props->perfIntervals.push_back( make_pair(2, 2) );
 
 	props->r_w = 0.1;
 	props->r_e = 2500.0;
@@ -435,10 +435,10 @@ using namespace std;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 160.0 * 1.0e+5;
 	tmp.s_init = 0.999;
 	tmp.h1 = 1500.0;
-	tmp.h2 = 1503.0;
-	tmp.height = 3.0;
+	tmp.h2 = 1500.1;
+	tmp.height = 0.1;
 	tmp.perm_r = 100.0;
-	tmp.perm_z = 0.0;
+	tmp.perm_z = 5.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
@@ -1078,33 +1078,52 @@ gasOil_perf::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	//props->perfIntervals.push_back(make_pair(1, 1));
-	//props->perfIntervals.push_back(make_pair(17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 17 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
-	/*props->perfIntervals.push_back(make_pair(18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 18 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
-	props->perfIntervals.push_back(make_pair(19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 19 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
-	props->perfIntervals.push_back(make_pair(20 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 20 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));*/
-
-	/*props->perfIntervals.push_back( make_pair(11+10*(props->cellsNum_r+2)*(props->cellsNum_z+2), 11+10*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(12+15*(props->cellsNum_r+2)*(props->cellsNum_z+2), 12+15*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(13+20*(props->cellsNum_r+2)*(props->cellsNum_z+2), 13+20*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(14+25*(props->cellsNum_r+2)*(props->cellsNum_z+2), 14+25*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(15+30*(props->cellsNum_r+2)*(props->cellsNum_z+2), 15+30*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(16+35*(props->cellsNum_r+2)*(props->cellsNum_z+2), 16+35*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(17+40*(props->cellsNum_r+2)*(props->cellsNum_z+2), 17+40*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(18+45*(props->cellsNum_r+2)*(props->cellsNum_z+2), 18+45*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(19+50*(props->cellsNum_r+2)*(props->cellsNum_z+2), 19+50*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
-	props->perfIntervals.push_back( make_pair(20+55*(props->cellsNum_r+2)*(props->cellsNum_z+2), 20+55*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );*/
-
-	//props->perfIntervals.push_back(make_pair(3, 3));
-	//props->perfIntervals.push_back(make_pair(3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
-	//props->perfIntervals.push_back(make_pair(3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
-	//props->perfIntervals.push_back(make_pair(3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	/*props->perfTunnels.push_back( make_pair(1, 0) );
+	props->perfTunnels.push_back(make_pair(1 + 1 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 2 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 4 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 5 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 7 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 8 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 10 *(props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 11 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 12 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 13 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 14 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 15 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 16 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 17 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 18 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 19 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 21 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 22 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 23 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 24 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 25 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 26 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 27 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 28 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 29 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 31 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 32 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 33 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 34 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 35 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 36 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 37 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 38 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(1 + 39 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));*/
 
 	props->perfTunnels.push_back( make_pair(3, 10) );
-	props->perfTunnels.push_back(make_pair(3 + 10 *(props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
+	props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
 	props->perfTunnels.push_back(make_pair(3 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
 	props->perfTunnels.push_back(make_pair(3 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
-
+	
 	props->r_w = 0.05;
 	props->r_e = 1000.0;
 
@@ -1113,18 +1132,18 @@ gasOil_perf::Properties* getProps()
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
 	tmp.s_init = 0.999;
-	tmp.h1 = 1500.0;
-	tmp.h2 = 1500.1;
+	tmp.h1 = 0.0;
+	tmp.h2 = 0.1;
 	tmp.height = 0.1;
 	tmp.perm_r = 100.0;
 	tmp.perm_z = 5.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
-	tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.skins.push_back(5.0);
+	tmp.radiuses_eff.push_back(0.25);
 	props->props_sk.push_back(tmp);
 
-	props->depth_point = 1500.0;
+	props->depth_point = 0.0;
 
 	props->props_oil.visc = 1.64;
 	props->props_oil.b_bore = 1.245;
