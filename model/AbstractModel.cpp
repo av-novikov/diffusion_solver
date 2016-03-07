@@ -36,9 +36,6 @@ void AbstractModel<varType, propsType, cellType, modelType>::setInitialState()
 	vector<cellType<varType> >::iterator it;
 	for(it = cells.begin(); it != cells.end(); ++it)
 		it->u_prev = it->u_iter = it->u_next = varInit;
-
-	//for(auto cell : cells)
-	//	cell.u_prev = cell.u_iter = cell.u_next = varInit;
 }
 
 template <typename varType, typename propsType,
@@ -74,7 +71,6 @@ void AbstractModel<varType, propsType, cellType, modelType>::setSnapshotter(stri
 	} else {
 		isWriteSnaps = false;
 	}
-	this->snapshot_all(0);
 }
 
 template <typename varType, typename propsType,

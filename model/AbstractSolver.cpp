@@ -27,6 +27,7 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 
 	t_dim = model->t_dim;
 }
+
 template <>
 AbstractSolver<gasOil_perf::GasOil_Perf>::AbstractSolver(gasOil_perf::GasOil_Perf* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
@@ -35,7 +36,6 @@ AbstractSolver<gasOil_perf::GasOil_Perf>::AbstractSolver(gasOil_perf::GasOil_Per
 
 	t_dim = model->t_dim;
 }
-
 
 template <class modelType>
 AbstractSolver<modelType>::~AbstractSolver()
@@ -71,8 +71,18 @@ void AbstractSolver<modelType>::fill()
 template <class modelType>
 void AbstractSolver<modelType>::copyIterLayer()
 {
-	for(int i = 0; i < model->cells.size(); i++)
+	for (int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_iter = model->cells[i].u_next;
+}
+
+template <>
+void AbstractSolver<gasOil_perf::GasOil_Perf>::copyIterLayer()
+{
+	for (int i = 0; i < model->cells.size(); i++)
+		model->cells[i].u_iter = model->cells[i].u_next;
+
+	for (int i = 0; i < model->tunnelCells.size(); i++)
+		model->tunnelCells[i].u_iter = model->tunnelCells[i].u_next;
 }
 
 template <class modelType>
@@ -80,6 +90,16 @@ void AbstractSolver<modelType>::copyTimeLayer()
 {
 	for(int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_prev = model->cells[i].u_iter = model->cells[i].u_next;
+}
+
+template <>
+void AbstractSolver<gasOil_perf::GasOil_Perf>::copyTimeLayer()
+{
+	for (int i = 0; i < model->cells.size(); i++)
+		model->cells[i].u_prev = model->cells[i].u_iter = model->cells[i].u_next;
+
+	for (int i = 0; i < model->tunnelCells.size(); i++)
+		model->tunnelCells[i].u_prev = model->tunnelCells[i].u_iter = model->tunnelCells[i].u_next;
 }
 
 template <class modelType>
@@ -108,6 +128,50 @@ double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 		}
 	}
 	
+	return relErr;
+}
+
+template <>
+double AbstractSolver<gasOil_perf::GasOil_Perf>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int i = 0; i < model->cells[0].varNum; i++)
+	{
+		for (int j = 0; j < model->cells.size(); j++)
+		{
+			var_next = model->cells[j].u_next.values[i];	var_iter = model->cells[j].u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = i;
+				}
+			}
+		}
+
+		for (int j = 0; j < model->tunnelCells.size(); j++)
+		{
+			var_next = model->tunnelCells[j].u_next.values[i];	var_iter = model->tunnelCells[j].u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = i;
+				}
+			}
+		}
+	}
+
 	return relErr;
 }
 
@@ -179,6 +243,24 @@ double AbstractSolver<modelType>::averValue(int varInd)
 		tmp += model->cells[i].u_next.values[varInd] * model->cells[i].V;
 	}
 	
+	return tmp / model->Volume;
+}
+
+template <>
+double AbstractSolver<gasOil_perf::GasOil_Perf>::averValue(int varInd)
+{
+	double tmp = 0.0;
+
+	for (int i = 0; i < model->cells.size(); i++)
+	{
+		tmp += model->cells[i].u_next.values[varInd] * model->cells[i].V;
+	}
+
+	for (int i = 0; i < model->tunnelCells.size(); i++)
+	{
+		tmp += model->tunnelCells[i].u_next.values[varInd] * model->tunnelCells[i].V;
+	}
+
 	return tmp / model->Volume;
 }
 

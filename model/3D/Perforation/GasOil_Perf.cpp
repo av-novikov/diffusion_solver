@@ -197,13 +197,13 @@ void GasOil_Perf::checkSkeletons(const vector<Skeleton_Props>& props)
 	
 	while(it != props.end())
 	{
-		assert( it->h1 == tmp );
-		assert( it->h2 - it->h1 == it->height );
+		//assert( it->h1 == tmp );
+		//assert( it->h2 - it->h1 == it->height );
 		indxs += it->cellsNum_z;
 		tmp = it->h2;
 		++it;
 	}
-	assert( indxs == cellsNum_z );
+	//assert( indxs == cellsNum_z );
 }
 
 void GasOil_Perf::makeDimLess()
@@ -440,6 +440,7 @@ void GasOil_Perf::buildTunnels()
 
 	for (int k = 0; k < perfTunnels.size(); k++)
 	{
+		r = cells[perfTunnels[k].first].r;
 		for (int i = 0; i < perfTunnels[k].second; i++)
 		{
 			Cell& cell = cells[perfTunnels[k].first + (i + 1) * (cellsNum_z + 2)];
@@ -793,8 +794,8 @@ double GasOil_Perf::solveH()
 
 double GasOil_Perf::getRate(int cur)
 {
-	Cell& cell = getCell(cur);
-	Cell& nebr = getCell(cur, cur + cellsNum_z + 2);
+	Cell& cell = tunnelCells[cur];
+	Cell& nebr = getCell(nebrMap[cur].first);
 	const Var2phase& upwd = getUpwindIdx(&cell, &nebr)->u_next;
 	return getTrans(cell, nebr) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR) * (nebr.u_next.p - cell.u_next.p);
 }

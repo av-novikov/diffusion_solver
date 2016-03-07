@@ -169,7 +169,7 @@ void Par3DSolver::solveStep()
 	double dAverPres = 1.0, dAverSat = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 8)
+	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 10)
 	{
 		copyIterLayer();
 

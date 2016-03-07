@@ -1,6 +1,7 @@
 #include "model/3D/Perforation/ParPerfSolver.h"
 
 #include <algorithm>
+#include <map>
 
 using namespace std;
 using namespace gasOil_perf;
@@ -28,8 +29,8 @@ ParPerfSolver::ParPerfSolver(GasOil_Perf* _model) : AbstractSolver<GasOil_Perf>(
 	ind_i = new int[7 * 4 * model->cellsNum];
 	ind_j = new int[7 * 4 * model->cellsNum];
 	a = new double[7 * 4 * model->cellsNum];
-	ind_rhs = new int[2 * model->cellsNum];
-	rhs = new double[2 * model->cellsNum];
+	ind_rhs = new int[2 * (model->cellsNum + model->tunnelCells.size())];
+	rhs = new double[2 * (model->cellsNum + model->tunnelCells.size())];
 
 	// Stencils allocating
 	stencils = new UsedStencils<GasOil_Perf>(model);
@@ -46,25 +47,31 @@ ParPerfSolver::~ParPerfSolver()
 
 void ParPerfSolver::writeData()
 {
-	double p = 0.0, s = 0.0;
+	double p = 0.0, s = 0.0, q = 0;
 
 	plot_qcells << cur_t * t_dim / 3600.0;
 
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		p += model->cells[it->first].u_next.p * model->P_dim;
-		s += model->cells[it->first].u_next.s;
+		p += model->tunnelCells[it->first].u_next.p * model->P_dim;
+		s += model->tunnelCells[it->first].u_next.s;
 		if (model->leftBoundIsRate)
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
+		{
 			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			q += model->getRate(it->first);
+		}
 	}
-
+	
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
 	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 
-	plot_qcells << endl;
+	if (model->leftBoundIsRate)
+		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;
+	else
+		plot_qcells << "\t" << q * model->Q_dim * 86400.0 << endl;
 }
 
 void ParPerfSolver::control()
@@ -95,7 +102,7 @@ void ParPerfSolver::start()
 	iterations = 8;
 
 	fillIndices();
-	solver.Init(2 * model->cellsNum);
+	solver.Init(2 * (model->cellsNum + model->tunnelCells.size()));
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -156,6 +163,12 @@ void ParPerfSolver::copySolution(const paralution::LocalVector<double>& sol)
 	{
 		model->cells[i].u_next.p += sol[2 * i];
 		model->cells[i].u_next.s += sol[2 * i + 1];
+	}
+
+	for (int i = model->cellsNum; i < model->cellsNum + model->tunnelCells.size(); i++)
+	{
+		model->tunnelCells[i-model->cellsNum].u_next.p += sol[2 * i];
+		model->tunnelCells[i-model->cellsNum].u_next.s += sol[2 * i + 1];
 	}
 }
 

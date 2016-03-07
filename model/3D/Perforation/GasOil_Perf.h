@@ -133,7 +133,7 @@ namespace gasOil_perf
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
+		template<typename> friend class AbstractSolver;
 		friend class ParPerfSolver;
 		template<typename> friend class MidStencil;
 		template<typename> friend class LeftStencil;
@@ -184,7 +184,7 @@ namespace gasOil_perf
 		inline Cell& getCell(int num)
 		{
 			Cell& cell = cells[num];
-			assert(cell.isUsed);
+			//assert(cell.isUsed);
 
 			return cell;
 		};
@@ -192,13 +192,13 @@ namespace gasOil_perf
 		inline Cell& getCell(int num, int beta)
 		{
 			Cell& cell = cells[num];
-			assert(cell.isUsed);
+			//assert(cell.isUsed);
 
 			Cell& nebr = cells[beta];
 			if (nebr.isUsed)
 				return nebr;
 			else
-				return tunnelCells[tunnelNebrMap[beta]];
+				return tunnelCells[tunnelNebrMap[num]];
 		};
 
 		inline const Cell& getCell(const int num) const
@@ -218,7 +218,7 @@ namespace gasOil_perf
 			if (nebr.isUsed)
 				return nebr;
 			else
-				return tunnelCells[ tunnelNebrMap.at(beta) ];
+				return tunnelCells[ tunnelNebrMap.at(num) ];
 		};
 
 		// Gas content in oil
@@ -279,20 +279,19 @@ namespace gasOil_perf
 		};
 		inline void getStencilIdx(int cur, Cell** const neighbor)
 		{
-
 			neighbor[0] = &getCell(cur);
-			neighbor[1] = &getCell(cur, cur - cellsNum_z - 2);
-			neighbor[2] = &getCell(cur, cur + cellsNum_z + 2);
-			neighbor[3] = &getCell(cur, cur - 1);
-			neighbor[4] = &getCell(cur, cur + 1);
+			neighbor[1] = &getCell(cur - cellsNum_z - 2);
+			neighbor[2] = &getCell(cur + cellsNum_z + 2);
+			neighbor[3] = &getCell(cur - 1);
+			neighbor[4] = &getCell(cur + 1);
 			if (cur < (cellsNum_r + 2) * (cellsNum_z + 2))
-				neighbor[5] = &getCell(cur, cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
+				neighbor[5] = &getCell(cur + (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 			else
-				neighbor[5] = &getCell(cur, cur - (cellsNum_r + 2) * (cellsNum_z + 2));
+				neighbor[5] = &getCell(cur - (cellsNum_r + 2) * (cellsNum_z + 2));
 			if (cur < (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1))
-				neighbor[6] = &getCell(cur, cur + (cellsNum_r + 2) * (cellsNum_z + 2));
+				neighbor[6] = &getCell(cur + (cellsNum_r + 2) * (cellsNum_z + 2));
 			else
-				neighbor[6] = &getCell(cur, cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
+				neighbor[6] = &getCell(cur - (cellsNum_r + 2) * (cellsNum_z + 2) * (cellsNum_phi - 1));
 		};
 		inline int getIdx(int i)
 		{
@@ -337,21 +336,21 @@ namespace gasOil_perf
 			const int idx1 = getSkeletonIdx(cell);
 			const int idx2 = getSkeletonIdx(beta);
 
-			if( abs(cell.num - beta.num) == 1 ) {
+			if( fabs(cell.z - beta.z) > EQUALITY_TOLERANCE ) {
 				k1 = props_sk[idx1].perm_z;
 				k2 = props_sk[idx2].perm_z;
 				if(k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 				S = cell.hphi * cell.r * cell.hr;
 				return 2.0 * k1 * k2 * S / (k1 * beta.hz + k2 * cell.hz);
-			} else if( abs(cell.num - beta.num) == cellsNum_z + 2 ) {
+			} else if( fabs(cell.r - beta.r) > EQUALITY_TOLERANCE) {
 				k1 = (cell.r > props_sk[idx1].radius_eff ? props_sk[idx1].perm_r : props_sk[idx1].perm_eff);
 				k2 = (beta.r > props_sk[idx2].radius_eff ? props_sk[idx2].perm_r : props_sk[idx2].perm_eff);
 				if(k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 				S = cell.hphi * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
-			} else {
+			} else if(fabs(cell.phi - beta.phi) > EQUALITY_TOLERANCE) {
 				k1 = (cell.r > props_sk[idx1].radius_eff ? props_sk[idx1].perm_r : props_sk[idx1].perm_eff);
 				if(k1 == 0.0)
 					return 0.0;
@@ -439,10 +438,9 @@ namespace gasOil_perf
 		};
 		inline void solveP_bub()
 		{
-			int idx;
 			double factRs, dissGas;
 
-			for (auto cell: cells)
+			for (auto& cell: cells)
 			{
 				Var2phase& next = cell.u_next;
 				Var2phase& prev = cell.u_prev;
@@ -464,7 +462,7 @@ namespace gasOil_perf
 				}
 			}
 
-			for (auto cell: tunnelCells)
+			for (auto& cell: tunnelCells)
 			{
 				Var2phase& next = cell.u_next;
 				Var2phase& prev = cell.u_prev;
@@ -677,7 +675,12 @@ namespace gasOil_perf
 			Cell& nebr1 = getCell(nebrMap[cur].first);
 			Cell& nebr2 = getCell(nebrMap[cur].second);
 
-			return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.r - nebr1.r) - (nebr1.u_next.s - cell.u_next.s) / (nebr1.r - cell.r);
+			if( fabs(nebr2.r - nebr1.r) > EQUALITY_TOLERANCE)
+				return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.r - nebr1.r) - (nebr1.u_next.s - cell.u_next.s) / (nebr1.r - cell.r);
+			else if(fabs(nebr2.z - nebr1.z) > EQUALITY_TOLERANCE)
+				return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.z - nebr1.z) - (nebr1.u_next.s - cell.u_next.s) / (nebr1.z - cell.z);
+			else if (fabs(nebr2.phi - nebr1.phi) > EQUALITY_TOLERANCE)
+				return (nebr2.u_next.s - nebr1.u_next.s) / (nebr2.phi - nebr1.phi) / nebr1.r - (nebr1.u_next.s - cell.u_next.s) / (nebr1.phi - cell.phi) / nebr1.r;
 		}
 
 		inline double solve_eq2Left_dp(int cur, int beta)
@@ -690,7 +693,12 @@ namespace gasOil_perf
 			Cell& cell = tunnelCells[cur];
 			Cell& nebr = getCell(nebrMap[cur].first);
 
-			return 1.0 / (nebr.r - cell.r);
+			if (fabs(cell.r - nebr.r) > EQUALITY_TOLERANCE)
+				return 1.0 / (nebr.r - cell.r);
+			else if (fabs(cell.z - nebr.z) > EQUALITY_TOLERANCE)
+				return 1.0 / (nebr.z - cell.z);
+			else if (fabs(cell.phi - nebr.phi) > EQUALITY_TOLERANCE)
+				return 1.0 / (nebr.phi - cell.phi) / nebr.r;
 		}
 
 		inline double solve_eq2Left_dp_beta(int cur, int beta)
@@ -704,10 +712,24 @@ namespace gasOil_perf
 			Cell& nebr1 = getCell(nebrMap[cur].first);
 			Cell& nebr2 = getCell(nebrMap[cur].second);
 
-			if (beta == cur + cellsNum_z + 2)
-				return -1.0 / (nebr2.r - nebr1.r) - 1.0 / (nebr1.r - cell.r);
+			if (beta == nebr1.num)
+			{
+				if (fabs(cell.r - nebr1.r) > EQUALITY_TOLERANCE)
+					return -1.0 / (nebr2.r - nebr1.r) - 1.0 / (nebr1.r - cell.r);
+				else if (fabs(cell.z - nebr1.z) > EQUALITY_TOLERANCE)
+					return -1.0 / (nebr2.z - nebr1.z) - 1.0 / (nebr1.z - cell.z);
+				else if (fabs(cell.phi - nebr1.phi) > EQUALITY_TOLERANCE)
+					return -1.0 / (nebr2.phi - nebr1.phi) / nebr1.r - 1.0 / (nebr1.phi - cell.phi) / nebr1.r;
+			}
 			else
-				return 1.0 / (nebr2.r - nebr1.r);
+			{
+				if (fabs(cell.r - nebr1.r) > EQUALITY_TOLERANCE)
+					return 1.0 / (nebr2.r - nebr1.r);
+				else if (fabs(cell.z - nebr1.z) > EQUALITY_TOLERANCE)
+					return 1.0 / (nebr2.z - nebr1.z);
+				else if (fabs(cell.phi - nebr1.phi) > EQUALITY_TOLERANCE)
+					return 1.0 / (nebr2.phi - nebr1.phi) / nebr1.r;
+			}
 		}
 
 		/*-------------- Right cells ------------------*/

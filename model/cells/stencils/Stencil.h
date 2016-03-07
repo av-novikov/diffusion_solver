@@ -40,7 +40,7 @@ class LeftStencil
 {
 protected:
 	modelType* model;
-	FillFoo foo;
+	const FillFoo foo;
 
 	double* matrix;
 	int* ind_i;

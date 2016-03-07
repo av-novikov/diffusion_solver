@@ -1061,20 +1061,20 @@ gasOil_perf::Properties* getProps()
 {
 	gasOil_perf::Properties* props = new gasOil_perf::Properties();
 
-	props->cellsNum_r = 5;
+	props->cellsNum_r = 50;
 	props->cellsNum_phi = 40;
-	props->cellsNum_z = 1;
+	props->cellsNum_z = 5;
 
-	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
+	props->timePeriods.push_back(60.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	//props->rates.push_back(1.0);
-	props->pwf.push_back(200.0 * 1.E+5);
+	//props->rates.push_back(20.0);
+	props->pwf.push_back(180.0 * 1.E+5);
 
-	props->ht = 1000.0;
+	props->ht = 100.0;
 	props->ht_min = 100.0;
-	props->ht_max = 5000000.0;
+	props->ht_max = 100000.0;
 
 	props->alpha = 7200.0;
 
@@ -1095,18 +1095,23 @@ gasOil_perf::Properties* getProps()
 	props->perfIntervals.push_back( make_pair(19+50*(props->cellsNum_r+2)*(props->cellsNum_z+2), 19+50*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );
 	props->perfIntervals.push_back( make_pair(20+55*(props->cellsNum_r+2)*(props->cellsNum_z+2), 20+55*(props->cellsNum_r+2)*(props->cellsNum_z+2)) );*/
 
-	props->perfTunnels.push_back( make_pair(1, 2) );
-	props->perfTunnels.push_back(make_pair(1 + 10*(props->cellsNum_r + 2)*(props->cellsNum_z + 2), 2));
-	props->perfTunnels.push_back(make_pair(1 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 2));
-	props->perfTunnels.push_back(make_pair(1 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 2));
+	//props->perfIntervals.push_back(make_pair(3, 3));
+	//props->perfIntervals.push_back(make_pair(3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	//props->perfIntervals.push_back(make_pair(3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+	//props->perfIntervals.push_back(make_pair(3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2)));
+
+	props->perfTunnels.push_back( make_pair(3, 10) );
+	props->perfTunnels.push_back(make_pair(3 + 10 *(props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
+	props->perfTunnels.push_back(make_pair(3 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
+	props->perfTunnels.push_back(make_pair(3 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
 
 	props->r_w = 0.05;
-	props->r_e = 10.0;
+	props->r_e = 1000.0;
 
 	gasOil_perf::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_bub = 250.0 * 1.0e+5;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
 	tmp.s_init = 0.999;
 	tmp.h1 = 1500.0;
 	tmp.h2 = 1500.1;
@@ -1206,11 +1211,17 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 	
+	/*gasOil_3d::Properties* props = getProps();
+	Scene<gasOil_3d::GasOil_3D, gasOil_3d::Par3DSolver, gasOil_3d::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
+
 	gasOil_perf::Properties* props = getProps();
 	Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	//scene.start();
+	scene.start();
 	
 	/*oil1D_NIT::Properties* props = getProps();
 	Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties> scene;
