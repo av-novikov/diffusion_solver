@@ -17,10 +17,13 @@ namespace gasOil_perf_nit
 	class ParPerfNITSolver : public AbstractSolver<GasOil_Perf_NIT>
 	{
 	protected:
+		std::ofstream plot_Tdyn;
 		std::ofstream plot_Sdyn;
 		std::ofstream plot_Pdyn;
 		std::ofstream plot_qcells;
 
+		double T_dim;
+		
 		void control();
 		void doNextStep();
 		void solveStep();
@@ -56,15 +59,16 @@ namespace gasOil_perf_nit
 			std::cout << std::endl;
 		};
 
-		void fill();
-		void fillIndices();
-		void copySolution(const paralution::LocalVector<double>& sol);
+		void fill(int key);
+		void fillIndices(int key);
+		void copySolution(const paralution::LocalVector<double>& sol, int key);
 
 		// Numerical stencils for matrix filling
 		UsedStencils<GasOil_Perf_NIT>* stencils;
 
-		// Sparse matrix solver
-		ParSolver solver;
+		// Sparse matrix solvers
+		ParSolver pres_solver;
+		ParSolver temp_solver;
 
 		// Coordinate form of sparse matrix & dense vector
 		int* ind_i;
@@ -72,8 +76,16 @@ namespace gasOil_perf_nit
 		double* a;
 		int* ind_rhs;
 		double* rhs;
+		//
+		int* tind_i;
+		int* tind_j;
+		double* ta;
+		int* tind_rhs;
+		double* trhs;
+
 		// Number of non-zero elements in sparse matrix
-		int elemNum;
+		int presElemNum;
+		int tempElemNum;
 
 	public:
 		ParPerfNITSolver(GasOil_Perf_NIT* _model);

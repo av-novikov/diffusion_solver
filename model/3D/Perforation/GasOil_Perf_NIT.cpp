@@ -171,6 +171,7 @@ void GasOil_Perf_NIT::setProps(Properties& props)
 
 	alpha = props.alpha;
 	depth_point = props.depth_point;
+	L = props.L;
 
 	makeDimLess();
 	
@@ -210,9 +211,9 @@ void GasOil_Perf_NIT::makeDimLess()
 {
 	// Main units
 	R_dim = r_w * 10.0;
-	Z_dim = props_sk[0].h2 - props_sk[0].h1;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
+	T_dim = props_sk[0].t_init;
 
 	// Temporal properties
 	ht /= t_dim;
@@ -237,6 +238,11 @@ void GasOil_Perf_NIT::makeDimLess()
 		props_sk[i].p_init /= P_dim;
 		props_sk[i].p_out /= P_dim;
 		props_sk[i].p_bub /= P_dim;
+		props_sk[i].t_init /= T_dim;
+
+		props_sk[i].c = props_sk[i].c / R_dim / R_dim * T_dim * t_dim * t_dim;
+		props_sk[i].lambda_r = props_sk[i].lambda_r * T_dim * t_dim / P_dim / R_dim / R_dim;
+		props_sk[i].lambda_z = props_sk[i].lambda_z * T_dim * t_dim / P_dim / R_dim / R_dim;
 
 		for(int j = 0; j < periodsNum; j++)
 		{
@@ -260,13 +266,24 @@ void GasOil_Perf_NIT::makeDimLess()
 	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
 
+	props_oil.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_oil.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_oil.jt = props_oil.jt * P_dim / T_dim;
+	props_oil.ad = props_oil.ad * P_dim / T_dim;
+
 	// Gas properties
 	props_gas.visc /= (P_dim * t_dim);
 	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 
+	props_gas.c = props_gas.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_gas.lambda = props_gas.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_gas.jt = props_gas.jt * P_dim / T_dim;
+	props_gas.ad = props_gas.ad * P_dim / T_dim;
+
 	// Rest properties
 	alpha /= t_dim;
 	//depth_point = 0.0;
+	L = L / R_dim / R_dim * t_dim * t_dim;
 }
 
 void GasOil_Perf_NIT::buildGridLog()
@@ -399,6 +416,7 @@ void GasOil_Perf_NIT::setInitialState()
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
 		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_bub;
 		it->u_prev.s = it->u_iter.s = it->u_next.s = props.s_init;
+		it->u_prev.t = it->u_iter.t = it->u_next.t = props.t_init;
 		if(props.p_bub > props.p_init)
 			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
 		else
@@ -411,6 +429,7 @@ void GasOil_Perf_NIT::setInitialState()
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
 		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_bub;
 		it->u_prev.s = it->u_iter.s = it->u_next.s = props.s_init;
+		it->u_prev.t = it->u_iter.t = it->u_next.t = props.t_init;
 		if (props.p_bub > props.p_init)
 			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
 		else
@@ -775,6 +794,35 @@ double GasOil_Perf_NIT::solve_eq2_ds_beta(int cur, int beta)
 		( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) +
 		getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
 }
+
+/*double GasOil_Perf_NIT::solve_eq3(int cur)
+{
+	Cell* neighbor[6];
+	getNeighborIdx(cur, neighbor);
+
+	Cell& cell = getCell(cur);
+	Cell* neighbor[6];
+	getNeighborIdx(cell, neighbor);
+
+	Cell& cell = cells[cur];
+	Var2phaseNIT& next = cell.u_next;
+	Var2phaseNIT& prev = cell.u_prev;
+
+	double H = 0.0;
+	H = (getPoro(next.p, cell) * next.s * getRho_oil(next.p, next.p_bub, next.SATUR) -
+		getPoro(prev.p, cell) * prev.s * getRho_oil(prev.p, prev.p_bub, prev.SATUR)) / ht;
+
+	for (int i = 0; i < 6; i++)
+	{
+		Cell& beta = cells[neighbor[i]];
+		Var2phaseNIT& upwd = cells[getUpwindIdx(cur, neighbor[i])].u_next;
+
+		H += 1.0 / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) *
+			getKr_oil(upwd.s) / props_oil.visc * getRho_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+	}
+
+	return H;
+}*/
 
 double GasOil_Perf_NIT::solveH()
 {

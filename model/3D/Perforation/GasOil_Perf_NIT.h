@@ -51,6 +51,18 @@ namespace gasOil_perf_nit
 		double p_init;
 		double p_bub;
 		double s_init;
+		double t_init;
+
+		// Thermal properties
+
+		// Thermal diffusivity coefficient [m2/sec]
+		double kappa_eff;
+		// Mass heat capacity [J/kg/K]
+		double c;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda_r;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda_z;
 	};
 
 	struct Fluid_Props
@@ -67,6 +79,17 @@ namespace gasOil_perf_nit
 		Interpolate* kr;
 		// Fluid volume factor
 		Interpolate* b;
+
+		// Thermal properties
+
+		// Mass heat capacity [J/kg/K]
+		double c;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda;
+		// Joule-thompson coefficient [K/Pa]
+		double jt;
+		// Adiabatic coefficient [K/Pa]
+		double ad;
 	};
 
 	struct Properties
@@ -126,6 +149,9 @@ namespace gasOil_perf_nit
 
 		// Data set (pressure, gas content in oil) ([Pa], [m3/m3])
 		std::vector< std::pair<double,double> > Rs;
+
+		// Heat of phase transition [J/kg]
+		double L;
 	};
 
 	class GasOil_Perf_NIT : public AbstractModel<Var2phaseNIT, Properties, CylCellPerf, GasOil_Perf_NIT>
@@ -225,6 +251,8 @@ namespace gasOil_perf_nit
 		Interpolate* Rs;
 		Interpolate* Prs;
 
+		// Heat of phase transition [J/kg]
+		double L;
 		// BHP will be converted to the depth
 		double depth_point;
 		// During the time flow rate decreases 'e' times in well test [sec] 
@@ -597,6 +625,82 @@ namespace gasOil_perf_nit
 			case Z_AXIS:
 				return -props_sk[idx].perm_z * getKr_gas(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
 			}
+		};
+
+		inline double getCn(Cell& cell) const
+		{
+			const int idx = getSkeletonIdx(cell);
+			return getPoro(cell.u_next.p, cell) * (cell.u_next.s * getRho_oil(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR) * props_oil.c +
+				(1.0 - cell.u_next.s) * getRho_gas(cell.u_next.p) * props_gas.c) +
+				(1.0 - getPoro(cell.u_next.p, cell)) * props_sk[idx].dens_stc * props_sk[idx].c;
+		};
+		inline double getAd(Cell& cell) const
+		{
+			return getPoro(cell.u_next.p, cell) * (cell.u_next.s * getRho_oil(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR) * props_oil.c * props_oil.ad +
+				(1.0 - cell.u_next.s) * getRho_gas(cell.u_next.p) * props_gas.c * props_gas.ad);
+		};
+		inline double getLambda(Cell& cell, int axis)
+		{
+			const int idx = getSkeletonIdx(cell);
+			switch (axis)
+			{
+			case R_AXIS:
+				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0 - cell.u_next.s) * props_gas.lambda) +
+					(1.0 - getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_r;
+			case PHI_AXIS:
+				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0 - cell.u_next.s) * props_gas.lambda) +
+					(1.0 - getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_r;
+			case Z_AXIS:
+				return getPoro(cell.u_next.p, cell) * (cell.u_next.s * props_oil.lambda + (1.0 - cell.u_next.s) * props_gas.lambda) +
+					(1.0 - getPoro(cell.u_next.p, cell)) * props_sk[idx].lambda_z;
+			}
+		};
+		inline double getLambda(Cell& cell1, Cell& cell2)
+		{
+			if (fabs(cell1.z - cell2.z) > EQUALITY_TOLERANCE)
+				return (cell1.hz * getLambda(cell2, Z_AXIS) + cell2.hz * getLambda(cell1, Z_AXIS)) / (cell1.hz + cell2.hz);
+			else if (fabs(cell1.r - cell2.r) > EQUALITY_TOLERANCE)
+				return (cell1.hr * getLambda(cell2, R_AXIS) + cell2.hr * getLambda(cell1, R_AXIS)) / (cell1.hr + cell2.hr);
+			else if (fabs(cell1.phi - cell2.phi) > EQUALITY_TOLERANCE)
+				return (cell1.hphi * getLambda(cell2, PHI_AXIS) + cell2.hphi * getLambda(cell1, PHI_AXIS)) / (cell1.hphi + cell2.hphi);
+		};
+		inline double getJT(Cell& cell, int varNum, int axis)
+		{
+			Var2phaseNIT* var;
+			switch (varNum)
+			{
+			case PREV:
+				var = &cell.u_prev;
+				break;
+			case ITER:
+				var = &cell.u_iter;
+				break;
+			case NEXT:
+				var = &cell.u_next;
+				break;
+			}
+
+			return getRho_oil(var->p, var->p_bub, var->SATUR) * props_oil.c * props_oil.jt * getOilVelocity(cell, varNum, axis) +
+				getRho_gas(var->p) * props_gas.c * props_gas.jt * getGasVelocity(cell, varNum, axis);
+		};
+		inline double getA(Cell& cell, int varNum, int axis)
+		{
+			Var2phaseNIT* var;
+			switch (varNum)
+			{
+			case PREV:
+				var = &cell.u_prev;
+				break;
+			case ITER:
+				var = &cell.u_iter;
+				break;
+			case NEXT:
+				var = &cell.u_next;
+				break;
+			}
+
+			return getRho_oil(var->p, var->p_bub, var->SATUR) * props_oil.c * getOilVelocity(cell, varNum, axis) +
+				getRho_gas(var->p) * props_gas.c * getGasVelocity(cell, varNum, axis);
 		};
 
 		// First eqn

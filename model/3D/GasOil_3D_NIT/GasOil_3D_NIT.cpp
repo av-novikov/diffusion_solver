@@ -116,7 +116,6 @@ void GasOil_3D_NIT::makeDimLess()
 	P_dim = BAR_TO_PA;
 	T_dim = props_sk[0].t_init;
 
-
 	// Temporal properties
 	ht /= t_dim;
 	ht_min /= t_dim;

@@ -9,6 +9,7 @@ using namespace gasOil_perf_nit;
 ParPerfNITSolver::ParPerfNITSolver(GasOil_Perf_NIT* _model) : AbstractSolver<GasOil_Perf_NIT>(_model)
 {
 	// Output streams
+	plot_Tdyn.open("snaps/T_dyn.dat", ofstream::out);
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
 	plot_Sdyn.open("snaps/S_dyn.dat", ofstream::out);
 	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
@@ -22,6 +23,7 @@ ParPerfNITSolver::ParPerfNITSolver(GasOil_Perf_NIT* _model) : AbstractSolver<Gas
 	b.Initialize(n - 1);
 
 	// Time settings
+	T_dim = model->T_dim;
 	t_dim = model->t_dim;
 	Tt = model->period[model->period.size() - 1];
 
@@ -40,6 +42,7 @@ ParPerfNITSolver::ParPerfNITSolver(GasOil_Perf_NIT* _model) : AbstractSolver<Gas
 ParPerfNITSolver::~ParPerfNITSolver()
 {
 	// Closing streams
+	plot_Tdyn.close();
 	plot_Pdyn.close();
 	plot_Sdyn.close();
 	plot_qcells.close();
@@ -47,13 +50,14 @@ ParPerfNITSolver::~ParPerfNITSolver()
 
 void ParPerfNITSolver::writeData()
 {
-	double p = 0.0, s = 0.0, q = 0;
+	double t = 0.0, p = 0.0, s = 0.0, q = 0;
 
 	plot_qcells << cur_t * t_dim / 3600.0;
 
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
+		t += model->cells[it->first].u_next.t;
 		p += model->tunnelCells[it->first].u_next.p * model->P_dim;
 		s += model->tunnelCells[it->first].u_next.s;
 		if (model->leftBoundIsRate)
@@ -65,6 +69,7 @@ void ParPerfNITSolver::writeData()
 		}
 	}
 	
+	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) * T_dim << endl;
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
 	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 
@@ -101,8 +106,10 @@ void ParPerfNITSolver::start()
 	int counter = 0;
 	iterations = 8;
 
-	fillIndices();
-	solver.Init(2 * (model->cellsNum + model->tunnelCells.size()));
+	fillIndices(PRES);
+	fillIndices(TEMP);
+	pres_solver.Init( 2 * (model->cellsNum + model->tunnelCells.size()) );
+	temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -157,18 +164,29 @@ void ParPerfNITSolver::doNextStep()
 	}
 }
 
-void ParPerfNITSolver::copySolution(const paralution::LocalVector<double>& sol)
+void ParPerfNITSolver::copySolution(const paralution::LocalVector<double>& sol, int key)
 {
-	for (int i = 0; i < model->cellsNum; i++)
+	if (key == PRES)
 	{
-		model->cells[i].u_next.p += sol[2 * i];
-		model->cells[i].u_next.s += sol[2 * i + 1];
-	}
+		for (int i = 0; i < model->cellsNum; i++)
+		{
+			model->cells[i].u_next.p += sol[2 * i];
+			model->cells[i].u_next.s += sol[2 * i + 1];
+		}
 
-	for (int i = model->cellsNum; i < model->cellsNum + model->tunnelCells.size(); i++)
+		for (int i = model->cellsNum; i < model->cellsNum + model->tunnelCells.size(); i++)
+		{
+			model->tunnelCells[i - model->cellsNum].u_next.p += sol[2 * i];
+			model->tunnelCells[i - model->cellsNum].u_next.s += sol[2 * i + 1];
+		}
+	}
+	else if (key == TEMP)
 	{
-		model->tunnelCells[i-model->cellsNum].u_next.p += sol[2 * i];
-		model->tunnelCells[i-model->cellsNum].u_next.s += sol[2 * i + 1];
+		for (int i = 0; i < model->cellsNum; i++)
+			model->cells[i].u_next.t += sol[i];
+
+		for (int i = model->cellsNum; i < model->cellsNum + model->tunnelCells.size(); i++)
+			model->tunnelCells[i - model->cellsNum].u_next.t += sol[i];
 	}
 }
 
@@ -186,10 +204,10 @@ void ParPerfNITSolver::solveStep()
 	{
 		copyIterLayer();
 
-		fill();
-		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve();
-		copySolution( solver.getSolution() );
+		fill(PRES);
+		pres_solver.Assemble(ind_i, ind_j, a, presElemNum, ind_rhs, rhs);
+		pres_solver.Solve();
+		copySolution( pres_solver.getSolution(), PRES );
 
 		model->solveP_bub();
 
@@ -207,153 +225,172 @@ void ParPerfNITSolver::solveStep()
 		iterations++;
 	}
 
+	fill(TEMP);
+	temp_solver.Assemble(tind_i, tind_j, ta, tempElemNum, tind_rhs, trhs);
+	temp_solver.Solve();
+	copySolution(temp_solver.getSolution(), TEMP);
+
 	cout << "Newton Iterations = " << iterations << endl;
 }
 
-void ParPerfNITSolver::fillIndices()
+void ParPerfNITSolver::fillIndices(int key)
 {
 	int idx, nebr;
 	int counter = 0;
 	Iterator it;
 	map<int, double>::iterator itPerf;
 
-	// Left
-	for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
+	if (key == PRES)
 	{
-		idx = it.getIdx();
-
-		if (it->isUsed)
+		// Left
+		for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
 		{
-			nebr = idx + model->cellsNum_z + 2;
-			ind_i[counter] = 2 * idx;
-			ind_j[counter++] = 2 * idx;
+			idx = it.getIdx();
 
-			ind_i[counter] = 2 * idx;
-			ind_j[counter++] = 2 * idx + 1;
+			if (it->isUsed)
+			{
+				nebr = idx + model->cellsNum_z + 2;
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * idx;
 
-			ind_i[counter] = 2 * idx;
-			ind_j[counter++] = 2 * nebr;
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * idx + 1;
 
-			ind_i[counter] = 2 * idx;
-			ind_j[counter++] = 2 * nebr + 1;
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * nebr;
 
-			ind_i[counter] = 2 * idx + 1;
-			ind_j[counter++] = 2 * idx;
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * nebr + 1;
 
-			ind_i[counter] = 2 * idx + 1;
-			ind_j[counter++] = 2 * idx + 1;
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * idx;
 
-			ind_i[counter] = 2 * idx + 1;
-			ind_j[counter++] = 2 * nebr;
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * idx + 1;
 
-			ind_i[counter] = 2 * idx + 1;
-			ind_j[counter++] = 2 * nebr + 1;
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * nebr;
+
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * nebr + 1;
+			}
+			else {
+				ind_i[counter] = 2 * idx;
+				ind_j[counter++] = 2 * idx;
+
+				ind_i[counter] = 2 * idx + 1;
+				ind_j[counter++] = 2 * idx + 1;
+			}
 		}
-		else {
-			ind_i[counter] = 2 * idx;
-			ind_j[counter++] = 2 * idx;
 
-			ind_i[counter] = 2 * idx + 1;
-			ind_j[counter++] = 2 * idx + 1;
+		// Middle
+		int res;
+		for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+		{
+			idx = it.getIdx();
+			res = idx % (model->cellsNum_z + 2);
+			if (res == 0)
+				stencils->top->fillIndex(idx, &counter);
+			else if (res == model->cellsNum_z + 1)
+				stencils->bot->fillIndex(idx, &counter);
+			else
+				stencils->middle->fillIndex(idx, &counter);
 		}
-	}
 
-	// Middle
-	int res;
-	for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+		// Right
+		for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
+		{
+			idx = it.getIdx();
+			stencils->right->fillIndex(idx, &counter);
+		}
+
+		// Tunnel cells
+		vector<Cell>::iterator itr;
+		for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
+		{
+			stencils->left->fillIndex(itr->num, &counter);
+		}
+
+		presElemNum = counter;
+
+		for (int i = 0; i < 2 * (model->cellsNum + model->tunnelCells.size()); i++)
+			ind_rhs[i] = i;
+	}
+	else if (key == TEMP)
 	{
-		idx = it.getIdx();
-		res = idx % (model->cellsNum_z + 2);
-		if( res == 0 )
-			stencils->top->fillIndex(idx, &counter);
-		else if( res == model->cellsNum_z + 1)
-			stencils->bot->fillIndex(idx, &counter);
-		else
-			stencils->middle->fillIndex(idx, &counter);	
+
 	}
-
-	// Right
-	for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
-	{
-		idx = it.getIdx();
-		stencils->right->fillIndex(idx, &counter);
-	}
-
-	// Tunnel cells
-	vector<Cell>::iterator itr;
-	for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
-	{
-		stencils->left->fillIndex(itr->num, &counter);
-	}
-
-	elemNum = counter;
-
-	for (int i = 0; i < 2*(model->cellsNum + model->tunnelCells.size()); i++)
-		ind_rhs[i] = i;
 }
 
-void ParPerfNITSolver::fill()
+void ParPerfNITSolver::fill(int key)
 {
 	int idx;
 	int counter = 0;
 	Iterator it;
 	map<int, double>::iterator itPerf;
 
-	// Left
-	for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
+	if (key == PRES)
 	{
-		idx = it.getIdx();
-
-		if (it->isUsed)
+		// Left
+		for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
 		{
-			a[counter++] = 1.0;
-			a[counter++] = 0.0;
-			a[counter++] = -1.0;
-			a[counter++] = 0.0;
+			idx = it.getIdx();
 
-			a[counter++] = 0.0;
-			a[counter++] = 1.0;
-			a[counter++] = 0.0;
-			a[counter++] = -1.0;
+			if (it->isUsed)
+			{
+				a[counter++] = 1.0;
+				a[counter++] = 0.0;
+				a[counter++] = -1.0;
+				a[counter++] = 0.0;
 
-			rhs[2 * idx] = 0.0;
-			rhs[2 * idx + 1] = 0.0;
+				a[counter++] = 0.0;
+				a[counter++] = 1.0;
+				a[counter++] = 0.0;
+				a[counter++] = -1.0;
+
+				rhs[2 * idx] = 0.0;
+				rhs[2 * idx + 1] = 0.0;
+			}
+			else {
+				a[counter++] = 1.0;
+				a[counter++] = 1.0;
+
+				rhs[2 * idx] = 0.0;
+				rhs[2 * idx + 1] = 0.0;
+			}
 		}
-		else {
-			a[counter++] = 1.0;
-			a[counter++] = 1.0;
 
-			rhs[2 * idx] = 0.0;
-			rhs[2 * idx + 1] = 0.0;
+		// Middle
+		int res;
+		for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+		{
+			idx = it.getIdx();
+			res = idx % (model->cellsNum_z + 2);
+			if (res == 0)
+				stencils->top->fill(idx, &counter);
+			else if (res == model->cellsNum_z + 1)
+				stencils->bot->fill(idx, &counter);
+			else
+				stencils->middle->fill(idx, &counter);
+		}
+
+		// Right
+		for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
+		{
+			idx = it.getIdx();
+			stencils->right->fill(idx, &counter);
+		}
+
+		// Tunnel cells
+		vector<Cell>::iterator itr;
+		for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
+		{
+			stencils->left->fill(itr->num, &counter);
 		}
 	}
-
-	// Middle
-	int res;
-	for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+	else if (key == TEMP)
 	{
-		idx = it.getIdx();
-		res = idx % (model->cellsNum_z + 2);
-		if (res == 0)
-			stencils->top->fill(idx, &counter);
-		else if (res == model->cellsNum_z + 1)
-			stencils->bot->fill(idx, &counter);
-		else
-			stencils->middle->fill(idx, &counter);
-	}
 
-	// Right
-	for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
-	{
-		idx = it.getIdx();
-		stencils->right->fill(idx, &counter);
-	}
-
-	// Tunnel cells
-	vector<Cell>::iterator itr;
-	for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
-	{
-		stencils->left->fill(itr->num, &counter);
 	}
 }
 
