@@ -13,6 +13,7 @@
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
 #include "model/3D/Perforation/GasOil_Perf.h"
+#include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
 using namespace std;
 
@@ -99,3 +100,4 @@ template class AbstractModel<Var2phase, gasOil_3d::Properties, CylCell3D, gasOil
 template class AbstractModel<Var2phaseNIT, gasOil_3d_NIT::Properties, CylCell3D, gasOil_3d_NIT::GasOil_3D_NIT>;
 
 template class AbstractModel<Var2phase, gasOil_perf::Properties, CylCellPerf, gasOil_perf::GasOil_Perf>;
+template class AbstractModel<Var2phaseNIT, gasOil_perf_nit::Properties, CylCellPerf, gasOil_perf_nit::GasOil_Perf_NIT>;

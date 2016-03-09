@@ -2,6 +2,7 @@
 
 #include "model/3D/GasOil_3D/GasOil_3D.h"
 #include "model/3D/Perforation/GasOil_Perf.h"
+#include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
 using namespace std;
 
@@ -644,3 +645,10 @@ template class RightStencil<gasOil_perf::GasOil_Perf>;
 template class TopStencil<gasOil_perf::GasOil_Perf>;
 template class BotStencil<gasOil_perf::GasOil_Perf>;
 template class UsedStencils<gasOil_perf::GasOil_Perf>;
+
+template class MidStencil<gasOil_perf_nit::GasOil_Perf_NIT>;
+template class LeftStencil<gasOil_perf_nit::GasOil_Perf_NIT>;
+template class RightStencil<gasOil_perf_nit::GasOil_Perf_NIT>;
+template class TopStencil<gasOil_perf_nit::GasOil_Perf_NIT>;
+template class BotStencil<gasOil_perf_nit::GasOil_Perf_NIT>;
+template class UsedStencils<gasOil_perf_nit::GasOil_Perf_NIT>;
