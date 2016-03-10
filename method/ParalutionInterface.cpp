@@ -47,8 +47,8 @@ void ParSolver::Solve()
 {
 	double tick, tack;
 	
-//	Mat.WriteFileMTX("snaps/mat.mtx");
-//	Rhs.WriteFileASCII("snaps/rhs.dat");
+	//Mat.WriteFileMTX("snaps/mat.mtx");
+	//Rhs.WriteFileASCII("snaps/rhs.dat");
 
 	ls.SetOperator(Mat);
 	p.Set(1);

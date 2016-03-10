@@ -127,6 +127,21 @@ void Snapshotter<gasOil_perf::GasOil_Perf>::setModel(gasOil_perf::GasOil_Perf* _
 }
 
 template <>
+void Snapshotter<gasOil_perf_nit::GasOil_Perf_NIT>::setModel(gasOil_perf_nit::GasOil_Perf_NIT* _model)
+{
+	model = _model;
+
+	T_dim = model->T_dim;
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_phi;
+	nz = model->cellsNum_z + 2;
+}
+
+template <>
 void Snapshotter<gasOil_3d_NIT::GasOil_3D_NIT>::setModel(gasOil_3d_NIT::GasOil_3D_NIT* _model)
 {
 	model = _model;

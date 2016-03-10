@@ -34,9 +34,9 @@ ParPerfNITSolver::ParPerfNITSolver(GasOil_Perf_NIT* _model) : AbstractSolver<Gas
 	ind_rhs = new int[2 * (model->cellsNum + model->tunnelCells.size())];
 	rhs = new double[2 * (model->cellsNum + model->tunnelCells.size())];
 
-	tind_i = new int[7 * model->cellsNum];
-	tind_j = new int[7 * model->cellsNum];
-	ta = new double[7 * model->cellsNum];
+	tind_i = new int[7 * (model->cellsNum + model->tunnelCells.size())];
+	tind_j = new int[7 * (model->cellsNum + model->tunnelCells.size())];
+	ta = new double[7 * (model->cellsNum + model->tunnelCells.size())];
 	tind_rhs = new int[model->cellsNum + model->tunnelCells.size()];
 	trhs = new double[model->cellsNum + model->tunnelCells.size()];
 
@@ -113,9 +113,9 @@ void ParPerfNITSolver::start()
 	iterations = 8;
 
 	fillIndices(PRES);
-	fillIndices(TEMP);
+	//fillIndices(TEMP);
 	pres_solver.Init( 2 * (model->cellsNum + model->tunnelCells.size()) );
-	temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
+	//temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -231,10 +231,10 @@ void ParPerfNITSolver::solveStep()
 		iterations++;
 	}
 
-	fill(TEMP);
+	/*fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, ta, tempElemNum, tind_rhs, trhs);
 	temp_solver.Solve();
-	copySolution(temp_solver.getSolution(), TEMP);
+	copySolution(temp_solver.getSolution(), TEMP);*/
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
@@ -394,13 +394,9 @@ void ParPerfNITSolver::fillIndices(int key)
 		for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
 		{
 			idx = it.getIdx();
-			nebr = idx - model->cellsNum_z + 2;
 
 			tind_i[counter] = idx;
 			tind_j[counter++] = idx;
-			
-			tind_i[counter] = idx;
-			tind_j[counter++] = nebr;
 		}
 
 		// Tunnel cells
@@ -535,19 +531,39 @@ void ParPerfNITSolver::fill(int key)
 
 				if (nebr[0]->isUsed)
 				{
-					for (int j = 0; j < 7; j++)
-					{
-						tind_i[counter] = idx;
-						if (nebr[j]->isUsed)
-							tind_j[counter++] = nebr[j]->num;
-						else
-							tind_j[counter++] = model->cellsNum + model->getCell(nebr[0]->num, nebr[j]->num).num;
-					}
+					ta[counter+1] = -2.0 * (max(model->getA(*nebr[0], NEXT, R_AXIS), 0.0) +
+						model->getLambda(*nebr[0], *nebr[1]) * (nebr[0]->r - nebr[0]->hr / 2.0) / nebr[0]->r / nebr[0]->hr) / (nebr[0]->hr + nebr[1]->hr);
+					ta[counter+2] = 2.0 * (min(model->getA(*nebr[0], NEXT, R_AXIS), 0.0) -
+						model->getLambda(*nebr[0], *nebr[2]) * (nebr[0]->r + nebr[0]->hr / 2.0) / nebr[0]->r / nebr[0]->hr) / (nebr[0]->hr + nebr[2]->hr);
+					ta[counter+3] = -2.0 * (max(model->getA(*nebr[0], NEXT, Z_AXIS), 0.0) +
+						model->getLambda(*nebr[0], *nebr[3]) / nebr[0]->hz) / (nebr[0]->hz + nebr[3]->hz);
+					ta[counter+4] = 2.0 * (min(model->getA(*nebr[0], NEXT, Z_AXIS), 0.0) -
+						model->getLambda(*nebr[0], *nebr[4]) / nebr[0]->hz) / (nebr[0]->hz + nebr[4]->hz);
+					ta[counter+5] = -2.0 * (max(model->getA(*nebr[0], NEXT, PHI_AXIS), 0.0) +
+						model->getLambda(*nebr[0], *nebr[5]) / nebr[0]->r / nebr[0]->hphi) / nebr[0]->r / (nebr[0]->hphi + nebr[5]->hphi);
+					ta[counter+6] = 2.0 * (min(model->getA(*nebr[0], NEXT, PHI_AXIS), 0.0) -
+						model->getLambda(*nebr[0], *nebr[6]) / nebr[0]->r / nebr[0]->hphi) / nebr[0]->r / (nebr[0]->hphi + nebr[6]->hphi);
+					ta[counter] = model->getCn(*nebr[0]) / model->ht 
+						- ta[counter + 1]
+						- ta[counter + 2]
+						- ta[counter + 3]
+						- ta[counter + 4]
+						- ta[counter + 5]
+						- ta[counter + 6];
+
+					trhs[idx] = model->getCn(*nebr[0]) * nebr[0]->u_prev.t / model->ht +
+						model->getAd(*nebr[0]) * (nebr[0]->u_next.p - nebr[0]->u_prev.p) / model->ht -
+						model->getJT(*nebr[0], NEXT, R_AXIS) * model->getNablaP(*nebr[0], NEXT, R_AXIS) -
+						model->getJT(*nebr[0], NEXT, PHI_AXIS) * model->getNablaP(*nebr[0], NEXT, PHI_AXIS) -
+						model->getJT(*nebr[0], NEXT, Z_AXIS) * model->getNablaP(*nebr[0], NEXT, Z_AXIS) -
+						model->solve_PhaseTrans(idx) * model->L;
+
+					counter += 7;
 				}
 				else
 				{
-					tind_i[counter] = idx;
-					tind_j[counter++] = idx;
+					ta[counter++] = 1.0;
+					trhs[idx] = 0.0;
 				}
 			}
 		}
@@ -558,9 +574,8 @@ void ParPerfNITSolver::fill(int key)
 			idx = it.getIdx();
 
 			ta[counter++] = 1.0;
-			ta[counter++] = -1.0;
 
-			trhs[idx] = 0.0;
+			trhs[idx] = model->props_sk[model->getSkeletonIdx(model->cells[idx])].t_init;;
 		}
 
 		// Tunnel cells
@@ -571,14 +586,26 @@ void ParPerfNITSolver::fill(int key)
 			Cell& nebr1 = model->getCell(model->nebrMap[itr->num].first);
 			Cell& nebr2 = model->getCell(model->nebrMap[itr->num].second);
 
-			tind_i[counter] = itr->num + model->cellsNum;
-			tind_j[counter++] = itr->num + model->cellsNum;
+			if (fabs(nebr2.r - nebr1.r) > EQUALITY_TOLERANCE)
+			{
+				ta[counter++] = 1.0 / (nebr1.r - cell.r);
+				ta[counter++] = -1.0 / (nebr2.r - nebr1.r) - 1.0 / (nebr1.r - cell.r);
+				ta[counter++] = 1.0 / (nebr2.r - nebr1.r);
+			}
+			else if (fabs(nebr2.z - nebr1.z) > EQUALITY_TOLERANCE)
+			{
+				ta[counter++] = 1.0 / (nebr1.z - cell.z);
+				ta[counter++] = -1.0 / (nebr2.z - nebr1.z) - 1.0 / (nebr1.z - cell.z);
+				ta[counter++] = 1.0 / (nebr2.z - nebr1.z);
+			}
+			else if (fabs(nebr2.phi - nebr1.phi) > EQUALITY_TOLERANCE)
+			{
+				ta[counter++] = 1.0 / (nebr1.phi - cell.phi) / nebr1.r;
+				ta[counter++] = -1.0 / (nebr2.phi - nebr1.phi) / nebr1.r - 1.0 / (nebr1.phi - cell.phi) / nebr1.r;
+				ta[counter++] = 1.0 / (nebr2.phi - nebr1.phi) / nebr1.r;
+			}
 
-			tind_i[counter] = itr->num + model->cellsNum;
-			tind_j[counter++] = model->nebrMap[itr->num].first;
-
-			tind_i[counter] = itr->num + model->cellsNum;
-			tind_j[counter++] = model->nebrMap[itr->num].second;
+			trhs[itr->num + model->cellsNum] = 0.0;
 		}
 	}
 }
