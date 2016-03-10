@@ -1026,6 +1026,49 @@ namespace gasOil_perf_nit
 			return -1.0;
 		}
 
+		/*-------------- Thermal funcs ------------------*/
+
+		inline double solve_PhaseTrans(int cur)
+		{
+			Cell& cell = getCell(cur);
+			Cell* neighbor[6];
+			getNeighborIdx(cell, neighbor);
+
+			Var2phaseNIT& next = cell.u_next;
+			Var2phaseNIT& prev = cell.u_prev;
+
+			double H = 0.0;
+			H = (getPoro(next.p, cell) * next.s * getRho_oil(next.p, next.p_bub, next.SATUR) -
+			getPoro(prev.p, cell) * prev.s * getRho_oil(prev.p, prev.p_bub, prev.SATUR)) / ht;
+
+			for (int i = 0; i < 6; i++)
+			{
+				Cell& beta = *neighbor[i];
+				const Var2phaseNIT& upwd = getUpwindIdx(&cell, neighbor[i])->u_next;
+
+				H += 1.0 / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) *
+				getKr_oil(upwd.s) / props_oil.visc * getRho_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+			}
+
+			return H;
+		};
+
+		/*inline double solve_eq3(int cur)
+		{
+			Cell& cell = getCell(cur);
+			return this->ht * ( this->getCn(cell) * cell.u_prev.t / this->ht + 
+				this->getAd(cell) * (cell.u_next.p - cell.u_prev.p) / this->ht - 
+				this->getJT(cell, NEXT, R_AXIS) * this->getNablaP(cell, NEXT, R_AXIS) -
+				this->getJT(cell, NEXT, PHI_AXIS) * this->getNablaP(cell, NEXT, PHI_AXIS) -
+				this->getJT(cell, NEXT, Z_AXIS) * this->getNablaP(cell, NEXT, Z_AXIS) -
+				this->solve_PhaseTrans(cur) * this->L );
+		};
+
+		inline double solve_cur(int cur, int beta)
+		{
+
+		};*/
+
 		// Finds functional
 		double solveH();
 

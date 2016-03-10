@@ -34,6 +34,12 @@ ParPerfNITSolver::ParPerfNITSolver(GasOil_Perf_NIT* _model) : AbstractSolver<Gas
 	ind_rhs = new int[2 * (model->cellsNum + model->tunnelCells.size())];
 	rhs = new double[2 * (model->cellsNum + model->tunnelCells.size())];
 
+	tind_i = new int[7 * model->cellsNum];
+	tind_j = new int[7 * model->cellsNum];
+	ta = new double[7 * model->cellsNum];
+	tind_rhs = new int[model->cellsNum + model->tunnelCells.size()];
+	trhs = new double[model->cellsNum + model->tunnelCells.size()];
+
 	// Stencils allocating
 	stencils = new UsedStencils<GasOil_Perf_NIT>(model);
 	stencils->setStorages(a, ind_i, ind_j, rhs);
@@ -318,7 +324,103 @@ void ParPerfNITSolver::fillIndices(int key)
 	}
 	else if (key == TEMP)
 	{
+		// Left
+		for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
+		{
+			idx = it.getIdx();
 
+			if (it->isUsed)
+			{
+				nebr = idx + model->cellsNum_z + 2;
+				tind_i[counter] = idx;
+				tind_j[counter++] = idx;
+
+				tind_i[counter] = idx;
+				tind_j[counter++] = nebr;
+			}
+			else {
+				tind_i[counter] = idx;
+				tind_j[counter++] = idx;
+			}
+		}
+
+		// Middle
+		int res;
+		for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+		{
+			idx = it.getIdx();
+			res = idx % (model->cellsNum_z + 2);
+			if (res == 0)
+			{
+				tind_i[counter] = idx;
+				tind_j[counter++] = idx;
+
+				tind_i[counter] = idx;
+				tind_j[counter++] = idx + 1;
+			}
+			else if (res == model->cellsNum_z + 1)
+			{
+				tind_i[counter] = idx;
+				tind_j[counter++] = idx;
+
+				tind_i[counter] = idx;
+				tind_j[counter++] = idx - 1;
+			} 
+			else
+			{
+				Cell* nebr[7];
+				model->getStencilIdx(idx, nebr);
+
+				if (nebr[0]->isUsed)
+				{
+					for (int j = 0; j < 7; j++)
+					{
+						tind_i[counter] = idx;
+						if (nebr[j]->isUsed)
+							tind_j[counter++] = nebr[j]->num;
+						else
+							tind_j[counter++] = model->cellsNum + model->getCell(nebr[0]->num, nebr[j]->num).num;
+					}
+				}
+				else
+				{
+					tind_i[counter] = idx;
+					tind_j[counter++] = idx;
+				}
+			}
+		}
+
+		// Right
+		for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
+		{
+			idx = it.getIdx();
+			nebr = idx - model->cellsNum_z + 2;
+
+			tind_i[counter] = idx;
+			tind_j[counter++] = idx;
+			
+			tind_i[counter] = idx;
+			tind_j[counter++] = nebr;
+		}
+
+		// Tunnel cells
+		vector<Cell>::iterator itr;
+		for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
+		{
+			tind_i[counter] = itr->num + model->cellsNum;
+			tind_j[counter++] = itr->num + model->cellsNum;
+
+			tind_i[counter] = itr->num + model->cellsNum;
+			tind_j[counter++] = model->nebrMap[itr->num].first;
+
+			tind_i[counter] = itr->num + model->cellsNum;
+			tind_j[counter++] = model->nebrMap[itr->num].second;
+		}
+
+		tempElemNum = counter;
+
+		for (int i = 0; i < model->cellsNum + model->tunnelCells.size(); i++)
+			tind_rhs[i] = i;
 	}
 }
 
@@ -390,7 +492,94 @@ void ParPerfNITSolver::fill(int key)
 	}
 	else if (key == TEMP)
 	{
+		// Left
+		for (it = model->getLeftBegin(); it != model->getLeftEnd(); ++it)
+		{
+			idx = it.getIdx();
 
+			if (it->isUsed)
+			{
+				ta[counter++] = 1.0;
+				ta[counter++] = -1.0;
+
+				trhs[idx] = 0.0;
+			}
+			else {
+				ta[counter++] = 1.0;
+				trhs[idx] = 0.0;
+			}
+		}
+
+		// Middle
+		int res;
+		for (it = model->getMidBegin(); it != model->getMidEnd(); ++it)
+		{
+			idx = it.getIdx();
+			res = idx % (model->cellsNum_z + 2);
+			if (res == 0)
+			{
+				ta[counter++] = 1.0;
+				ta[counter++] = -1.0;
+				trhs[idx] = 0.0;
+			}
+			else if (res == model->cellsNum_z + 1)
+			{
+				ta[counter++] = 1.0;
+				ta[counter++] = -1.0;
+				trhs[idx] = 0.0;
+			}
+			else
+			{
+				Cell* nebr[7];
+				model->getStencilIdx(idx, nebr);
+
+				if (nebr[0]->isUsed)
+				{
+					for (int j = 0; j < 7; j++)
+					{
+						tind_i[counter] = idx;
+						if (nebr[j]->isUsed)
+							tind_j[counter++] = nebr[j]->num;
+						else
+							tind_j[counter++] = model->cellsNum + model->getCell(nebr[0]->num, nebr[j]->num).num;
+					}
+				}
+				else
+				{
+					tind_i[counter] = idx;
+					tind_j[counter++] = idx;
+				}
+			}
+		}
+
+		// Right
+		for (it = model->getRightBegin(); it != model->getRightEnd(); ++it)
+		{
+			idx = it.getIdx();
+
+			ta[counter++] = 1.0;
+			ta[counter++] = -1.0;
+
+			trhs[idx] = 0.0;
+		}
+
+		// Tunnel cells
+		vector<Cell>::iterator itr;
+		for (itr = model->tunnelCells.begin(); itr != model->tunnelCells.end(); ++itr)
+		{
+			Cell& cell = *itr;
+			Cell& nebr1 = model->getCell(model->nebrMap[itr->num].first);
+			Cell& nebr2 = model->getCell(model->nebrMap[itr->num].second);
+
+			tind_i[counter] = itr->num + model->cellsNum;
+			tind_j[counter++] = itr->num + model->cellsNum;
+
+			tind_i[counter] = itr->num + model->cellsNum;
+			tind_j[counter++] = model->nebrMap[itr->num].first;
+
+			tind_i[counter] = itr->num + model->cellsNum;
+			tind_j[counter++] = model->nebrMap[itr->num].second;
+		}
 	}
 }
 

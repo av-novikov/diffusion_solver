@@ -1057,7 +1057,7 @@ using namespace std;
 	return props;
 }*/
 
-gasOil_perf::Properties* getProps()
+/*gasOil_perf::Properties* getProps()
 {
 	gasOil_perf::Properties* props = new gasOil_perf::Properties();
 
@@ -1117,7 +1117,7 @@ gasOil_perf::Properties* getProps()
 	props->perfTunnels.push_back(make_pair(1 + 36 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
 	props->perfTunnels.push_back(make_pair(1 + 37 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
 	props->perfTunnels.push_back(make_pair(1 + 38 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(1 + 39 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));*/
+	props->perfTunnels.push_back(make_pair(1 + 39 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
 
 	props->perfTunnels.push_back( make_pair(3, 10) );
 	props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 10));
@@ -1170,20 +1170,20 @@ gasOil_perf::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
-}
+}*/
 
-/*gas1D::Properties* getProps()
+gas1D::Properties* getProps()
 {
 	gas1D::Properties* props = new gas1D::Properties();
 
-	props->cellsNum_r = 500;
+	props->cellsNum_r = 100;
 
 	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
 	
-	props->leftBoundIsRate = false;
+	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(100000.0);
-	props->pwf.push_back(134.1 * 100000.0);
+	props->rates.push_back(1000000.0);
 
 	props->ht = 20000.0;
 	props->ht_min = 10000.0;
@@ -1194,16 +1194,16 @@ gasOil_perf::Properties* getProps()
 	props->perfIntervals.push_back( make_pair(0, 0) );
 
 	props->r_w = 0.1;
-	props->r_e = 1000.0;
+	props->r_e = 1128.4;
 
 	gas1D::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m = 0.2;
-	tmp.p_init = tmp.p_out = 150.0 * 1.0e+5;
+	tmp.p_init = tmp.p_out = 275.79 * 1.0e+5;
 	tmp.h1 = 1500.0;
 	tmp.h2 = 1510.0;
 	tmp.height = 10.0;
-	tmp.perm_r = 10.0 / 0.986923;
+	tmp.perm_r = 20.0;
 	tmp.perm_z = 0.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 0.0;//3.0e-10;
@@ -1216,11 +1216,11 @@ gasOil_perf::Properties* getProps()
 	//props->props_gas.visc = 0.01;
 
 	// Defining relative permeabilities
-	setDataFromFile(props->z_factor, "props/z.txt");
-	setDataFromFile(props->visc_gas, "props/gas_visc.txt");
+	setDataFromFile(props->z_factor, "props/zzz.txt");
+	setDataFromFile(props->visc_gas, "props/visc_ggas1.txt");
 
 	return props;
-}*/
+}
 
 int main(int argc, char** argv)
 {
@@ -1236,11 +1236,11 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	gasOil_perf::Properties* props = getProps();
+	/*gasOil_perf::Properties* props = getProps();
 	Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 	
 	/*oil1D_NIT::Properties* props = getProps();
 	Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties> scene;
@@ -1254,11 +1254,11 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	/*gas1D::Properties* props = getProps();
-	Scene_OMP<1, gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties> scene;
+	gas1D::Properties* props = getProps();
+	Scene<gas1D::Gas1D, gas1D::Gas1DSol, gas1D::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 
 	/*gas1D::Properties* props = getProps();
 	double p_c = props->props_sk[0].p_out / 100000.0;
