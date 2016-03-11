@@ -40,6 +40,8 @@ ParPerfNITSolver::ParPerfNITSolver(GasOil_Perf_NIT* _model) : AbstractSolver<Gas
 	tind_rhs = new int[model->cellsNum + model->tunnelCells.size()];
 	trhs = new double[model->cellsNum + model->tunnelCells.size()];
 
+	isGmres = true;
+
 	// Stencils allocating
 	stencils = new UsedStencils<GasOil_Perf_NIT>(model);
 	stencils->setStorages(a, ind_i, ind_j, rhs);
@@ -63,7 +65,7 @@ void ParPerfNITSolver::writeData()
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		t += model->cells[it->first].u_next.t;
+		t += model->tunnelCells[it->first].u_next.t;
 		p += model->tunnelCells[it->first].u_next.p * model->P_dim;
 		s += model->tunnelCells[it->first].u_next.s;
 		if (model->leftBoundIsRate)
@@ -94,6 +96,7 @@ void ParPerfNITSolver::control()
 		curTimePeriod++;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
+		isGmres = true;
 	}
 
 	if (model->ht <= model->ht_max && iterations < 6)
@@ -113,9 +116,9 @@ void ParPerfNITSolver::start()
 	iterations = 8;
 
 	fillIndices(PRES);
-	//fillIndices(TEMP);
+	fillIndices(TEMP);
 	pres_solver.Init( 2 * (model->cellsNum + model->tunnelCells.size()) );
-	//temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
+	temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -189,10 +192,10 @@ void ParPerfNITSolver::copySolution(const paralution::LocalVector<double>& sol, 
 	else if (key == TEMP)
 	{
 		for (int i = 0; i < model->cellsNum; i++)
-			model->cells[i].u_next.t += sol[i];
+			model->cells[i].u_next.t = sol[i];
 
 		for (int i = model->cellsNum; i < model->cellsNum + model->tunnelCells.size(); i++)
-			model->tunnelCells[i - model->cellsNum].u_next.t += sol[i];
+			model->tunnelCells[i - model->cellsNum].u_next.t = sol[i];
 	}
 }
 
@@ -212,7 +215,7 @@ void ParPerfNITSolver::solveStep()
 
 		fill(PRES);
 		pres_solver.Assemble(ind_i, ind_j, a, presElemNum, ind_rhs, rhs);
-		pres_solver.Solve();
+		pres_solver.Solve(isGmres);
 		copySolution( pres_solver.getSolution(), PRES );
 
 		model->solveP_bub();
@@ -231,10 +234,12 @@ void ParPerfNITSolver::solveStep()
 		iterations++;
 	}
 
-	/*fill(TEMP);
+	fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, ta, tempElemNum, tind_rhs, trhs);
-	temp_solver.Solve();
-	copySolution(temp_solver.getSolution(), TEMP);*/
+	temp_solver.Solve(isGmres);
+	copySolution(temp_solver.getSolution(), TEMP);
+
+	isGmres = false;
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
@@ -575,7 +580,7 @@ void ParPerfNITSolver::fill(int key)
 
 			ta[counter++] = 1.0;
 
-			trhs[idx] = model->props_sk[model->getSkeletonIdx(model->cells[idx])].t_init;;
+			trhs[idx] = model->props_sk[model->getSkeletonIdx(model->cells[idx])].t_init;
 		}
 
 		// Tunnel cells

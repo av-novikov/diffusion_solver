@@ -31,6 +31,8 @@ Par3DSolver::Par3DSolver(GasOil_3D* _model) : AbstractSolver<GasOil_3D>(_model)
 	ind_rhs = new int[2 * model->cellsNum];
 	rhs = new double[2 * model->cellsNum];
 
+	isGmres = true;
+
 	// Stencils allocating
 	stencils = new UsedStencils<GasOil_3D>(model);
 	stencils->setStorages(a, ind_i, ind_j, rhs);
@@ -76,6 +78,7 @@ void Par3DSolver::control()
 		curTimePeriod++;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
+		isGmres = true;
 	}
 
 	if (model->ht <= model->ht_max && iterations < 6)
@@ -175,7 +178,7 @@ void Par3DSolver::solveStep()
 
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve();
+		solver.Solve(isGmres);
 		copySolution( solver.getSolution() );
 
 		model->solveP_bub();
@@ -193,6 +196,8 @@ void Par3DSolver::solveStep()
 
 		iterations++;
 	}
+
+	isGmres = false;
 
 	cout << "Newton Iterations = " << iterations << endl;
 }

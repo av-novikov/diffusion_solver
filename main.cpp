@@ -1400,9 +1400,9 @@ using namespace std;
 	return props;
 }*/
 
-gasOil_perf_nit::Properties* getProps()
+gasOil_perf::Properties* getProps()
 {
-	gasOil_perf_nit::Properties* props = new gasOil_perf_nit::Properties();
+	gasOil_perf::Properties* props = new gasOil_perf::Properties();
 
 	props->cellsNum_r = 50;
 	props->cellsNum_phi = 40;
@@ -1470,11 +1470,11 @@ gasOil_perf_nit::Properties* getProps()
 	props->r_w = 0.05;
 	props->r_e = 1000.0;
 
-	gasOil_perf_nit::Skeleton_Props tmp;
+	gasOil_perf::Skeleton_Props tmp;
 	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
-	tmp.t_init = 302.058;
+	//tmp.t_init = 302.058;
 	tmp.s_init = 0.999;
 	tmp.h1 = 0.0;
 	tmp.h2 = 0.1;
@@ -1486,9 +1486,9 @@ gasOil_perf_nit::Properties* getProps()
 	tmp.skins.push_back(5.0);
 	tmp.radiuses_eff.push_back(0.25);
 	
-	tmp.c = 1800.0;
+	/*tmp.c = 1800.0;
 	tmp.kappa_eff = 0.0;
-	tmp.lambda_r = tmp.lambda_z = 6.0;
+	tmp.lambda_r = tmp.lambda_z = 6.0;*/
 
 	props->props_sk.push_back(tmp);
 
@@ -1498,19 +1498,19 @@ gasOil_perf_nit::Properties* getProps()
 	props->props_oil.b_bore = 1.245;
 	props->props_oil.dens_stc = 736.0;
 	props->props_oil.beta = 1.0 * 1.e-9;
-	props->props_oil.jt = 4.0 * 1.e-7;
+	/*props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.1 * 1.e-7;
 	props->props_oil.c = 1880.0;
-	props->props_oil.lambda = 0.16;
+	props->props_oil.lambda = 0.16;*/
 
 	props->props_gas.visc = 0.02833;
 	props->props_gas.dens_stc = 0.8;
-	props->props_gas.jt = -1.6 * 1.e-6;
+	/*props->props_gas.jt = -1.6 * 1.e-6;
 	props->props_gas.ad = 3.6 * 1.e-6;
 	props->props_gas.c = 3200.0;
-	props->props_gas.lambda = 0.06;
+	props->props_gas.lambda = 0.06;*/
 
-	props->L = -50.0*1.e3;
+	//props->L = -50.0*1.e3;
 
 	// Defining relative permeabilities
 	setDataFromFile(props->kr_oil, "props/koil.txt");
@@ -1592,8 +1592,8 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	gasOil_perf_nit::Properties* props = getProps();
-	Scene<gasOil_perf_nit::GasOil_Perf_NIT, gasOil_perf_nit::ParPerfNITSolver, gasOil_perf_nit::Properties> scene;
+	gasOil_perf::Properties* props = getProps();
+	Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();
