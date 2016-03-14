@@ -83,8 +83,6 @@ namespace gasOil_perf_nit
 		int* tind_rhs;
 		double* trhs;
 
-		bool isGmres;
-
 		// Number of non-zero elements in sparse matrix
 		int presElemNum;
 		int tempElemNum;

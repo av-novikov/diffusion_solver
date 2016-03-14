@@ -1053,6 +1053,22 @@ namespace gasOil_perf_nit
 			return H;
 		};
 
+		/*inline double solve_eq3(int cur)
+		{
+			Cell& cell = getCell(cur);
+			return this->ht * ( this->getCn(cell) * cell.u_prev.t / this->ht + 
+				this->getAd(cell) * (cell.u_next.p - cell.u_prev.p) / this->ht - 
+				this->getJT(cell, NEXT, R_AXIS) * this->getNablaP(cell, NEXT, R_AXIS) -
+				this->getJT(cell, NEXT, PHI_AXIS) * this->getNablaP(cell, NEXT, PHI_AXIS) -
+				this->getJT(cell, NEXT, Z_AXIS) * this->getNablaP(cell, NEXT, Z_AXIS) -
+				this->solve_PhaseTrans(cur) * this->L );
+		};
+
+		inline double solve_cur(int cur, int beta)
+		{
+
+		};*/
+
 		// Finds functional
 		double solveH();
 

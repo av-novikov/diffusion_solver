@@ -32,8 +32,6 @@ ParPerfSolver::ParPerfSolver(GasOil_Perf* _model) : AbstractSolver<GasOil_Perf>(
 	ind_rhs = new int[2 * (model->cellsNum + model->tunnelCells.size())];
 	rhs = new double[2 * (model->cellsNum + model->tunnelCells.size())];
 
-	isGmres = true;
-
 	// Stencils allocating
 	stencils = new UsedStencils<GasOil_Perf>(model);
 	stencils->setStorages(a, ind_i, ind_j, rhs);
@@ -80,13 +78,11 @@ void ParPerfSolver::control()
 {
 	writeData();
 
-
 	if (cur_t >= model->period[curTimePeriod])
 	{
 		curTimePeriod++;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
-		isGmres = true;
 	}
 
 	if (model->ht <= model->ht_max && iterations < 6)
@@ -192,7 +188,7 @@ void ParPerfSolver::solveStep()
 
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(isGmres);
+		solver.Solve();
 		copySolution( solver.getSolution() );
 
 		model->solveP_bub();
@@ -210,7 +206,6 @@ void ParPerfSolver::solveStep()
 
 		iterations++;
 	}
-	isGmres = false;
 
 	cout << "Newton Iterations = " << iterations << endl;
 }

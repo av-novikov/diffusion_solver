@@ -75,8 +75,6 @@ namespace gasOil_perf
 		// Number of non-zero elements in sparse matrix
 		int elemNum;
 
-		bool isGmres;
-
 	public:
 		ParPerfSolver(GasOil_Perf* _model);
 		~ParPerfSolver();

@@ -72,9 +72,6 @@ namespace gasOil_3d
 		double* a;
 		int* ind_rhs;
 		double* rhs;
-
-		bool isGmres;
-
 		// Number of non-zero elements in sparse matrix
 		int elemNum;
 
