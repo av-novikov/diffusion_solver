@@ -37,27 +37,33 @@ GasOil2DNITSolver::~GasOil2DNITSolver()
 
 void GasOil2DNITSolver::writeData()
 {
-	double t = 0.0, p = 0.0, s = 0.0;
+	double t = 0.0, p = 0.0, s = 0.0, q = 0.0;
 
 	plot_qcells << cur_t * t_dim / 3600.0;
 
 	map<int,double>::iterator it;
 	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		p += model->cells[it->first].u_next.p;
+		p += model->cells[it->first].u_next.p * model->P_dim;
 		s += model->cells[it->first].u_next.s;
 		t += model->cells[it->first].u_next.t;
-		if( model->leftBoundIsRate )
+		if (model->leftBoundIsRate)
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
+		{
 			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			q += model->getRate(it->first);
+		}
 	}
 
-	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
 	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) * T_dim << endl;
+	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
 	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 
-	plot_qcells << endl;
+	if (model->leftBoundIsRate)
+		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;
+	else
+		plot_qcells << "\t" << q * model->Q_dim * 86400.0 << endl;
 }
 
 void GasOil2DNITSolver::control()

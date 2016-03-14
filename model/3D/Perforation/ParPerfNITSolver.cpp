@@ -63,7 +63,7 @@ void ParPerfNITSolver::writeData()
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		t += model->cells[it->first].u_next.t;
+		t += model->tunnelCells[it->first].u_next.t;
 		p += model->tunnelCells[it->first].u_next.p * model->P_dim;
 		s += model->tunnelCells[it->first].u_next.s;
 		if (model->leftBoundIsRate)
@@ -113,9 +113,9 @@ void ParPerfNITSolver::start()
 	iterations = 8;
 
 	fillIndices(PRES);
-	//fillIndices(TEMP);
+	fillIndices(TEMP);
 	pres_solver.Init( 2 * (model->cellsNum + model->tunnelCells.size()) );
-	//temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
+	temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -189,10 +189,10 @@ void ParPerfNITSolver::copySolution(const paralution::LocalVector<double>& sol, 
 	else if (key == TEMP)
 	{
 		for (int i = 0; i < model->cellsNum; i++)
-			model->cells[i].u_next.t += sol[i];
+			model->cells[i].u_next.t = sol[i];
 
 		for (int i = model->cellsNum; i < model->cellsNum + model->tunnelCells.size(); i++)
-			model->tunnelCells[i - model->cellsNum].u_next.t += sol[i];
+			model->tunnelCells[i - model->cellsNum].u_next.t = sol[i];
 	}
 }
 
@@ -231,10 +231,10 @@ void ParPerfNITSolver::solveStep()
 		iterations++;
 	}
 
-	/*fill(TEMP);
+	fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, ta, tempElemNum, tind_rhs, trhs);
 	temp_solver.Solve();
-	copySolution(temp_solver.getSolution(), TEMP);*/
+	copySolution(temp_solver.getSolution(), TEMP);
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
