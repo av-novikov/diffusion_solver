@@ -176,13 +176,13 @@ void ParPerfSolver::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
-	double averPresPrev = averValue(1);
-	double averSatPrev = averValue(2);
+	double averPresPrev = averValue(0);
+	double averSatPrev = averValue(1);
 	double averPres, averSat;
 	double dAverPres = 1.0, dAverSat = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 8)
+	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 10)
 	{
 		copyIterLayer();
 
@@ -195,7 +195,7 @@ void ParPerfSolver::solveStep()
 
 		err_newton = convergance(cellIdx, varIdx);
 
-		averPres = averValue(1);					averSat = averValue(2);
+		averPres = averValue(0);					averSat = averValue(1);
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
 

@@ -53,6 +53,7 @@ const paralution::LocalVector<double>& ParSolver::getSolution()
 void ParSolver::Solve()
 {
 	SolveGMRES();
+	//SolveBiCGStab();
 		
 	x.MoveToHost();
 }
@@ -91,10 +92,11 @@ void ParSolver::SolveGMRES()
 	gmres.Init(1.E-15, 1.E-8, 1E+4, 5000);
 	Mat.info();
 
-	//writeSystem();
 	gmres.RecordResidualHistory();
 	gmres.Solve(Rhs, &x);
 	gmres.RecordHistory(resHistoryFile);
+	//writeSystem();
+
 
 	getResiduals();
 	cout << "Initial residual: " << initRes << endl;

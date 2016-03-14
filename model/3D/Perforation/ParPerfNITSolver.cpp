@@ -76,7 +76,7 @@ void ParPerfNITSolver::writeData()
 	}
 	
 	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) * T_dim << endl;
-	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
+	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) / 100000.0 << endl;
 	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 
 	if (model->leftBoundIsRate)
@@ -206,7 +206,7 @@ void ParPerfNITSolver::solveStep()
 	double dAverPres = 1.0, dAverSat = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 8)
+	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 10)
 	{
 		copyIterLayer();
 

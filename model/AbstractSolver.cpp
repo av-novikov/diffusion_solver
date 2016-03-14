@@ -187,6 +187,50 @@ double AbstractSolver<gasOil_perf::GasOil_Perf>::convergance(int& ind, int& varI
 }
 
 template <>
+double AbstractSolver<gasOil_perf_nit::GasOil_Perf_NIT>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int i = 1; i < model->cells[0].varNum; i++)
+	{
+		for (int j = 0; j < model->cells.size(); j++)
+		{
+			var_next = model->cells[j].u_next.values[i];	var_iter = model->cells[j].u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = i;
+				}
+			}
+		}
+
+		for (int j = 0; j < model->tunnelCells.size(); j++)
+		{
+			var_next = model->tunnelCells[j].u_next.values[i];	var_iter = model->tunnelCells[j].u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = i;
+				}
+			}
+		}
+	}
+
+	return relErr;
+}
+
+template <>
 double AbstractSolver<gasOil_rz_NIT::GasOil_RZ_NIT>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -274,6 +318,25 @@ double AbstractSolver<gasOil_perf::GasOil_Perf>::averValue(int varInd)
 
 	return tmp / model->Volume;
 }
+
+template <>
+double AbstractSolver<gasOil_perf_nit::GasOil_Perf_NIT>::averValue(int varInd)
+{
+	double tmp = 0.0;
+
+	for (int i = 0; i < model->cells.size(); i++)
+	{
+		tmp += model->cells[i].u_next.values[varInd] * model->cells[i].V;
+	}
+
+	for (int i = 0; i < model->tunnelCells.size(); i++)
+	{
+		tmp += model->tunnelCells[i].u_next.values[varInd] * model->tunnelCells[i].V;
+	}
+
+	return tmp / model->Volume;
+}
+
 
 template <class modelType>
 void AbstractSolver<modelType>::construct_solution()
