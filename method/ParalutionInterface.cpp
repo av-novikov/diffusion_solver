@@ -1,11 +1,18 @@
 #include "method/ParalutionInterface.h"
 
-using namespace paralution;
+#include <fstream>
+#include <iostream>
 
-ParSolver::ParSolver()
+using namespace paralution;
+using std::ifstream;
+using std::cout;
+using std::endl;
+
+ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 {
 	isAssembled = false;
-	ls.Init(1.E-15, 1.E-8, 1E+4, 20000);
+	gmres.Init(1.E-15, 1.E-8, 1E+4, 20000);
+	bicgstab.Init(1.E-15, 1.E-8, 1E+4, 20000);
 }
 
 ParSolver::~ParSolver()
@@ -45,31 +52,75 @@ const paralution::LocalVector<double>& ParSolver::getSolution()
 
 void ParSolver::Solve()
 {
-	double tick, tack;
-	
-	//Mat.WriteFileMTX("snaps/mat.mtx");
-	//Rhs.WriteFileASCII("snaps/rhs.dat");
+	SolveGMRES();
+		
+	x.MoveToHost();
+}
 
-	ls.SetOperator(Mat);
+void ParSolver::SolveBiCGStab()
+{
+	bicgstab.SetOperator(Mat);
 	p.Set(1);
-	ls.SetPreconditioner(p);
-	ls.Build();
+	bicgstab.SetPreconditioner(p);
+	bicgstab.Build();
 	isAssembled = true;
-	
-	ls.Init(1.E-15, 1.E-8, 1E+4, 5000);
+
+	bicgstab.Init(1.E-15, 1.E-8, 1E+4, 5000);
 	Mat.info();
 
-	//ls.RecordResidualHistory();
-	//std::cout << ls.GetCurrentResidual() << std::endl;
-	tick = paralution_time();
-	ls.Solve(Rhs, &x);
-	tack = paralution_time();
-	//ls.RecordHistory("snaps/history.dat");
-	//x.WriteFileASCII("snaps/x.dat");
-	//std::cout << ls.GetCurrentResidual() << std::endl;
-	std::cout << "Solver execution:" << (tack - tick) / 1000000 << " sec" << std::endl << std::endl;
+	bicgstab.RecordResidualHistory();
+	bicgstab.Solve(Rhs, &x);
+	bicgstab.RecordHistory(resHistoryFile);
 
-	x.MoveToHost();
+	getResiduals();
+	cout << "Initial residual: " << initRes << endl;
+	cout << "Final residual: " << finalRes << endl;
+	cout << "Number of iterations: " << iterNum << endl << endl;
 
-	ls.Clear();
+	bicgstab.Clear();
+}
+
+void ParSolver::SolveGMRES()
+{
+	gmres.SetOperator(Mat);
+	p.Set(1);
+	gmres.SetPreconditioner(p);
+	gmres.Build();
+	isAssembled = true;
+
+	gmres.Init(1.E-15, 1.E-8, 1E+4, 5000);
+	Mat.info();
+
+	//writeSystem();
+	gmres.RecordResidualHistory();
+	gmres.Solve(Rhs, &x);
+	gmres.RecordHistory(resHistoryFile);
+
+	getResiduals();
+	cout << "Initial residual: " << initRes << endl;
+	cout << "Final residual: " << finalRes << endl;
+	cout << "Number of iterations: " << iterNum << endl << endl;
+
+	gmres.Clear();
+}
+
+void ParSolver::getResiduals()
+{
+	double tmp;
+	int i = 0;
+
+	ifstream file;
+	file.open(resHistoryFile, ifstream::in);
+
+	file >> initRes;
+	while ( !file.eof() )
+	{
+		file >> tmp;
+		i++;
+	}
+	finalRes = tmp;
+	iterNum = i;
+
+	file.close();
+
 }

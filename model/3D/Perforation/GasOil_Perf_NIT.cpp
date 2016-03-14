@@ -213,7 +213,10 @@ void GasOil_Perf_NIT::makeDimLess()
 	R_dim = r_w * 10.0;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
-	T_dim = props_sk[0].t_init;
+	if (props_sk[0].t_init != 0.0)
+		T_dim = props_sk[0].t_init;
+	else
+		T_dim = 1.0;
 
 	// Temporal properties
 	ht /= t_dim;
@@ -469,6 +472,8 @@ void GasOil_Perf_NIT::buildTunnels()
 
 			// Right
 			phi = cell.phi - cell.hphi / 2.0;
+			if (phi < 0.0)
+				phi += 2.0 * M_PI;
 			hphi = 0.0;
 			z = cell.z;
 			hz = cell.hz;
@@ -487,6 +492,8 @@ void GasOil_Perf_NIT::buildTunnels()
 
 			// Left
 			phi = cell.phi + cell.hphi / 2.0;
+			if (phi > 2.0 * M_PI)
+				phi -= 2.0 * M_PI;
 			hphi = 0.0;
 			z = cell.z;
 			hz = cell.hz;
@@ -533,25 +540,28 @@ void GasOil_Perf_NIT::setPerforated()
 
 void GasOil_Perf_NIT::setPeriod(int period)
 {
-	if(leftBoundIsRate)
+	if (leftBoundIsRate)
+	{
 		Q_sum = rate[period];
+
+		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+			{
+				Cell& cell = tunnelCells[it->first];
+				it->second = Q_sum * cell.hphi * cell.r * cell.hz / height_perf;
+			}
+		}
+		else {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = it->second * Q_sum / rate[period - 1];
+		}
+	}
 	else
 	{
 		Pwf = pwf[period];
 		Q_sum = 0.0;
-	}
-	
-	if(period == 0 || rate[period-1] < EQUALITY_TOLERANCE ) {
-		map<int,double>::iterator it;
-		for(it = Qcell.begin(); it != Qcell.end(); ++it)
-		{
-			Cell& cell = tunnelCells[ it->first ];
-			it->second = Q_sum * cell.hphi * cell.r * cell.hz / height_perf;
-		}
-	} else {
-		map<int,double>::iterator it;
-		for(it = Qcell.begin(); it != Qcell.end(); ++it)
-			it->second = it->second * Q_sum / rate[period-1];
 	}
 
 	for(int i = 0; i < skeletonsNum; i++)

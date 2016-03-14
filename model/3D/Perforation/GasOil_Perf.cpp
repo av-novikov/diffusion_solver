@@ -450,6 +450,8 @@ void GasOil_Perf::buildTunnels()
 
 			// Right
 			phi = cell.phi - cell.hphi / 2.0;
+			if (phi < 0.0)
+				phi += 2.0 * M_PI;
 			hphi = 0.0;
 			z = cell.z;
 			hz = cell.hz;
@@ -468,6 +470,8 @@ void GasOil_Perf::buildTunnels()
 
 			// Left
 			phi = cell.phi + cell.hphi / 2.0;
+			if (phi > 2.0 * M_PI)
+				phi -= 2.0 * M_PI;
 			hphi = 0.0;
 			z = cell.z;
 			hz = cell.hz;
