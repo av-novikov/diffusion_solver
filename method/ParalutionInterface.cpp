@@ -89,7 +89,7 @@ void ParSolver::SolveGMRES()
 	gmres.Build();
 	isAssembled = true;
 
-	gmres.Init(1.E-15, 1.E-8, 1E+4, 5000);
+	gmres.Init(1.E-15, 1.E-10, 1E+4, 5000);
 	Mat.info();
 
 	gmres.RecordResidualHistory();

@@ -96,6 +96,16 @@ void AbstractSolver<gasOil_perf::GasOil_Perf>::copyIterLayer()
 		model->tunnelCells[i].u_iter = model->tunnelCells[i].u_next;
 }
 
+template <>
+void AbstractSolver<gasOil_perf_nit::GasOil_Perf_NIT>::copyIterLayer()
+{
+	for (int i = 0; i < model->cells.size(); i++)
+		model->cells[i].u_iter = model->cells[i].u_next;
+
+	for (int i = 0; i < model->tunnelCells.size(); i++)
+		model->tunnelCells[i].u_iter = model->tunnelCells[i].u_next;
+}
+
 template <class modelType>
 void AbstractSolver<modelType>::copyTimeLayer()
 {
@@ -308,15 +318,15 @@ double AbstractSolver<gasOil_perf::GasOil_Perf>::averValue(int varInd)
 
 	for (int i = 0; i < model->cells.size(); i++)
 	{
-		tmp += model->cells[i].u_next.values[varInd] * model->cells[i].V;
+		tmp += model->cells[i].u_next.values[varInd];
 	}
 
 	for (int i = 0; i < model->tunnelCells.size(); i++)
 	{
-		tmp += model->tunnelCells[i].u_next.values[varInd] * model->tunnelCells[i].V;
+		tmp += model->tunnelCells[i].u_next.values[varInd];
 	}
 
-	return tmp / model->Volume;
+	return tmp / ( model->cellsNum + model->tunnelCells.size() );
 }
 
 template <>

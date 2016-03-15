@@ -226,8 +226,8 @@ void GasOil3DSolver::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
-	double averPresPrev = averValue(1);
-	double averSatPrev = averValue(2);
+	double averPresPrev = averValue(0);
+	double averSatPrev = averValue(1);
 	double averPres, averSat;
 	double dAverPres = 1.0, dAverSat = 1.0;
 	
@@ -242,7 +242,7 @@ void GasOil3DSolver::solveStep()
  
 		err_newton = convergance(cellIdx, varIdx);
 
-		averPres = averValue(1);					averSat = averValue(2);
+		averPres = averValue(0);					averSat = averValue(1);
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
 

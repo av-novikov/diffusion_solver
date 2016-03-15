@@ -63,9 +63,9 @@ void ParPerfNITSolver::writeData()
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		t += model->tunnelCells[it->first].u_next.t;
-		p += model->tunnelCells[it->first].u_next.p * model->P_dim;
-		s += model->tunnelCells[it->first].u_next.s;
+	//	t += model->tunnelCells[it->first].u_next.t;
+	//	p += model->tunnelCells[it->first].u_next.p * model->P_dim;
+	//	s += model->tunnelCells[it->first].u_next.s;
 		if (model->leftBoundIsRate)
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
@@ -74,10 +74,49 @@ void ParPerfNITSolver::writeData()
 			q += model->getRate(it->first);
 		}
 	}
+
+	int counter = 0;
+	int sum = 0;
+	for (int i = 0; i < model->perfTunnels.size(); i++)
+	{
+		if (model->perfTunnels[i].second != 0)
+		{
+			t += model->tunnelCells[counter].u_next.t;
+			p += model->tunnelCells[counter].u_next.p * model->P_dim;
+			s += model->tunnelCells[counter++].u_next.s;
+
+			t += model->tunnelCells[counter].u_next.t;
+			p += model->tunnelCells[counter].u_next.p * model->P_dim;
+			s += model->tunnelCells[counter++].u_next.s;
+
+			t += model->tunnelCells[counter].u_next.t;
+			p += model->tunnelCells[counter].u_next.p * model->P_dim;
+			s += model->tunnelCells[counter++].u_next.s;
+
+			t += model->tunnelCells[counter].u_next.t;
+			p += model->tunnelCells[counter].u_next.p * model->P_dim;
+			s += model->tunnelCells[counter++].u_next.s;
+
+			sum += 4;
+			counter += ((model->perfTunnels[i].second - 1) * 4 + 1);
+		}
+		else
+		{
+			t += model->tunnelCells[counter].u_next.t;
+			p += model->tunnelCells[counter].u_next.p * model->P_dim;
+			s += model->tunnelCells[counter++].u_next.s;
+
+			sum++;
+		}
+	}
 	
-	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) * T_dim << endl;
-	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) / 100000.0 << endl;
-	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
+	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(sum) * T_dim << endl;
+	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(sum) / 100000.0 << endl;
+	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(sum) << endl;
+
+	//plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) * T_dim << endl;
+	//plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) / 100000.0 << endl;
+	//plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 
 	if (model->leftBoundIsRate)
 		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;
@@ -206,7 +245,7 @@ void ParPerfNITSolver::solveStep()
 	double dAverPres = 1.0, dAverSat = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 && (dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 10)
+	while (err_newton > 1.e-4 && /*(dAverSat > 1.e-8 || dAverPres > 1.e-4) &&*/ iterations < 10)
 	{
 		copyIterLayer();
 
