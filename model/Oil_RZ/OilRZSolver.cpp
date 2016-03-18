@@ -32,14 +32,29 @@ OilRZSolver::~OilRZSolver()
 
 void OilRZSolver::writeData()
 {
-	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << model->cells[idx1].u_next.p << endl;
-	
-	plot_qcells << cur_t * t_dim / 3600.0;
-	map<int,double>::iterator it;
-	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
-		plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+	double p = 0.0, q = 0.0;
 
-	plot_qcells << endl;
+	plot_qcells << cur_t * t_dim / 3600.0;
+
+	map<int, double>::iterator it;
+	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
+	{
+		p += model->cells[it->first].u_next.p * model->P_dim;
+		if (model->leftBoundIsRate)
+			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
+		else
+		{
+			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			q += model->getRate(it->first);
+		}
+	}
+
+	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
+
+	if (model->leftBoundIsRate)
+		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;
+	else
+		plot_qcells << "\t" << q * model->Q_dim * 86400.0 << endl;
 }
 
 void OilRZSolver::control()
@@ -386,8 +401,14 @@ void OilRZSolver::TopAppr(int i, int key)
 	if(key == PRES)
 	{
 		// First eqn
-		B[0][0] = 1.0;
-		B[0][1] = -1.0;
+		//B[0][0] = 1.0;
+		//B[0][1] = -1.0;
+
+		B[0][0] = model->solve_eqTop_dp(i);
+		B[0][1] = model->solve_eqTop_dp_beta(i);
+		RightSide[0][0] = -model->solve_eqTop(i) +
+			B[0][0] * model->cells[i].u_next.p +
+			B[0][1] * model->cells[i + 1].u_next.p;
 	}
 }
 
@@ -398,7 +419,13 @@ void OilRZSolver::BottomAppr(int i, int key)
 		int idx = model->cellsNum_z + 1;
 
 		// First eqn
-		B[idx][idx] = 1.0;
-		B[idx][idx-1] = -1.0;
+		/*B[idx][idx] = 1.0;
+		B[idx][idx-1] = -1.0;*/
+
+		B[idx][idx] = model->solve_eqBot_dp(i);
+		B[idx][idx-1] = model->solve_eqBot_dp_beta(i);
+		RightSide[idx][0] = -model->solve_eqBot(i) +
+			B[idx][idx] * model->cells[i].u_next.p +
+			B[idx][idx-1] * model->cells[i - 1].u_next.p;
 	}
 }

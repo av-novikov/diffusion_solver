@@ -2307,6 +2307,7 @@ void VTKSnapshotter<oil_rz::Oil_RZ>::dump_all(int i)
 		for(int j = 1; j < ny; j++)
 		{
 			Cell& cell = model->cells[ k * ny + j ];
+			double ttemp = r_dim * (cell.r - cell.hr / 2.0);
 			points->InsertNextPoint(r_dim * (cell.r-cell.hr/2.0), -r_dim * (cell.z-cell.hz/2.0), 0.0);
 		}
 	}
@@ -2353,7 +2354,7 @@ void VTKSnapshotter<oil_rz::Oil_RZ>::dump_all(int i)
 	}
 
 	// Middle cells
-	for(k = 1; k < nx-2; k++)
+	for(k = 1; k < nx-1; k++)
 	{
 		for(j = 0; j < ny-2; j++)
 		{

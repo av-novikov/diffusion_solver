@@ -399,6 +399,56 @@ double Oil_RZ::solve_eqRight_dp_beta(int cur)
 		return -1.0;
 }
 
+double Oil_RZ::solve_eqTop(int cur)
+{
+	const int neighbor = cur + 1;
+	Var1phase& next = cells[cur].u_next;
+	//const double q = Q_sum;
+	const double q = -19.964 / 86400.0 / Q_dim;
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / M_PI / r_e / r_e);
+}
+
+double Oil_RZ::solve_eqTop_dp(int cur)
+{
+	const int neighbor = cur + 1;
+	Var1phase& next = cells[cur].u_next;
+
+	return -getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
+}
+
+double Oil_RZ::solve_eqTop_dp_beta(int cur)
+{
+	const int neighbor = cur + 1;
+	Var1phase& next = cells[cur].u_next;
+
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
+}
+
+double Oil_RZ::solve_eqBot(int cur)
+{
+	const int neighbor = cur - 1;
+	Var1phase& next = cells[cur].u_next;
+	//const double q = Q_sum;
+	const double q = 39.913 / 86400.0 / Q_dim;
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / M_PI / r_e / r_e);
+}
+
+double Oil_RZ::solve_eqBot_dp(int cur)
+{
+	const int neighbor = cur - 1;
+	Var1phase& next = cells[cur].u_next;
+
+	return -getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
+}
+
+double Oil_RZ::solve_eqBot_dp_beta(int cur)
+{
+	const int neighbor = cur - 1;
+	Var1phase& next = cells[cur].u_next;
+
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
+}
+
 double Oil_RZ::solveH()
 {
 	double H = 0.0;
@@ -414,4 +464,12 @@ double Oil_RZ::solveH()
 	}
 
 	return H;
+}
+
+double Oil_RZ::getRate(int cur)
+{
+	int neighbor = cur + cellsNum_z + 2;
+	Var1phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+	Var1phase& next = cells[cur].u_next;
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p);
 }

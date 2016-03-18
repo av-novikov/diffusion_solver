@@ -103,6 +103,13 @@ namespace oil_rz
 		void checkSkeletons(const std::vector<Skeleton_Props>& props);
 		
 		// Service functions
+		inline int getUpwindIdx(int cur, int beta)
+		{
+			if (cells[cur].u_next.p < cells[beta].u_next.p)
+				return beta;
+			else
+				return cur;
+		};
 		inline void getNeighborIdx(int cur, int* const neighbor)
 		{
 			neighbor[0] = cur - cellsNum_z - 2; 
@@ -258,7 +265,16 @@ namespace oil_rz
 		double solve_eqRight_dp(int cur);
 		double solve_eqRight_dp_beta(int cur);
 
+		double solve_eqTop(int cur);
+		double solve_eqTop_dp(int cur);
+		double solve_eqTop_dp_beta(int cur);
+
+		double solve_eqBot(int cur);
+		double solve_eqBot_dp(int cur);
+		double solve_eqBot_dp_beta(int cur);
+
 		double solveH();
+		double getRate(int cur);
 
 	public:
 		Oil_RZ();

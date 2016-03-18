@@ -653,18 +653,19 @@ using namespace std;
 	return props;
 }*/
 
-/*oil_rz::Properties* getProps()
+oil_rz::Properties* getProps()
 {
 	oil_rz::Properties* props = new oil_rz::Properties();
 
-	props->cellsNum_r = 100;
-	props->cellsNum_z = 3;
+	props->cellsNum_r = 50;
+	props->cellsNum_z = 20;
 
 	props->timePeriods.push_back(10.0 * 365.0 * 86400.0);
 	
-	props->leftBoundIsRate = true;
-	props->rightBoundIsPres = false;
-	props->rates.push_back(5.0);
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	//props->rates.push_back(1.0);
+	props->pwf.push_back(133.36 * 1.E+5);
 
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
@@ -672,35 +673,35 @@ using namespace std;
 	
 	props->alpha = 7200.0;
 
-	props->perfIntervals.push_back( make_pair(1, 3) );
+	props->perfIntervals.push_back( make_pair(1, 20) );
 
 	props->r_w = 0.1;
-	props->r_e = 2500.0;
+	props->r_e = 19.8;
 
 	oil_rz::Skeleton_Props tmp;
-	tmp.cellsNum_z = 3;
+	tmp.cellsNum_z = 20;
 	tmp.m = 0.1;
-	tmp.p_init = tmp.p_out = 160.0 * 1.0e+5;
-	tmp.h1 = 1500.0;
-	tmp.h2 = 1503.0;
-	tmp.height = 3.0;
-	tmp.perm_r = 100.0;
-	tmp.perm_z = 0.0;
+	tmp.p_init = tmp.p_out = 257.2 * 1.0e+5;
+	tmp.h1 = 0.0;
+	tmp.h2 = 1.0;
+	tmp.height = 1.0;
+	tmp.perm_r = 20.0;
+	tmp.perm_z = 20.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	props->props_sk.push_back( tmp );
 
-	props->depth_point = 1500.0;
+	props->depth_point = 0.0;
 
-	props->props_oil.visc = 0.62807;
-	props->props_oil.b_bore = 1.09754;
+	props->props_oil.visc = 1.0;
+	props->props_oil.b_bore = 1.0;
 	props->props_oil.dens_stc = 800.026;
 	props->props_oil.beta = 1.24703e-09;
 
 	return props;
-}*/
+}
 
 /*oil1D_NIT::Properties* getProps()
 {
@@ -1215,7 +1216,7 @@ using namespace std;
 	return props;
 }*/
 
-gasOil_perf_nit::Properties* getProps()
+/*gasOil_perf_nit::Properties* getProps()
 {
 	gasOil_perf_nit::Properties* props = new gasOil_perf_nit::Properties();
 
@@ -1242,10 +1243,10 @@ gasOil_perf_nit::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->perfTunnels.push_back(make_pair(3, 7));
-	props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 7));
-	props->perfTunnels.push_back(make_pair(3 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 7));
-	props->perfTunnels.push_back(make_pair(3 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 7));
+	props->perfTunnels.push_back(make_pair(3, 0));
+	props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
 
 	props->r_w = 0.05;
 	props->r_e = 1000.0;
@@ -1264,15 +1265,15 @@ gasOil_perf_nit::Properties* getProps()
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 
-	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(5.0);
+	tmp.skins.push_back(5.0);
+	tmp.skins.push_back(5.0);
+	tmp.skins.push_back(5.0);
 
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back( 0.15 );
+	tmp.radiuses_eff.push_back( 0.15 );
+	tmp.radiuses_eff.push_back( 0.15 );
+	tmp.radiuses_eff.push_back( 0.15 );
 
 	tmp.c = 1800.0;
 	tmp.kappa_eff = 0.0;
@@ -1314,7 +1315,7 @@ gasOil_perf_nit::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs.txt");
 
 	return props;
-}
+}*/
 
 /*gas1D::Properties* getProps()
 {
@@ -1380,11 +1381,11 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	gasOil_perf_nit::Properties* props = getProps();
+	/*gasOil_perf_nit::Properties* props = getProps();
 	Scene<gasOil_perf_nit::GasOil_Perf_NIT, gasOil_perf_nit::ParPerfNITSolver, gasOil_perf_nit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	/*gasOil_perf::Properties* props = getProps();
 	Scene<gasOil_perf::GasOil_Perf, gasOil_perf::ParPerfSolver, gasOil_perf::Properties> scene;
@@ -1392,6 +1393,12 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 	
+	oil_rz::Properties* props = getProps();
+	Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();
+
 	/*oil1D_NIT::Properties* props = getProps();
 	Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties> scene;
 	scene.load(*props);
