@@ -286,22 +286,25 @@ void GasOil_RZ::setPerforated()
 
 void GasOil_RZ::setPeriod(int period)
 {
-	if(leftBoundIsRate)
+	if (leftBoundIsRate)
+	{
 		Q_sum = rate[period];
+
+		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = Q_sum * cells[it->first].hz / height_perf;
+		}
+		else {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = it->second * Q_sum / rate[period - 1];
+		}
+	}
 	else
 	{
 		Pwf = pwf[period];
 		Q_sum = 0.0;
-	}
-	
-	if(period == 0 || rate[period-1] < EQUALITY_TOLERANCE ) {
-		map<int,double>::iterator it;
-		for(it = Qcell.begin(); it != Qcell.end(); ++it)
-			it->second = Q_sum * cells[ it->first ].hz / height_perf;
-	} else {
-		map<int,double>::iterator it;
-		for(it = Qcell.begin(); it != Qcell.end(); ++it)
-			it->second = it->second * Q_sum / rate[period-1];
 	}
 
 	for(int i = 0; i < skeletonsNum; i++)

@@ -23,7 +23,6 @@ GasOil2DNITSolver::GasOil2DNITSolver(GasOil_RZ_NIT* _model) : AbstractSolver<Gas
 	mat.Initialize(n-1, n-1);
 	b.Initialize(n-1);
 
-	isWellboreAffect = false;
 	Tt = model->period[model->period.size()-1];
 }
 
@@ -46,7 +45,7 @@ void GasOil2DNITSolver::writeData()
 	{
 		p += model->cells[it->first].u_next.p * model->P_dim;
 		s += model->cells[it->first].u_next.s;
-		t += model->cells[it->first].u_next.t;
+		t += model->cells[it->first].u_next.t * model->T_dim;
 		if (model->leftBoundIsRate)
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
@@ -56,7 +55,7 @@ void GasOil2DNITSolver::writeData()
 		}
 	}
 
-	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) * T_dim << endl;
+	plot_Tdyn << cur_t * t_dim / 3600.0 << "\t" << t / (double)(model->Qcell.size()) << endl;
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
 	plot_Sdyn << cur_t * t_dim / 3600.0 << "\t" << s / (double)(model->Qcell.size()) << endl;
 

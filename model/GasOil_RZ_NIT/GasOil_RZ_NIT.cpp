@@ -112,7 +112,10 @@ void GasOil_RZ_NIT::makeDimLess()
 	R_dim = 10.0 * r_w;
 	t_dim = 3600.0;
 	P_dim = BAR_TO_PA;
-	T_dim = props_sk[0].t_init;
+	if (props_sk[0].t_init != 0.0)
+		T_dim = props_sk[0].t_init;
+	else
+		T_dim = 1.0;
 
 	// Temporal properties
 	ht = ht / t_dim;

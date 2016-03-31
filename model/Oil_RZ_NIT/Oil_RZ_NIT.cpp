@@ -1,20 +1,20 @@
-#include "model/Oil_RZ/Oil_RZ.h"
+#include "model/Oil_RZ_NIT/Oil_RZ_NIT.h"
 #include "util/utils.h"
 
 #include <cassert>
 
 using namespace std;
-using namespace oil_rz;
+using namespace oil_rz_nit;
 
-Oil_RZ::Oil_RZ()
+Oil_RZ_NIT::Oil_RZ_NIT()
 {
 }
 
-Oil_RZ::~Oil_RZ()
+Oil_RZ_NIT::~Oil_RZ_NIT()
 {
 }
 
-void Oil_RZ::setProps(Properties& props)
+void Oil_RZ_NIT::setProps(Properties& props)
 {
 	leftBoundIsRate = props.leftBoundIsRate;
 	rightBoundIsPres = props.rightBoundIsPres;
@@ -70,7 +70,7 @@ void Oil_RZ::setProps(Properties& props)
 	makeDimLess();
 }
 
-void Oil_RZ::checkSkeletons(const vector<Skeleton_Props>& props)
+void Oil_RZ_NIT::checkSkeletons(const vector<Skeleton_Props>& props)
 {
 	vector<Skeleton_Props>::const_iterator it = props.begin();
 	double tmp;
@@ -92,12 +92,16 @@ void Oil_RZ::checkSkeletons(const vector<Skeleton_Props>& props)
 	assert( indxs == cellsNum_z );
 }
 
-void Oil_RZ::makeDimLess()
+void Oil_RZ_NIT::makeDimLess()
 {
 	// Main units
 	R_dim = r_w;
 	t_dim = 3600.0;
 	P_dim = BAR_TO_PA;
+	if (props_sk[0].t_init != 0.0)
+		T_dim = props_sk[0].t_init;
+	else
+		T_dim = 1.0;
 
 	// Temporal properties
 	ht /= t_dim;
@@ -121,6 +125,11 @@ void Oil_RZ::makeDimLess()
 		props_sk[i].height /= R_dim;
 		props_sk[i].p_init /= P_dim;
 		props_sk[i].p_out /= P_dim;
+		props_sk[i].t_init /= T_dim;
+
+		props_sk[i].c = props_sk[i].c / R_dim / R_dim * T_dim * t_dim * t_dim;
+		props_sk[i].lambda_r = props_sk[i].lambda_r * T_dim * t_dim / P_dim / R_dim / R_dim;
+		props_sk[i].lambda_z = props_sk[i].lambda_z * T_dim * t_dim / P_dim / R_dim / R_dim;
 
 		for(int j = 0; j < periodsNum; j++)
 		{
@@ -144,12 +153,17 @@ void Oil_RZ::makeDimLess()
 	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
 
+	props_oil.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_oil.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_oil.jt = props_oil.jt * P_dim / T_dim;
+	props_oil.ad = props_oil.ad * P_dim / T_dim;
+
 	// Rest properties
 	alpha /= t_dim;
 	//depth_point = 0.0;
 }
 
-void Oil_RZ::buildGridLog()
+void Oil_RZ_NIT::buildGridLog()
 {
 	cells.reserve( cellsNum );
 
@@ -236,14 +250,18 @@ void Oil_RZ::buildGridLog()
 	cells.push_back( Cell(counter++, cm_r, cm_z+hz/2.0, 0.0, 0.0) );
 }
 
-void Oil_RZ::setInitialState()
+void Oil_RZ_NIT::setInitialState()
 {
 	vector<Cell>::iterator it;
-	for(it = cells.begin(); it != cells.end(); ++it)
-		it->u_prev.p = it->u_iter.p = it->u_next.p = props_sk[ getSkeletonIdx(*it) ].p_init;
+	for (it = cells.begin(); it != cells.end(); ++it) {
+		const Skeleton_Props& props = props_sk[getSkeletonIdx(*it)];
+		
+		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
+		it->u_prev.t = it->u_iter.t = it->u_next.t = props.t_init;
+	}
 }
 
-void Oil_RZ::setPerforated()
+void Oil_RZ_NIT::setPerforated()
 {
 	height_perf = 0.0;
 	vector<pair<int,int> >::iterator it;
@@ -257,12 +275,15 @@ void Oil_RZ::setPerforated()
 	}
 }
 
-void Oil_RZ::setPeriod(int period)
+void Oil_RZ_NIT::setPeriod(int period)
 {
 	if(leftBoundIsRate)
 		Q_sum = rate[period];
 	else
+	{
 		Pwf = pwf[period];
+		Q_sum = 0.0;
+	}
 	
 	if(period == 0 || rate[period-1] < EQUALITY_TOLERANCE ) {
 		map<int,double>::iterator it;
@@ -282,19 +303,19 @@ void Oil_RZ::setPeriod(int period)
 	}
 }
 
-void Oil_RZ::setRateDeviation(int num, double ratio)
+void Oil_RZ_NIT::setRateDeviation(int num, double ratio)
 {
 	Qcell[num] += Q_sum * ratio;
 }
 
-double Oil_RZ::solve_eq(int cur)
+double Oil_RZ_NIT::solve_eq(int cur)
 {
 	int neighbor [4];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var1phase& next = cell.u_next;
-	Var1phase& prev = cell.u_prev;
+	Var1phaseNIT& next = cell.u_next;
+	Var1phaseNIT& prev = cell.u_prev;
 
 	double H = 0.0;
 	H = getPoro(next.p, cell) * getRho(next.p) - getPoro(prev.p, cell) * getRho(prev.p);
@@ -308,13 +329,13 @@ double Oil_RZ::solve_eq(int cur)
 	return H;
 }
 
-double Oil_RZ::solve_eq_dp(int cur)
+double Oil_RZ_NIT::solve_eq_dp(int cur)
 {
 	int neighbor [4];
 	getNeighborIdx(cur, neighbor);
 
 	Cell& cell = cells[cur];
-	Var1phase& next = cell.u_next;
+	Var1phaseNIT& next = cell.u_next;
 
 	double H = 0.0;
 	
@@ -331,7 +352,7 @@ double Oil_RZ::solve_eq_dp(int cur)
 	return H;
 }
 
-double Oil_RZ::solve_eq_dp_beta(int cur, int beta)
+double Oil_RZ_NIT::solve_eq_dp_beta(int cur, int beta)
 {
 	Cell& cell = cells[cur];
 	Cell& nebr = cells[beta];
@@ -340,10 +361,10 @@ double Oil_RZ::solve_eq_dp_beta(int cur, int beta)
 		( (cell.u_next.p - nebr.u_next.p) * getRho_dp_beta(cell, nebr) - getRho(cell, nebr) );
 }
 
-double Oil_RZ::solve_eqLeft(int cur)
+double Oil_RZ_NIT::solve_eqLeft(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 	
 	if( leftBoundIsRate )
 		return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) - Qcell[cur];
@@ -351,10 +372,10 @@ double Oil_RZ::solve_eqLeft(int cur)
 		return next.p - Pwf;
 }
 
-double Oil_RZ::solve_eqLeft_dp(int cur)
+double Oil_RZ_NIT::solve_eqLeft_dp(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 
 	if( leftBoundIsRate )
 		return -getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
@@ -362,10 +383,10 @@ double Oil_RZ::solve_eqLeft_dp(int cur)
 		return 1.0;
 }
 
-double Oil_RZ::solve_eqLeft_dp_beta(int cur)
+double Oil_RZ_NIT::solve_eqLeft_dp_beta(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 
 	if( leftBoundIsRate )
 		return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
@@ -373,7 +394,7 @@ double Oil_RZ::solve_eqLeft_dp_beta(int cur)
 		return 0.0;
 }
 
-double Oil_RZ::solve_eqRight(int cur)
+double Oil_RZ_NIT::solve_eqRight(int cur)
 {
 	const Cell& cell = cells[cur];
 
@@ -383,7 +404,7 @@ double Oil_RZ::solve_eqRight(int cur)
 		return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
 }
 
-double Oil_RZ::solve_eqRight_dp(int cur)
+double Oil_RZ_NIT::solve_eqRight_dp(int cur)
 {
 	if( rightBoundIsPres )
 		return 1.0;
@@ -391,7 +412,7 @@ double Oil_RZ::solve_eqRight_dp(int cur)
 		return 1.0;
 }
 
-double Oil_RZ::solve_eqRight_dp_beta(int cur)
+double Oil_RZ_NIT::solve_eqRight_dp_beta(int cur)
 {
 	if( rightBoundIsPres )
 		return 0.0;
@@ -399,60 +420,60 @@ double Oil_RZ::solve_eqRight_dp_beta(int cur)
 		return -1.0;
 }
 
-double Oil_RZ::solve_eqTop(int cur)
+double Oil_RZ_NIT::solve_eqTop(int cur)
 {
 	const int neighbor = cur + 1;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 	//const double q = Q_sum;
 	const double q = 0.0;// -19.964 / 86400.0 / Q_dim;
 	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / M_PI / r_e / r_e);
 }
 
-double Oil_RZ::solve_eqTop_dp(int cur)
+double Oil_RZ_NIT::solve_eqTop_dp(int cur)
 {
 	const int neighbor = cur + 1;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 
 	return -getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
 }
 
-double Oil_RZ::solve_eqTop_dp_beta(int cur)
+double Oil_RZ_NIT::solve_eqTop_dp_beta(int cur)
 {
 	const int neighbor = cur + 1;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 
 	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
 }
 
-double Oil_RZ::solve_eqBot(int cur)
+double Oil_RZ_NIT::solve_eqBot(int cur)
 {
 	const int neighbor = cur - 1;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 	//const double q = Q_sum;
-	const double q = 19.96 /*39.913*/ / 86400.0 / Q_dim * M_PI * r_e * r_e / 100.0 / 100.0 * R_dim * R_dim;
+	const double q = 0.0;// 19.96 /*39.913*/ / 86400.0 / Q_dim * M_PI * r_e * r_e / 100.0 / 100.0 * R_dim * R_dim;
 	const double lambda = r_e;
 	const double B = M_PI * lambda * lambda * (exp(-r_w*r_w/lambda/lambda) - exp(-r_e*r_e/lambda/lambda));
 	//return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / M_PI / r_e / r_e);
 	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr * exp(-cells[cur].r*cells[cur].r/lambda/lambda) / B );
 }
 
-double Oil_RZ::solve_eqBot_dp(int cur)
+double Oil_RZ_NIT::solve_eqBot_dp(int cur)
 {
 	const int neighbor = cur - 1;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 
 	return -getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
 }
 
-double Oil_RZ::solve_eqBot_dp_beta(int cur)
+double Oil_RZ_NIT::solve_eqBot_dp_beta(int cur)
 {
 	const int neighbor = cur - 1;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 
 	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
 }
 
-double Oil_RZ::solveH()
+double Oil_RZ_NIT::solveH()
 {
 	double H = 0.0;
 	double p1, p0;
@@ -469,10 +490,10 @@ double Oil_RZ::solveH()
 	return H;
 }
 
-double Oil_RZ::getRate(int cur)
+double Oil_RZ_NIT::getRate(int cur)
 {
 	int neighbor = cur + cellsNum_z + 2;
-	Var1phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
-	Var1phase& next = cells[cur].u_next;
+	Var1phaseNIT& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
+	Var1phaseNIT& next = cells[cur].u_next;
 	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p);
 }

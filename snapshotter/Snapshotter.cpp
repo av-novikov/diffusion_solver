@@ -6,6 +6,7 @@
 #include "model/Gas1D/Gas1D_simple.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
+#include "model/Oil_RZ_NIT/Oil_RZ_NIT.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
@@ -87,6 +88,18 @@ void Snapshotter<gas1D::Gas1D_simple>::setModel(gas1D::Gas1D_simple* _model)
 
 template <>
 void Snapshotter<oil_rz::Oil_RZ>::setModel(oil_rz::Oil_RZ* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_z + 2;
+}
+
+template <>
+void Snapshotter<oil_rz_nit::Oil_RZ_NIT>::setModel(oil_rz_nit::Oil_RZ_NIT* _model)
 {
 	model = _model;
 
@@ -206,6 +219,7 @@ template class Snapshotter<gas1D::Gas1D>;
 template class Snapshotter<gas1D::Gas1D_simple>;
 template class Snapshotter<oil1D_NIT::Oil1D_NIT>;
 template class Snapshotter<oil_rz::Oil_RZ>;
+template class Snapshotter<oil_rz_nit::Oil_RZ_NIT>;
 template class Snapshotter<gasOil_rz::GasOil_RZ>;
 template class Snapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>;
 

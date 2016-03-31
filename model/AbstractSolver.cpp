@@ -6,6 +6,7 @@
 #include "model/Gas1D/Gas1D_simple.h"
 #include "model/Oil1D_NIT/Oil1D_NIT.h"
 #include "model/Oil_RZ/Oil_RZ.h"
+#include "model/Oil_RZ_NIT/Oil_RZ_NIT.h"
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ_NIT/GasOil_RZ_NIT.h"
 
@@ -241,6 +242,35 @@ double AbstractSolver<gasOil_perf_nit::GasOil_Perf_NIT>::convergance(int& ind, i
 }
 
 template <>
+double AbstractSolver<oil_rz_nit::Oil_RZ_NIT>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int i = 1; i < model->cells[0].varNum; i++)
+	{
+		for (int j = 0; j < model->cells.size(); j++)
+		{
+			var_next = model->cells[j].u_next.values[i];	var_iter = model->cells[j].u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = i;
+				}
+			}
+		}
+	}
+
+	return relErr;
+}
+
+template <>
 double AbstractSolver<gasOil_rz_NIT::GasOil_RZ_NIT>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -358,6 +388,7 @@ template class AbstractSolver<gas1D::Gas1D>;
 template class AbstractSolver<gas1D::Gas1D_simple>;
 template class AbstractSolver<oil1D_NIT::Oil1D_NIT>;
 template class AbstractSolver<oil_rz::Oil_RZ>;
+template class AbstractSolver<oil_rz_nit::Oil_RZ_NIT>;
 template class AbstractSolver<gasOil_rz_NIT::GasOil_RZ_NIT>;
 template class AbstractSolver<gasOil_rz::GasOil_RZ>;
 
