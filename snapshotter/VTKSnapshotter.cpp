@@ -824,7 +824,7 @@ void VTKSnapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>::dump_all(int i)
 	}
 
 	// Middle cells
-	for(k = 1; k < nx-2; k++)
+	for(k = 1; k < nx-1; k++)
 	{
 		for(j = 0; j < ny-2; j++)
 		{
