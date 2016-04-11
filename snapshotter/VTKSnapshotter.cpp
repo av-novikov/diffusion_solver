@@ -2395,7 +2395,7 @@ void VTKSnapshotter<oil_rz::Oil_RZ>::dump_all(int i)
 
 			pres->InsertNextValue(cell.u_next.p);
 			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
-			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);	
+			vel[1] = -r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);	
 			vel[2] = 0.0;
 			vel_oil->InsertNextTuple(vel);
 		}

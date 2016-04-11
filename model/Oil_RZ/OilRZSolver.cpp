@@ -8,6 +8,7 @@ OilRZSolver::OilRZSolver(Oil_RZ* _model) : AbstractSolver<Oil_RZ>(_model)
 	Initialize(model->cellsNum_r+2, model->cellsNum_z+2);
 
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
+	plot_Pavg.open("snaps/Pavg.dat", ofstream::out);
 	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
 
 	t_dim = model->t_dim;
@@ -27,12 +28,13 @@ OilRZSolver::OilRZSolver(Oil_RZ* _model) : AbstractSolver<Oil_RZ>(_model)
 OilRZSolver::~OilRZSolver()
 {
 	plot_Pdyn.close();
+	plot_Pavg.close();
 	plot_qcells.close();
 }
 
 void OilRZSolver::writeData()
 {
-	double p = 0.0, q = 0.0;
+	double p = 0.0, q = 0.0, p_avg = 0.0;
 
 	plot_qcells << cur_t * t_dim / 3600.0;
 
@@ -49,7 +51,12 @@ void OilRZSolver::writeData()
 		}
 	}
 
+	for (int i = 0; i < model->cellsNum; i++)
+		p_avg += model->cells[i].u_next.p * model->cells[i].V * model->P_dim;
+	p_avg /= model->Volume;
+
 	plot_Pdyn << cur_t * t_dim / 3600.0 << "\t" << p / (double)(model->Qcell.size()) << endl;
+	plot_Pavg << cur_t * t_dim / 3600.0 << "\t" << p_avg << endl;
 
 	if (model->leftBoundIsRate)
 		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;

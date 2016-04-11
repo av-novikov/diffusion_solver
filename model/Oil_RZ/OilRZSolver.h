@@ -30,6 +30,7 @@ namespace oil_rz
 
 		std::ofstream plot_Pdyn;
 		std::ofstream plot_qcells;
+		std::ofstream plot_Pavg;
 
 		int n;
 		bool isChange;

@@ -138,6 +138,30 @@
     <ClInclude Include="model\3D\GasOil_3D\Par3DSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="model\cells\stencils\Stencil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\cells\Iterators.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\3D\Perforation\GasOil_Perf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\iterators-test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\cells\CylCellPerf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\3D\Perforation\ParPerfSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\3D\Perforation\GasOil_Perf_NIT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\3D\Perforation\ParPerfNITSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="model\cells\AbstractCell.cpp">
@@ -248,10 +272,31 @@
     <ClCompile Include="snapshotter\VTKSnapshotter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="method\ParalutionInterface.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
     <ClCompile Include="model\3D\GasOil_3D\Par3DSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\cells\stencils\Stencil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\ParalutionInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\3D\Perforation\GasOil_Perf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\iterators-test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\cells\CylCellPerf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\3D\Perforation\ParPerfSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\3D\Perforation\GasOil_Perf_NIT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\3D\Perforation\ParPerfNITSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

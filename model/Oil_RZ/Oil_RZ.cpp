@@ -373,39 +373,47 @@ double Oil_RZ::solve_eqLeft_dp_beta(int cur)
 		return 0.0;
 }
 
-double Oil_RZ::solve_eqRight(int cur)
-{
-	const Cell& cell = cells[cur];
-
-	if( rightBoundIsPres )
-		return cell.u_next.p - props_sk[getSkeletonIdx(cell)].p_out;
-	else
-		return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
-}
-
 double Oil_RZ::solve_eqRight_dp(int cur)
 {
-	if( rightBoundIsPres )
+	Cell& cell = cells[cur];
+	Cell& nebr = cells[cur-cellsNum_z-2];
+
+	if (rightBoundIsPres)
 		return 1.0;
 	else
-		return 1.0;
+	{
+		if ((cur == cellsNum - 1) || (cur == cellsNum - cellsNum_z - 2))
+			return -1.0;
+		else
+			return -getTrans(cell, nebr) / props_oil.visc / props_oil.b_bore;
+	}
+		//return 1.0;
 }
 
 double Oil_RZ::solve_eqRight_dp_beta(int cur)
 {
+	Cell& cell = cells[cur];
+	Cell& nebr = cells[cur - cellsNum_z - 2];
+
 	if( rightBoundIsPres )
 		return 0.0;
 	else
-		return -1.0;
+	{
+		if ((cur == cellsNum - 1) || (cur == cellsNum - cellsNum_z - 2))
+			return 1.0;
+		else
+			return getTrans(cell, nebr) / props_oil.visc / props_oil.b_bore;
+		//return -1.0;
+	}
 }
 
 double Oil_RZ::solve_eqTop(int cur)
 {
 	const int neighbor = cur + 1;
 	Var1phase& next = cells[cur].u_next;
-	//const double q = Q_sum;
-	const double q = 0.0;// -19.964 / 86400.0 / Q_dim;
-	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / M_PI / r_e / r_e);
+
+	const double q = 0.0;// -25.0 / 86400.0 / Q_dim;
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / (M_PI * r_e * r_e - M_PI * r_w * r_w));
 }
 
 double Oil_RZ::solve_eqTop_dp(int cur)
@@ -424,16 +432,35 @@ double Oil_RZ::solve_eqTop_dp_beta(int cur)
 	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore;
 }
 
+double Oil_RZ::solve_eqRight(int cur)
+{
+	Cell& cell = cells[cur];
+	Cell& nebr = cells[cur - cellsNum_z - 2];
+	const double q = 0.0;// 2.0 * 5.0047 / 86400.0 / Q_dim / (2.0 * M_PI * r_e * (props_sk[props_sk.size() - 1].h2 - props_sk[0].h1));
+
+	if (rightBoundIsPres)
+		return cell.u_next.p - props_sk[getSkeletonIdx(cell)].p_out;
+	else
+	{
+		if ((cur == cellsNum - 1) || (cur == cellsNum - cellsNum_z - 2))
+			return nebr.u_next.p - cell.u_next.p;
+		else
+			return getTrans(cell, nebr) / props_oil.visc / props_oil.b_bore * (nebr.u_next.p - cell.u_next.p) + q * 2.0 * M_PI * r_e * cell.hz;
+		//return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;
+	}
+}
+
 double Oil_RZ::solve_eqBot(int cur)
 {
 	const int neighbor = cur - 1;
 	Var1phase& next = cells[cur].u_next;
-	//const double q = Q_sum;
-	const double q = 19.96 /*39.913*/ / 86400.0 / Q_dim * M_PI * r_e * r_e / 100.0 / 100.0 * R_dim * R_dim;
-	const double lambda = r_e;
-	const double B = M_PI * lambda * lambda * (exp(-r_w*r_w/lambda/lambda) - exp(-r_e*r_e/lambda/lambda));
-	//return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr / M_PI / r_e / r_e);
-	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * (2.0 * M_PI * cells[cur].r * cells[cur].hr * exp(-cells[cur].r*cells[cur].r/lambda/lambda) / B );
+
+	const double q = 0.0;//39.91 / 86400.0 / Q_dim / (M_PI * r_e * r_e - M_PI * r_w * r_w);
+	double lambda = r_e / 100.0;
+	double b = 1.0;// exp(-cells[cur].r * cells[cur].r / lambda / lambda) / M_PI / lambda / lambda /
+			//(exp(-r_w*r_w/lambda/lambda) - exp(-r_e*r_e/lambda/lambda));
+
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.b_bore * (cells[neighbor].u_next.p - next.p) + q * b * 2.0 * M_PI * cells[cur].r * cells[cur].hr;
 }
 
 double Oil_RZ::solve_eqBot_dp(int cur)
