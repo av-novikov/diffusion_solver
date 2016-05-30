@@ -162,6 +162,18 @@
     <ClInclude Include="model\3D\Perforation\ParPerfNITSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="model\Oil_RZ_NIT\Oil_RZ_NIT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Oil_RZ_NIT\OilRZNITSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\3D\Perforation\Oil_Perf_NIT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\3D\Perforation\OilPerfNITSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="model\cells\AbstractCell.cpp">
@@ -297,6 +309,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="model\3D\Perforation\ParPerfNITSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\Oil_RZ_NIT\Oil_RZ_NIT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\Oil_RZ_NIT\OilRZNITSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\3D\Perforation\Oil_Perf_NIT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\3D\Perforation\OilPerfNITSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
