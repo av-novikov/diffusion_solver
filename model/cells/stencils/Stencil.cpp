@@ -205,6 +205,49 @@ void MidStencil<gasOil_perf_nit::GasOil_Perf_NIT>::fillIndex(int cellIdx, int *c
 	}
 }
 
+void MidStencil<oil_perf_nit::Oil_Perf_NIT>::fill(int cellIdx, int *counter)
+{
+	oil_perf_nit::Cell* nebr[7];
+	model->getStencilIdx(cellIdx, nebr);
+
+	if (nebr[0]->isUsed)
+	{
+		for (int j = 0; j < 7; j++)
+			matrix[(*counter)++] = foo.mat[0][j](cellIdx, nebr[j]->num);
+
+		rhs[cellIdx] = -foo.rhs[0](cellIdx);
+	}
+	else
+	{
+		matrix[(*counter)++] = 1.0;
+		rhs[cellIdx] = 0.0;
+	}
+}
+
+template <>
+void MidStencil<oil_perf_nit::Oil_Perf_NIT>::fillIndex(int cellIdx, int *counter)
+{
+	oil_perf_nit::Cell* nebr[7];
+	model->getStencilIdx(cellIdx, nebr);
+
+	if (nebr[0]->isUsed)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			ind_i[*counter] = cellIdx;
+			if (nebr[j]->isUsed)
+				ind_j[(*counter)++] = nebr[j]->num;
+			else
+				ind_j[(*counter)++] = model->cellsNum + model->getCell(nebr[0]->num, nebr[j]->num).num;
+		}
+
+	}
+	else {
+		ind_i[*counter] = cellIdx;
+		ind_j[(*counter)++] = cellIdx;
+	}
+}
+
 /*--------------------LeftStencil--------------------*/
 
 template <class modelType>
@@ -406,6 +449,30 @@ void LeftStencil<gasOil_perf_nit::GasOil_Perf_NIT>::fillIndex(int cellIdx, int *
 	}
 }
 
+template <>
+void LeftStencil<oil_perf_nit::Oil_Perf_NIT>::fill(int cellIdx, int *counter)
+{
+	int nebrIdx = model->nebrMap[cellIdx].first;
+
+	matrix[(*counter)++] = foo.mat[0][0](cellIdx, cellIdx);
+	matrix[(*counter)++] = foo.mat[0][1](cellIdx, nebrIdx);
+
+	rhs[cellIdx + model->cellsNum] = -foo.rhs[0](cellIdx);
+}
+
+template <>
+void LeftStencil<oil_perf_nit::Oil_Perf_NIT>::fillIndex(int cellIdx, int *counter)
+{
+	const int cellMatIdx = cellIdx + model->cellsNum;
+	const int nebrIdx = model->nebrMap[cellIdx].first;
+
+	ind_i[*counter] = cellMatIdx;
+	ind_j[(*counter)++] = cellMatIdx;
+
+	ind_i[*counter] = cellMatIdx;
+	ind_j[(*counter)++] = nebrIdx;
+
+}
 
 /*--------------------RightStencil--------------------*/
 
@@ -550,6 +617,28 @@ void RightStencil<gasOil_perf_nit::GasOil_Perf_NIT>::fillIndex(int cellIdx, int 
 	}
 }
 
+void RightStencil<oil_perf_nit::Oil_Perf_NIT>::fill(int cellIdx, int *counter)
+{
+	int nebrIdx = cellIdx - model->cellsNum_z - 2;
+
+	matrix[(*counter)++] = foo.mat[0][0](cellIdx, cellIdx);
+	matrix[(*counter)++] = foo.mat[0][1](cellIdx, nebrIdx);
+
+	rhs[cellIdx] = -foo.rhs[0](cellIdx);
+}
+
+template <>
+void RightStencil<oil_perf_nit::Oil_Perf_NIT>::fillIndex(int cellIdx, int *counter)
+{
+	int nebrIdx = cellIdx - model->cellsNum_z - 2;
+
+	ind_i[*counter] = cellIdx;
+	ind_j[(*counter)++] = cellIdx;
+
+	ind_i[*counter] = cellIdx;
+	ind_j[(*counter)++] = nebrIdx;
+}
+
 /*--------------------TopStencil--------------------*/
 
 template <class modelType>
@@ -692,6 +781,30 @@ void TopStencil<gasOil_perf_nit::GasOil_Perf_NIT>::fillIndex(int cellIdx, int *c
 	}
 }
 
+template <>
+void TopStencil<oil_perf_nit::Oil_Perf_NIT>::fill(int cellIdx, int *counter)
+{
+	int nebrIdx = cellIdx + 1;
+
+	matrix[(*counter)++] = foo.mat[0][0](cellIdx, cellIdx);
+	matrix[(*counter)++] = foo.mat[0][1](cellIdx, nebrIdx);
+
+	// Right side
+	rhs[cellIdx] = -foo.rhs[0](cellIdx);
+}
+
+template <>
+void TopStencil<oil_perf_nit::Oil_Perf_NIT>::fillIndex(int cellIdx, int *counter)
+{
+	int nebrIdx = cellIdx + 1;
+
+	ind_i[*counter] = cellIdx;
+	ind_j[(*counter)++] = cellIdx;
+
+	ind_i[*counter] = cellIdx;
+	ind_j[(*counter)++] = nebrIdx;
+}
+
 /*--------------------BotStencil--------------------*/
 
 template <class modelType>
@@ -832,6 +945,30 @@ void BotStencil<gasOil_perf_nit::GasOil_Perf_NIT>::fillIndex(int cellIdx, int *c
 		ind_i[*counter] = 2 * cellIdx + i;
 		ind_j[(*counter)++] = 2 * nebrIdx + 1;
 	}
+}
+
+template <>
+void BotStencil<oil_perf_nit::Oil_Perf_NIT>::fill(int cellIdx, int *counter)
+{
+	int nebrIdx = cellIdx - 1;
+
+	matrix[(*counter)++] = foo.mat[0][0](cellIdx, cellIdx);
+	matrix[(*counter)++] = foo.mat[0][1](cellIdx, nebrIdx);
+
+	// Right side
+	rhs[cellIdx] = -foo.rhs[0](cellIdx);
+}
+
+template <>
+void BotStencil<oil_perf_nit::Oil_Perf_NIT>::fillIndex(int cellIdx, int *counter)
+{
+	int nebrIdx = cellIdx - 1;
+
+	ind_i[*counter] = cellIdx;
+	ind_j[(*counter)++] = cellIdx;
+
+	ind_i[*counter] = cellIdx;
+	ind_j[(*counter)++] = nebrIdx;
 }
 
 /*--------------------UsedStencils--------------------*/
