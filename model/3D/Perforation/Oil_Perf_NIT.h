@@ -141,7 +141,7 @@ namespace oil_perf_nit
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractSolver;
-		friend class ParPerfNITSolver;
+		friend class OilPerfNITSolver;
 		template<typename> friend class MidStencil;
 		template<typename> friend class LeftStencil;
 		template<typename> friend class RightStencil;

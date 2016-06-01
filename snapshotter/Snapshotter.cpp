@@ -14,6 +14,7 @@
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
 #include "model/3D/Perforation/GasOil_Perf.h"
+#include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
 using namespace std;
@@ -140,6 +141,21 @@ void Snapshotter<gasOil_perf::GasOil_Perf>::setModel(gasOil_perf::GasOil_Perf* _
 }
 
 template <>
+void Snapshotter<oil_perf_nit::Oil_Perf_NIT>::setModel(oil_perf_nit::Oil_Perf_NIT* _model)
+{
+	model = _model;
+
+	T_dim = model->T_dim;
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_phi;
+	nz = model->cellsNum_z + 2;
+}
+
+template <>
 void Snapshotter<gasOil_perf_nit::GasOil_Perf_NIT>::setModel(gasOil_perf_nit::GasOil_Perf_NIT* _model)
 {
 	model = _model;
@@ -227,4 +243,5 @@ template class Snapshotter<gasOil_3d::GasOil_3D>;
 template class Snapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;
 
 template class Snapshotter<gasOil_perf::GasOil_Perf>;
+template class Snapshotter<oil_perf_nit::Oil_Perf_NIT>;
 template class Snapshotter<gasOil_perf_nit::GasOil_Perf_NIT>;

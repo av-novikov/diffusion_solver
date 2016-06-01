@@ -81,19 +81,15 @@ void OilPerfNITSolver::writeData()
 		{
 			t += model->tunnelCells[counter].u_next.t;
 			p += model->tunnelCells[counter].u_next.p * model->P_dim;
-			s += model->tunnelCells[counter++].u_next.s;
 
 			t += model->tunnelCells[counter].u_next.t;
 			p += model->tunnelCells[counter].u_next.p * model->P_dim;
-			s += model->tunnelCells[counter++].u_next.s;
 
 			t += model->tunnelCells[counter].u_next.t;
 			p += model->tunnelCells[counter].u_next.p * model->P_dim;
-			s += model->tunnelCells[counter++].u_next.s;
 
 			t += model->tunnelCells[counter].u_next.t;
 			p += model->tunnelCells[counter].u_next.p * model->P_dim;
-			s += model->tunnelCells[counter++].u_next.s;
 
 			sum += 4;
 			counter += ((model->perfTunnels[i].second - 1) * 4 + 1);
@@ -102,7 +98,6 @@ void OilPerfNITSolver::writeData()
 		{
 			t += model->tunnelCells[counter].u_next.t;
 			p += model->tunnelCells[counter].u_next.p * model->P_dim;
-			s += model->tunnelCells[counter++].u_next.s;
 
 			sum++;
 		}
@@ -146,7 +141,7 @@ void OilPerfNITSolver::start()
 
 	fillIndices(PRES);
 	fillIndices(TEMP);
-	pres_solver.Init( 2 * (model->cellsNum + model->tunnelCells.size()) );
+	pres_solver.Init( model->cellsNum + model->tunnelCells.size() );
 	temp_solver.Init( model->cellsNum + model->tunnelCells.size() );
 
 	model->setPeriod(curTimePeriod);
@@ -279,36 +274,15 @@ void OilPerfNITSolver::fillIndices(int key)
 			if (it->isUsed)
 			{
 				nebr = idx + model->cellsNum_z + 2;
-				ind_i[counter] = 2 * idx;
-				ind_j[counter++] = 2 * idx;
+				ind_i[counter] = idx;
+				ind_j[counter++] = idx;
 
-				ind_i[counter] = 2 * idx;
-				ind_j[counter++] = 2 * idx + 1;
-
-				ind_i[counter] = 2 * idx;
-				ind_j[counter++] = 2 * nebr;
-
-				ind_i[counter] = 2 * idx;
-				ind_j[counter++] = 2 * nebr + 1;
-
-				ind_i[counter] = 2 * idx + 1;
-				ind_j[counter++] = 2 * idx;
-
-				ind_i[counter] = 2 * idx + 1;
-				ind_j[counter++] = 2 * idx + 1;
-
-				ind_i[counter] = 2 * idx + 1;
-				ind_j[counter++] = 2 * nebr;
-
-				ind_i[counter] = 2 * idx + 1;
-				ind_j[counter++] = 2 * nebr + 1;
+				ind_i[counter] = idx;
+				ind_j[counter++] = nebr;
 			}
 			else {
-				ind_i[counter] = 2 * idx;
-				ind_j[counter++] = 2 * idx;
-
-				ind_i[counter] = 2 * idx + 1;
-				ind_j[counter++] = 2 * idx + 1;
+				ind_i[counter] = idx;
+				ind_j[counter++] = idx;
 			}
 		}
 
@@ -342,7 +316,7 @@ void OilPerfNITSolver::fillIndices(int key)
 
 		presElemNum = counter;
 
-		for (int i = 0; i < 2 * (model->cellsNum + model->tunnelCells.size()); i++)
+		for (int i = 0; i < model->cellsNum + model->tunnelCells.size(); i++)
 			ind_rhs[i] = i;
 	}
 	else if (key == TEMP)
@@ -460,24 +434,14 @@ void OilPerfNITSolver::fill(int key)
 			if (it->isUsed)
 			{
 				a[counter++] = 1.0;
-				a[counter++] = 0.0;
-				a[counter++] = -1.0;
-				a[counter++] = 0.0;
-
-				a[counter++] = 0.0;
-				a[counter++] = 1.0;
-				a[counter++] = 0.0;
 				a[counter++] = -1.0;
 
-				rhs[2 * idx] = 0.0;
-				rhs[2 * idx + 1] = 0.0;
+				rhs[idx] = 0.0;
 			}
 			else {
 				a[counter++] = 1.0;
-				a[counter++] = 1.0;
 
-				rhs[2 * idx] = 0.0;
-				rhs[2 * idx + 1] = 0.0;
+				rhs[idx] = 0.0;
 			}
 		}
 
@@ -578,8 +542,7 @@ void OilPerfNITSolver::fill(int key)
 						model->getAd(*nebr[0]) * (nebr[0]->u_next.p - nebr[0]->u_prev.p) / model->ht -
 						model->getJT(*nebr[0], NEXT, R_AXIS) * model->getNablaP(*nebr[0], NEXT, R_AXIS) -
 						model->getJT(*nebr[0], NEXT, PHI_AXIS) * model->getNablaP(*nebr[0], NEXT, PHI_AXIS) -
-						model->getJT(*nebr[0], NEXT, Z_AXIS) * model->getNablaP(*nebr[0], NEXT, Z_AXIS) -
-						model->solve_PhaseTrans(idx) * model->L;
+						model->getJT(*nebr[0], NEXT, Z_AXIS) * model->getNablaP(*nebr[0], NEXT, Z_AXIS);
 
 					counter += 7;
 				}
@@ -598,7 +561,7 @@ void OilPerfNITSolver::fill(int key)
 
 			ta[counter++] = 1.0;
 
-			trhs[idx] = model->props_sk[model->getSkeletonIdx(model->cells[idx])].t_init;;
+			trhs[idx] = model->props_sk[model->getSkeletonIdx(model->cells[idx])].t_init;
 		}
 
 		// Tunnel cells
@@ -633,7 +596,7 @@ void OilPerfNITSolver::fill(int key)
 	}
 }
 
-void ParPerfNITSolver::fillq()
+void OilPerfNITSolver::fillq()
 {
 	int i = 0;
 	map<int, double>::iterator it = model->Qcell.begin();
@@ -644,13 +607,13 @@ void ParPerfNITSolver::fillq()
 	}
 }
 
-void ParPerfNITSolver::fillDq()
+void OilPerfNITSolver::fillDq()
 {
 	for (int i = 0; i < n; i++)
 		dq[i] = 0.0;
 }
 
-void ParPerfNITSolver::solveDq(double mult)
+void OilPerfNITSolver::solveDq(double mult)
 {
 	fillDq();
 	filldPdQ(mult);
@@ -666,7 +629,7 @@ void ParPerfNITSolver::solveDq(double mult)
 	cout << endl;
 }
 
-void ParPerfNITSolver::solveSystem()
+void OilPerfNITSolver::solveSystem()
 {
 	double s = 0.0, p1, p2;
 	map<int, double>::iterator it;
@@ -704,7 +667,7 @@ void ParPerfNITSolver::solveSystem()
 	dq[0] = -s;
 }
 
-void ParPerfNITSolver::filldPdQ(double mult)
+void OilPerfNITSolver::filldPdQ(double mult)
 {
 	double p1, p2, ratio;
 	ratio = mult * 0.001 / (double)(n);

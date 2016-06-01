@@ -14,6 +14,7 @@
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 
 #include "model/3D/Perforation/GasOil_Perf.h"
+#include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
 using namespace std;
@@ -277,4 +278,5 @@ template class GRDECLSnapshotter<gasOil_3d::GasOil_3D>;
 template class GRDECLSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;
 
 template class GRDECLSnapshotter<gasOil_perf::GasOil_Perf>;
+template class GRDECLSnapshotter<oil_perf_nit::Oil_Perf_NIT>;
 template class GRDECLSnapshotter<gasOil_perf_nit::GasOil_Perf_NIT>;

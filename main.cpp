@@ -26,6 +26,7 @@
 #include "model/3D/GasOil_3D/GasOil_3D.h"
 #include "model/3D/GasOil_3D_NIT/GasOil_3D_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf.h"
+#include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
 using namespace std;
@@ -670,7 +671,7 @@ using namespace std;
 	return props;
 }*/
 
-oil_rz::Properties* getProps()
+/*oil_rz::Properties* getProps()
 {
 	oil_rz::Properties* props = new oil_rz::Properties();
 
@@ -726,7 +727,7 @@ oil_rz::Properties* getProps()
 	tmp.beta = 0.0;// 4.35113e-10;
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);*/
+	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;
 
@@ -736,7 +737,7 @@ oil_rz::Properties* getProps()
 	props->props_oil.beta = 0.0;//5.8e-10;
 
 	return props;
-}
+}*/
 
 /*oil1D_NIT::Properties* getProps()
 {
@@ -1388,6 +1389,97 @@ oil_rz::Properties* getProps()
 	return props;
 }*/
 
+oil_perf_nit::Properties* getProps()
+{
+	oil_perf_nit::Properties* props = new oil_perf_nit::Properties();
+
+	props->cellsNum_r = 50;
+	props->cellsNum_phi = 12;
+	props->cellsNum_z = 5;
+
+	props->timePeriods.push_back(20.0 * 86400.0);
+	//props->timePeriods.push_back(10.0 * 86400.0);
+	//props->timePeriods.push_back(15.0 * 86400.0);
+	//props->timePeriods.push_back(30.0 * 86400.0);
+
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	//props->rates.push_back(20.0);
+	props->pwf.push_back(180.0 * 1.E+5);
+	//props->pwf.push_back(140.0 * 1.E+5);
+	//props->pwf.push_back(100.0 * 1.E+5);
+	//props->pwf.push_back(200.0 * 1.E+5);
+
+	props->ht = 100.0;
+	props->ht_min = 10.0;
+	props->ht_max = 500000.0;
+
+	props->alpha = 7200.0;
+
+	//props->perfTunnels.push_back(make_pair(3, 0));
+	//props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+
+	props->perfTunnels.push_back(make_pair(3, 0));
+	props->perfTunnels.push_back(make_pair(3 + 1 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 2 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 4 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 5 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 7 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 8 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 11 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+
+	props->r_w = 0.05;
+	props->r_e = 1000.0;
+
+	oil_perf_nit::Skeleton_Props tmp;
+	tmp.cellsNum_z = 5;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
+	tmp.t_init = 0.0;
+	tmp.h1 = 0.0;
+	tmp.h2 = 0.1;
+	tmp.height = 0.1;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 5.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+
+	tmp.skins.push_back(0.0);
+	//tmp.skins.push_back(5.0);
+	//tmp.skins.push_back(5.0);
+	//tmp.skins.push_back(5.0);
+
+	tmp.radiuses_eff.push_back( props->r_w );
+	//tmp.radiuses_eff.push_back( 0.15 );
+	//tmp.radiuses_eff.push_back( 0.15 );
+	//tmp.radiuses_eff.push_back( 0.15 );
+
+	tmp.c = 1800.0;
+	tmp.kappa_eff = 0.0;
+	tmp.lambda_r = tmp.lambda_z = 0.0;// 6.0;
+
+	props->props_sk.push_back(tmp);
+
+	props->depth_point = 0.0;
+
+	props->props_oil.visc = 1.0;
+	props->props_oil.b_bore = 1.0;
+	props->props_oil.dens_stc = 736.0;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.jt = 4.0 * 1.e-7;
+	props->props_oil.ad = 2.0 * 1.e-7;
+	props->props_oil.c = 1880.0;
+	props->props_oil.lambda = 0.0;// 0.16;
+
+	return props;
+}
+
 /*oil_rz_nit::Properties* getProps()
 {
 	oil_rz_nit::Properties* props = new oil_rz_nit::Properties();
@@ -1486,6 +1578,12 @@ int main(int argc, char** argv)
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
+
+	oil_perf_nit::Properties* props = getProps();
+	Scene<oil_perf_nit::Oil_Perf_NIT, oil_perf_nit::OilPerfNITSolver, oil_perf_nit::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();
 	
 	/*oil_rz_nit::Properties* props = getProps();
 	Scene<oil_rz_nit::Oil_RZ_NIT, oil_rz_nit::OilRZNITSolver, oil_rz_nit::Properties> scene;
@@ -1493,11 +1591,11 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 	
-	oil_rz::Properties* props = getProps();
+	/*oil_rz::Properties* props = getProps();
 	Scene<oil_rz::Oil_RZ, oil_rz::OilRZSolver, oil_rz::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	/*oil1D_NIT::Properties* props = getProps();
 	Scene<oil1D_NIT::Oil1D_NIT, oil1D_NIT::Oil1DNITSolver, oil1D_NIT::Properties> scene;
