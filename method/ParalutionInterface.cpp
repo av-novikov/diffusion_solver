@@ -92,16 +92,16 @@ void ParSolver::SolveGMRES()
 	gmres.Init(1.E-15, 1.E-10, 1E+4, 5000);
 	Mat.info();
 
-	gmres.RecordResidualHistory();
+	//gmres.RecordResidualHistory();
 	gmres.Solve(Rhs, &x);
-	gmres.RecordHistory(resHistoryFile);
+	//gmres.RecordHistory(resHistoryFile);
 	//writeSystem();
 
 
-	getResiduals();
-	cout << "Initial residual: " << initRes << endl;
-	cout << "Final residual: " << finalRes << endl;
-	cout << "Number of iterations: " << iterNum << endl << endl;
+	//getResiduals();
+	//cout << "Initial residual: " << initRes << endl;
+	//cout << "Final residual: " << finalRes << endl;
+	//cout << "Number of iterations: " << iterNum << endl << endl;
 
 	gmres.Clear();
 }

@@ -1421,18 +1421,18 @@ oil_perf_nit::Properties* getProps()
 	//props->perfTunnels.push_back(make_pair(3 + 20 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
 	//props->perfTunnels.push_back(make_pair(3 + 30 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
 
-	props->perfTunnels.push_back(make_pair(3, 0));
-	props->perfTunnels.push_back(make_pair(3 + 1 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 2 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 4 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 5 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 7 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 8 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
-	props->perfTunnels.push_back(make_pair(3 + 11 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3, 0));
+	//props->perfTunnels.push_back(make_pair(3 + 1 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 2 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 3 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 12));
+	//props->perfTunnels.push_back(make_pair(3 + 4 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 5 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 6 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 7 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 12));
+	//props->perfTunnels.push_back(make_pair(3 + 8 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 9 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	//props->perfTunnels.push_back(make_pair(3 + 10 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 0));
+	props->perfTunnels.push_back(make_pair(3 + 11 * (props->cellsNum_r + 2)*(props->cellsNum_z + 2), 12));
 
 	props->r_w = 0.05;
 	props->r_e = 1000.0;
@@ -1448,7 +1448,7 @@ oil_perf_nit::Properties* getProps()
 	tmp.perm_r = 100.0;
 	tmp.perm_z = 5.0;
 	tmp.dens_stc = 2000.0;
-	tmp.beta = 4.35113e-10;
+	tmp.beta = 0.0;// 4.35113e-10;
 
 	tmp.skins.push_back(0.0);
 	//tmp.skins.push_back(5.0);
@@ -1471,9 +1471,9 @@ oil_perf_nit::Properties* getProps()
 	props->props_oil.visc = 1.0;
 	props->props_oil.b_bore = 1.0;
 	props->props_oil.dens_stc = 736.0;
-	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.beta = 0.0;// 1.0 * 1.e-9;
 	props->props_oil.jt = 4.0 * 1.e-7;
-	props->props_oil.ad = 2.0 * 1.e-7;
+	props->props_oil.ad = 0.0;// 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
 	props->props_oil.lambda = 0.0;// 0.16;
 
@@ -1484,10 +1484,10 @@ oil_perf_nit::Properties* getProps()
 {
 	oil_rz_nit::Properties* props = new oil_rz_nit::Properties();
 
-	props->cellsNum_r = 200;
-	props->cellsNum_z = 20;
+	props->cellsNum_r = 50;
+	props->cellsNum_z = 5;
 
-	props->timePeriods.push_back(300.0 * 86400.0);
+	props->timePeriods.push_back(20.0 * 86400.0);
 	//props->timePeriods.push_back(10.0 * 86400.0);
 	//props->timePeriods.push_back(15.0 * 86400.0);
 	//props->timePeriods.push_back(30.0 * 86400.0);
@@ -1499,27 +1499,27 @@ oil_perf_nit::Properties* getProps()
 	//props->pwf.push_back(100.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
 
-	props->ht = 5.0;
-	props->ht_min = 5.0;
-	props->ht_max = 1000000.0;
+	props->ht = 100.0;
+	props->ht_min = 10.0;
+	props->ht_max = 500000.0;
 
 	props->alpha = 7200.0;
 
-	props->perfIntervals.push_back(make_pair(10, 11));
+	props->perfIntervals.push_back(make_pair(3, 3));
 
 	props->r_w = 0.05;
 	props->r_e = 1000.0;
 
 	oil_rz_nit::Skeleton_Props tmp;
-	tmp.cellsNum_z = 20;
+	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
 	tmp.t_init = 0.0;
 	tmp.h1 = 0.0;
-	tmp.h2 = 10.0;
-	tmp.height = 10.0;
+	tmp.h2 = 0.1;
+	tmp.height = 0.1;
 	tmp.perm_r = 100.0;
-	tmp.perm_z = 100.0;
+	tmp.perm_z = 5.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 0.0;// 4.35113e-10;
 
@@ -1541,10 +1541,11 @@ oil_perf_nit::Properties* getProps()
 
 	props->depth_point = 0.0;
 
+
 	props->props_oil.visc = 1.0;
 	props->props_oil.b_bore = 1.0;
 	props->props_oil.dens_stc = 736.0;
-	props->props_oil.beta = 0.0;// 1.0 * 1.e-9;
+	props->props_oil.beta = 0.0;//1.0 * 1.e-9;
 	props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
