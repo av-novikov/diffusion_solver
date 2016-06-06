@@ -66,17 +66,17 @@ void ParSolver::SolveBiCGStab()
 	bicgstab.Build();
 	isAssembled = true;
 
-	bicgstab.Init(1.E-15, 1.E-8, 1E+4, 5000);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+4, 5000);
 	Mat.info();
 
-	bicgstab.RecordResidualHistory();
+	//bicgstab.RecordResidualHistory();
 	bicgstab.Solve(Rhs, &x);
-	bicgstab.RecordHistory(resHistoryFile);
+	//bicgstab.RecordHistory(resHistoryFile);
 
-	getResiduals();
-	cout << "Initial residual: " << initRes << endl;
-	cout << "Final residual: " << finalRes << endl;
-	cout << "Number of iterations: " << iterNum << endl << endl;
+	//getResiduals();
+	//cout << "Initial residual: " << initRes << endl;
+	//cout << "Final residual: " << finalRes << endl;
+	//cout << "Number of iterations: " << iterNum << endl << endl;
 
 	bicgstab.Clear();
 }
