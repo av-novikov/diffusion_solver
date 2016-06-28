@@ -214,7 +214,7 @@ void GasOil_Perf_NIT::makeDimLess()
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
 	if (props_sk[0].t_init != 0.0)
-		T_dim = props_sk[0].t_init;
+		T_dim = fabs(props_sk[0].t_init);
 	else
 		T_dim = 1.0;
 

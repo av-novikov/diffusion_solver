@@ -11,6 +11,7 @@ using std::endl;
 ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 {
 	isAssembled = false;
+	isPrecondBuilt = false;
 	gmres.Init(1.E-15, 1.E-8, 1E+4, 20000);
 	bicgstab.Init(1.E-15, 1.E-8, 1E+4, 20000);
 }
@@ -84,7 +85,7 @@ void ParSolver::SolveBiCGStab()
 void ParSolver::SolveGMRES()
 {
 	gmres.SetOperator(Mat);
-	p.Set(1);
+	p.Set(1.E-10, 1000);
 	gmres.SetPreconditioner(p);
 	gmres.Build();
 	isAssembled = true;

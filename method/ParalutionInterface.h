@@ -15,9 +15,10 @@ protected:
 	void SolveBiCGStab();
 	paralution::GMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > gmres;
 	void SolveGMRES();
-	paralution::ILU<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double> p;
+	paralution::ILUT<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double> p;
 
 	bool isAssembled;
+	bool isPrecondBuilt;
 	int matSize;
 
 	inline void writeSystem()
