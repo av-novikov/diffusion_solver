@@ -81,6 +81,7 @@ class AbstractModel
 
 		void load(propsType& props);
 		virtual void setPeriod(int period) = 0;
+		virtual void setWellborePeriod(int period, double cut_t);
 		int getCellsNum();
 
 		void snapshot(int i);

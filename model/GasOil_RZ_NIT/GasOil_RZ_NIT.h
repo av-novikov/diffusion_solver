@@ -113,6 +113,7 @@ namespace gasOil_rz_NIT
 		double ht_max;
 		// During the time flow rate decreases 'e' times in well test [sec] 
 		double alpha;
+		double wellboreDuration;
 
 		// Perforated intervals
 		std::vector<std::pair<int,int> > perfIntervals;
@@ -150,6 +151,14 @@ namespace gasOil_rz_NIT
 		double L;
 	};
 
+	struct DiscrepancyCoefficints
+	{
+		double eq;
+		double dp_cur, ds_cur;
+		double dp_nebr1, ds_nebr1;
+		double dp_nebr2, ds_nebr2;
+	};
+
 	class GasOil_RZ_NIT : public AbstractModel<Var2phaseNIT, Properties, CylCell2D, GasOil_RZ_NIT>
 	{
 		template<typename> friend class Snapshotter;
@@ -180,6 +189,7 @@ namespace gasOil_rz_NIT
 		double depth_point;
 		// During the time flow rate decreases 'e' times in well test [sec] 
 		double alpha;
+		double wellboreDuration;
 
 		void setInitialState();
 		// Set all properties
@@ -194,6 +204,12 @@ namespace gasOil_rz_NIT
 		void setRateDeviation(int num, double ratio);
 		// Check formations properties
 		void checkSkeletons(const std::vector<Skeleton_Props>& props);
+		// Change well rate or pressure due to wellbore effect
+		void setWellborePeriod(int period, double cur_t);
+		// Return best value of newton step according to saturation in wellbore cell
+		double getNewtonStep();
+		void getDiscrCoeffs();
+		DiscrepancyCoefficints coeff;
 
 		// Service functions
 		inline double upwindIsCur(int cur, int beta)

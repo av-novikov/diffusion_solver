@@ -17,11 +17,15 @@
 #include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
+#include <iomanip>
+
 using namespace std;
 
 template <class modelType>
 AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size()-1])
 {
+	newton_step = 1.0;
+	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -34,6 +38,7 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 template <>
 AbstractSolver<gasOil_perf::GasOil_Perf>::AbstractSolver(gasOil_perf::GasOil_Perf* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
+	newton_step = 1.0;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -43,6 +48,8 @@ AbstractSolver<gasOil_perf::GasOil_Perf>::AbstractSolver(gasOil_perf::GasOil_Per
 template <>
 AbstractSolver<oil_perf_nit::Oil_Perf_NIT>::AbstractSolver(oil_perf_nit::Oil_Perf_NIT* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
+	newton_step = 1.0;
+	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -52,6 +59,8 @@ AbstractSolver<oil_perf_nit::Oil_Perf_NIT>::AbstractSolver(oil_perf_nit::Oil_Per
 template <>
 AbstractSolver<gasOil_perf_nit::GasOil_Perf_NIT>::AbstractSolver(gasOil_perf_nit::GasOil_Perf_NIT* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
+	newton_step = 1.0;
+	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -79,6 +88,8 @@ void AbstractSolver<modelType>::start()
 		doNextStep();
 		copyTimeLayer();
 		cout << "---------------------NEW TIME STEP---------------------" << endl;
+		cout << setprecision(6);
+		cout << "time = " << cur_t << endl;
 	}
 	if( model->isWriteSnaps )
 		model->snapshot_all(counter++);
@@ -95,6 +106,13 @@ void AbstractSolver<modelType>::copyIterLayer()
 {
 	for (int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_iter = model->cells[i].u_next;
+}
+
+template <class modelType>
+void AbstractSolver<modelType>::revertIterLayer()
+{
+	for (int i = 0; i < model->cells.size(); i++)
+		model->cells[i].u_next = model->cells[i].u_iter;
 }
 
 template <>

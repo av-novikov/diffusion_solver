@@ -12,7 +12,7 @@
 template <class modelType>
 class AbstractSolver {
 	protected:
-	
+
 		modelType* model;
 		int size;
 			
@@ -27,6 +27,7 @@ class AbstractSolver {
 		int iterations;
 		
 		void copyIterLayer();
+		void revertIterLayer();
 		void copyTimeLayer();
 		
 		double convergance(int& ind, int& varInd);
@@ -40,6 +41,8 @@ class AbstractSolver {
 		// Wellbore storage effect
 		double wellboreDuration;
 		bool isWellboreAffect;
+
+		double newton_step;
 
 	public:
 		AbstractSolver(modelType* _model);

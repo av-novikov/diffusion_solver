@@ -23,6 +23,7 @@ GasOil2DNITSolver::GasOil2DNITSolver(GasOil_RZ_NIT* _model) : AbstractSolver<Gas
 	mat.Initialize(n-1, n-1);
 	b.Initialize(n-1);
 
+	wellboreDuration = model->wellboreDuration;
 	Tt = model->period[model->period.size()-1];
 }
 
@@ -71,10 +72,17 @@ void GasOil2DNITSolver::control()
 
 	if(cur_t >= model->period[curTimePeriod])
 	{
-		curTimePeriod++;
+  		curTimePeriod++;
+		isWellboreAffect = true;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
 	}
+
+	if (isWellboreAffect)
+		if (fabs(cur_t - model->period[curTimePeriod - 1]) < wellboreDuration)
+			model->setWellborePeriod(curTimePeriod, cur_t);
+		else
+			isWellboreAffect = false;
 
 	if(model->ht <= model->ht_max && iterations < 6)
 		model->ht = model->ht * 1.5;
@@ -128,26 +136,38 @@ void GasOil2DNITSolver::doNextStep()
 void GasOil2DNITSolver::solveStep()
 {
 	int cellIdx, varIdx;
-	double err_newton = 1.0;
+	double err_newton = 1.0, err_newton_prev = 1.0;
 	double averPresPrev = averValue(1);
 	double averSatPrev = averValue(2);
 	double averPres, averSat;
 	double dAverPres = 1.0, dAverSat = 1.0;
 	
+	newton_step = 1.0;
 	iterations = 0;
-	while( err_newton > 1.e-4 && ( dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 8 )
+	while( err_newton > 1.e-4 && ( dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 20 )
 	{	
+		if(iterations > 0)
+			newton_step = model->getNewtonStep();
 		copyIterLayer();
+
+		model->getDiscrCoeffs();
 
 		Solve(model->cellsNum_r+1, 2*(model->cellsNum_z+2), PRES);
 		construction_from_fz(model->cellsNum_r+2, 2*(model->cellsNum_z+2), PRES);
 		model->solveP_bub();
 
+		err_newton_prev = err_newton;
 		err_newton = convergance(cellIdx, varIdx);
-
 		averPres = averValue(1);					averSat = averValue(2);
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
+
+		if (iterations > 0 && err_newton > err_newton_prev)
+		{
+			revertIterLayer();
+			model->solveP_bub();
+			break;
+		}
 
 		/*if(varIdx == PRES)
 			cout << "BadPresValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.p << endl;
@@ -323,7 +343,7 @@ void GasOil2DNITSolver::LeftBoundAppr(int MZ, int key)
 			C[idx][idx+1] = model->solve_eqLeft_ds(it->first);
 			B[idx][idx] = model->solve_eqLeft_dp_beta(it->first);
 			B[idx][idx+1] = model->solve_eqLeft_ds_beta(it->first);
-			RightSide[idx][0] = -model->solve_eqLeft(it->first) + 
+			RightSide[idx][0] = -model->solve_eqLeft(it->first) / newton_step + 
 								C[idx][idx] * curr.u_next.p + C[idx][idx+1] * curr.u_next.s +
 								B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
 
@@ -379,7 +399,7 @@ void GasOil2DNITSolver::RightBoundAppr(int MZ, int key)
 			A[idx][idx+1] = model->solve_eqRight_ds(i);
 			B[idx][idx] = model->solve_eqRight_dp_beta(i);
 			B[idx][idx+1] = model->solve_eqRight_ds_beta(i);
-			RightSide[idx][0] = -model->solve_eqRight(i) + 
+			RightSide[idx][0] = -model->solve_eqRight(i) / newton_step + 
 								A[idx][idx] * curr.u_next.p + A[idx][idx+1] * curr.u_next.s +
 								B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
 
@@ -447,7 +467,7 @@ void GasOil2DNITSolver::MiddleAppr(int current, int MZ, int key)
 			B[idx][idx+3] = model->solve_eq1_ds_beta(i, i+1);
 			A[idx][idx] = model->solve_eq1_dp_beta(i, i + model->cellsNum_z + 2);
 			A[idx][idx+1] = model->solve_eq1_ds_beta(i, i + model->cellsNum_z + 2);
-			RightSide[idx][0] = -model->solve_eq1(i) + 
+			RightSide[idx][0] = -model->solve_eq1(i) / newton_step + 
 								C[idx][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
 								B[idx][idx-2] * model->cells[i-1].u_next.p + B[idx][idx-1] * model->cells[i-1].u_next.s +
 								B[idx][idx] * model->cells[i].u_next.p + B[idx][idx+1] * model->cells[i].u_next.s + 
@@ -464,7 +484,7 @@ void GasOil2DNITSolver::MiddleAppr(int current, int MZ, int key)
 			B[idx+1][idx+3] = model->solve_eq2_ds_beta(i, i+1);
 			A[idx+1][idx] = model->solve_eq2_dp_beta(i, i + model->cellsNum_z + 2);
 			A[idx+1][idx+1] = model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2);
-			RightSide[idx+1][0] = -model->solve_eq2(i) + 
+			RightSide[idx+1][0] = -model->solve_eq2(i) / newton_step + 
 								C[idx+1][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx+1][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
 								B[idx+1][idx-2] * model->cells[i-1].u_next.p + B[idx+1][idx-1] * model->cells[i-1].u_next.s +
 								B[idx+1][idx] * model->cells[i].u_next.p + B[idx+1][idx+1] * model->cells[i].u_next.s + 

@@ -69,6 +69,7 @@ void GasOil_RZ_NIT::setProps(Properties& props)
 	props_gas.visc = cPToPaSec( props_gas.visc );
 
 	alpha = props.alpha;
+	wellboreDuration = props.wellboreDuration;
 	depth_point = props.depth_point;
 	L = props.L;
 
@@ -111,7 +112,7 @@ void GasOil_RZ_NIT::makeDimLess()
 	// Main units
 	R_dim = 10.0 * r_w;
 	t_dim = 3600.0;
-	P_dim = BAR_TO_PA;
+	P_dim = props_sk[0].p_out;
 	if (props_sk[0].t_init != 0.0)
 		T_dim = fabs(props_sk[0].t_init);
 	else
@@ -183,7 +184,8 @@ void GasOil_RZ_NIT::makeDimLess()
 	props_gas.ad = props_gas.ad * P_dim / T_dim;
 
 	// Rest properties
-	alpha = alpha / t_dim;
+	alpha /= t_dim;
+	wellboreDuration /= t_dim;
 	//depth_point = 0.0;
 	L = L / R_dim / R_dim * t_dim * t_dim;
 }
@@ -337,6 +339,66 @@ void GasOil_RZ_NIT::setPeriod(int period)
 		props_sk[i].perm_eff = props_sk[i].perms_eff[period];
 		props_sk[i].skin = props_sk[i].skins[period];
 	}
+}
+
+void GasOil_RZ_NIT::setWellborePeriod(int period, double cur_t)
+{
+	const double k = exp((this->period[period - 1] - cur_t) / alpha);
+
+	if (leftBoundIsRate)
+	{
+		Q_sum = (1.0 - k) * rate[period] + k * rate[period - 1];
+
+		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE)
+		{
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = Q_sum * cells[it->first].hz / height_perf;
+		}
+		else {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = it->second * Q_sum / rate[period - 1];
+		}
+	}
+	else
+	{
+		Pwf = (1.0 - k) * pwf[period] + k * pwf[period - 1];
+		Q_sum = 0.0;
+	}
+}
+
+void GasOil_RZ_NIT::getDiscrCoeffs()
+{
+	const int cur_idx = (5 * (cellsNum_z + 2)) / 2;
+
+	coeff.eq = this->solve_eq2(cur_idx);
+	
+	coeff.dp_cur = this->solve_eq2_dp(cur_idx);
+	coeff.ds_cur = this->solve_eq2_ds(cur_idx);
+
+	coeff.dp_nebr1 = this->solve_eq2_dp_beta(cur_idx, cur_idx + cellsNum_z + 2);
+	coeff.ds_nebr1 = this->solve_eq2_ds_beta(cur_idx, cur_idx + cellsNum_z + 2);
+
+	coeff.dp_nebr2 = this->solve_eq2_dp_beta(cur_idx, cur_idx - cellsNum_z - 2);
+	coeff.ds_nebr2 = this->solve_eq2_ds_beta(cur_idx, cur_idx - cellsNum_z - 2);
+}
+
+double GasOil_RZ_NIT::getNewtonStep()
+{
+	const int cur_idx = (5 * (cellsNum_z + 2)) / 2;
+	const Cell& curr = this->cells[cur_idx];
+	const Cell& nebr1 = this->cells[cur_idx + cellsNum_z + 2];
+	const Cell& nebr2 = this->cells[cur_idx - cellsNum_z - 2];
+
+	const double sum = coeff.dp_cur * (curr.u_next.p - curr.u_iter.p) + 
+						coeff.ds_cur * (curr.u_next.s - curr.u_iter.s) + 
+						coeff.dp_nebr1 * (nebr1.u_next.p - nebr1.u_iter.p) +
+						coeff.ds_nebr1 * (nebr1.u_next.s - nebr1.u_iter.s) +
+						coeff.dp_nebr2 * (nebr2.u_next.p - nebr2.u_iter.p) +
+						coeff.ds_nebr2 * (nebr2.u_next.s - nebr2.u_iter.s);
+
+	return -coeff.eq / sum;
 }
 
 void GasOil_RZ_NIT::setRate(double _rate)

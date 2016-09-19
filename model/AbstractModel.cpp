@@ -78,6 +78,12 @@ void AbstractModel<varType, propsType, cellType, modelType>::setSnapshotter(stri
 
 template <typename varType, typename propsType,
 template <typename varType> class cellType, class modelType>
+void AbstractModel<varType, propsType, cellType, modelType>::setWellborePeriod(int period, double cur_t)
+{
+}
+
+template <typename varType, typename propsType,
+template <typename varType> class cellType, class modelType>
 void AbstractModel<varType, propsType, cellType, modelType>::snapshot(int i)
 {
 	snapshotter->dump(i);
