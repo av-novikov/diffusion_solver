@@ -10,12 +10,6 @@ struct Var1phase
 			double p;
 		};
 	};
-	
-	Var1phase& operator=(const Var1phase& a)
-	{
-		p = a.p;
-		return *this;
-	}
 };
 
 struct Var1phaseNIT 
@@ -28,13 +22,6 @@ struct Var1phaseNIT
 			double p;
 		};
 	};
-	
-	Var1phaseNIT& operator=(const Var1phaseNIT& a)
-	{
-		p = a.p;
-		t = a.t;
-		return *this;
-	}
 };
 
 struct Var2phase 
@@ -49,16 +36,6 @@ struct Var2phase
 		};
 	};
 	bool SATUR;
-	
-	Var2phase& operator=(const Var2phase& a)
-	{
-		p = a.p;
-		s = a.s;
-		p_bub = a.p_bub;
-		SATUR = a.SATUR;
-		
-		return *this;
-	}
 };
 
 struct Var2phaseNIT
@@ -74,17 +51,21 @@ struct Var2phaseNIT
 		};
 	};
 	bool SATUR;
-	
-	Var2phaseNIT& operator=(const Var2phaseNIT& a)
-	{
-		p = a.p;
-		s = a.s;
-		p_bub = a.p_bub;
-		t = a.t;
-		SATUR = a.SATUR;
-		
-		return *this;
-	}
+};
+
+struct VarSimpleAcid
+{
+	union {
+		double values[5];
+		struct
+		{
+			double m;
+			double p;
+			double s;
+			double Ys;
+			double Ya;
+		};
+	};
 };
 
 #endif /* VARIABLES_HPP_ */

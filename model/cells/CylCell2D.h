@@ -10,6 +10,9 @@
 
 #include "model/cells/AbstractCell.hpp"
 
+struct EmptyStruct
+{};
+
 template <typename varType>
 class CylCell2D : public AbstractCell<varType>
 {
@@ -20,10 +23,30 @@ public:
 	double hr;
 	double hz;
 
-	CylCell2D();
-	CylCell2D(int _num, double _r, double _z, double _hr, double _hz);
-	~CylCell2D();
+	CylCell2D() {};
+	CylCell2D(int _num, double _r, double _z, double _hr, double _hz) :
+				AbstractCell<varType>(_num), r(_r), z(_z), hr(_hr), hz(_hz) {};
+	~CylCell2D() {};
 };
+
+template <typename varType, typename PropsType = EmptyStruct>
+class NewCylCell2D : public AbstractCell<varType>
+{
+public:
+	double r;
+	double z;
+
+	double hr;
+	double hz;
+
+	PropsType* props;
+
+	NewCylCell2D() {};
+	NewCylCell2D(int _num, double _r, double _z, double _hr, double _hz) :
+				AbstractCell<varType>(_num), r(_r), z(_z), hr(_hr), hz(_hz) {};
+	~NewCylCell2D() {};
+};
+
 
 namespace std {
 	template <typename varType>

@@ -322,6 +322,7 @@ void GasOil_RZ_NIT::setPeriod(int period)
 				it->second = Q_sum * cells[it->first].hz / height_perf;
 		}
 		else {
+
 			map<int, double>::iterator it;
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)
 				it->second = it->second * Q_sum / rate[period - 1];
@@ -329,6 +330,8 @@ void GasOil_RZ_NIT::setPeriod(int period)
 	}
 	else
 	{
+		if (period == 1)
+			ht_max = 3600 / t_dim;
 		Pwf = pwf[period];
 		Q_sum = 0.0;
 	}
