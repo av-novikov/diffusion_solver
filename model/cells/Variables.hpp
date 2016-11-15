@@ -68,4 +68,17 @@ struct VarSimpleAcid
 	};
 };
 
+struct VarSimpleVPP
+{
+	union {
+		double values[3];
+		struct
+		{
+			double p;
+			double s;
+			double c;
+		};
+	};
+};
+
 #endif /* VARIABLES_HPP_ */

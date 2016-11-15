@@ -47,7 +47,6 @@ public:
 	~NewCylCell2D() {};
 };
 
-
 namespace std {
 	template <typename varType>
 	inline std::ostream& operator<<(std::ostream& os, const CylCell2D<varType>& cell)

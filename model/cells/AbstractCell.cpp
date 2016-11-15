@@ -35,3 +35,6 @@ template class AbstractCell<Var1phase>;
 template class AbstractCell<Var1phaseNIT>;
 template class AbstractCell<Var2phase>;
 template class AbstractCell<Var2phaseNIT>;
+
+template class AbstractCell<VarSimpleAcid>;
+template class AbstractCell<VarSimpleVPP>;

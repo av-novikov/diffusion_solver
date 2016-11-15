@@ -17,6 +17,9 @@
 #include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
+#include "model/Acid/2d/Acid2d.hpp"
+#include "model/VPP2d/VPP2d.hpp"
+
 using namespace std;
 
 template <class modelType>
@@ -199,6 +202,32 @@ void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
 }
 
 template <>
+void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_z + 2;
+}
+
+template <>
+void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_z + 2;
+}
+
+template <>
 void Snapshotter<gasOil_rz_NIT::GasOil_RZ_NIT>::setModel(gasOil_rz_NIT::GasOil_RZ_NIT* _model)
 {
 	model = _model;
@@ -245,3 +274,6 @@ template class Snapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;
 template class Snapshotter<gasOil_perf::GasOil_Perf>;
 template class Snapshotter<oil_perf_nit::Oil_Perf_NIT>;
 template class Snapshotter<gasOil_perf_nit::GasOil_Perf_NIT>;
+
+template class Snapshotter<acid2d::Acid2d>;
+template class Snapshotter<vpp2d::VPP2d>;

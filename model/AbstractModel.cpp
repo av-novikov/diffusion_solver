@@ -17,6 +17,9 @@
 #include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
+#include "model/Acid/2d/Acid2d.hpp"
+#include "model/VPP2d/VPP2d.hpp"
+
 using namespace std;
 
 template <typename varType, typename propsType,
@@ -111,3 +114,6 @@ template class AbstractModel<Var2phaseNIT, gasOil_3d_NIT::Properties, CylCell3D,
 template class AbstractModel<Var2phase, gasOil_perf::Properties, CylCellPerf, gasOil_perf::GasOil_Perf>;
 template class AbstractModel<Var1phaseNIT, oil_perf_nit::Properties, CylCellPerf, oil_perf_nit::Oil_Perf_NIT>;
 template class AbstractModel<Var2phaseNIT, gasOil_perf_nit::Properties, CylCellPerf, gasOil_perf_nit::GasOil_Perf_NIT>;
+
+template class AbstractModel<VarSimpleAcid, acid2d::Properties, acid2d::TCell, acid2d::Acid2d>;
+template class AbstractModel<VarSimpleVPP, vpp2d::Properties, vpp2d::TCell, vpp2d::VPP2d>;

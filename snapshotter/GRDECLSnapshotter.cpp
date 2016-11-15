@@ -17,6 +17,9 @@
 #include "model/3D/Perforation/Oil_Perf_NIT.h"
 #include "model/3D/Perforation/GasOil_Perf_NIT.h"
 
+#include "model/Acid/2d/Acid2d.hpp"
+#include "model/VPP2d/VPP2d.hpp"
+
 using namespace std;
 
 template <class modelType>
@@ -280,3 +283,6 @@ template class GRDECLSnapshotter<gasOil_3d_NIT::GasOil_3D_NIT>;
 template class GRDECLSnapshotter<gasOil_perf::GasOil_Perf>;
 template class GRDECLSnapshotter<oil_perf_nit::Oil_Perf_NIT>;
 template class GRDECLSnapshotter<gasOil_perf_nit::GasOil_Perf_NIT>;
+
+template class GRDECLSnapshotter<acid2d::Acid2d>;
+template class GRDECLSnapshotter<vpp2d::VPP2d>;
