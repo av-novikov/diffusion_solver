@@ -237,71 +237,103 @@ gasOil_rz_NIT::Properties* getProps()
 {
 	gasOil_rz_NIT::Properties* props = new gasOil_rz_NIT::Properties();
 
-	props->cellsNum_r = 100;
+	// Number of cells in radial direction
+	props->cellsNum_r = 500;
+	// in vertical direction
 	props->cellsNum_z = 3;
 
+	// Time periods for current value of boundary condition
 	props->timePeriods.push_back(86400.0 * 50.0);
 	props->timePeriods.push_back(86400.0 * 100.0);
 
+	// well BC type
 	props->leftBoundIsRate = false;
+	// reservoir BC type
 	props->rightBoundIsPres = true;
+	// well BC values
 	props->pwf.push_back(60.0 * 1.e+5);
 	props->pwf.push_back(200.0 * 1.e+5);
 
+	// Initial time step
 	props->ht = 0.1;
 	props->ht_min = 0.01;
 	props->ht_max = 100000.0;
 
-	props->alpha = 7200.0;
-	props->wellboreDuration = 86400.0;
+	//props->alpha = 7200.0;
+	//props->wellboreDuration = 86400.0;
 
+	// Range of cells that are perforated
 	props->perfIntervals.push_back(make_pair(1, 3));
 
+	// Well radius
 	props->r_w = 0.05;
+	// Reservoir radius
 	props->r_e = 1000.0;
 
+	// Reservoir properties
 	gasOil_rz_NIT::Skeleton_Props tmp;
+	// Number of cells
 	tmp.cellsNum_z = 3;
+	// Porosity
 	tmp.m = 0.1;
+	// Pressures
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
+	// Initial temperature
 	tmp.t_init = 0.0;
+	// Initial oil saturation
 	tmp.s_init = 0.999;
+	// Depth 
 	tmp.h1 = 0.0;
 	tmp.h2 = 0.1;
+	// Reservoir thickness
 	tmp.height = 0.1;
+	// Permeabilities
 	tmp.perm_r = 500.0;
 	tmp.perm_z = 0.0;// 500.0;
+	// Density
 	tmp.dens_stc = 2000.0;
+	// Compressibility
 	tmp.beta = 4.35113e-10;
+	// Skins
 	tmp.skins.push_back(0.0);
 	tmp.skins.push_back(0.0);
+	// Radiuses of damaged zone
 	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
 
+	// thermal props
 	tmp.c = 1800.0;
 	tmp.kappa_eff = 0.0;
 	tmp.lambda_r = 6.0;
 	tmp.lambda_z = 0.0;
 	props->props_sk.push_back(tmp);
 
-	props->depth_point = 0.0;
+	//props->depth_point = 0.0;
 
-	// Thermal properties
+	// viscosity
 	props->props_oil.visc = 1.0;
+	// volume factor for well
 	props->props_oil.b_bore = 1.0;
+	// Density
 	props->props_oil.dens_stc = 736.0;
+	// Compressibility
 	props->props_oil.beta = 1.0 * 1.e-9;
+
+	// Thermal properties of fluid
 	props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
 	props->props_oil.lambda = 0.16;
 
+	// Viscosity
 	props->props_gas.visc = 0.01;
 	props->props_gas.dens_stc = 1.0;
+	
 	props->props_gas.jt = -1.6 * 1.e-6;
 	props->props_gas.ad = 2.0 * 1.e-6;
 	props->props_gas.c = 3200.0;
 	props->props_gas.lambda = 0.06;
+
 
 	props->L = -50.0*1.e3;
 
