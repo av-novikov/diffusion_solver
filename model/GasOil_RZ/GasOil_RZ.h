@@ -275,8 +275,8 @@ namespace gasOil_rz
 		};
 		inline double getBoreB_oil(double p, double p_bub, bool SATUR) const
 		{
-			return props_oil.b_bore;
-			//return getB_oil(p, p_bub, SATUR);
+			//return props_oil.b_bore;
+			return getB_oil(p, p_bub, SATUR);
 		};
 		inline double getB_oil_dp(double p, double p_bub, bool SATUR) const
 		{
@@ -284,6 +284,13 @@ namespace gasOil_rz
 				return props_oil.b->DSolve(p);
 			else
 				return -props_oil.b->Solve(p_bub) * props_oil.beta;
+		};
+		inline double getB_oil_dp_bub(double p_bub, bool SATUR) const
+		{
+			if (SATUR)
+				return 0.0;
+			else
+				return props_oil.b->Solve(p_bub) * props_oil.beta;
 		};
 		inline double getB_gas(double p) const
 		{
@@ -307,13 +314,17 @@ namespace gasOil_rz
 			else
 				return 0.0;
 		};
+		inline double getRs_dp_bub() const
+		{
+				return 0.0;
+		};
 		inline double getPresFromRs(double rs) const
 		{
 			return Prs->Solve(rs);
 		};
 		inline void solveP_bub()
 		{
-			int idx;
+			/*int idx;
 			double factRs, dissGas;
 
 			for(int i = 0; i < cellsNum_r+2; i++)
@@ -338,6 +349,25 @@ namespace gasOil_rz
 						next.p_bub = next.p;
 						next.SATUR = true;
 					}
+				}*/
+			int idx;
+
+			for (int i = 0; i < cellsNum_r + 2; i++)
+				for (int j = 0; j < cellsNum_z + 2; j++)
+				{
+					idx = i * (cellsNum_z + 2) + j;
+
+					Var2phase& next = cells[idx].u_next;
+					if (next.s > 1.0 + EQUALITY_TOLERANCE)
+						next.s = 1.0;
+
+					if (next.p > next.p_bub + EQUALITY_TOLERANCE)
+					{
+						next.SATUR = false;
+						next.s = 1.0;
+					}
+					else
+						next.SATUR = true;
 				}
 		};
 

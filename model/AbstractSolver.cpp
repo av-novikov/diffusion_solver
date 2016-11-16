@@ -212,6 +212,51 @@ double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 }
 
 template <>
+double AbstractSolver<gasOil_rz::GasOil_RZ>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int j = 0; j < model->cells.size(); j++)
+	{
+		gasOil_rz::Cell& cell = model->cells[j];
+		var_next = cell.u_next.p;	var_iter = cell.u_iter.p;
+		if (fabs(var_next) > EQUALITY_TOLERANCE)
+		{
+			cur_relErr = fabs((var_next - var_iter) / var_next);
+			if (cur_relErr > relErr)
+			{
+				relErr = cur_relErr;
+				ind = j;
+				varInd = 0;
+			}
+		}
+		
+		if (cell.u_next.SATUR)
+		{
+			var_next = cell.u_next.s;	var_iter = cell.u_iter.s;
+		}
+		else {
+			var_next = cell.u_next.p_bub;	var_iter = cell.u_iter.p_bub;
+		}
+		if (fabs(var_next) > EQUALITY_TOLERANCE)
+		{
+			cur_relErr = fabs((var_next - var_iter) / var_next);
+			if (cur_relErr > relErr)
+			{
+				relErr = cur_relErr;
+				ind = j;
+				varInd = 1;
+			}
+		}
+	}
+
+	return relErr;
+}
+
+template <>
 double AbstractSolver<gasOil_perf::GasOil_Perf>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -431,15 +476,37 @@ double AbstractSolver<gasOil_3d_NIT::GasOil_3D_NIT>::convergance(int& ind, int& 
 }
 
 template <class modelType>
-double AbstractSolver<modelType>::averValue(int varInd)
+double AbstractSolver<modelType>::averValue(const int varInd)
 {
 	double tmp = 0.0;
 
-	for(int i = 0; i < model->cells.size(); i++)
+	for(const auto& cell : model->cells)
 	{
-		tmp += model->cells[i].u_next.values[varInd] * model->cells[i].V;
+		tmp += cell.u_next.values[varInd] * cell.V;
 	}
 	
+	return tmp / model->Volume;
+}
+
+template <>
+double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
+{
+	double tmp = 0.0;
+
+	if (varInd == 0)
+		for (const auto& cell : model->cells)
+		{
+			tmp += cell.u_next.values[varInd] * cell.V;
+		}
+	else
+		for(const auto& cell : model->cells)
+		{
+			if(cell.u_next.SATUR)
+				tmp += cell.u_next.values[varInd] * cell.V;
+			else
+				tmp += cell.u_next.values[varInd+1] * cell.V;
+		}
+
 	return tmp / model->Volume;
 }
 

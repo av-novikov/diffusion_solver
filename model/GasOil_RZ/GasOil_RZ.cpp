@@ -110,7 +110,7 @@ void GasOil_RZ::makeDimLess()
 	// Main units
 	R_dim = r_w;
 	t_dim = 3600.0;
-	P_dim = BAR_TO_PA;
+	P_dim = props_sk[0].p_init;
 
 	// Temporal properties
 	ht /= t_dim;
@@ -263,10 +263,13 @@ void GasOil_RZ::setInitialState()
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
 		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_bub;
 		it->u_prev.s = it->u_iter.s = it->u_next.s = props.s_init;
-		if(props.p_bub > props.p_init)
-			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
-		else
+		if (props.p_init > props.p_bub)
+		{
 			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
+			it->u_prev.s = it->u_iter.s = it->u_next.s = 1.0;
+		}
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
 	}
 }
 
@@ -384,7 +387,11 @@ double GasOil_RZ::solve_eq1_ds(int cur)
 	Var2phase& next = cell.u_next;
 	
 	double H = 0.0;
-	H = getPoro(next.p, cell) / getB_oil(next.p, next.p_bub, next.SATUR);
+	const double B_oil = getB_oil(next.p, next.p_bub, next.SATUR);
+	if(next.SATUR)
+		H = getPoro(next.p, cell) / B_oil;
+	else
+		H = -getPoro(next.p, cell) / B_oil / B_oil * getB_oil_dp_bub(next.p_bub, next.SATUR);
 
 	for(int i = 0; i < 4; i++)
 	{
@@ -392,8 +399,16 @@ double GasOil_RZ::solve_eq1_ds(int cur)
 		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Cell& beta = cells[ neighbor[i] ];
 
-		H += ht / cell.V * getTrans(cell, beta) * 
-			upwind * (next.p - beta.u_next.p) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+		if (next.SATUR)
+			H += ht / cell.V * getTrans(cell, beta) * 
+				upwind * (next.p - beta.u_next.p) * getKr_oil_ds(upwd.s) / 
+				props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+		else
+			H -= ht / cell.V * getTrans(cell, beta) *
+				upwind * (next.p - beta.u_next.p) * getKr_oil(upwd.s) /
+				props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) / 
+				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) * 
+				getB_oil_dp_bub(upwd.p_bub, upwd.SATUR);
 	}
 
 	return H;
@@ -417,10 +432,20 @@ double GasOil_RZ::solve_eq1_ds_beta(int cur, int beta)
 	Cell& cell = cells[cur];
 
 	double upwind = upwindIsCur(cur, beta);
-	Var2phase& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
+	Var2phase& upwd = cells[getUpwindIdx(cur, beta)].u_next;
 
-	return ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
-			getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+	if(upwd.SATUR)
+		return ht / cell.V * getTrans(cell, cells[beta]) * 
+				(1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
+				getKr_oil_ds(upwd.s) / props_oil.visc / 
+				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR);
+	else
+		return -ht / cell.V * getTrans(cell, cells[beta]) *
+				(1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
+				getKr_oil(upwd.s) / props_oil.visc /
+				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) / 
+				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) * 
+				getB_oil_dp_bub(upwd.p_bub, upwd.SATUR);
 }
 
 double GasOil_RZ::solve_eq2(int cur)
@@ -497,7 +522,13 @@ double GasOil_RZ::solve_eq2_ds(int cur)
 	Var2phase& next = cell.u_next;
 	
 	double H = 0.0;
-	H = getPoro(next.p, cell) * ( getRs(next.p, next.p_bub, next.SATUR) / getB_oil(next.p, next.p_bub, next.SATUR) - 1.0 / getB_gas(next.p) );
+	const double B_oil = getB_oil(next.p, next.p_bub, next.SATUR);
+	if (next.SATUR)
+		H = getPoro(next.p, cell) * (getRs(next.p, next.p_bub, next.SATUR) / B_oil -
+			1.0 / getB_gas(next.p));
+	else
+		H = -getPoro(next.p, cell) * getRs(next.p, next.p_bub, next.SATUR) / B_oil / B_oil *
+			getB_oil_dp_bub(next.p_bub, next.SATUR);
 
 	for(int i = 0; i < 4; i++)
 	{
@@ -505,9 +536,15 @@ double GasOil_RZ::solve_eq2_ds(int cur)
 		Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor[i]) ].u_next;
 		Cell& beta = cells[ neighbor[i] ];
 
-		H += ht / cell.V * getTrans(cell, beta) * upwind * (next.p - beta.u_next.p) * 
-			( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) + 
-			getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
+		if (next.SATUR)
+			H += ht / cell.V * getTrans(cell, beta) * upwind * (next.p - beta.u_next.p) * 
+				( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) + 
+				getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
+		else
+			H -= ht / cell.V * getTrans(cell, beta) * upwind * (next.p - beta.u_next.p) *
+				getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil(upwd.s) / props_oil.visc / 
+				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) *
+				getB_oil_dp_bub(upwd.p_bub, upwd.SATUR);
 	}
 
 	return H;
@@ -533,13 +570,19 @@ double GasOil_RZ::solve_eq2_dp_beta(int cur, int beta)
 double GasOil_RZ::solve_eq2_ds_beta(int cur, int beta)
 {
 	Cell& cell = cells[cur];
-
+	
 	double upwind = upwindIsCur(cur, beta);
-	Var2phase& upwd = cells[ getUpwindIdx(cur, beta) ].u_next;
+	Var2phase& upwd = cells[getUpwindIdx(cur, beta)].u_next;
 
-	return ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
-		( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) +
-		getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
+	if(upwd.SATUR)
+		return ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * (cell.u_next.p - cells[beta].u_next.p) *
+			( getRs(upwd.p, upwd.p_bub, upwd.SATUR) * getKr_oil_ds(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) +
+			getKr_gas_ds(upwd.s) / props_gas.visc / getB_gas(upwd.p) );
+	else
+		return -ht / cell.V * getTrans(cell, cells[beta]) * (1.0 - upwind) * 
+				(cell.u_next.p - cells[beta].u_next.p) * getRs(upwd.p, upwd.p_bub, upwd.SATUR) * 
+				getKr_oil(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) / 
+				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) * getB_oil_dp_bub(upwd.p_bub, upwd.SATUR);
 }
 
 double GasOil_RZ::solve_eqLeft(int cur)
@@ -570,10 +613,19 @@ double GasOil_RZ::solve_eqLeft_ds(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
 	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	Var2phase& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
 
-	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
+	if (leftBoundIsRate)
+	{
+		if (next.SATUR)
+			return getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * 
+					getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / 
+					props_oil.visc * (cells[neighbor].u_next.p - next.p);
+		else
+			return -getTrans(cells[cur], cells[neighbor]) * upwindIsCur(cur, neighbor) * 
+					getKr_oil(upwd.s) / getB_oil_dp_bub(next.p_bub, next.SATUR) / 
+					props_oil.visc * (cells[neighbor].u_next.p - next.p);
+	}
 	else
 		return 0.0;
 }
@@ -596,8 +648,15 @@ double GasOil_RZ::solve_eqLeft_ds_beta(int cur)
 	Var2phase& next = cells[cur].u_next;
 	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
-	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * (1.0-upwindIsCur(cur, neighbor)) * getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * (cells[neighbor].u_next.p - next.p);
+	if (leftBoundIsRate)
+	{
+		if (upwd.SATUR)
+			return getTrans(cells[cur], cells[neighbor]) * (1.0 - upwindIsCur(cur, neighbor)) *
+					getKr_oil_ds(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) /
+					props_oil.visc * (cells[neighbor].u_next.p - next.p);
+		else
+			return 0.0;
+	}
 	else
 		return 0.0;
 }

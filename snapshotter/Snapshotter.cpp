@@ -196,6 +196,7 @@ void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 	T_dim = model->T_dim;
+	P_dim = model->P_dim;
 
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
@@ -209,6 +210,7 @@ void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 	T_dim = model->T_dim;
+	P_dim = model->P_dim;
 
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
@@ -222,6 +224,7 @@ void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 	T_dim = model->T_dim;
+	P_dim = model->P_dim;
 
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;

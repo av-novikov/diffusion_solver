@@ -908,7 +908,7 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 	for(int j = 1; j < ny; j++)
 	{
 		Cell& cell = model->cells[ j ];
-		points->InsertNextPoint(r_dim * (0.99 * cell.r), -r_dim * (cell.z-cell.hz/2.0), 0.0);
+		points->InsertNextPoint(r_dim * (0.9 * cell.r), -r_dim * (cell.z-cell.hz/2.0), 0.0);
 	}
 	for(int k = 1; k < nx; k++)
 	{
@@ -932,6 +932,10 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 		vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 
+	vtkSmartPointer<vtkDoubleArray> p_bub =
+		vtkSmartPointer<vtkDoubleArray>::New();
+	p_bub->SetName("buble_point");
+
 	vtkSmartPointer<vtkDoubleArray> sat_oil = 
 		vtkSmartPointer<vtkDoubleArray>::New();
 	sat_oil->SetName("oilSaturation");
@@ -939,6 +943,10 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 	vtkSmartPointer<vtkDoubleArray> sat_gas = 
 		vtkSmartPointer<vtkDoubleArray>::New();
 	sat_gas->SetName("gasSaturation");
+
+	vtkSmartPointer<vtkIntArray> satur =
+		vtkSmartPointer<vtkIntArray>::New();
+	satur->SetName("SATUR");
 
 	vtkSmartPointer<vtkDoubleArray> vel_oil = 
 		vtkSmartPointer<vtkDoubleArray>::New();
@@ -966,7 +974,9 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 		polygon->GetPointIds()->SetId(3, idx+1);
 		polygons->InsertNextCell(polygon);
 
-		pres->InsertNextValue(cell.u_next.p);
+		pres->InsertNextValue(cell.u_next.p * P_dim);
+		p_bub->InsertNextValue(cell.u_next.p_bub);
+		satur->InsertNextValue(cell.u_next.SATUR);
 		sat_oil->InsertNextValue(cell.u_next.s);
 		sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 		vel[0] = 0.0;
@@ -996,7 +1006,9 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 			polygon->GetPointIds()->SetId(3, idx+1);
 			polygons->InsertNextCell(polygon);
 
-			pres->InsertNextValue(cell.u_next.p);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
+			p_bub->InsertNextValue(cell.u_next.p_bub);
+			satur->InsertNextValue(cell.u_next.SATUR);
 			sat_oil->InsertNextValue(cell.u_next.s);
 			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
 			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
@@ -1016,6 +1028,8 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(pres);
+	fd->AddArray(p_bub);
+	fd->AddArray(satur);
 	fd->AddArray(sat_oil);
 	fd->AddArray(sat_gas);
 	fd->AddArray(vel_oil);

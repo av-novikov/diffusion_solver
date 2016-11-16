@@ -40,7 +40,7 @@ void GasOil2DSolver::writeData()
 	map<int,double>::iterator it;
 	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		p += model->cells[it->first].u_next.p;
+		p += model->cells[it->first].u_next.p * model->P_dim;
 		s += model->cells[it->first].u_next.s;
 		if( model->leftBoundIsRate )
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
@@ -222,123 +222,17 @@ void GasOil2DSolver::filldPdQ(double mult)
 	}
 }
 
-/*void GasOil2DSolver::fillGrad(double mult)
-{
-	// Fill gradient
-	map<int,double>::iterator it;
-	double H1, H2, ratio;
-	ratio = mult * 0.001 / (double)(n);
-	int i = 0;
-	for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
-	{
-		model->setRateDeviation(it->first, -ratio);
-		solveStep();
-		H1 = model->solveH();
-		
-		model->setRateDeviation(it->first, 2.0 * ratio);
-		solveStep();
-		H2 = model->solveH();
-		
-		model->setRateDeviation(it->first, -ratio);
-
-		gradH[i++] = (H1 - H2) / ( 2.0 * ratio * model->Q_sum );
-	}
-
-	gradH[i] = -model->solveRateDiff();
-}
-
-void GasOil2DSolver::fillGess()
-{
-	// Fill gessian
-	int i = 0;
-	int j = 0;
-	double H1, H2, H3, H4, ratio, ratioLambda;
-	double lambda0 = model->Lambda;
-	ratio = 0.1 / (double)(n);
-	ratioLambda = 0.1;
-	map<int,double>::iterator it1, it2;
-
-	for(it1 = model->Qcell.begin(); it1 != model->Qcell.end(); ++it1)
-	{
-		j = i;
-		for(it2 = it1; it2 != model->Qcell.end(); ++it2)
-		{
-			model->setRateDeviation(it1->first, -ratio);	
-			model->setRateDeviation(it2->first, -ratio);
-			solveStep();
-			H1 = model->solveH();
-			
-			model->setRateDeviation(it2->first, 2.0 * ratio);
-			solveStep();
-			H2 = model->solveH();
-
-			model->setRateDeviation(it1->first, 2.0 * ratio);
-			solveStep();
-			H4 = model->solveH();
-
-			model->setRateDeviation(it2->first, -2.0 * ratio);
-			solveStep();
-			H3 = model->solveH();
-
-			model->setRateDeviation(it1->first, -ratio);
-			model->setRateDeviation(it2->first, ratio);
-
-			gessH[i][j++] = (H4 - H3 - H2 + H1) / ( 4.0 * ratio * model->Q_sum * ratio * model->Q_sum );
-		}
-		
-		model->setRateDeviation(it1->first, -ratio);
-		solveStep();
-		H1 = model->solveRateDiff();
-			
-		model->setRateDeviation(it1->first, 2.0 * ratio);
-		solveStep();
-		H2 = model->solveRateDiff();
-
-		gessH[i][j] = (H2 - H1) / ( 2.0 * ratio * model->Q_sum);
-
-		i++;
-	}
-	
-	j = 0;
-	for(it2 = model->Qcell.begin(); it2 != model->Qcell.end(); ++it2)
-	{
-		model->Lambda = (1.0 - ratioLambda) * lambda0;
-		model->setRateDeviation(it2->first, -ratio);
-		solveStep();
-		H1 = model->solveH();
-			
-		model->setRateDeviation(it2->first, 2.0 * ratio);
-		solveStep();
-		H2 = model->solveH();
-
-		model->Lambda = (1.0 + ratioLambda) * lambda0;
-		solveStep();
-		H4 = model->solveH();
-
-		model->setRateDeviation(it2->first, -2.0 * ratio);
-		solveStep();
-		H3 = model->solveH();
-
-		model->Lambda = lambda0;
-		model->setRateDeviation(it2->first, ratio);
-
-		gessH[i][j++] = (H4 - H3 - H2 + H1) / ( 4.0 * ratio * model->Q_sum * ratioLambda * model->Lambda );
-	}
-
-	gessH[i][j] = 0.0;
-}*/
-
 void GasOil2DSolver::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
-	double averPresPrev = averValue(1);
-	double averSatPrev = averValue(2);
+	double averPresPrev = averValue(0);
+	double averSatPrev = averValue(1);
 	double averPres, averSat;
 	double dAverPres = 1.0, dAverSat = 1.0;
 	
 	iterations = 0;
-	while( err_newton > 1.e-4 && ( dAverSat > 1.e-8 || dAverPres > 1.e-4) && iterations < 8 )
+	while( err_newton > 1.e-4 && ( dAverSat > 1.e-8 || dAverPres > 1.e-8) && iterations < 8 )
 	{	
 		copyIterLayer();
 
@@ -348,7 +242,7 @@ void GasOil2DSolver::solveStep()
  
 		err_newton = convergance(cellIdx, varIdx);
 
-		averPres = averValue(1);					averSat = averValue(2);
+		averPres = averValue(0);					averSat = averValue(1);
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
 
@@ -374,7 +268,10 @@ void GasOil2DSolver::construction_from_fz(int N, int n, int key)
 			{
 				Var2phase& var = model->cells[i*(model->cellsNum_z+2) + j].u_next;
 				var.p = fz[i][2*j+1];
- 				var.s = fz[i][2*j+2];
+				if(var.SATUR)
+ 					var.s = fz[i][2*j+2];
+				else
+					var.p_bub = fz[i][2*j+2];
 			}
 		}
 	}
