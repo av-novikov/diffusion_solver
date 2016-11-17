@@ -25,7 +25,8 @@ public:
 
 	CylCell2D() {};
 	CylCell2D(int _num, double _r, double _z, double _hr, double _hz) :
-				AbstractCell<varType>(_num), r(_r), z(_z), hr(_hr), hz(_hz) {};
+				AbstractCell<varType>(_num), r(_r), z(_z), hr(_hr), hz(_hz) 
+				{ V = 2 * M_PI * r * hr * hz; };
 	~CylCell2D() {};
 };
 
@@ -43,7 +44,8 @@ public:
 
 	NewCylCell2D() {};
 	NewCylCell2D(int _num, double _r, double _z, double _hr, double _hz) :
-				AbstractCell<varType>(_num), r(_r), z(_z), hr(_hr), hz(_hz) {};
+				AbstractCell<varType>(_num), r(_r), z(_z), hr(_hr), hz(_hz)
+				{ V = 2 * M_PI * r * hr * hz; };
 	~NewCylCell2D() {};
 };
 

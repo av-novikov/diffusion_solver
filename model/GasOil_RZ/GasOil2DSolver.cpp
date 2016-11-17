@@ -232,7 +232,7 @@ void GasOil2DSolver::solveStep()
 	double dAverPres = 1.0, dAverSat = 1.0;
 	
 	iterations = 0;
-	while( err_newton > 1.e-4 && ( dAverSat > 1.e-8 || dAverPres > 1.e-8) && iterations < 8 )
+	while( err_newton > 1.e-4 && ( dAverSat > 1.e-10 || dAverPres > 1.e-10) && iterations < 9 )
 	{	
 		copyIterLayer();
 
@@ -245,11 +245,6 @@ void GasOil2DSolver::solveStep()
 		averPres = averValue(0);					averSat = averValue(1);
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
-
-//		if(varIdx == PRES)
-//			cout << "BadPresValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.p << endl;
-//		else if(varIdx == SAT)
-//			cout << "BadSatValue[" << cellIdx  << "]: " << model->cells[cellIdx].u_next.s << endl;
 
 		iterations++;
 	}
@@ -269,9 +264,15 @@ void GasOil2DSolver::construction_from_fz(int N, int n, int key)
 				Var2phase& var = model->cells[i*(model->cellsNum_z+2) + j].u_next;
 				var.p = fz[i][2*j+1];
 				if(var.SATUR)
- 					var.s = fz[i][2*j+2];
+				{
+					var.s = fz[i][2 * j + 2];
+					var.p_bub = var.p;
+				}
 				else
-					var.p_bub = fz[i][2*j+2];
+				{
+					var.p_bub = fz[i][2 * j + 2];
+					var.s = 1.0;
+				}
 			}
 		}
 	}

@@ -446,15 +446,15 @@ gasOil_rz::Properties* getProps()
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(500.0);
+	props->rates.push_back(50.0);
 	props->rates.push_back(0.0);
 	//props->pwf.push_back(100.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
 	//props->pwf.push_back(100.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
 
-	props->ht = 1.0;
-	props->ht_min = 1.0;
+	props->ht = 100.0;
+	props->ht_min = 100.0;
 	props->ht_max = 100000.0;
 
 	props->alpha = 7200.0;
@@ -473,7 +473,7 @@ gasOil_rz::Properties* getProps()
 	tmp.h2 = 10.0;
 	tmp.height = 10.0;
 	tmp.perm_r = 20.0;
-	tmp.perm_z = 20.0;
+	tmp.perm_z = 0.0;// 20.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 
