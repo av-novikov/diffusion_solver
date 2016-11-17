@@ -324,32 +324,6 @@ namespace gasOil_rz
 		};
 		inline void solveP_bub()
 		{
-			/*int idx;
-			double factRs, dissGas;
-
-			for(int i = 0; i < cellsNum_r+2; i++)
-				for(int j = 0; j < cellsNum_z+2; j++)
-				{
-					idx = i * (cellsNum_z + 2) + j;
-
-					Var2phase& next = cells[idx].u_next;
-					Var2phase& prev = cells[idx].u_prev;
-
-					if(next.s > 1.0)
-						next.s = 1.0;
-
-					dissGas = (1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) / ( (1.0 - next.s) * getB_oil(next.p, next.p_bub, next.SATUR) + next.s * getB_gas(next.p));
-					factRs = getRs(prev.p, prev.p_bub, next.SATUR) + dissGas;
-
-					if(getRs(next.p, next.p, next.SATUR) > factRs)
-					{
-						next.p_bub = getPresFromRs(factRs);
-						next.SATUR = false;
-					} else {
-						next.p_bub = next.p;
-						next.SATUR = true;
-					}
-				}*/
 			int idx;
 
 			for (int i = 0; i < cellsNum_r + 2; i++)
@@ -364,18 +338,22 @@ namespace gasOil_rz
 						if (next.s > 1.0 + EQUALITY_TOLERANCE)
 						{
 							next.SATUR = false;
-							next.s = 1.0;
-							next.p_bub -= 0.001 * next.p_bub;
+//							next.s = 1.0;
+							next.p_bub -= 0.01 * next.p_bub;
 						}
+						else
+							next.p_bub = next.p;
 					}
 					else 
 					{
 						if (next.p_bub > next.p + EQUALITY_TOLERANCE)
 						{
 							next.SATUR = true;
-							next.p_bub = next.p;
-							next.s -= 0.001;
+//							next.p_bub = next.p;
+							next.s -= 0.01;
 						}
+						else
+							next.s = 1.0;
 					}
 				}
 		};

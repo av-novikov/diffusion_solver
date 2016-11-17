@@ -266,12 +266,10 @@ void GasOil2DSolver::construction_from_fz(int N, int n, int key)
 				if(var.SATUR)
 				{
 					var.s = fz[i][2 * j + 2];
-					var.p_bub = var.p;
 				}
 				else
 				{
 					var.p_bub = fz[i][2 * j + 2];
-					var.s = 1.0;
 				}
 			}
 		}

@@ -974,8 +974,8 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 		polygon->GetPointIds()->SetId(3, idx+1);
 		polygons->InsertNextCell(polygon);
 
-		pres->InsertNextValue(cell.u_next.p * P_dim);
-		p_bub->InsertNextValue(cell.u_next.p_bub);
+		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
+		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 		satur->InsertNextValue(cell.u_next.SATUR);
 		sat_oil->InsertNextValue(cell.u_next.s);
 		sat_gas->InsertNextValue(1.0 - cell.u_next.s);
@@ -1006,8 +1006,8 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 			polygon->GetPointIds()->SetId(3, idx+1);
 			polygons->InsertNextCell(polygon);
 
-			pres->InsertNextValue(cell.u_next.p * P_dim);
-			p_bub->InsertNextValue(cell.u_next.p_bub);
+			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
+			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 			satur->InsertNextValue(cell.u_next.SATUR);
 			sat_oil->InsertNextValue(cell.u_next.s);
 			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
