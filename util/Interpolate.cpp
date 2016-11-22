@@ -98,6 +98,21 @@ double Interpolate::Solve(double arg)
 	return (arg - x[Flag[index]])/dx*dy + y[Flag[index]];
 }
 
+adouble Interpolate::Solve(adouble arg)
+{
+	if (arg.value() < xmin)
+		arg.setValue(xmin);
+	else if (arg.value() > xmax)
+		arg.setValue(xmax);
+
+	adouble aY;
+
+	int i = Flag[int((arg.value() - xmin) / temp)];
+	aY = DSolve(arg.value()) * (arg - x[i]) + y[i];
+
+	return aY;
+}
+
 double Interpolate::DSolve(double arg)
 {
 	double result;

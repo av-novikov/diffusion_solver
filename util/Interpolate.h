@@ -2,6 +2,7 @@
 #define INTERPOLATE_H_
 
 #include <math.h>
+#include "adolc/adouble.h"
 
 class Interpolate
 {
@@ -13,6 +14,7 @@ class Interpolate
 	~Interpolate();
 	
 	double Solve(double arg);
+	adouble Solve(adouble arg);
 	double DSolve(double arg);
 	double D2Solve(double arg);
 	

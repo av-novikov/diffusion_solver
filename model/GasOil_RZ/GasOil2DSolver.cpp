@@ -297,7 +297,7 @@ void GasOil2DSolver::LeftBoundAppr(int MZ, int key)
 	{
 		for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 		{
-			Cell& curr = model->cells[it->first];
+			/*Cell& curr = model->cells[it->first];
 			Cell& nebr = model->cells[it->first+model->cellsNum_z+2];
 			idx = 2 * it->first;
 			
@@ -314,7 +314,7 @@ void GasOil2DSolver::LeftBoundAppr(int MZ, int key)
 			C[idx+1][idx+1] = 1.0;
 			B[idx+1][idx+1] = (curr.r - nebr.r) / (model->cells[it->first+2*model->cellsNum_z+4].r - nebr.r) - 1.0;
 			A[idx+1][idx+1] = -(curr.r - nebr.r) / (model->cells[it->first+2*model->cellsNum_z+4].r - nebr.r);
-			RightSide[idx+1][0] = 0.0;
+			RightSide[idx+1][0] = 0.0;*/
 		}
 	}
 
@@ -340,7 +340,7 @@ void GasOil2DSolver::RightBoundAppr(int MZ, int key)
 		
 		for(int i = (model->cellsNum_r+1)*(model->cellsNum_z+2); i < (model->cellsNum_r+2)*(model->cellsNum_z+2); i++)
 		{
-			Cell& curr = model->cells[i];
+			/*Cell& curr = model->cells[i];
 			Cell& nebr = model->cells[i-model->cellsNum_z-2];
 
 			// First eqn
@@ -364,7 +364,7 @@ void GasOil2DSolver::RightBoundAppr(int MZ, int key)
 				RightSide[idx+1][0] = 0.0;
 			}
 
-			idx += 2;
+			idx += 2;*/
 		}
 	}
 
@@ -396,7 +396,7 @@ void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
 		// Middle cells
 		for(i = current * (model->cellsNum_z+2) + 1; i < (current+1) * (model->cellsNum_z+2) - 1; i++)
 		{
-			Var2phase& next = model->cells[i].u_next;
+			/*Var2phase& next = model->cells[i].u_next;
 
 			// First eqn
 			C[idx][idx] = model->solve_eq1_dp_beta(i, i - model->cellsNum_z - 2);
@@ -432,7 +432,7 @@ void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
 								B[idx+1][idx] * model->cells[i].u_next.p + B[idx+1][idx+1] * model->cells[i].u_next.s + 
 								B[idx+1][idx+2] * model->cells[i+1].u_next.p + B[idx+1][idx+3] * model->cells[i+1].u_next.s + 
 								A[idx+1][idx] * model->cells[i+model->cellsNum_z+2].u_next.p + A[idx+1][idx+1] * model->cells[i+model->cellsNum_z+2].u_next.s;
-			idx += 2;
+			idx += 2;*/
 		}
 
 		// Bottom cell

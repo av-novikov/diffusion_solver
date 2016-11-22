@@ -5,125 +5,16 @@
 #include <map>
 #include <string>
 
-#include "model/cells/Variables.hpp"
-#include "model/cells/CylCell2D.h"
+#include "model/GasOil_RZ/Properties.hpp"
 #include "model/AbstractModel.hpp"
-#include "util/Interpolate.h"
-#include "util/utils.h"
 
 namespace gasOil_rz
 {
-	typedef CylCell2D<Var2phase> Cell;
+	typedef Var2phase Variable;
+	typedef NewCylCell2D<Variable, Skeleton_Props> Cell;
+	template <typename TVariable> using TCell = NewCylCell2D<TVariable, Skeleton_Props>;
 
-	struct Skeleton_Props
-	{
-		// Porosity in STC
-		double m; 
-		// Density of skeleton matter in STC [kg/m3]
-		double dens_stc;
-		// Compessibility [1/Pa]
-		double beta;
-		// Permeability along radial direction [mD]
-		double perm_r;
-		// Permeability along vertical direction [mD]
-		double perm_z;
-
-		// Permeability of colmatage zone [mD]
-		std::vector<double> perms_eff;
-		// Radius of colmatage zone [m]
-		std::vector<double> radiuses_eff;
-		// Vector of skins
-		std::vector<double> skins;
-		double perm_eff;
-		double radius_eff;
-		double skin;
-
-		// Top and bottom depth of perforation
-		double h1, h2;
-		// Height of formation [m]
-		double height;
-
-		int cellsNum_z;
-
-		double p_out;
-		double p_init;
-		double p_bub;
-		double s_init;
-	};
-
-	struct Fluid_Props
-	{
-		// Viscosity [cP]
-		double visc;
-		// Density of fluid in STC [kg/m3]
-		double dens_stc;
-		// Volume factor for well bore
-		double b_bore;
-		// Compessibility [1/Pa]
-		double beta;
-		// Relative fluid permeability
-		Interpolate* kr;
-		// Fluid volume factor
-		Interpolate* b;
-	};
-
-	struct Properties
-	{
-		// Vector of start times of periods [sec]
-		std::vector<double> timePeriods;
-		// Vector of rates [m3/day]
-		std::vector<double> rates;
-		// Vector of BHPs [Pa]
-		std::vector<double> pwf;
-
-		// If left boundary condition would be 2nd type
-		bool leftBoundIsRate;
-		// If right boundary condition would be 1st type
-		bool rightBoundIsPres;
-	
-		// Perforated intervals
-		std::vector<std::pair<int,int> > perfIntervals;
-		// Time step limits
-		// Initial time step [sec]
-		double ht;
-		// Minimal time step [sec]
-		double ht_min;
-		// Maximum time step [sec]
-		double ht_max;
-		// During the time flow rate decreases 'e' times in well test [sec] 
-		double alpha;
-
-		// Inner radius of well [m]
-		double r_w;
-		// Radius of formation [m]
-		double r_e;
-	
-		// Number of cells in radial direction
-		int cellsNum_r;
-		// Number of cells in vertical direction
-		int cellsNum_z;
-
-		std::vector<Skeleton_Props> props_sk;
-		Fluid_Props props_oil;
-		Fluid_Props props_gas;
-
-		double depth_point;
-
-		// Data set (saturation, relative oil permeability)
-		std::vector< std::pair<double,double> > kr_oil;
-		// Data set (saturation, relative gas permeability)
-		std::vector< std::pair<double,double> > kr_gas;
-
-		// Data set (pressure, oil volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double,double> > B_oil;
-		// Data set (pressure, gas volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double,double> > B_gas;
-
-		// Data set (pressure, gas content in oil) ([Pa], [m3/m3])
-		std::vector< std::pair<double,double> > Rs;
-	};
-
-	class GasOil_RZ : public AbstractModel<Var2phase, Properties, CylCell2D, GasOil_RZ>
+	class GasOil_RZ : public AbstractModel<Variable, Properties, TCell, GasOil_RZ>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
@@ -135,8 +26,8 @@ namespace gasOil_rz
 		// Continuum properties
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
-		Fluid_Props props_oil;
-		Fluid_Props props_gas;
+		Oil_Props props_oil;
+		Gas_Props props_gas;
 
 		// Number of cells in radial direction
 		int cellsNum_r;
@@ -144,8 +35,8 @@ namespace gasOil_rz
 		int cellsNum_z;
 
 		// Gas content in oil
-		Interpolate* Rs;
-		Interpolate* Prs;
+		//Interpolate* Rs;
+		//Interpolate* Prs;
 
 		// BHP will be converted to the depth
 		double depth_point;
@@ -174,12 +65,19 @@ namespace gasOil_rz
 			else
 				return 1.0;
 		};
-		inline int getUpwindIdx(int cur, int beta)
+		inline int getUpwindIdx(int cur, int beta) const
 		{
 			if(cells[cur].u_next.p < cells[beta].u_next.p)
 				return beta;
 			else
 				return cur;
+		};
+		inline int getUpwindIdxTape(int cur, int beta, int tapeIdx) const
+		{
+			if (cells[cur].u_next.p < cells[beta].u_next.p)
+				return tapeIdx;
+			else
+				return 0;
 		};
 		inline void getNeighborIdx(int cur, int* const neighbor)
 		{
@@ -201,16 +99,16 @@ namespace gasOil_rz
 		};
 
 		// Solving coefficients
-		inline double getPoro(double p, Cell& cell) const
+		/*inline double getPoro(double p, Cell& cell) const
 		{
 			const int idx = getSkeletonIdx(cell);
-			return props_sk[idx].m * (1.0 + props_sk[idx].beta * (p /*- props_sk[idx].p_init*/) );
+			return props_sk[idx].m * (1.0 + props_sk[idx].beta * (p /*- props_sk[idx].p_init) );
 		};
 		inline double getPoro_dp(Cell& cell) const
 		{
 			const int idx = getSkeletonIdx(cell);
 			return props_sk[idx].m * props_sk[idx].beta;
-		};
+		};*/
 		inline double getTrans(Cell& cell, Cell& beta)
 		{
 			double k1, k2, S;
@@ -232,12 +130,7 @@ namespace gasOil_rz
 				S = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
-		};
-		inline double getPerm_r(const Cell& cell) const
-		{
-			const int idx = getSkeletonIdx(cell);
-			return (cell.r > props_sk[idx].radius_eff ? props_sk[idx].perm_r : props_sk[idx].perm_eff);
-		};
+		};/*
 		inline double getKr_oil(double sat_oil) const
 		{
 			if(sat_oil > 1.0)
@@ -321,7 +214,7 @@ namespace gasOil_rz
 				return 0.0;
 			else
 				return Rs->DSolve(p_bub);
-		};
+		};*/
 		inline void solveP_bub()
 		{
 			int idx;
@@ -359,7 +252,7 @@ namespace gasOil_rz
 		};
 
 		// Thermal functions
-		inline double getRho_oil(double p, double p_bub, bool SATUR) const
+		/*inline double getRho_oil(double p, double p_bub, bool SATUR) const
 		{
 			return (props_oil.dens_stc + getRs(p, p_bub, SATUR) * props_gas.dens_stc) / getB_oil(p, p_bub, SATUR);
 		};
@@ -459,35 +352,35 @@ namespace gasOil_rz
 			case Z_AXIS:
 				return -props_sk[idx].perm_z * getKr_gas(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
 			}
-		};
+		};*/
 
 		// First eqn
 		double solve_eq1(int cur);
-		double solve_eq1_dp(int cur);
-		double solve_eq1_ds(int cur);
-		double solve_eq1_dp_beta(int cur, int beta);
-		double solve_eq1_ds_beta(int cur, int beta);
+		//double solve_eq1_dp(int cur);
+		//double solve_eq1_ds(int cur);
+		//double solve_eq1_dp_beta(int cur, int beta);
+		//double solve_eq1_ds_beta(int cur, int beta);
 
 		// Second eqn
 		double solve_eq2(int cur);
-		double solve_eq2_dp(int cur);
-		double solve_eq2_ds(int cur);
-		double solve_eq2_dp_beta(int cur, int beta);
-		double solve_eq2_ds_beta(int cur, int beta);
+		//double solve_eq2_dp(int cur);
+		//double solve_eq2_ds(int cur);
+		//double solve_eq2_dp_beta(int cur, int beta);
+		//double solve_eq2_ds_beta(int cur, int beta);
 
 		// Left boundary condition
 		double solve_eqLeft(int cur);
-		double solve_eqLeft_dp(int cur);
-		double solve_eqLeft_ds(int cur);
-		double solve_eqLeft_dp_beta(int cur);
-		double solve_eqLeft_ds_beta(int cur);
+		//double solve_eqLeft_dp(int cur);
+		//double solve_eqLeft_ds(int cur);
+		//double solve_eqLeft_dp_beta(int cur);
+		//double solve_eqLeft_ds_beta(int cur);
 
 		// Right boundary condition
 		double solve_eqRight(int cur);
-		double solve_eqRight_dp(int cur);
-		double solve_eqRight_ds(int cur);
-		double solve_eqRight_dp_beta(int cur);
-		double solve_eqRight_ds_beta(int cur);
+		//double solve_eqRight_dp(int cur);
+		//double solve_eqRight_ds(int cur);
+		//double solve_eqRight_dp_beta(int cur);
+		//double solve_eqRight_ds_beta(int cur);
 
 		// Finds functional
 		double solveH();

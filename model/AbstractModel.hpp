@@ -5,10 +5,10 @@
 #include <string>
 #include <map>
 
-#include "model\cells\stencils\Stencil.h"
 #include "snapshotter/VTKSnapshotter.h"
 #include "snapshotter/GRDECLSnapshotter.h"
 #include "snapshotter/Snapshotter.h"
+#include "util/utils.h"
 
 template <typename varType, typename propsType,
 template <typename varType> class cellType, class modelType>

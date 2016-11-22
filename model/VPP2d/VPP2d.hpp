@@ -6,7 +6,7 @@
 #include "model/cells/Variables.hpp"
 #include "model/cells/CylCell2D.h"
 #include "model/AbstractModel.hpp"
-#include "util/Interpolate.h"
+#include "util/utils.h"
 
 namespace vpp2d
 {
