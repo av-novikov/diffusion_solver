@@ -6,6 +6,10 @@
 using namespace std;
 using namespace gasOil_rz;
 
+const int GasOil_RZ::size = 3;
+const int GasOil_RZ::schemeVarNum = 15;
+const int GasOil_RZ::boundVarNum = 6;
+
 GasOil_RZ::GasOil_RZ()
 {
 }
@@ -337,8 +341,8 @@ double GasOil_RZ::solve_eq1(int cur)
 	
 	trace_on(mid1);
 	
-	adouble x[schemeVarNum];
 	double sent = 0.0;
+	adouble x[schemeVarNum];
 	adouble H = 0.0;
 
 	x[0] <<= next.p;	x[1] <<= next.s;	x[2] <<= next.p_bub;
@@ -356,13 +360,13 @@ double GasOil_RZ::solve_eq1(int cur)
 		Variable& upwd = cells[getUpwindIdx(cur, neighbor[i])].u_next;
 		const int tapeIdx = getUpwindIdxTape(cur, neighbor[i], i+1);
 
-		x[(i + 1) * mid_stenc] <<= beta.u_next.p;	
-		x[(i + 1) * mid_stenc + 1] <<= beta.u_next.s;
-		x[(i + 1) * mid_stenc + 2] <<= beta.u_next.p_bub;
+		x[(i + 1) * size] <<= beta.u_next.p;	
+		x[(i + 1) * size + 1] <<= beta.u_next.s;
+		x[(i + 1) * size + 2] <<= beta.u_next.p_bub;
 		
-		H += ht / cell.V * getTrans(cell, beta) * (x[0] - x[(i + 1) * mid_stenc]) *
-			props_oil.getKr(x[tapeIdx*mid_stenc+1]) / props_oil.visc / 
-			props_oil.getB(x[tapeIdx*mid_stenc], x[tapeIdx*mid_stenc+2], upwd.SATUR);
+		H += ht / cell.V * getTrans(cell, beta) * (x[0] - x[(i + 1) * size]) *
+			props_oil.getKr(x[tapeIdx*size+1]) / props_oil.visc / 
+			props_oil.getB(x[tapeIdx*size], x[tapeIdx*size+2], upwd.SATUR);
 	}
 
 	H >>= sent;
@@ -481,8 +485,8 @@ double GasOil_RZ::solve_eq2(int cur)
 
 	trace_on(mid2);
 
-	adouble x[schemeVarNum];
 	double sent = 0.0;
+	adouble x[schemeVarNum];
 	adouble H = 0.0;
 
 	x[0] <<= next.p;	x[1] <<= next.s;	x[2] <<= next.p_bub;
@@ -500,14 +504,14 @@ double GasOil_RZ::solve_eq2(int cur)
 		Cell& beta = cells[ neighbor[i] ];
 		const int tapeIdx = getUpwindIdxTape(cur, neighbor[i], i+1);
 
-		x[(i + 1) * mid_stenc] <<= beta.u_next.p;
-		x[(i + 1) * mid_stenc + 1] <<= beta.u_next.s;
-		x[(i + 1) * mid_stenc + 2] <<= beta.u_next.p_bub;
+		x[(i + 1) * size] <<= beta.u_next.p;
+		x[(i + 1) * size + 1] <<= beta.u_next.s;
+		x[(i + 1) * size + 2] <<= beta.u_next.p_bub;
 
-		H += ht / cell.V * getTrans(cell, beta) * (x[0] - x[(i + 1) * mid_stenc]) *
-			( props_oil.getKr(x[tapeIdx*mid_stenc+1]) * props_oil.getRs(x[tapeIdx*mid_stenc], x[tapeIdx*mid_stenc+2], upwd.SATUR) 
-											/ props_oil.visc / props_oil.getB(x[tapeIdx*mid_stenc], x[tapeIdx*mid_stenc+2], upwd.SATUR) +
-			props_gas.getKr(x[tapeIdx*mid_stenc+1]) / props_gas.visc / props_gas.getB(x[tapeIdx*mid_stenc]) );
+		H += ht / cell.V * getTrans(cell, beta) * (x[0] - x[(i + 1) * size]) *
+			( props_oil.getKr(x[tapeIdx*size+1]) * props_oil.getRs(x[tapeIdx*size], x[tapeIdx*size+2], upwd.SATUR) 
+											/ props_oil.visc / props_oil.getB(x[tapeIdx*size], x[tapeIdx*size+2], upwd.SATUR) +
+			props_gas.getKr(x[tapeIdx*size+1]) / props_gas.visc / props_gas.getB(x[tapeIdx*size]) );
 	}
 
 	H >>= sent;
@@ -629,16 +633,31 @@ double GasOil_RZ::solve_eq2_ds_beta(int cur, int beta)
 
 double GasOil_RZ::solve_eqLeft(int cur)
 {
-	/*const int neighbor = cur + cellsNum_z + 2;
-	Var2phase& next = cells[cur].u_next;
-	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	const int neighbor = cur + cellsNum_z + 2;
+	Variable& next = cells[cur].u_next;
+	Variable& nebr = cells[neighbor].u_next;
+	Variable& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
+	const int tapeIdx = getUpwindIdxTape(cur, neighbor, 1);
+
+	trace_on(left);
+
+	double sent = 0.0;
+	adouble x[boundVarNum];
+	adouble H = 0.0;
+
+	x[0] <<= next.p;	x[1] <<= next.s;	x[2] <<= next.p_bub;
+	x[3] <<= nebr.p;	x[4] <<= nebr.s;	x[5] <<= nebr.p_bub;
 
 	if( leftBoundIsRate )
-		return getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / props_oil.visc / getBoreB_oil(next.p, next.p_bub, next.SATUR) * (cells[neighbor].u_next.p - next.p) - Qcell[cur];
+		H = getTrans(cells[cur], cells[neighbor]) * props_oil.getKr(x[size * tapeIdx + 1]) / props_oil.visc / props_oil.getBoreB(x[0], x[2], next.SATUR) * 
+						(x[3] - x[0]) - Qcell[cur];
 	else
-		return next.p - Pwf;
-	*/
-	return 0.0;
+		H = x[0] - Pwf;
+	
+	H >>= sent;
+	trace_off();
+
+	return sent;
 }
 
 /*double GasOil_RZ::solve_eqLeft_dp(int cur)
@@ -708,13 +727,28 @@ double GasOil_RZ::solve_eqLeft_ds_beta(int cur)
 
 double GasOil_RZ::solve_eqRight(int cur)
 {
-	/*const Cell& cell = cells[cur];
+	const int neighbor = cur - cellsNum_z - 2;
+	Variable& next = cells[cur].u_next;
+	Variable& nebr = cells[neighbor].u_next;
+
+	trace_on(left);
+
+	double sent = 0.0;
+	adouble x[boundVarNum];
+	adouble H = 0.0;
+
+	x[0] <<= next.p;	x[1] <<= next.s;	x[2] <<= next.p_bub;
+	x[3] <<= nebr.p;	x[4] <<= nebr.s;	x[5] <<= nebr.p_bub;
 
 	if( rightBoundIsPres )
-		return cell.u_next.p - props_sk[getSkeletonIdx(cell)].p_out;
+		H = x[0] - cells[cur].props->p_out;
 	else
-		return cell.u_next.p - cells[cur - cellsNum_z - 2].u_next.p;*/
-	return 0.0;
+		H = x[0] - x[3];
+
+	H >>= sent;
+	trace_off();
+
+	return sent;
 }
 
 /*double GasOil_RZ::solve_eqRight_dp(int cur)

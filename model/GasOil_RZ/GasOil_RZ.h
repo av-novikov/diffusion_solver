@@ -23,6 +23,10 @@ namespace gasOil_rz
 		friend class GasOil2DSolver;	
 
 	protected:
+		static const int size;
+		static const int schemeVarNum;
+		static const int boundVarNum;
+
 		// Continuum properties
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;

@@ -6,8 +6,6 @@
 #include <iostream>
 #include <valarray>
 
-#include "gtest/gtest.h"
-
 #include "util/utils.h"
 #include "method/mcmath.h"
 #include "Scene.h"

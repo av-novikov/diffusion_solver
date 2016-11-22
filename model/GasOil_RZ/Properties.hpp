@@ -15,12 +15,6 @@ namespace gasOil_rz
 	const int left = 3;
 	const int right = 4;
 
-	const int neighbors = 4;
-	const int mid_stenc = 3;
-	const int b_stenc = 2;
-	const int schemeVarNum = mid_stenc * (neighbors + 1);
-	const int boundVarNum = b_stenc * (neighbors + 1);
-
 	struct Skeleton_Props
 	{
 		// Porosity in STC
