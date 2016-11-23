@@ -256,20 +256,19 @@ namespace gasOil_rz
 		};
 
 		// Thermal functions
-		/*inline double getRho_oil(double p, double p_bub, bool SATUR) const
+		inline double getRho_oil(double p, double p_bub, bool SATUR) const
 		{
-			return (props_oil.dens_stc + getRs(p, p_bub, SATUR) * props_gas.dens_stc) / getB_oil(p, p_bub, SATUR);
+			return (props_oil.dens_stc + props_oil.getRs(p, p_bub, SATUR) * props_gas.dens_stc) / props_oil.getB(p, p_bub, SATUR);
 		};
 		inline double getRho_gas(double p) const
 		{
-			return props_gas.dens_stc / getB_gas(p);
+			return props_gas.dens_stc / props_gas.getB(p);
 		};
 		inline double getNablaP(Cell& cell, int varNum, int axis)
 		{
 			Cell* nebr1;
 			Cell* nebr2;
 			double h, r_eff;
-			const int idx = getSkeletonIdx(cell);
 
 			switch(axis)
 			{
@@ -277,7 +276,7 @@ namespace gasOil_rz
 				nebr1 = &cells[cell.num - cellsNum_z - 2];
 				nebr2 = &cells[cell.num + cellsNum_z + 2];
 
-				r_eff = props_sk[idx].radius_eff;
+				r_eff = cell.props->radius_eff;
 				if ((nebr1->r < r_eff) && (nebr2->r > r_eff))
 				{
 					if (cell.r > r_eff)
@@ -307,9 +306,7 @@ namespace gasOil_rz
 		};
 		inline double getOilVelocity(Cell& cell, int varNum, int axis)
 		{
-			const int idx = getSkeletonIdx( cell );
-
-			Var2phase* var;
+			Variable* var;
 			switch(varNum)
 			{
 			case PREV:
@@ -326,9 +323,9 @@ namespace gasOil_rz
 			switch(axis)
 			{
 			case R_AXIS:
-				return -getPerm_r(cell) * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPerm_r(cell.r) * props_oil.getKr(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -props_sk[idx].perm_z * getKr_oil(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->perm_z * props_oil.getKr(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getGasVelocity(Cell& cell, int varNum, int axis)
@@ -352,43 +349,25 @@ namespace gasOil_rz
 			switch(axis)
 			{
 			case R_AXIS:
-				return -getPerm_r(cell) * getKr_gas(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPerm_r(cell.r) * props_gas.getKr(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -props_sk[idx].perm_z * getKr_gas(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
+				return -props_sk[idx].perm_z * props_gas.getKr(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
 			}
-		};*/
+		};
 
 		// First eqn
 		double solve_eq1(int cur);
-		//double solve_eq1_dp(int cur);
-		//double solve_eq1_ds(int cur);
-		//double solve_eq1_dp_beta(int cur, int beta);
-		//double solve_eq1_ds_beta(int cur, int beta);
-
 		// Second eqn
 		double solve_eq2(int cur);
-		//double solve_eq2_dp(int cur);
-		//double solve_eq2_ds(int cur);
-		//double solve_eq2_dp_beta(int cur, int beta);
-		//double solve_eq2_ds_beta(int cur, int beta);
+		void setMiddleIndependent(double* x, int cur);
 
 		// Left boundary condition
 		double solve_eqLeft(int cur);
-		//double solve_eqLeft_dp(int cur);
-		//double solve_eqLeft_ds(int cur);
-		//double solve_eqLeft_dp_beta(int cur);
-		//double solve_eqLeft_ds_beta(int cur);
+		void setLeftIndependent(double* x, int cur);
 
 		// Right boundary condition
 		double solve_eqRight(int cur);
-		//double solve_eqRight_dp(int cur);
-		//double solve_eqRight_ds(int cur);
-		//double solve_eqRight_dp_beta(int cur);
-		//double solve_eqRight_ds_beta(int cur);
-
-		void setMiddleIndependent(double* x, int cur);
 		void setRightIndependent(double* x, int cur);
-		void setLeftIndependent(double* x, int cur);
 
 		// Finds functional
 		double solveH();

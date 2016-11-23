@@ -339,7 +339,7 @@ double GasOil_RZ::solve_eq1(int cur)
 	Variable& next = cell.u_next;
 	Variable& prev = cell.u_prev;
 	
-	trace_on(mid1);
+	trace_on(mid1, mid1);
 	
 	double sent = 0.0;
 	adouble x[schemeVarNum];
@@ -483,7 +483,7 @@ double GasOil_RZ::solve_eq2(int cur)
 	Var2phase& next = cell.u_next;
 	Var2phase& prev = cell.u_prev;
 
-	trace_on(mid2);
+	trace_on(mid2, mid2);
 
 	double sent = 0.0;
 	adouble x[schemeVarNum];
@@ -639,7 +639,7 @@ double GasOil_RZ::solve_eqLeft(int cur)
 	Variable& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 	const int tapeIdx = getUpwindIdxTape(cur, neighbor, 1);
 
-	trace_on(left);
+	trace_on(left, left);
 
 	double sent = 0.0;
 	adouble x[boundVarNum];
@@ -731,7 +731,7 @@ double GasOil_RZ::solve_eqRight(int cur)
 	Variable& next = cells[cur].u_next;
 	Variable& nebr = cells[neighbor].u_next;
 
-	trace_on(right);
+	trace_on(right, right);
 
 	double sent = 0.0;
 	adouble x[boundVarNum];
@@ -776,7 +776,6 @@ double GasOil_RZ::solve_eqRight_ds_beta(int cur)
 {
 	return 0.0;
 }*/
-
 
 void GasOil_RZ::setMiddleIndependent(double* x, int cur)
 {

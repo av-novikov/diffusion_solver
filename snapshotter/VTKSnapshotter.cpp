@@ -66,7 +66,7 @@ void VTKSnapshotter<modelType>::dump_all(int i)
 template <>
 void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 {
-/*	using gasOil_rz::Cell;
+	using gasOil_rz::Cell;
 
 	// Grid
 	vtkSmartPointer<vtkPolyData> grid =
@@ -211,7 +211,7 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 	
 	writer->SetFileName( getFileName(i).c_str() );
 	writer->SetInputData(grid);
-	writer->Write();*/
+	writer->Write();
 }
 
 template <>
