@@ -18,7 +18,15 @@ namespace gasOil_rz
 		void LeftBoundAppr(int MZ, int key);
 		void RightBoundAppr (int MZ, int key);
 
+		void setLeftAppr(const int i, const int idx);
+		void setMiddleAppr(const int i, const int idx);
+		void setRightAppr(const int i, const int idx);
+
 	protected:
+
+		double *x, *x_bound;
+		double *grad, *grad_bound;
+
 		void TopAppr(int i, int key);
 		void BottomAppr(int i, int key);
 

@@ -1,5 +1,8 @@
 #include "model/GasOil_RZ/GasOil2DSolver.h"
 
+#include "adolc/drivers/drivers.h"
+#include "adolc/adolc.h"  
+
 using namespace std;
 using namespace gasOil_rz;
 
@@ -22,6 +25,10 @@ GasOil2DSolver::GasOil2DSolver(GasOil_RZ* _model) : AbstractSolver<GasOil_RZ>(_m
 	b.Initialize(n-1);
 
 	Tt = model->period[model->period.size()-1];
+
+
+	x = myalloc1(GasOil_RZ::schemeVarNum);		x_bound = myalloc1(GasOil_RZ::boundVarNum);
+	grad = myalloc1(GasOil_RZ::schemeVarNum);	grad_bound = myalloc1(GasOil_RZ::boundVarNum);
 }
 
 GasOil2DSolver::~GasOil2DSolver()
@@ -262,14 +269,14 @@ void GasOil2DSolver::construction_from_fz(int N, int n, int key)
 			for(int j = 0; j < model->cellsNum_z+2; j++)
 			{
 				Var2phase& var = model->cells[i*(model->cellsNum_z+2) + j].u_next;
-				var.p = fz[i][2*j+1];
+				var.p += fz[i][2*j+1];
 				if(var.SATUR)
 				{
-					var.s = fz[i][2 * j + 2];
+					var.s += fz[i][2 * j + 2];
 				}
 				else
 				{
-					var.p_bub = fz[i][2 * j + 2];
+					var.p_bub += fz[i][2 * j + 2];
 				}
 			}
 		}
@@ -297,28 +304,36 @@ void GasOil2DSolver::LeftBoundAppr(int MZ, int key)
 	{
 		for(it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 		{
-			/*Cell& curr = model->cells[it->first];
-			Cell& nebr = model->cells[it->first+model->cellsNum_z+2];
-			idx = 2 * it->first;
-			
-			// First eqn
-			C[idx][idx] = model->solve_eqLeft_dp(it->first);
-			C[idx][idx+1] = model->solve_eqLeft_ds(it->first);
-			B[idx][idx] = model->solve_eqLeft_dp_beta(it->first);
-			B[idx][idx+1] = model->solve_eqLeft_ds_beta(it->first);
-			RightSide[idx][0] = -model->solve_eqLeft(it->first) + 
-								C[idx][idx] * curr.u_next.p + C[idx][idx+1] * curr.u_next.s +
-								B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
-
-			// Second eqn
-			C[idx+1][idx+1] = 1.0;
-			B[idx+1][idx+1] = (curr.r - nebr.r) / (model->cells[it->first+2*model->cellsNum_z+4].r - nebr.r) - 1.0;
-			A[idx+1][idx+1] = -(curr.r - nebr.r) / (model->cells[it->first+2*model->cellsNum_z+4].r - nebr.r);
-			RightSide[idx+1][0] = 0.0;*/
+			setLeftAppr(it->first, 2 * it->first);
 		}
 	}
 
 	construction_bz(MZ, 2);
+}
+
+void GasOil2DSolver::setLeftAppr(const int i, const int idx)
+{
+	Cell& curr = model->cells[i];
+	Cell& nebr = model->cells[i + model->cellsNum_z + 2];
+
+	int curIdx, addIdx;
+	if (curr.u_next.SATUR == true)
+		addIdx = 0;
+	else
+		addIdx = 1;
+
+	RightSide[idx][0] = -model->solve_eqLeft(i);
+	model->setLeftIndependent(x_bound, i);
+	gradient(left, GasOil_RZ::boundVarNum, x_bound, grad_bound);
+	curIdx = 0;
+	C[idx][idx] = grad_bound[curIdx];				C[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+
+	// Second eqn
+	C[idx + 1][idx + 1] = 1.0;
+	B[idx + 1][idx + 1] = (curr.r - nebr.r) / (model->cells[i + 2 * model->cellsNum_z + 4].r - nebr.r) - 1.0;
+	A[idx + 1][idx + 1] = -(curr.r - nebr.r) / (model->cells[i + 2 * model->cellsNum_z + 4].r - nebr.r);
+	RightSide[idx + 1][0] = 0.0;
 }
 
 void GasOil2DSolver::RightBoundAppr(int MZ, int key)
@@ -340,35 +355,43 @@ void GasOil2DSolver::RightBoundAppr(int MZ, int key)
 		
 		for(int i = (model->cellsNum_r+1)*(model->cellsNum_z+2); i < (model->cellsNum_r+2)*(model->cellsNum_z+2); i++)
 		{
-			/*Cell& curr = model->cells[i];
-			Cell& nebr = model->cells[i-model->cellsNum_z-2];
+			setRightAppr(i, idx);
 
-			// First eqn
-			A[idx][idx] = model->solve_eqRight_dp(i);
-			A[idx][idx+1] = model->solve_eqRight_ds(i);
-			B[idx][idx] = model->solve_eqRight_dp_beta(i);
-			B[idx][idx+1] = model->solve_eqRight_ds_beta(i);
-			RightSide[idx][0] = -model->solve_eqRight(i) + 
-								A[idx][idx] * curr.u_next.p + A[idx][idx+1] * curr.u_next.s +
-								B[idx][idx] * nebr.u_next.p + B[idx][idx+1] * nebr.u_next.s;
-
-			if( model->rightBoundIsPres )
-			{
-				// Second eqn
-				A[idx+1][idx+1] = 1.0;
-				RightSide[idx+1][0] = model->props_sk[ model->getSkeletonIdx(model->cells[i]) ].s_init;
-			} else {
-				// Second eqn
-				A[idx+1][idx+1] = 1.0;
-				B[idx+1][idx+1] = -1.0;
-				RightSide[idx+1][0] = 0.0;
-			}
-
-			idx += 2;*/
+			idx += 2;
 		}
 	}
 
 	construction_bz(MZ,1);
+}
+
+void GasOil2DSolver::setRightAppr(const int i, const int idx)
+{
+	int curIdx, addIdx;
+	if (model->cells[i].u_next.SATUR == true)
+		addIdx = 0;
+	else
+		addIdx = 1;
+
+	RightSide[idx][0] = -model->solve_eqRight(i);
+	model->setRightIndependent(x_bound, i);
+	gradient(right, GasOil_RZ::boundVarNum, x_bound, grad_bound);
+	curIdx = 0;
+	A[idx][idx] = grad_bound[curIdx];				A[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	curIdx = GasOil_RZ::size;
+	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+
+	if (model->rightBoundIsPres)
+	{
+		// Second eqn
+		A[idx + 1][idx + 1] = 1.0;
+		RightSide[idx + 1][0] = model->props_sk[model->getSkeletonIdx(model->cells[i])].s_init;
+	}
+	else {
+		// Second eqn
+		A[idx + 1][idx + 1] = 1.0;
+		B[idx + 1][idx + 1] = -1.0;
+		RightSide[idx + 1][0] = 0.0;
+	}
 }
 
 void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
@@ -396,43 +419,8 @@ void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
 		// Middle cells
 		for(i = current * (model->cellsNum_z+2) + 1; i < (current+1) * (model->cellsNum_z+2) - 1; i++)
 		{
-			/*Var2phase& next = model->cells[i].u_next;
-
-			// First eqn
-			C[idx][idx] = model->solve_eq1_dp_beta(i, i - model->cellsNum_z - 2);
-			C[idx][idx+1] = model->solve_eq1_ds_beta(i, i - model->cellsNum_z - 2);
-			B[idx][idx-2] = model->solve_eq1_dp_beta(i, i-1);
-			B[idx][idx-1] = model->solve_eq1_ds_beta(i, i-1);
-			B[idx][idx] = model->solve_eq1_dp(i);
-			B[idx][idx+1] = model->solve_eq1_ds(i);
-			B[idx][idx+2] = model->solve_eq1_dp_beta(i, i+1);
-			B[idx][idx+3] = model->solve_eq1_ds_beta(i, i+1);
-			A[idx][idx] = model->solve_eq1_dp_beta(i, i + model->cellsNum_z + 2);
-			A[idx][idx+1] = model->solve_eq1_ds_beta(i, i + model->cellsNum_z + 2);
-			RightSide[idx][0] = -model->solve_eq1(i) + 
-								C[idx][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
-								B[idx][idx-2] * model->cells[i-1].u_next.p + B[idx][idx-1] * model->cells[i-1].u_next.s +
-								B[idx][idx] * model->cells[i].u_next.p + B[idx][idx+1] * model->cells[i].u_next.s + 
-								B[idx][idx+2] * model->cells[i+1].u_next.p + B[idx][idx+3] * model->cells[i+1].u_next.s + 
-								A[idx][idx] * model->cells[i+model->cellsNum_z+2].u_next.p + A[idx][idx+1] * model->cells[i+model->cellsNum_z+2].u_next.s;			
-			// Second eqn
-			C[idx+1][idx] = model->solve_eq2_dp_beta(i, i - model->cellsNum_z - 2);
-			C[idx+1][idx+1] = model->solve_eq2_ds_beta(i, i - model->cellsNum_z - 2);
-			B[idx+1][idx-2] = model->solve_eq2_dp_beta(i, i-1);
-			B[idx+1][idx-1] = model->solve_eq2_ds_beta(i, i-1);
-			B[idx+1][idx] = model->solve_eq2_dp(i);
-			B[idx+1][idx+1] = model->solve_eq2_ds(i);
-			B[idx+1][idx+2] = model->solve_eq2_dp_beta(i, i+1);
-			B[idx+1][idx+3] = model->solve_eq2_ds_beta(i, i+1);
-			A[idx+1][idx] = model->solve_eq2_dp_beta(i, i + model->cellsNum_z + 2);
-			A[idx+1][idx+1] = model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2);
-			RightSide[idx+1][0] = -model->solve_eq2(i) + 
-								C[idx+1][idx] * model->cells[i-model->cellsNum_z-2].u_next.p + C[idx+1][idx+1] * model->cells[i-model->cellsNum_z-2].u_next.s + 
-								B[idx+1][idx-2] * model->cells[i-1].u_next.p + B[idx+1][idx-1] * model->cells[i-1].u_next.s +
-								B[idx+1][idx] * model->cells[i].u_next.p + B[idx+1][idx+1] * model->cells[i].u_next.s + 
-								B[idx+1][idx+2] * model->cells[i+1].u_next.p + B[idx+1][idx+3] * model->cells[i+1].u_next.s + 
-								A[idx+1][idx] * model->cells[i+model->cellsNum_z+2].u_next.p + A[idx+1][idx+1] * model->cells[i+model->cellsNum_z+2].u_next.s;
-			idx += 2;*/
+			setMiddleAppr(i, idx);
+			idx += 2;
 		}
 
 		// Bottom cell
@@ -440,6 +428,43 @@ void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
 	}
 
 	construction_bz(MZ,2);
+}
+
+void GasOil2DSolver::setMiddleAppr(const int i, const int idx)
+{
+	int curIdx, addIdx;
+	if (model->cells[i].u_next.SATUR == true)
+		addIdx = 0;
+	else
+		addIdx = 1;
+
+	model->setMiddleIndependent(x, i);
+
+	RightSide[idx][0] = -model->solve_eq1(i);
+	gradient(mid1, GasOil_RZ::schemeVarNum, x, grad);
+	curIdx = GasOil_RZ::size;
+	C[idx][idx] = grad[curIdx];				C[idx][idx + 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 2 * GasOil_RZ::size;
+	A[idx][idx] = grad[curIdx];				A[idx][idx + 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 3 * GasOil_RZ::size;
+	B[idx][idx - 2] = grad[curIdx];			B[idx][idx - 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 0;
+	B[idx][idx] = grad[curIdx];				B[idx][idx + 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 4 * GasOil_RZ::size;
+	B[idx][idx + 2] = grad[curIdx];			B[idx][idx + 3] = grad[curIdx + 1 + addIdx];
+
+	RightSide[idx + 1][0] = -model->solve_eq2(i);
+	gradient(mid2, GasOil_RZ::schemeVarNum, x, grad);
+	curIdx = GasOil_RZ::size;
+	C[idx + 1][idx] = grad[curIdx];			C[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 2 * GasOil_RZ::size;
+	A[idx + 1][idx] = grad[curIdx];			A[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 3 * GasOil_RZ::size;
+	B[idx + 1][idx - 2] = grad[curIdx];		B[idx + 1][idx - 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 0;
+	B[idx + 1][idx] = grad[curIdx];			B[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
+	curIdx = 4 * GasOil_RZ::size;
+	B[idx + 1][idx + 2] = grad[curIdx];		B[idx + 1][idx + 3] = grad[curIdx + 1 + addIdx];
 }
 
 void GasOil2DSolver::TopAppr(int i, int key)

@@ -731,7 +731,7 @@ double GasOil_RZ::solve_eqRight(int cur)
 	Variable& next = cells[cur].u_next;
 	Variable& nebr = cells[neighbor].u_next;
 
-	trace_on(left);
+	trace_on(right);
 
 	double sent = 0.0;
 	adouble x[boundVarNum];
@@ -776,6 +776,42 @@ double GasOil_RZ::solve_eqRight_ds_beta(int cur)
 {
 	return 0.0;
 }*/
+
+
+void GasOil_RZ::setMiddleIndependent(double* x, int cur)
+{
+	int neighbor[4];
+	getNeighborIdx(cur, neighbor);
+
+	const Variable& next = cells[cur].u_next;
+	x[0] = next.p;	x[1] = next.s;	x[2] = next.p_bub;
+
+	for (int i = 0; i < 4; i++)
+	{
+		const Variable& beta = cells[neighbor[i]].u_next;
+		x[size * (i+1)] = next.p;	x[size * (i + 1)+1] = next.s;	x[size * (i + 1)+2] = next.p_bub;
+	}
+}
+
+void GasOil_RZ::setRightIndependent(double* x, int cur)
+{
+	const int neighbor = cur - cellsNum_z - 2;
+	const Variable& next = cells[cur].u_next;
+	const Variable& nebr = cells[neighbor].u_next;
+
+	x[0] = next.p;	x[1] = next.s;	x[2] = next.p_bub;
+	x[3] = nebr.p;	x[4] = nebr.s;	x[5] = nebr.p_bub;
+}
+
+void GasOil_RZ::setLeftIndependent(double* x, int cur)
+{
+	const int neighbor = cur + cellsNum_z + 2;
+	const Variable& next = cells[cur].u_next;
+	const Variable& nebr = cells[neighbor].u_next;
+
+	x[0] = next.p;	x[1] = next.s;	x[2] = next.p_bub;
+	x[3] = nebr.p;	x[4] = nebr.s;	x[5] = nebr.p_bub;
+}
 
 double GasOil_RZ::solveH()
 {

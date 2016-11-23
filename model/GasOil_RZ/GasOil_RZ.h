@@ -386,6 +386,10 @@ namespace gasOil_rz
 		//double solve_eqRight_dp_beta(int cur);
 		//double solve_eqRight_ds_beta(int cur);
 
+		void setMiddleIndependent(double* x, int cur);
+		void setRightIndependent(double* x, int cur);
+		void setLeftIndependent(double* x, int cur);
+
 		// Finds functional
 		double solveH();
 
