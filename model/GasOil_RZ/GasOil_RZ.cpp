@@ -375,7 +375,6 @@ double GasOil_RZ::solve_eq1(int cur)
 	return sent;
 }
 
-/*/
 double GasOil_RZ::solve_eq1_dp(int cur)
 {
 	double upwind;
@@ -471,7 +470,7 @@ double GasOil_RZ::solve_eq1_ds_beta(int cur, int beta)
 				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) / 
 				getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) * 
 				getB_oil_dp_bub(upwd.p, upwd.p_bub, upwd.SATUR);
-}*/
+}
 
 double GasOil_RZ::solve_eq2(int cur)
 {
@@ -520,7 +519,7 @@ double GasOil_RZ::solve_eq2(int cur)
 	return sent;
 }
 
-/*double GasOil_RZ::solve_eq2_dp(int cur)
+double GasOil_RZ::solve_eq2_dp(int cur)
 {
 	double upwind;	
 	int neighbor [4];
@@ -629,7 +628,7 @@ double GasOil_RZ::solve_eq2_ds_beta(int cur, int beta)
 				(cell.u_next.p - cells[beta].u_next.p) * getKr_oil(upwd.s) / props_oil.visc / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) * 
 				(getRs_dp_bub(upwd.p_bub, upwd.SATUR) -
 				getRs(upwd.p, upwd.p_bub, upwd.SATUR) / getB_oil(upwd.p, upwd.p_bub, upwd.SATUR) * getB_oil_dp_bub(upwd.p, upwd.p_bub, upwd.SATUR));
-}*/
+}
 
 double GasOil_RZ::solve_eqLeft(int cur)
 {
@@ -660,14 +659,16 @@ double GasOil_RZ::solve_eqLeft(int cur)
 	return sent;
 }
 
-/*double GasOil_RZ::solve_eqLeft_dp(int cur)
+double GasOil_RZ::solve_eqLeft_dp(int cur)
 {
 	const int neighbor = cur + cellsNum_z + 2;
 	Var2phase& next = cells[cur].u_next;
 	Var2phase& upwd = cells[ getUpwindIdx(cur, neighbor) ].u_next;
 
 	if( leftBoundIsRate )
-		return -getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc;
+		return -getTrans(cells[cur], cells[neighbor]) * getKr_oil(upwd.s) / getBoreB_oil(next.p, next.p_bub, next.SATUR) / props_oil.visc * 
+				(1.0 + (cells[neighbor].u_next.p - next.p) / getBoreB_oil(next.p, next.p_bub, next.SATUR) *
+							getB_oil_dp(next.p, next.p_bub, next.SATUR));
 	else
 		return 1.0;
 }
@@ -723,7 +724,7 @@ double GasOil_RZ::solve_eqLeft_ds_beta(int cur)
 	}
 	else
 		return 0.0;
-}*/
+}
 
 double GasOil_RZ::solve_eqRight(int cur)
 {
@@ -751,7 +752,7 @@ double GasOil_RZ::solve_eqRight(int cur)
 	return sent;
 }
 
-/*double GasOil_RZ::solve_eqRight_dp(int cur)
+double GasOil_RZ::solve_eqRight_dp(int cur)
 {
 	if( rightBoundIsPres )
 		return 1.0;
@@ -775,7 +776,7 @@ double GasOil_RZ::solve_eqRight_dp_beta(int cur)
 double GasOil_RZ::solve_eqRight_ds_beta(int cur)
 {
 	return 0.0;
-}*/
+}
 
 void GasOil_RZ::setMiddleIndependent(double* x, int cur)
 {

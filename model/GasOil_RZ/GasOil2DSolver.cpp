@@ -1,5 +1,7 @@
 #include "model/GasOil_RZ/GasOil2DSolver.h"
 
+#include <cassert>
+
 #include "adolc/drivers/drivers.h"
 #include "adolc/adolc.h"  
 
@@ -327,7 +329,19 @@ void GasOil2DSolver::setLeftAppr(const int i, const int idx)
 	gradient(left, GasOil_RZ::boundVarNum, x_bound, grad_bound);
 	curIdx = 0;
 	C[idx][idx] = grad_bound[curIdx];				C[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	curIdx = GasOil_RZ::size;
 	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+
+	double a = model->solve_eqLeft_dp(i);
+	double b = C[idx][idx];
+	if (fabs(a - b) > EQUALITY_TOLERANCE)
+	{
+		double c = 1.0;
+	}
+	assert(fabs(C[idx][idx] - model->solve_eqLeft_dp(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(C[idx][idx + 1] - model->solve_eqLeft_ds(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx] - model->solve_eqLeft_dp_beta(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx + 1] - model->solve_eqLeft_ds_beta(i)) < EQUALITY_TOLERANCE);
 
 	// Second eqn
 	C[idx + 1][idx + 1] = 1.0;
@@ -379,6 +393,11 @@ void GasOil2DSolver::setRightAppr(const int i, const int idx)
 	A[idx][idx] = grad_bound[curIdx];				A[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
 	curIdx = GasOil_RZ::size;
 	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+
+	assert(fabs(A[idx][idx] - model->solve_eqRight_dp(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(A[idx][idx + 1] - model->solve_eqRight_ds(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx] - model->solve_eqRight_dp_beta(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx + 1] - model->solve_eqRight_ds_beta(i)) < EQUALITY_TOLERANCE);
 
 	if (model->rightBoundIsPres)
 	{
@@ -465,6 +484,34 @@ void GasOil2DSolver::setMiddleAppr(const int i, const int idx)
 	B[idx + 1][idx] = grad[curIdx];			B[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
 	curIdx = 4 * GasOil_RZ::size;
 	B[idx + 1][idx + 2] = grad[curIdx];		B[idx + 1][idx + 3] = grad[curIdx + 1 + addIdx];
+
+	/*assert(fabs(C[idx][idx] - model->solve_eq1_dp_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(C[idx][idx + 1] - model->solve_eq1_ds_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx - 2] - model->solve_eq1_dp_beta(i, i - 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx - 1] - model->solve_eq1_ds_beta(i, i - 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx] - model->solve_eq1_dp(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx + 1] - model->solve_eq1_ds(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx + 2] - model->solve_eq1_dp_beta(i, i + 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx][idx + 3] - model->solve_eq1_ds_beta(i, i + 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(A[idx][idx] - model->solve_eq1_dp_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(A[idx][idx + 1] - model->solve_eq1_ds_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);
+		
+	assert(fabs(C[idx + 1][idx] - model->solve_eq2_dp_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(C[idx + 1][idx + 1] - model->solve_eq2_ds_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx + 1][idx - 2] - model->solve_eq2_dp_beta(i, i - 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx + 1][idx - 1] - model->solve_eq2_ds_beta(i, i - 1)) < EQUALITY_TOLERANCE);
+	double a = model->solve_eq2_dp(i);
+	double b = B[idx + 1][idx];
+	if (fabs(a - b) > EQUALITY_TOLERANCE)
+	{
+		double c = 1.0;
+	}
+	assert(fabs(B[idx + 1][idx] - model->solve_eq2_dp(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx + 1][idx + 1] - model->solve_eq2_ds(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx + 1][idx + 2] - model->solve_eq2_dp_beta(i, i + 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(B[idx + 1][idx + 3] - model->solve_eq2_ds_beta(i, i + 1)) < EQUALITY_TOLERANCE);
+	assert(fabs(A[idx + 1][idx] - model->solve_eq2_dp_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(A[idx + 1][idx + 1] - model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);*/
 }
 
 void GasOil2DSolver::TopAppr(int i, int key)

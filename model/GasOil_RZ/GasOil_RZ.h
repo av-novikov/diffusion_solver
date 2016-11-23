@@ -103,16 +103,16 @@ namespace gasOil_rz
 		};
 
 		// Solving coefficients
-		/*inline double getPoro(double p, Cell& cell) const
+		inline double getPoro(double p, Cell& cell) const
 		{
 			const int idx = getSkeletonIdx(cell);
-			return props_sk[idx].m * (1.0 + props_sk[idx].beta * (p /*- props_sk[idx].p_init) );
+			return props_sk[idx].m * (1.0 + props_sk[idx].beta * (p /*- props_sk[idx].p_init*/) );
 		};
 		inline double getPoro_dp(Cell& cell) const
 		{
 			const int idx = getSkeletonIdx(cell);
 			return props_sk[idx].m * props_sk[idx].beta;
-		};*/
+		};
 		inline double getTrans(Cell& cell, Cell& beta)
 		{
 			double k1, k2, S;
@@ -134,7 +134,7 @@ namespace gasOil_rz
 				S = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
-		};/*
+		};
 		inline double getKr_oil(double sat_oil) const
 		{
 			if(sat_oil > 1.0)
@@ -201,14 +201,14 @@ namespace gasOil_rz
 		inline double getRs(double p, double p_bub, bool SATUR) const
 		{
 			if(SATUR)
-				return Rs->Solve(p);
+				return props_oil.Rs->Solve(p);
 			else
-				return Rs->Solve(p_bub);
+				return props_oil.Rs->Solve(p_bub);
 		};
 		inline double getRs_dp(double p, double p_bub, bool SATUR) const
 		{
 			if(SATUR)
-				return Rs->DSolve(p);
+				return props_oil.Rs->DSolve(p);
 			else
 				return 0.0;
 		};
@@ -217,8 +217,8 @@ namespace gasOil_rz
 			if (SATUR)
 				return 0.0;
 			else
-				return Rs->DSolve(p_bub);
-		};*/
+				return props_oil.Rs->DSolve(p_bub);
+		};
 		inline void solveP_bub()
 		{
 			int idx;
@@ -357,16 +357,33 @@ namespace gasOil_rz
 
 		// First eqn
 		double solve_eq1(int cur);
+		double solve_eq1_dp(int cur);
+		double solve_eq1_ds(int cur);
+		double solve_eq1_dp_beta(int cur, int beta);
+		double solve_eq1_ds_beta(int cur, int beta);
+
 		// Second eqn
 		double solve_eq2(int cur);
+		double solve_eq2_dp(int cur);
+		double solve_eq2_ds(int cur);
+		double solve_eq2_dp_beta(int cur, int beta);
+		double solve_eq2_ds_beta(int cur, int beta);
 		void setMiddleIndependent(double* x, int cur);
 
 		// Left boundary condition
 		double solve_eqLeft(int cur);
+		double solve_eqLeft_dp(int cur);
+		double solve_eqLeft_ds(int cur);
+		double solve_eqLeft_dp_beta(int cur);
+		double solve_eqLeft_ds_beta(int cur);
 		void setLeftIndependent(double* x, int cur);
 
 		// Right boundary condition
 		double solve_eqRight(int cur);
+		double solve_eqRight_dp(int cur);
+		double solve_eqRight_ds(int cur);
+		double solve_eqRight_dp_beta(int cur);
+		double solve_eqRight_ds_beta(int cur);
 		void setRightIndependent(double* x, int cur);
 
 		// Finds functional
