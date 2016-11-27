@@ -10,7 +10,7 @@ class AbstractCell
 {
 	public:		
 		int num;
-		static const int varNum;
+		static const int varNum = varType::size;
 		
 		double V;
 		
@@ -18,9 +18,9 @@ class AbstractCell
 		varType u_iter;
 		varType u_prev;
 		
-		AbstractCell();
-		AbstractCell(int _num);
-		~AbstractCell();
+		AbstractCell() : V(0.0), num(-1) {};
+		AbstractCell(int _num) : num(_num) {};
+		~AbstractCell() {};
 };
 
 #endif /* ABSTRACTCELL_HPP_ */

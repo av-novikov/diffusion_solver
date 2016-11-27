@@ -7,237 +7,13 @@
 #include "model/cells/CylCell2D.h"
 #include "model/AbstractModel.hpp"
 #include "util/utils.h"
+#include "model/VPP2d/Properties.hpp"
 
 namespace vpp2d
 {
-	struct Skeleton_Props
-	{
-		// Porosity in STC
-		double m;
-		// Density of skeleton matter in STC [kg/m3]
-		double dens_stc;
-		// Compessibility [1/Pa]
-		double beta;
-		// Permeability along radial direction [mD]
-		double perm_r;
-		// Permeability along vertical direction [mD]
-		double perm_z;
-
-		// Permeability of colmatage zone [mD]
-		std::vector<double> perms_eff;
-		// Radius of colmatage zone [m]
-		std::vector<double> radiuses_eff;
-		// Vector of skins
-		std::vector<double> skins;
-		double perm_eff;
-		double radius_eff;
-		double skin;
-
-		// Top and bottom depth of perforation
-		double h1, h2;
-		// Height of formation [m]
-		double height;
-
-		int cellsNum_z;
-
-		double p_out;
-
-		// Initial values
-		double p_init;
-		double s_init;
-		double c_init;
-	};
-	struct Component
-	{
-
-	};
-	struct Water_Props
-	{
-		Component active;
-
-		// Viscosity [cP]
-		double visc;
-		Interpolate* visc_table;
-		inline double getViscosity(const double p) const
-		{
-			return visc;
-		};
-		inline double getViscosity_dp(const double p) const
-		{
-			return 0.0;
-		};
-
-		// Fluid volume factor
-		Interpolate* b;
-		double b_bore;
-		// Density of fluid in STC [kg/m3]
-		double dens_stc;
-		// Compessibility [1/Pa]
-		double beta;
-		inline double getB(double p) const
-		{
-			return b->Solve(p);
-		};
-		inline double getBoreB(double p) const
-		{
-			return b_bore;
-		};
-		inline double getB_dp(double p) const
-		{
-			return b->DSolve(p);
-		};
-		// Reference pressure [Pa]
-		double p_ref;
-		inline double getDensity(const double p) const
-		{
-			return dens_stc * (1.0 + beta * (p - p_ref));
-		};
-		inline double getDensity_dp() const
-		{
-			return dens_stc * beta;
-		};
-
-		// Relative fluid permeability
-		Interpolate* kr;
-		inline double getKr(const double s_l) const
-		{
-			if (s_l > 1.0)
-				return 1.0;
-			else
-				return kr->Solve(s_l);
-		};
-		inline double getKr_ds(const double s_l) const
-		{
-			if (s_l > 1.0)
-				return kr->DSolve(1.0);
-			else
-				return kr->DSolve(s_l);
-		};
-	};
-	struct Oil_Props
-	{
-		// Viscosity [cP]
-		double visc;
-		Interpolate* visc_table;
-		inline double getViscosity(const double p) const
-		{
-			return visc;
-		};
-		inline double getViscosity_dp(const double p) const
-		{
-			return 0.0;
-		};
-
-		// Fluid volume factor
-		Interpolate* b;
-		double b_bore;
-		inline double getB(double p) const
-		{
-			return b->Solve(p);
-		};
-		inline double getBoreB_oil(double p) const
-		{
-			return b_bore;
-		};
-		inline double getB_dp(double p) const
-		{
-			return b->DSolve(p);
-		};
-		// Density of fluid in STC [kg/m3]
-		double dens_stc;
-		// Compessibility [1/Pa]
-		double beta;
-		// Reference pressure [Pa]
-		double p_ref;
-		inline double getDensity(const double p) const
-		{
-			return dens_stc * (1.0 + beta * (p - p_ref));
-		};
-		inline double getDensity_dp() const
-		{
-			return dens_stc * beta;
-		};
-
-		// Relative fluid permeability
-		Interpolate* kr;
-		inline double getKr(const double s_l) const
-		{
-			if (s_l > 1.0)
-				return 0.0;
-			else
-				return kr->Solve(s_l);
-		};
-		inline double getKr_ds(const double s_l) const
-		{
-			if (s_l > 1.0)
-				return kr->DSolve(1.0);
-			else
-				return kr->DSolve(s_l);
-		};
-	};
-	struct Properties
-	{
-		// Vector of start times of periods [sec]
-		std::vector<double> timePeriods;
-		// Vector of rates [m3/day]
-		std::vector<double> rates;
-		// Vector of BHPs [Pa]
-		std::vector<double> pwf;
-
-		// If left boundary condition would be 2nd type
-		bool leftBoundIsRate;
-		// If right boundary condition would be 1st type
-		bool rightBoundIsPres;
-
-		// Perforated intervals
-		std::vector<std::pair<int, int> > perfIntervals;
-		// Time step limits
-		// Initial time step [sec]
-		double ht;
-		// Minimal time step [sec]
-		double ht_min;
-		// Maximum time step [sec]
-		double ht_max;
-		// During the time flow rate decreases 'e' times in well test [sec] 
-		double alpha;
-
-		// Inner radius of well [m]
-		double r_w;
-		// Radius of formation [m]
-		double r_e;
-
-		// Number of cells in radial direction
-		int cellsNum_r;
-		// Number of cells in vertical direction
-		int cellsNum_z;
-
-		std::vector<Skeleton_Props> props_sk;
-		Water_Props props_w;
-		Oil_Props props_o;
-
-		double depth_point;
-
-		// Data set (saturation, relative oil permeability)
-		std::vector< std::pair<double, double> > kr_o;
-		// Data set (saturation, relative gas permeability)
-		std::vector< std::pair<double, double> > kr_w;
-
-		// Data set (pressure, oil volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double, double> > B_o;
-		// Data set (pressure, gas volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double, double> > B_w;
-
-		// Data set (pressure, oil volume factor) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_o;
-		// Data set (pressure, gas volume factor) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_w;
-
-		// Data set (pressure, gas volume factor) ([Pa], [1])
-		std::vector< std::pair<double, double> > a;
-	};
-
-	typedef VarSimpleVPP Variable;
-	typedef NewCylCell2D<VarSimpleVPP, Skeleton_Props> Cell;
+	typedef VarSimpleVPP<double> Variable;
+	typedef TapeVarSimpleVPP TapeVariable;
+	typedef NewCylCell2D<Variable, Skeleton_Props> Cell;
 	template <typename TVariable> using TCell = NewCylCell2D<TVariable, Skeleton_Props>;
 
 	class VPP2d : public AbstractModel<Variable, Properties, TCell, VPP2d>
@@ -246,15 +22,18 @@ namespace vpp2d
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-		friend class VPP2dSolver;
+		friend class VPPSolver;
 
 	protected:
+		// Concentration
+		std::vector<double> c;
+		double C;
+
 		// Continuum properties
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
-		Water_Props props_w;
-		Oil_Props props_o;
-		Interpolate* a;
+		Water_Props props_wat;
+		Oil_Props props_oil;
 
 		// Number of cells in radial direction
 		int cellsNum_r;
@@ -311,8 +90,7 @@ namespace vpp2d
 			neighbor[2] = cur - 1;
 			neighbor[3] = cur + 1;
 		};
-
-		inline double getTrans(Cell& cell, Cell& beta)
+		inline double getTrans(const Cell& cell, const Cell& beta) const
 		{
 			double k1, k2, S;
 
@@ -330,10 +108,6 @@ namespace vpp2d
 				S = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
-		};
-		inline double getPerm_r(const Cell& cell) const
-		{
-			return (cell.r > cell.props->radius_eff ? cell.props->perm_r : cell.props->perm_eff);
 		};
 		inline double getNablaP(Cell& cell, int varNum, int axis)
 		{
@@ -394,9 +168,9 @@ namespace vpp2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -getPerm_r(cell) * props_w.getKr(var->s) / props_w.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPerm_r(cell.r) * props_wat.getKr(var->s).value() / props_wat.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->perm_z * props_w.getKr(var->s) / props_w.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->perm_z * props_wat.getKr(var->s).value() / props_wat.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getOilVelocity(Cell& cell, int varNum, int axis)
@@ -418,18 +192,28 @@ namespace vpp2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -getPerm_r(cell) * props_o.getKr(var->s) / props_o.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPerm_r(cell.r) * props_oil.getKr(var->s).value() / props_oil.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->perm_z * props_o.getKr(var->s) / props_o.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->perm_z * props_oil.getKr(var->s).value() / props_oil.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 
 		// Finds functional
 		double solveH();
 
+		void setVariables(int cur);
+		void solve_eqMiddle(int cur);
+		void solve_eqLeft(int cur);
+		void solve_eqRight(int cur);
+		void solve_eqVertical(int cur);
+		void solveFixVar();
+
 	public:
 		VPP2d();
 		~VPP2d();
+
+		double* x;
+		double* y;
 
 		void setPeriod(int period);
 		double getRate(int cur);

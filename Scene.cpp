@@ -3,6 +3,9 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ/GasOil2DSolver.h"
 
+#include "model/VPP2d/VPP2d.hpp"
+#include "model/VPP2d/VPPSolver.hpp"
+
 #include "paralution.hpp"
 
 using namespace std;
@@ -33,7 +36,6 @@ void Scene<modelType, methodType, propsType>::load(propsType& props, int i)
 {
 }
 
-
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::setSnapshotterType(std::string type)
 {
@@ -53,3 +55,4 @@ modelType* Scene<modelType, methodType, propsType>::getModel() const
 }
 
 template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties>;
+template class Scene<vpp2d::VPP2d, vpp2d::VPPSolver, vpp2d::Properties>;

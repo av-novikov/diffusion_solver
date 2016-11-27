@@ -2,6 +2,7 @@
 #include "util/utils.h"
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
+#include "model/VPP2d/VPP2d.hpp"
 
 #include <iomanip>
 
@@ -191,3 +192,4 @@ void AbstractSolver<modelType>::construct_solution()
 }
 
 template class AbstractSolver<gasOil_rz::GasOil_RZ>;
+template class AbstractSolver<vpp2d::VPP2d>;

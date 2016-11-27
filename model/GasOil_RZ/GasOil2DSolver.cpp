@@ -244,6 +244,7 @@ void GasOil2DSolver::solveStep()
 	while( err_newton > 1.e-4 && ( dAverSat > 1.e-10 || dAverPres > 1.e-10) && iterations < 9 )
 	{	
 		copyIterLayer();
+		model->snapshot_all(iterations);
 
 		Solve(model->cellsNum_r+1, 2*(model->cellsNum_z+2), PRES);
 		construction_from_fz(model->cellsNum_r+2, 2*(model->cellsNum_z+2), PRES);
@@ -254,6 +255,7 @@ void GasOil2DSolver::solveStep()
 		averPres = averValue(0);					averSat = averValue(1);
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;
+
 
 		iterations++;
 	}
@@ -318,19 +320,15 @@ void GasOil2DSolver::setLeftAppr(const int i, const int idx)
 	Cell& curr = model->cells[i];
 	Cell& nebr = model->cells[i + model->cellsNum_z + 2];
 
-	int curIdx, addIdx;
-	if (curr.u_next.SATUR == true)
-		addIdx = 0;
-	else
-		addIdx = 1;
+	int curIdx;
 
 	RightSide[idx][0] = -model->solve_eqLeft(i);
 	model->setLeftIndependent(x_bound, i);
 	gradient(left, GasOil_RZ::boundVarNum, x_bound, grad_bound);
 	curIdx = 0;
-	C[idx][idx] = grad_bound[curIdx];				C[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	C[idx][idx] = grad_bound[curIdx];				C[idx][idx + 1] = grad_bound[curIdx + 1 + model->isNotSatur(i)];
 	curIdx = GasOil_RZ::size;
-	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + model->isNotSatur(i + model->cellsNum_z + 2)];
 
 	double a = model->solve_eqLeft_dp(i);
 	double b = C[idx][idx];
@@ -380,19 +378,15 @@ void GasOil2DSolver::RightBoundAppr(int MZ, int key)
 
 void GasOil2DSolver::setRightAppr(const int i, const int idx)
 {
-	int curIdx, addIdx;
-	if (model->cells[i].u_next.SATUR == true)
-		addIdx = 0;
-	else
-		addIdx = 1;
+	int curIdx;
 
 	RightSide[idx][0] = -model->solve_eqRight(i);
 	model->setRightIndependent(x_bound, i);
 	gradient(right, GasOil_RZ::boundVarNum, x_bound, grad_bound);
 	curIdx = 0;
-	A[idx][idx] = grad_bound[curIdx];				A[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	A[idx][idx] = grad_bound[curIdx];				A[idx][idx + 1] = grad_bound[curIdx + 1 + model->isNotSatur(i)];
 	curIdx = GasOil_RZ::size;
-	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + addIdx];
+	B[idx][idx] = grad_bound[curIdx];				B[idx][idx + 1] = grad_bound[curIdx + 1 + model->isNotSatur(i - model->cellsNum_z - 2)];
 
 	assert(fabs(A[idx][idx] - model->solve_eqRight_dp(i)) < EQUALITY_TOLERANCE);
 	assert(fabs(A[idx][idx + 1] - model->solve_eqRight_ds(i)) < EQUALITY_TOLERANCE);
@@ -451,41 +445,40 @@ void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
 
 void GasOil2DSolver::setMiddleAppr(const int i, const int idx)
 {
-	int curIdx, addIdx;
-	if (model->cells[i].u_next.SATUR == true)
-		addIdx = 0;
-	else
-		addIdx = 1;
+	int curIdx;
 
 	model->setMiddleIndependent(x, i);
 
 	RightSide[idx][0] = -model->solve_eq1(i);
 	gradient(mid1, GasOil_RZ::schemeVarNum, x, grad);
 	curIdx = GasOil_RZ::size;
-	C[idx][idx] = grad[curIdx];				C[idx][idx + 1] = grad[curIdx + 1 + addIdx];
+	C[idx][idx] = grad[curIdx];				C[idx][idx + 1] = grad[curIdx + 1 + model->isNotSatur(i - model->cellsNum_z - 2)];
 	curIdx = 2 * GasOil_RZ::size;
-	A[idx][idx] = grad[curIdx];				A[idx][idx + 1] = grad[curIdx + 1 + addIdx];
+	A[idx][idx] = grad[curIdx];				A[idx][idx + 1] = grad[curIdx + 1 + model->isNotSatur(i - 1)];
 	curIdx = 3 * GasOil_RZ::size;
-	B[idx][idx - 2] = grad[curIdx];			B[idx][idx - 1] = grad[curIdx + 1 + addIdx];
+	B[idx][idx - 2] = grad[curIdx];			B[idx][idx - 1] = grad[curIdx + 1 + model->isNotSatur(i + 1)];
 	curIdx = 0;
-	B[idx][idx] = grad[curIdx];				B[idx][idx + 1] = grad[curIdx + 1 + addIdx];
+	B[idx][idx] = grad[curIdx];				B[idx][idx + 1] = grad[curIdx + 1 + model->isNotSatur(i)];
 	curIdx = 4 * GasOil_RZ::size;
-	B[idx][idx + 2] = grad[curIdx];			B[idx][idx + 3] = grad[curIdx + 1 + addIdx];
-
+	B[idx][idx + 2] = grad[curIdx];			B[idx][idx + 3] = grad[curIdx + 1 + model->isNotSatur(i + model->cellsNum_z + 2)];
+	
 	RightSide[idx + 1][0] = -model->solve_eq2(i);
 	gradient(mid2, GasOil_RZ::schemeVarNum, x, grad);
 	curIdx = GasOil_RZ::size;
-	C[idx + 1][idx] = grad[curIdx];			C[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
+	C[idx + 1][idx] = grad[curIdx];			C[idx + 1][idx + 1] = grad[curIdx + 1 + model->isNotSatur(i - model->cellsNum_z - 2)];
 	curIdx = 2 * GasOil_RZ::size;
-	A[idx + 1][idx] = grad[curIdx];			A[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
+	A[idx + 1][idx] = grad[curIdx];			A[idx + 1][idx + 1] = grad[curIdx + 1 + model->isNotSatur(i - 1)];
 	curIdx = 3 * GasOil_RZ::size;
-	B[idx + 1][idx - 2] = grad[curIdx];		B[idx + 1][idx - 1] = grad[curIdx + 1 + addIdx];
+	B[idx + 1][idx - 2] = grad[curIdx];		B[idx + 1][idx - 1] = grad[curIdx + 1 + model->isNotSatur(i + 1)];
 	curIdx = 0;
-	B[idx + 1][idx] = grad[curIdx];			B[idx + 1][idx + 1] = grad[curIdx + 1 + addIdx];
+	B[idx + 1][idx] = grad[curIdx];			B[idx + 1][idx + 1] = grad[curIdx + 1 + model->isNotSatur(i)];
 	curIdx = 4 * GasOil_RZ::size;
-	B[idx + 1][idx + 2] = grad[curIdx];		B[idx + 1][idx + 3] = grad[curIdx + 1 + addIdx];
+	B[idx + 1][idx + 2] = grad[curIdx];		B[idx + 1][idx + 3] = grad[curIdx + 1 + model->isNotSatur(i + model->cellsNum_z + 2)];
 
-	/*assert(fabs(C[idx][idx] - model->solve_eq1_dp_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
+	assert(fabs(RightSide[idx][0] + model->solve_eq11(i)) < EQUALITY_TOLERANCE);
+	assert(fabs(RightSide[idx + 1][0] + model->solve_eq22(i)) < EQUALITY_TOLERANCE);
+
+	assert(fabs(C[idx][idx] - model->solve_eq1_dp_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
 	assert(fabs(C[idx][idx + 1] - model->solve_eq1_ds_beta(i, i - model->cellsNum_z - 2)) < EQUALITY_TOLERANCE);
 	assert(fabs(B[idx][idx - 2] - model->solve_eq1_dp_beta(i, i - 1)) < EQUALITY_TOLERANCE);
 	assert(fabs(B[idx][idx - 1] - model->solve_eq1_ds_beta(i, i - 1)) < EQUALITY_TOLERANCE);
@@ -511,7 +504,7 @@ void GasOil2DSolver::setMiddleAppr(const int i, const int idx)
 	assert(fabs(B[idx + 1][idx + 2] - model->solve_eq2_dp_beta(i, i + 1)) < EQUALITY_TOLERANCE);
 	assert(fabs(B[idx + 1][idx + 3] - model->solve_eq2_ds_beta(i, i + 1)) < EQUALITY_TOLERANCE);
 	assert(fabs(A[idx + 1][idx] - model->solve_eq2_dp_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);
-	assert(fabs(A[idx + 1][idx + 1] - model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);*/
+	assert(fabs(A[idx + 1][idx + 1] - model->solve_eq2_ds_beta(i, i + model->cellsNum_z + 2)) < EQUALITY_TOLERANCE);
 }
 
 void GasOil2DSolver::TopAppr(int i, int key)
@@ -532,14 +525,21 @@ void GasOil2DSolver::BottomAppr(int i, int key)
 {
 	if(key == PRES)
 	{
+		Variable& next = model->cells[i].u_next;
+		Variable& nebr = model->cells[i-1].u_next;
 		int idx = 2 * (model->cellsNum_z + 2) - 2;
 
 		// First eqn
 		B[idx][idx] = 1.0;
 		B[idx][idx-2] = -1.0;
+		RightSide[idx][0] = nebr.p - next.p;
 
 		// Second eqn
 		B[idx+1][idx+1] = 1.0;
-		B[idx+1][idx-1] = -1.0;
+//		if(nebr.SATUR)
+			B[idx+1][idx-1] = -1.0;
+//		else 
+//			B[idx+1][idx-1] = -1.0;
+
 	}
 }

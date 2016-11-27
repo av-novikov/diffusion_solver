@@ -8,11 +8,15 @@ using std::vector;
 using std::map;
 
 VPP2d::VPP2d()
-{}
-
+{
+	x = new double[5 * Variable::size];
+	y = new double[Variable::size];
+}
 VPP2d::~VPP2d()
-{}
-
+{
+	delete x;
+	delete y;
+}
 void VPP2d::setProps(Properties& props)
 {
 	leftBoundIsRate = props.leftBoundIsRate;
@@ -41,6 +45,7 @@ void VPP2d::setProps(Properties& props)
 	for (int i = 0; i < periodsNum; i++)
 	{
 		period.push_back(props.timePeriods[i]);
+		c.push_back(props.c[i]);
 		if (leftBoundIsRate)
 			rate.push_back(props.rates[i] / 86400.0);
 		else
@@ -60,27 +65,26 @@ void VPP2d::setProps(Properties& props)
 	ht_max = props.ht_max;
 
 	// Oil properties
-	props_o = props.props_o;
-	props_o.visc = cPToPaSec(props_o.visc);
+	props_oil = props.props_o;
+	props_oil.visc = cPToPaSec(props_oil.visc);
 
 	// Water properties
-	props_w = props.props_w;
-	props_w.visc = cPToPaSec(props_w.visc);
+	props_wat = props.props_w;
+	props_wat.visc = cPToPaSec(props_wat.visc);
 
 	depth_point = props.depth_point;
 
 	makeDimLess();
 
 	// Data sets
-	props_o.kr = setDataset(props.kr_o, 1.0, 1.0);
-	props_w.kr = setDataset(props.kr_w, 1.0, 1.0);
+	props_oil.kr = setDataset(props.kr_o, 1.0, 1.0);
+	props_wat.kr = setDataset(props.kr_w, 1.0, 1.0);
 
-	props_o.b = setDataset(props.B_o, P_dim / BAR_TO_PA, 1.0);
-	props_w.b = setDataset(props.B_w, P_dim / BAR_TO_PA, 1.0);
+//	props_oil.b = setDataset(props.B_o, P_dim / BAR_TO_PA, 1.0);
+//	props_wat.b = setDataset(props.B_w, P_dim / BAR_TO_PA, 1.0);
 
-	a = setDataset(props.a, P_dim / BAR_TO_PA, 1.0);
+//	props_wat.a = setDataset(props.a, P_dim / BAR_TO_PA, 1.0);
 }
-
 void VPP2d::makeDimLess()
 {
 	// Main units
@@ -129,16 +133,15 @@ void VPP2d::makeDimLess()
 	}
 
 	// Oil properties
-	props_o.visc /= (P_dim * t_dim);
-	props_o.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
-	props_o.beta /= (1.0 / P_dim);
+	props_oil.visc /= (P_dim * t_dim);
+	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_oil.beta /= (1.0 / P_dim);
 
 	// Water properties
-	props_w.visc /= (P_dim * t_dim);
-	props_w.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
-	props_w.beta /= (1.0 / P_dim);
+	props_wat.visc /= (P_dim * t_dim);
+	props_wat.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_wat.beta /= (1.0 / P_dim);
 }
-
 void VPP2d::checkSkeletons(const vector<Skeleton_Props>& props)
 {
 	vector<Skeleton_Props>::const_iterator it = props.begin();
@@ -160,7 +163,6 @@ void VPP2d::checkSkeletons(const vector<Skeleton_Props>& props)
 	}
 	assert(indxs == cellsNum_z);
 }
-
 void VPP2d::buildGridLog()
 {
 	cells.reserve(cellsNum);
@@ -247,7 +249,6 @@ void VPP2d::buildGridLog()
 	}
 	cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0));
 }
-
 void VPP2d::setInitialState()
 {
 	vector<Cell>::iterator it;
@@ -260,7 +261,6 @@ void VPP2d::setInitialState()
 		it->u_prev.c = it->u_iter.c = it->u_next.c = props.c_init;
 	}
 }
-
 void VPP2d::setPerforated()
 {
 	height_perf = 0.0;
@@ -274,7 +274,6 @@ void VPP2d::setPerforated()
 		}
 	}
 }
-
 void VPP2d::setPeriod(int period)
 {
 	if (leftBoundIsRate)
@@ -298,6 +297,8 @@ void VPP2d::setPeriod(int period)
 		Q_sum = 0.0;
 	}
 
+	C = c[period];
+
 	for (int i = 0; i < skeletonsNum; i++)
 	{
 		props_sk[i].radius_eff = props_sk[i].radiuses_eff[period];
@@ -305,12 +306,10 @@ void VPP2d::setPeriod(int period)
 		props_sk[i].skin = props_sk[i].skins[period];
 	}
 }
-
 void VPP2d::setRateDeviation(int num, double ratio)
 {
 	Qcell[num] += Q_sum * ratio;
 }
-
 double VPP2d::solveH()
 {
 	double H = 0.0;
@@ -327,11 +326,229 @@ double VPP2d::solveH()
 
 	return H;
 }
-
 double VPP2d::getRate(int cur)
 {
 	int neighbor = cur + cellsNum_z + 2;
 	Variable& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
 	Variable& next = cells[cur].u_next;
-	return getTrans(cells[cur], cells[neighbor]) * props_w.getKr(upwd.s) / props_o.visc / props_w.getBoreB(next.p) * (cells[neighbor].u_next.p - next.p);
+	return getTrans(cells[cur], cells[neighbor]) * props_wat.getKr(upwd.s).value() / props_wat.getViscosity(upwd.s).value() / props_wat.getBoreB(next.p).value() * (cells[neighbor].u_next.p - next.p);
+}
+
+void VPP2d::solve_eqMiddle(int cur)
+{
+	const Cell& cell = cells[cur];
+	const Skeleton_Props& props = *cell.props;
+
+	trace_on(mid);
+	adouble h [Variable::size];
+	TapeVariable var[5];
+	const Variable& prev = cell.u_prev;
+
+	for (int i = 0; i < 5; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].c <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+
+	h[0] = props.getPoro(next.p) * next.s / props_wat.getB(next.p) -
+		props.getPoro(prev.p) * prev.s / props_wat.getB(prev.p);
+
+	h[1] = props.getPoro(next.p) * (1.0 - next.s) / props_oil.getB(next.p) -
+		props.getPoro(prev.p) * (1.0 - prev.s) / props_oil.getB(prev.p);
+
+	h[2] = props.getPoro(next.p) * next.s * next.c / props_wat.getB(next.p) -
+		props.getPoro(prev.p) * prev.s * prev.c / props_wat.getB(prev.p);
+
+	int neighbor[4];
+	getNeighborIdx(cur, neighbor);
+	for (int i = 0; i < 4; i++)
+	{
+		const Cell& beta = cells[neighbor[i]];
+		const int upwd_idx = (getUpwindIdx(cur, neighbor[i]) == cur) ? 0 : i + 1;
+		const TapeVariable& nebr = var[i + 1];
+		const TapeVariable& upwd = var[upwd_idx];
+
+		h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p);
+
+		h[1] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			props_oil.getKr(upwd.s) / props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p);
+
+		h[2] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p) *
+			upwd.c;
+	}
+
+	for (int i = 0; i < Variable::size; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+void VPP2d::solve_eqLeft(int cur)
+{
+	const Cell& cell = cells[cur];
+
+	trace_on(left);
+	adouble h[Variable::size];
+	TapeVariable var[2];
+	adouble leftIsRate = leftBoundIsRate;
+	for (int i = 0; i < 2; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].c <<= x[i * Variable::size + 2];
+	}
+	
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr = var[1];
+	const TapeVariable& upwd = var[(getUpwindIdx(cur, cur + cellsNum_z + 2) == cur) ? 0 : 1];
+
+	condassign(h[0], leftIsRate,
+		getTrans(cells[cur], cells[cur+cellsNum_z+2]) * props_wat.getKr(upwd.s) / 
+		props_wat.getViscosity(next.p) / props_wat.getBoreB(next.p) *
+		(nebr.p - next.p) - Qcell[cur],
+		next.p - Pwf);
+
+	h[1] = next.s - 1.0;
+	h[2] = next.c - C;
+
+	for (int i = 0; i < Variable::size; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+void VPP2d::solve_eqRight(int cur)
+{
+	const Cell& cell = cells[cur];
+	const Cell& beta1 = cells[cur - cellsNum_z - 2];
+	const Cell& beta2 = cells[cur - 2 * cellsNum_z - 4];
+	const Skeleton_Props& props = *cell.props;
+
+	trace_on(right);
+	adouble h[Variable::size];
+	TapeVariable var[3];
+	adouble rightIsPres = rightBoundIsPres;
+	for (int i = 0; i < 3; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].c <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr1 = var[1];
+	const TapeVariable& nebr2 = var[2];
+
+	condassign(h[0], rightIsPres, next.p - props.p_out, next.p - nebr1.p);
+	h[1] = (next.s - nebr1.s) / (cell.r - beta1.r) - (nebr1.s - nebr2.s) / (beta1.r - beta2.r);
+	h[2] = (next.c - nebr1.c) / (cell.r - beta1.r) - (nebr1.c - nebr2.c) / (beta1.r - beta2.r);
+
+	for (int i = 0; i < Variable::size; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+void VPP2d::solve_eqVertical(int cur)
+{
+	const Cell& cell = cells[cur];
+
+	trace_on(vertical);
+	adouble h[Variable::size];
+	TapeVariable var[2];
+
+	for (int i = 0; i < 2; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].c <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr = var[1];
+
+	h[0] = next.p - nebr.p;
+	h[1] = next.s - nebr.s;
+	h[2] = next.c - nebr.c;
+
+	for (int i = 0; i < Variable::size; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+void VPP2d::solveFixVar()
+{
+}
+void VPP2d::setVariables(int cur)
+{
+	if (cur < cellsNum_z + 2)
+	{
+		// Left
+		const Variable& next = cells[cur].u_next;
+		const Variable& nebr1 = cells[cur + cellsNum_z + 2].u_next;
+		const Variable& nebr2 = cells[cur + 2 * cellsNum_z + 4].u_next;
+		
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr1.values[i];
+			x[2 * Variable::size + i] = nebr2.values[i];
+		}
+	}
+	else if (cur >= (cellsNum_z + 2) * (cellsNum_r + 1))
+	{
+		// Right
+		const Variable& next = cells[cur].u_next;
+		const Variable& nebr = cells[cur - cellsNum_z - 2].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+	}
+	else if (cur % (cellsNum_z + 2) == 0)
+	{
+		// Top
+		const Variable& next = cells[cur].u_next;
+		const Variable& nebr = cells[cur + 1].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+	}
+	else if ((cur + 1) % (cellsNum_z + 2) == 0)
+	{
+		// Bottom
+		const Variable& next = cells[cur].u_next;
+		const Variable& nebr = cells[cur - 1].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+	}
+	else
+	{
+		// Middle
+		const Variable& next = cells[cur].u_next;
+		int neighbor[4];
+		getNeighborIdx(cur, neighbor);
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+
+			for (int j = 0; j < 4; j++)
+			{
+				const Variable& nebr = cells[neighbor[j]].u_next;
+				x[(j + 1) * Variable::size + i] = nebr.values[i];
+			}
+		}
+	}
 }

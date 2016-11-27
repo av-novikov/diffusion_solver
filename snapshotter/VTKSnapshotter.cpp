@@ -29,35 +29,29 @@ VTKSnapshotter<modelType>::VTKSnapshotter()
 {
 	pattern = prefix + "snap_%{STEP}.vtp";
 }
-
 template <>
 VTKSnapshotter<gasOil_rz::GasOil_RZ>::VTKSnapshotter()
 {
 	pattern = prefix + "GasOil_RZ_%{STEP}.vtp";
 }
-
 template <>
 VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter()
 {
 	pattern = prefix + "Acid2d_%{STEP}.vtp";
 }
-
 template <>
 VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
 {
 	pattern = prefix + "VPP2d_%{STEP}.vtp";
 }
-
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()
 {
 }
-
 template <class modelType>
 void VTKSnapshotter<modelType>::dump(int i)
 {
 }
-
 template <class modelType>
 void VTKSnapshotter<modelType>::dump_all(int i)
 {

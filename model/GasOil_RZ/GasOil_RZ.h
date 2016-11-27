@@ -1,6 +1,8 @@
 #ifndef GASOIL_RZ_H_
 #define GASOIL_RZ_H_
 
+#define ADOLC_ADVANCED_BRANCHING
+
 #include <vector>
 #include <map>
 #include <string>
@@ -90,6 +92,10 @@ namespace gasOil_rz
 			neighbor[2] = cur - 1;
 			neighbor[3] = cur + 1;
 		};
+		inline int isNotSatur(int cur) const
+		{
+			return !cells[cur].u_next.SATUR;
+		};
 		inline int getSkeletonIdx(const Cell& cell) const
 		{
 			int idx = 0;
@@ -116,19 +122,17 @@ namespace gasOil_rz
 		inline double getTrans(Cell& cell, Cell& beta)
 		{
 			double k1, k2, S;
-			const int idx1 = getSkeletonIdx(cell);
-			const int idx2 = getSkeletonIdx(beta);
 
 			if( abs(cell.num - beta.num) == 1) {
-				k1 = props_sk[idx1].perm_z;
-				k2 = props_sk[idx2].perm_z;
+				k1 = cell.props->perm_z;
+				k2 = beta.props->perm_z;
 				if(k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 				S = 2.0 * M_PI * cell.r * cell.hr;
 				return 2.0 * k1 * k2 * S / (k1 * beta.hz + k2 * cell.hz);
 			} else {
-				k1 = (cell.r > props_sk[idx1].radius_eff ? props_sk[idx1].perm_r : props_sk[idx1].perm_eff);
-				k2 = (beta.r > props_sk[idx2].radius_eff ? props_sk[idx2].perm_r : props_sk[idx2].perm_eff);
+				k1 = (cell.r > cell.props->radius_eff ? cell.props->perm_r : cell.props->perm_eff);
+				k2 = (beta.r > beta.props->radius_eff ? beta.props->perm_r : beta.props->perm_eff);
 				if(k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 				S = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
@@ -357,6 +361,7 @@ namespace gasOil_rz
 
 		// First eqn
 		double solve_eq1(int cur);
+		double solve_eq11(int cur);
 		double solve_eq1_dp(int cur);
 		double solve_eq1_ds(int cur);
 		double solve_eq1_dp_beta(int cur, int beta);
@@ -364,6 +369,7 @@ namespace gasOil_rz
 
 		// Second eqn
 		double solve_eq2(int cur);
+		double solve_eq22(int cur);
 		double solve_eq2_dp(int cur);
 		double solve_eq2_ds(int cur);
 		double solve_eq2_dp_beta(int cur, int beta);
@@ -372,6 +378,7 @@ namespace gasOil_rz
 
 		// Left boundary condition
 		double solve_eqLeft(int cur);
+		double solve_eqLLeft(int cur);
 		double solve_eqLeft_dp(int cur);
 		double solve_eqLeft_ds(int cur);
 		double solve_eqLeft_dp_beta(int cur);
