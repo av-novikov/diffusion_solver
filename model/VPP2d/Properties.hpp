@@ -53,6 +53,10 @@ namespace vpp2d
 
 		double p_out;
 
+		// Connate saturations
+		double s_wc;
+		double s_oc;
+
 		// Initial values
 		double p_init;
 		double s_init;

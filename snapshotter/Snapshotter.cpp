@@ -26,6 +26,7 @@ void Snapshotter<modelType>::setModel(modelType* _model)
 {
 	model = _model;
 
+	P_dim = model->P_dim;
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 }

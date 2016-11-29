@@ -90,7 +90,7 @@ void VPP2d::makeDimLess()
 	// Main units
 	R_dim = r_w;
 	t_dim = 3600.0;
-	P_dim = BAR_TO_PA;
+	P_dim = props_sk[0].p_init;
 
 	// Temporal properties
 	ht /= t_dim;
@@ -404,15 +404,13 @@ void VPP2d::solve_eqLeft(int cur)
 	
 	const TapeVariable& next = var[0];
 	const TapeVariable& nebr = var[1];
-	const TapeVariable& upwd = var[(getUpwindIdx(cur, cur + cellsNum_z + 2) == cur) ? 0 : 1];
 
 	condassign(h[0], leftIsRate,
-		getTrans(cells[cur], cells[cur+cellsNum_z+2]) * props_wat.getKr(upwd.s) / 
-		props_wat.getViscosity(next.p) / props_wat.getBoreB(next.p) *
-		(nebr.p - next.p) - Qcell[cur],
+		getTrans(cells[cur], cells[cur+cellsNum_z+2]) / props_wat.getViscosity(next.p) / 
+		props_wat.getBoreB(next.p) * (nebr.p - next.p) - Qcell[cur],
 		next.p - Pwf);
 
-	h[1] = next.s - 1.0;
+	h[1] = next.s - cell.props->s_oc;
 	h[2] = next.c - C;
 
 	for (int i = 0; i < Variable::size; i++)

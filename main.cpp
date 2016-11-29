@@ -189,9 +189,9 @@ vpp2d::Properties* getProps()
 	
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(20.0);
+	props->rates.push_back(0.00001);
 	props->rates.push_back(0.0);
-	props->c.push_back(0.1);
+	props->c.push_back(0.0);
 	props->c.push_back(0.0);
 	//props->pwf.push_back(100.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
@@ -213,7 +213,9 @@ vpp2d::Properties* getProps()
 	tmp.cellsNum_z = 1;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
-	tmp.s_init = 1.0;
+	tmp.s_init = 0.8;
+	tmp.s_wc = 0.1;
+	tmp.s_oc = 0.9;
 	tmp.c_init = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;

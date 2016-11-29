@@ -439,7 +439,7 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 		polygon->GetPointIds()->SetId(3, idx + 1);
 		polygons->InsertNextCell(polygon);
 
-		pres->InsertNextValue(cell.u_next.p);
+		pres->InsertNextValue(cell.u_next.p * P_dim);
 		sat_w->InsertNextValue(cell.u_next.s);
 		sat_o->InsertNextValue(1.0 - cell.u_next.s);
 		conc_a->InsertNextValue(cell.u_next.c);
@@ -469,7 +469,7 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 			polygon->GetPointIds()->SetId(3, idx + 1);
 			polygons->InsertNextCell(polygon);
 
-			pres->InsertNextValue(cell.u_next.p);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
 			sat_w->InsertNextValue(cell.u_next.s);
 			sat_o->InsertNextValue(1.0 - cell.u_next.s);
 			conc_a->InsertNextValue(cell.u_next.c);

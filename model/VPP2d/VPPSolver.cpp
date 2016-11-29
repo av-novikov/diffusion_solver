@@ -241,7 +241,6 @@ void VPPSolver::solveStep()
 	while (err_newton > 1.e-4 && (dAverSat > 1.e-10 || dAverPres > 1.e-10 || dAverC > 1.e-10) && iterations < 9)
 	{
 		copyIterLayer();
-		model->snapshot_all(iterations);
 
 		Solve(model->cellsNum_r + 1, Variable::size * (model->cellsNum_z + 2), PRES);
 		construction_from_fz(model->cellsNum_r + 2, Variable::size * (model->cellsNum_z + 2), PRES);
@@ -289,6 +288,7 @@ void VPPSolver::LeftBoundAppr(int MZ, int key)
 		
 		C[i][i] = 1.0;
 		B[i][i] = -1.0;
+		A[i][i] = 0.0;
 		RightSide[i][0] = model->cells[i / Variable::size].u_next.values[i % Variable::size] - 
 						model->cells[int(i / Variable::size) + model->cellsNum_z + 2].u_next.values[i % Variable::size];
 	}
@@ -316,7 +316,6 @@ void VPPSolver::LeftBoundAppr(int MZ, int key)
 					// j - variable index
 					C[idx + i][idx + j] = jac[i][j];
 					B[idx + i][idx + j] = jac[i][Variable::size + j];
-					A[idx + i][idx + j] = jac[i][2 * Variable::size + j];
 				}
 			}
 		}
@@ -358,6 +357,7 @@ void VPPSolver::RightBoundAppr(int MZ, int key)
 					// j - variable index
 					A[idx + i][idx + j] = jac[i][j];
 					B[idx + i][idx + j] = jac[i][Variable::size + j];
+					C[idx + i][idx + j] = jac[i][2 * Variable::size + j];
 				}
 			}
 
