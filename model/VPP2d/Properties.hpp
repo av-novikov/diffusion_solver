@@ -17,7 +17,7 @@ namespace vpp2d
 		double m;
 		inline adouble getPoro(adouble p) const
 		{
-			return m * (1.0 + beta * (p /*- cell.props->p_init*/));
+			return (adouble)(m) * ((adouble)(1.0) + (adouble)(beta) * (p /*- cell.props->p_init*/));
 		};
 
 		// Density of skeleton matter in STC [kg/m3]
@@ -72,7 +72,7 @@ namespace vpp2d
 		Interpolate* visc_table;
 		inline adouble getViscosity(const adouble p) const
 		{
-			return visc;
+			return (adouble)(visc);
 		};
 
 		// Fluid volume factor
@@ -85,7 +85,7 @@ namespace vpp2d
 		inline adouble getB(const adouble p) const
 		{
 			//return b->Solve(p);
-			return b_bore * (1 - beta * (p - p_ref));
+			return (adouble)(b_bore) * (adouble(1.0) - (adouble)beta * (p - (adouble)p_ref));
 		};
 		inline adouble getBoreB(const adouble p) const
 		{
@@ -95,7 +95,7 @@ namespace vpp2d
 		double p_ref;
 		inline adouble getDensity(const adouble p) const
 		{
-			return dens_stc * (1.0 + beta * (p - p_ref));
+			return (adouble)(dens_stc) * ((adouble)(1.0) + (adouble)(beta) * (p - (adouble)(p_ref)));
 		};
 
 		// Relative fluid permeability
@@ -115,7 +115,7 @@ namespace vpp2d
 		Interpolate* visc_table;
 		inline adouble getViscosity(const adouble p) const
 		{
-			return visc;
+			return (adouble)(visc);
 		};
 
 		// Fluid volume factor
@@ -124,7 +124,7 @@ namespace vpp2d
 		inline adouble getB(const adouble p) const
 		{
 			//return b->Solve(p);
-			return b_bore * (1 - beta * (p - p_ref));
+			return (adouble)(b_bore) * (adouble(1.0) - (adouble)beta * (p - (adouble)p_ref));
 		};
 		inline adouble getBoreB(const adouble p) const
 		{
@@ -138,7 +138,7 @@ namespace vpp2d
 		double p_ref;
 		inline adouble getDensity(const adouble p) const
 		{
-			return dens_stc * (1.0 + beta * (p - p_ref));
+			return (adouble)(dens_stc) * ((adouble)(1.0) + (adouble)(beta) * (p - (adouble)(p_ref)));
 		};
 
 		// Relative fluid permeability

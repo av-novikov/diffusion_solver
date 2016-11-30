@@ -252,6 +252,7 @@ void VPPSolver::solveStep()
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);	dAverC = fabs(averC - averСPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;					averСPrev = averC;
 
+		const Variable& cell = model->cells[3].u_next;
 		iterations++;
 	}
 
@@ -267,9 +268,9 @@ void VPPSolver::construction_from_fz(int N, int n, int key)
 			for (int j = 0; j < model->cellsNum_z + 2; j++)
 			{
 				Variable& var = model->cells[i * (model->cellsNum_z + 2) + j].u_next;
-				var.p += fz[i][2 * j + 1];
-				var.s += fz[i][2 * j + 2];
-				var.c += fz[i][2 * j + 3];
+				var.p += fz[i][Variable::size * j + 1];
+				var.s += fz[i][Variable::size * j + 2];
+				var.c += fz[i][Variable::size * j + 3];
 			}
 		}
 	}
@@ -288,7 +289,6 @@ void VPPSolver::LeftBoundAppr(int MZ, int key)
 		
 		C[i][i] = 1.0;
 		B[i][i] = -1.0;
-		A[i][i] = 0.0;
 		RightSide[i][0] = model->cells[i / Variable::size].u_next.values[i % Variable::size] - 
 						model->cells[int(i / Variable::size) + model->cellsNum_z + 2].u_next.values[i % Variable::size];
 	}

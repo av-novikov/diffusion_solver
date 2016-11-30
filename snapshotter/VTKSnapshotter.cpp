@@ -377,7 +377,7 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 	for (int j = 1; j < ny; j++)
 	{
 		Cell& cell = model->cells[j];
-		points->InsertNextPoint(r_dim * (0.99 * cell.r), -r_dim * (cell.z - cell.hz / 2.0), 0.0);
+		points->InsertNextPoint(r_dim * (0.9 * cell.r), -r_dim * (cell.z - cell.hz / 2.0), 0.0);
 	}
 	for (int k = 1; k < nx; k++)
 	{

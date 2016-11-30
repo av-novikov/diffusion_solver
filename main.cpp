@@ -182,16 +182,16 @@ vpp2d::Properties* getProps()
 	vpp2d::Properties* props = new vpp2d::Properties();
 
 	props->cellsNum_r = 50;
-	props->cellsNum_z = 1;
+	props->cellsNum_z = 5;
 
 	props->timePeriods.push_back(2.0 * 86400.0);
 	props->timePeriods.push_back(4.0 * 86400.0);
 	
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(10.0);
+	props->rates.push_back(-100.0);
 	props->rates.push_back(0.0);
-	props->c.push_back(0.0);
+	props->c.push_back(0.1);
 	props->c.push_back(0.0);
 	//props->pwf.push_back(100.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
@@ -207,10 +207,10 @@ vpp2d::Properties* getProps()
 	props->r_w = 0.05;
 	props->r_e = 1000.0;
 
-	props->perfIntervals.push_back(make_pair(1, 1));
+	props->perfIntervals.push_back(make_pair(3, 3));
 
 	vpp2d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
 	tmp.s_init = 0.8;

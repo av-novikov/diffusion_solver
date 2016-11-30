@@ -107,7 +107,7 @@ adouble Interpolate::Solve(adouble arg)
 		tmp = xmax;
 		
 	int i = Flag[int((tmp - xmin) / temp)];
-	return DSolve(tmp) * (arg - x[i]) + y[i];
+	return (adouble)(DSolve(tmp)) * (arg - (adouble)(x[i])) + (adouble)y[i];
 }
 
 double Interpolate::DSolve(double arg)

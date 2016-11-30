@@ -371,15 +371,15 @@ void VPP2d::solve_eqMiddle(int cur)
 		const Cell& beta = cells[neighbor[i]];
 		const int upwd_idx = (getUpwindIdx(cur, neighbor[i]) == cur) ? 0 : i + 1;
 		const TapeVariable& nebr = var[i + 1];
-		const TapeVariable& upwd = var[upwd_idx];
+		TapeVariable& upwd = var[upwd_idx];
 
-		h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+		h[0] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p);
 
-		h[1] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+		h[1] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_oil.getKr(upwd.s) / props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p);
 
-		h[2] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+		h[2] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p) *
 			upwd.c;
 	}
@@ -408,12 +408,12 @@ void VPP2d::solve_eqLeft(int cur)
 	const TapeVariable& nebr = var[1];
 
 	condassign(h[0], leftIsRate,
-		getTrans(cells[cur], cells[cur+cellsNum_z+2]) / props_wat.getViscosity(next.p) / 
-		props_wat.getBoreB(next.p) * (nebr.p - next.p) - Qcell[cur],
-		next.p - Pwf);
+		(adouble)(getTrans(cells[cur], cells[cur+cellsNum_z+2])) / props_wat.getViscosity(next.p) / 
+		props_wat.getBoreB(next.p) * (nebr.p - next.p) - (adouble)(Qcell[cur]),
+		next.p - (adouble)(Pwf));
 
-	h[1] = next.s - cell.props->s_oc;
-	h[2] = next.c - C;
+	h[1] = next.s - (adouble)(cell.props->s_oc);
+	h[2] = next.c - (adouble)(C);
 
 	for (int i = 0; i < Variable::size; i++)
 		h[i] >>= y[i];
@@ -442,9 +442,9 @@ void VPP2d::solve_eqRight(int cur)
 	const TapeVariable& nebr1 = var[1];
 	const TapeVariable& nebr2 = var[2];
 
-	condassign(h[0], rightIsPres, next.p - props.p_out, next.p - nebr1.p);
-	h[1] = (next.s - nebr1.s) / (cell.r - beta1.r) - (nebr1.s - nebr2.s) / (beta1.r - beta2.r);
-	h[2] = (next.c - nebr1.c) / (cell.r - beta1.r) - (nebr1.c - nebr2.c) / (beta1.r - beta2.r);
+	condassign(h[0], rightIsPres, next.p - (adouble)(props.p_out), next.p - (adouble)(nebr1.p));
+	h[1] = (next.s - nebr1.s) / (adouble)(cell.r - beta1.r) - (nebr1.s - nebr2.s) / (adouble)(beta1.r - beta2.r);
+	h[2] = (next.c - nebr1.c) / (adouble)(cell.r - beta1.r) - (nebr1.c - nebr2.c) / (adouble)(beta1.r - beta2.r);
 
 	for (int i = 0; i < Variable::size; i++)
 		h[i] >>= y[i];
