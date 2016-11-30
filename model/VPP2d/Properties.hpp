@@ -102,10 +102,9 @@ namespace vpp2d
 		Interpolate* kr;
 		inline adouble getKr(const adouble s_l) const
 		{
-			if (s_l > 1.0)
-				return kr->Solve(1.0);
-			else
-				return kr->Solve(s_l);
+			adouble tmp;
+			condassign(tmp, s_l - adouble(1.0), kr->Solve(s_l), adouble(0.0));
+			return tmp;
 		};
 		
 	};
@@ -146,10 +145,9 @@ namespace vpp2d
 		Interpolate* kr;
 		inline adouble getKr(const adouble s_l) const
 		{
-			if (s_l > 1.0)
-				return 0.0;
-			else
-				return kr->Solve(s_l);
+			adouble tmp;
+			condassign(tmp, s_l - adouble(1.0), adouble(0.0), kr->Solve(s_l));
+			return tmp;
 		};
 	};
 

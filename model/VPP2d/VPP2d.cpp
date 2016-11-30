@@ -78,7 +78,7 @@ void VPP2d::setProps(Properties& props)
 
 	// Data sets
 	props_oil.kr = setDataset(props.kr_o, 1.0, 1.0);
-	props_wat.kr = setDataset(props.kr_w, 1.0, 1.0);
+ 	props_wat.kr = setDataset(props.kr_w, 1.0, 1.0);
 
 //	props_oil.b = setDataset(props.B_o, P_dim / BAR_TO_PA, 1.0);
 //	props_wat.b = setDataset(props.B_w, P_dim / BAR_TO_PA, 1.0);
@@ -136,11 +136,13 @@ void VPP2d::makeDimLess()
 	props_oil.visc /= (P_dim * t_dim);
 	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
+	props_oil.p_ref /= P_dim;
 
 	// Water properties
 	props_wat.visc /= (P_dim * t_dim);
 	props_wat.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_wat.beta /= (1.0 / P_dim);
+	props_wat.p_ref /= P_dim;
 }
 void VPP2d::checkSkeletons(const vector<Skeleton_Props>& props)
 {

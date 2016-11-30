@@ -189,7 +189,7 @@ vpp2d::Properties* getProps()
 	
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(0.00001);
+	props->rates.push_back(10.0);
 	props->rates.push_back(0.0);
 	props->c.push_back(0.0);
 	props->c.push_back(0.0);
@@ -223,7 +223,7 @@ vpp2d::Properties* getProps()
 	tmp.perm_r = 50.0;
 	tmp.perm_z = 0.0;//	 50.0;
 	tmp.dens_stc = 2000.0;
-	tmp.beta = 4.35113e-10;
+	tmp.beta = 1.e-10;
 
 	tmp.skins.push_back(0.0);
 	tmp.skins.push_back(0.0);
@@ -240,18 +240,16 @@ vpp2d::Properties* getProps()
 	props->depth_point = 0.0;
 
 	props->props_o.visc = 1.0;
-	props->props_o.b_bore = 1.0;
 	props->props_o.dens_stc = 736.0;
 	props->props_o.beta = 0.5 * 1.e-9;
-	props->props_o.b_bore = 1.15;
-	props->props_o.p_ref = tmp.p_out;
+	props->props_o.b_bore = 1.0;
+	props->props_o.p_ref = 0.0;// tmp.p_out;
 
 	props->props_w.visc = 1.0;
-	props->props_w.b_bore = 1.0;
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 0.5 * 1.e-9;
-	props->props_w.b_bore = 0.99;
-	props->props_w.p_ref = tmp.p_out;
+	props->props_w.b_bore = 1.0;
+	props->props_w.p_ref = 0.0;// tmp.p_out;
 
 	// Defining relative permeabilities
 	setDataFromFile(props->kr_o, "props/vpp/kr_oil.txt");

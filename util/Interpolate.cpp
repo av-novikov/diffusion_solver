@@ -100,17 +100,14 @@ double Interpolate::Solve(double arg)
 
 adouble Interpolate::Solve(adouble arg)
 {
-	if (arg.value() < xmin)
-		arg.setValue(xmin);
-	else if (arg.value() > xmax)
-		arg.setValue(xmax);
-
-	adouble aY;
-
-	int i = Flag[int((arg.value() - xmin) / temp)];
-	aY = DSolve(arg.value()) * (arg - x[i]) + y[i];
-
-	return aY;
+	double tmp = arg.value();
+	if (tmp < xmin)
+		tmp = xmin;
+	else if (tmp > xmax)
+		tmp = xmax;
+		
+	int i = Flag[int((tmp - xmin) / temp)];
+	return DSolve(tmp) * (arg - x[i]) + y[i];
 }
 
 double Interpolate::DSolve(double arg)
