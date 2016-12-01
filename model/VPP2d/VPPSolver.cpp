@@ -252,7 +252,6 @@ void VPPSolver::solveStep()
 		dAverPres = fabs(averPres - averPresPrev);	dAverSat = fabs(averSat - averSatPrev);	dAverC = fabs(averC - averСPrev);
 		averPresPrev = averPres;					averSatPrev = averSat;					averСPrev = averC;
 
-		const Variable& cell = model->cells[3].u_next;
 		iterations++;
 	}
 

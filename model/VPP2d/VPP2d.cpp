@@ -347,36 +347,25 @@ void VPP2d::solve_eqMiddle(int cur)
 
 	trace_on(mid);
 	adouble h [Variable::size];
-	//TapeVariable var[5];
-	adouble var[5 * Variable::size];
+	TapeVariable var[5];
 	const Variable& prev = cell.u_prev;
 
 	for (int i = 0; i < 5; i++)
 	{
-		var[i * Variable::size] <<= x[i * Variable::size];
-		var[i * Variable::size + 1] <<= x[i * Variable::size + 1];
-		var[i * Variable::size + 2] <<= x[i * Variable::size + 2];
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].c <<= x[i * Variable::size + 2];
 	}
 
-	//const TapeVariable& next = var[0];
-	adouble* next = &var[0];
+	const TapeVariable& next = var[0];
 
-	/*h[0] = props.getPoro(next.p) * next.s / props_wat.getB(next.p) -
+	h[0] = props.getPoro(next.p) * next.s / props_wat.getB(next.p) -
 		props.getPoro(prev.p) * prev.s / props_wat.getB(prev.p);
 
 	h[1] = props.getPoro(next.p) * (1.0 - next.s) / props_oil.getB(next.p) -
 		props.getPoro(prev.p) * (1.0 - prev.s) / props_oil.getB(prev.p);
 
 	h[2] = props.getPoro(next.p) * next.s * next.c / props_wat.getB(next.p) -
-		props.getPoro(prev.p) * prev.s * prev.c / props_wat.getB(prev.p);*/
-
-	h[0] = props.getPoro(next[P]) * next[S] / props_wat.getB(next[P]) -
-		props.getPoro(prev.p) * prev.s / props_wat.getB(prev.p);
-
-	h[1] = props.getPoro(next[P]) * (1.0 - next[S]) / props_oil.getB(next[P]) -
-		props.getPoro(prev.p) * (1.0 - prev.s) / props_oil.getB(prev.p);
-
-	h[2] = props.getPoro(next[P]) * next[S] * next[C] / props_wat.getB(next[P]) -
 		props.getPoro(prev.p) * prev.s * prev.c / props_wat.getB(prev.p);
 
 	int neighbor[4];
@@ -385,37 +374,12 @@ void VPP2d::solve_eqMiddle(int cur)
 	for (int i = 0; i < 4; i++)
 	{
 		const Cell& beta = cells[neighbor[i]];
-		//const int upwd_idx = (getUpwindIdx(cur, neighbor[i]) == cur) ? 0 : i + 1;
+		const int upwd_idx = (getUpwindIdx(cur, neighbor[i]) == cur) ? 0 : i + 1;
 		const int nebr_idx = (i + 1) * Variable::size;
-		adouble* nebr = &var[nebr_idx];
-		//const TapeVariable& nebr = var[i + 1];
-		//TapeVariable& upwd = var[upwd_idx];
+		const TapeVariable& nebr = var[i + 1];
+		TapeVariable& upwd = var[upwd_idx];
 
-		condassign(tmp[0], upwindIsCur(cur, neighbor[i]),
-			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_wat.getKr(next[S]) / props_wat.getViscosity(next[P]) / props_wat.getB(next[P]),
-			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_wat.getKr(nebr[S]) / props_wat.getViscosity(nebr[P]) / props_wat.getB(nebr[P]));
-		/*tmp[0] = (adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_wat.getKr(nebr[S]) / props_wat.getViscosity(nebr[P]) / props_wat.getB(nebr[P]);*/
-
-		condassign(tmp[1], upwindIsCur(cur, neighbor[i]),
-			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_oil.getKr(next[S]) / props_oil.getViscosity(next[P]) / props_oil.getB(next[P]),
-			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_oil.getKr(nebr[S]) / props_oil.getViscosity(nebr[P]) / props_oil.getB(nebr[P]));
-
-		condassign(tmp[2], upwindIsCur(cur, neighbor[i]),
-			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_wat.getKr(next[S]) / props_wat.getViscosity(next[P]) / props_wat.getB(next[P]) *
-			next[C],
-			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
-			props_wat.getKr(nebr[S]) / props_wat.getViscosity(nebr[P]) / props_wat.getB(nebr[P]) *
-			nebr[C]);
-
-		h[0] += tmp[0];		h[1] += tmp[1];		h[2] += tmp[2];
-
-		/*h[0] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
+		h[0] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p);
 
 		h[1] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
@@ -423,7 +387,7 @@ void VPP2d::solve_eqMiddle(int cur)
 
 		h[2] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p) *
-			upwd.c;*/
+			upwd.c;
 	}
 
 	for (int i = 0; i < Variable::size; i++)
