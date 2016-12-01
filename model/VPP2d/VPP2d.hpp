@@ -27,7 +27,7 @@ namespace vpp2d
 	protected:
 		// Concentration
 		std::vector<double> c;
-		double C;
+		double Conc;
 
 		// Continuum properties
 		int skeletonsNum;
@@ -69,12 +69,12 @@ namespace vpp2d
 			}
 			exit(-1);
 		};
-		inline double upwindIsCur(int cur, int beta)
+		inline adouble upwindIsCur(int cur, int beta)
 		{
 			if (cells[cur].u_next.p < cells[beta].u_next.p)
-				return 0.0;
+				return adouble(0.0);
 			else
-				return 1.0;
+				return adouble(1.0);
 		};
 		inline int getUpwindIdx(int cur, int beta)
 		{
@@ -92,21 +92,21 @@ namespace vpp2d
 		};
 		inline double getTrans(const Cell& cell, const Cell& beta) const
 		{
-			double k1, k2, S;
+			double k1, k2, Square;
 
 			if (abs(cell.num - beta.num) == 1) {
 				k1 = cell.props->perm_z;
 				k2 = beta.props->perm_z;
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
-				S = 2.0 * M_PI * cell.r * cell.hr;
-				return 2.0 * k1 * k2 * S / (k1 * beta.hz + k2 * cell.hz);
+				Square = 2.0 * M_PI * cell.r * cell.hr;
+				return 2.0 * k1 * k2 * Square / (k1 * beta.hz + k2 * cell.hz);
 			}
 			else {
 				k1 = (cell.r > cell.props->radius_eff ? cell.props->perm_r : cell.props->perm_eff);
 				k2 = (beta.r > beta.props->radius_eff ? beta.props->perm_r : beta.props->perm_eff);
-				S = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
-				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
+				Square = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
+				return 2.0 * k1 * k2 * Square / (k1 * beta.hr + k2 * cell.hr);
 			}
 		};
 		inline double getNablaP(Cell& cell, int varNum, int axis)

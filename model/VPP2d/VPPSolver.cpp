@@ -340,11 +340,11 @@ void VPPSolver::RightBoundAppr(int MZ, int key)
 	{
 		int idx = 0;
 
-		for (int i = (model->cellsNum_r + 1)*(model->cellsNum_z + 2); i < (model->cellsNum_r + 2)*(model->cellsNum_z + 2); i++)
+		for (int cell_idx = (model->cellsNum_r + 1)*(model->cellsNum_z + 2); cell_idx < (model->cellsNum_r + 2)*(model->cellsNum_z + 2); cell_idx++)
 		{
-			model->setVariables(i);
+			model->setVariables(cell_idx);
 
-			model->solve_eqRight(i);
+			model->solve_eqRight(cell_idx);
 			for (int i = 0; i < Variable::size; i++)
 				RightSide[idx + i][0] = -model->y[i];
 
@@ -383,12 +383,12 @@ void VPPSolver::MiddleAppr(int current, int MZ, int key)
 	if (key == PRES)
 	{
 		int idx = 0;
-		int i = current * (model->cellsNum_z + 2);
+		int cell_idx = current * (model->cellsNum_z + 2);
 
 		// Top cell
-		model->setVariables(i);
+		model->setVariables(cell_idx);
 
-		model->solve_eqVertical(i);
+		model->solve_eqVertical(cell_idx);
 		for (int i = 0; i < Variable::size; i++)
 			RightSide[idx + i][0] = -model->y[i];
 
@@ -407,11 +407,11 @@ void VPPSolver::MiddleAppr(int current, int MZ, int key)
 		idx += Variable::size;
 
 		// Middle cells
-		for (i = current * (model->cellsNum_z + 2) + 1; i < (current + 1) * (model->cellsNum_z + 2) - 1; i++)
+		for (cell_idx = current * (model->cellsNum_z + 2) + 1; cell_idx < (current + 1) * (model->cellsNum_z + 2) - 1; cell_idx++)
 		{
-			model->setVariables(i);
+			model->setVariables(cell_idx);
 
-			model->solve_eqMiddle(i);
+			model->solve_eqMiddle(cell_idx);
 			for (int i = 0; i < Variable::size; i++)
 				RightSide[idx + i][0] = -model->y[i];
 
@@ -434,9 +434,9 @@ void VPPSolver::MiddleAppr(int current, int MZ, int key)
 		}
 
 		// Bottom cell
-		model->setVariables(i);
+		model->setVariables(cell_idx);
 
-		model->solve_eqVertical(i);
+		model->solve_eqVertical(cell_idx);
 		for (int i = 0; i < Variable::size; i++)
 			RightSide[idx + i][0] = -model->y[i];
 

@@ -3,6 +3,10 @@
 #include <cassert>
 #include <map>
 
+#define P 0
+#define S 1
+#define C 2
+
 using namespace vpp2d;
 using std::vector;
 using std::map;
@@ -299,7 +303,7 @@ void VPP2d::setPeriod(int period)
 		Q_sum = 0.0;
 	}
 
-	C = c[period];
+	Conc = c[period];
 
 	for (int i = 0; i < skeletonsNum; i++)
 	{
@@ -333,7 +337,7 @@ double VPP2d::getRate(int cur)
 	int neighbor = cur + cellsNum_z + 2;
 	Variable& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
 	Variable& next = cells[cur].u_next;
-	return getTrans(cells[cur], cells[neighbor]) * props_wat.getKr(upwd.s).value() / props_wat.getViscosity(upwd.s).value() / props_wat.getBoreB(next.p).value() * (cells[neighbor].u_next.p - next.p);
+	return getTrans(cells[cur], cells[neighbor]) / props_wat.getViscosity(upwd.s).value() / props_wat.getBoreB(next.p).value() * (cells[neighbor].u_next.p - next.p);
 }
 
 void VPP2d::solve_eqMiddle(int cur)
@@ -343,37 +347,75 @@ void VPP2d::solve_eqMiddle(int cur)
 
 	trace_on(mid);
 	adouble h [Variable::size];
-	TapeVariable var[5];
+	//TapeVariable var[5];
+	adouble var[5 * Variable::size];
 	const Variable& prev = cell.u_prev;
 
 	for (int i = 0; i < 5; i++)
 	{
-		var[i].p <<= x[i * Variable::size];
-		var[i].s <<= x[i * Variable::size + 1];
-		var[i].c <<= x[i * Variable::size + 2];
+		var[i * Variable::size] <<= x[i * Variable::size];
+		var[i * Variable::size + 1] <<= x[i * Variable::size + 1];
+		var[i * Variable::size + 2] <<= x[i * Variable::size + 2];
 	}
 
-	const TapeVariable& next = var[0];
+	//const TapeVariable& next = var[0];
+	adouble* next = &var[0];
 
-	h[0] = props.getPoro(next.p) * next.s / props_wat.getB(next.p) -
+	/*h[0] = props.getPoro(next.p) * next.s / props_wat.getB(next.p) -
 		props.getPoro(prev.p) * prev.s / props_wat.getB(prev.p);
 
 	h[1] = props.getPoro(next.p) * (1.0 - next.s) / props_oil.getB(next.p) -
 		props.getPoro(prev.p) * (1.0 - prev.s) / props_oil.getB(prev.p);
 
 	h[2] = props.getPoro(next.p) * next.s * next.c / props_wat.getB(next.p) -
+		props.getPoro(prev.p) * prev.s * prev.c / props_wat.getB(prev.p);*/
+
+	h[0] = props.getPoro(next[P]) * next[S] / props_wat.getB(next[P]) -
+		props.getPoro(prev.p) * prev.s / props_wat.getB(prev.p);
+
+	h[1] = props.getPoro(next[P]) * (1.0 - next[S]) / props_oil.getB(next[P]) -
+		props.getPoro(prev.p) * (1.0 - prev.s) / props_oil.getB(prev.p);
+
+	h[2] = props.getPoro(next[P]) * next[S] * next[C] / props_wat.getB(next[P]) -
 		props.getPoro(prev.p) * prev.s * prev.c / props_wat.getB(prev.p);
 
 	int neighbor[4];
 	getNeighborIdx(cur, neighbor);
+	adouble tmp[Variable::size];
 	for (int i = 0; i < 4; i++)
 	{
 		const Cell& beta = cells[neighbor[i]];
-		const int upwd_idx = (getUpwindIdx(cur, neighbor[i]) == cur) ? 0 : i + 1;
-		const TapeVariable& nebr = var[i + 1];
-		TapeVariable& upwd = var[upwd_idx];
+		//const int upwd_idx = (getUpwindIdx(cur, neighbor[i]) == cur) ? 0 : i + 1;
+		const int nebr_idx = (i + 1) * Variable::size;
+		adouble* nebr = &var[nebr_idx];
+		//const TapeVariable& nebr = var[i + 1];
+		//TapeVariable& upwd = var[upwd_idx];
 
-		h[0] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
+		condassign(tmp[0], upwindIsCur(cur, neighbor[i]),
+			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_wat.getKr(next[S]) / props_wat.getViscosity(next[P]) / props_wat.getB(next[P]),
+			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_wat.getKr(nebr[S]) / props_wat.getViscosity(nebr[P]) / props_wat.getB(nebr[P]));
+		/*tmp[0] = (adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_wat.getKr(nebr[S]) / props_wat.getViscosity(nebr[P]) / props_wat.getB(nebr[P]);*/
+
+		condassign(tmp[1], upwindIsCur(cur, neighbor[i]),
+			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_oil.getKr(next[S]) / props_oil.getViscosity(next[P]) / props_oil.getB(next[P]),
+			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_oil.getKr(nebr[S]) / props_oil.getViscosity(nebr[P]) / props_oil.getB(nebr[P]));
+
+		condassign(tmp[2], upwindIsCur(cur, neighbor[i]),
+			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_wat.getKr(next[S]) / props_wat.getViscosity(next[P]) / props_wat.getB(next[P]) *
+			next[C],
+			(adouble)(ht / cell.V * getTrans(cell, beta)) * (next[P] - nebr[P]) *
+			props_wat.getKr(nebr[S]) / props_wat.getViscosity(nebr[P]) / props_wat.getB(nebr[P]) *
+			nebr[C]);
+
+		h[0] += tmp[0];		h[1] += tmp[1];		h[2] += tmp[2];
+
+		/*h[0] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p);
 
 		h[1] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
@@ -381,7 +423,7 @@ void VPP2d::solve_eqMiddle(int cur)
 
 		h[2] += (adouble)(ht / cell.V * getTrans(cell, beta)) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s) / props_wat.getViscosity(upwd.p) / props_wat.getB(upwd.p) *
-			upwd.c;
+			upwd.c;*/
 	}
 
 	for (int i = 0; i < Variable::size; i++)
@@ -413,7 +455,7 @@ void VPP2d::solve_eqLeft(int cur)
 		next.p - (adouble)(Pwf));
 
 	h[1] = next.s - (adouble)(cell.props->s_oc);
-	h[2] = next.c - (adouble)(C);
+	h[2] = next.c - (adouble)(Conc);
 
 	for (int i = 0; i < Variable::size; i++)
 		h[i] >>= y[i];
