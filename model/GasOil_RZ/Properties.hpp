@@ -1,8 +1,6 @@
 #ifndef GASOILRZ_PROPERTIES_HPP_
 #define GASOILRZ_PROPERTIES_HPP_
 
-#include "model/cells/Variables.hpp"
-#include "model/cells/CylCell2D.h"
 #include "util/utils.h"
 
 #include "adolc/adouble.h"
@@ -10,22 +8,18 @@
 
 namespace gasOil_rz
 {
-	const int mid1 = 1;
-	const int mid2 = 2;
-	const int left = 3;
-	const int right = 4;
+	const int mid = 1;
+	const int left = 2;
+	const int right = 3;
+	const int vertical = 4;
 
 	struct Skeleton_Props
 	{
 		// Porosity in STC
 		double m;
-		inline double getPoro(double p) const
-		{
-			return m * (1.0 + beta * (p /*- cell.props->p_init*/));
-		};
 		inline adouble getPoro(adouble p) const
 		{
-			return m * (1.0 + beta * (p /*- cell.props->p_init*/));
+			return (adouble)(m)* ((adouble)(1.0) + (adouble)(beta)* (p /*- cell.props->p_init*/));
 		};
 		// Density of skeleton matter in STC [kg/m3]
 		double dens_stc;
@@ -57,6 +51,10 @@ namespace gasOil_rz
 
 		int cellsNum_z;
 
+		// Connate saturations
+		double s_wc;
+		double s_oc;
+
 		double p_out;
 		double p_init;
 		double p_bub;
@@ -67,6 +65,11 @@ namespace gasOil_rz
 	{
 		// Viscosity [cP]
 		double visc;
+		Interpolate* visc_table;
+		inline adouble getViscosity(const adouble p) const
+		{
+			return (adouble)(visc);
+		};
 		// Density of fluid in STC [kg/m3]
 		double dens_stc;
 		// Volume factor for well bore
@@ -75,43 +78,20 @@ namespace gasOil_rz
 		double beta;
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline double getKr(double sat_oil) const
-		{
-			if (sat_oil > 1.0)
-				return 1.0;
-			else
-				return kr->Solve(sat_oil);
-		};
 		inline adouble getKr(adouble sat_oil) const
 		{
-			if (sat_oil > 1.0)
-				return 1.0;
-			else
-				return kr->Solve(sat_oil);
+			return kr->Solve(sat_oil);
 		};
 
 		// Fluid volume factor
 		Interpolate* b;
-		inline double getB(double p, double p_bub, bool SATUR) const
+		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
 		{
-			if (SATUR)
-				return b->Solve(p);
-			else
-				return b->Solve(p_bub) * (1.0 + beta * (p_bub - p));
+			adouble tmp;
+			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub) * (1.0 + beta * (p_bub - p)));
+			return tmp;
 		};
-		inline adouble getB(adouble p, adouble p_bub, bool SATUR) const
-		{
-			if (SATUR)
-				return b->Solve(p);
-			else
-				return b->Solve(p_bub) * (1.0 + beta * (p_bub - p));
-		};
-		inline double getBoreB(double p, double p_bub, bool SATUR) const
-		{
-			//return props_oil.b_bore;
-			return getB(p, p_bub, SATUR);
-		};
-		inline adouble getBoreB(adouble p, adouble p_bub, bool SATUR) const
+		inline adouble getBoreB(adouble p, adouble p_bub, adouble SATUR) const
 		{
 			//return props_oil.b_bore;
 			return getB(p, p_bub, SATUR);
@@ -119,19 +99,11 @@ namespace gasOil_rz
 
 		// Gas-oil ratio
 		Interpolate* Rs;
-		inline double getRs(double p, double p_bub, bool SATUR) const
+		inline adouble getRs(adouble p, adouble p_bub, adouble SATUR) const
 		{
-			if (SATUR)
-				return Rs->Solve(p);
-			else
-				return Rs->Solve(p_bub);
-		};
-		inline adouble getRs(adouble p, adouble p_bub, bool SATUR) const
-		{
-			if (SATUR)
-				return Rs->Solve(p);
-			else
-				return Rs->Solve(p_bub);
+			adouble tmp;
+			condassign(tmp, SATUR, Rs->Solve(p), Rs->Solve(p_bub));
+			return tmp;
 		};
 	};
 	
@@ -139,6 +111,11 @@ namespace gasOil_rz
 	{
 		// Viscosity [cP]
 		double visc;
+		Interpolate* visc_table;
+		inline adouble getViscosity(const adouble p) const
+		{
+			return (adouble)(visc);
+		};
 		// Density of fluid in STC [kg/m3]
 		double dens_stc;
 		// Volume factor for well bore
@@ -147,26 +124,12 @@ namespace gasOil_rz
 		double beta;
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline double getKr(double sat_oil) const
-		{
-			if (sat_oil > 1.0)
-				return 0.0;
-			else
-				return kr->Solve(sat_oil);
-		};
 		inline adouble getKr(adouble sat_oil) const
 		{
-			if (sat_oil > 1.0)
-				return 0.0;
-			else
-				return kr->Solve(sat_oil);
+			return kr->Solve(sat_oil);
 		};
 		// Fluid volume factor
 		Interpolate* b;
-		inline double getB(double p) const
-		{
-			return b->Solve(p);
-		};
 		inline adouble getB(adouble p) const
 		{
 			return b->Solve(p);
@@ -224,6 +187,11 @@ namespace gasOil_rz
 		std::vector< std::pair<double, double> > B_oil;
 		// Data set (pressure, gas volume factor) ([Pa], [m3/m3])
 		std::vector< std::pair<double, double> > B_gas;
+
+		// Data set (pressure, oil viscosity) ([Pa], [cP])
+		std::vector< std::pair<double, double> > visc_oil;
+		// Data set (pressure, gas viscosity) ([Pa], [cP])
+		std::vector< std::pair<double, double> > visc_gas;
 
 		// Data set (pressure, gas content in oil) ([Pa], [m3/m3])
 		std::vector< std::pair<double, double> > Rs;

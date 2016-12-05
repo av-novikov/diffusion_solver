@@ -17,18 +17,7 @@ namespace gasOil_rz
 		void MiddleAppr(int current, int MZ, int key);
 		void LeftBoundAppr(int MZ, int key);
 		void RightBoundAppr (int MZ, int key);
-
-		void setLeftAppr(const int i, const int idx);
-		void setMiddleAppr(const int i, const int idx);
-		void setRightAppr(const int i, const int idx);
-
 	protected:
-
-		double *x, *x_bound;
-		double *grad, *grad_bound;
-
-		void TopAppr(int i, int key);
-		void BottomAppr(int i, int key);
 
 		void construction_from_fz(int N, int n, int key);
 		void control();
@@ -53,8 +42,6 @@ namespace gasOil_rz
 		void filldPdQ(double mult);
 		void solveSystem();
 		void solveDq(double mult);
-		//void fillGrad(double mult);
-		//void fillGess();
 
 		inline void printWellRates()
 		{
@@ -71,6 +58,8 @@ namespace gasOil_rz
 			std::cout << "Summary rate deviation = " << DQ * model->Q_dim * 86400.0 << std::endl;
 			std::cout << std::endl;
 		};
+
+		double** jac;
 
 	public:
 		GasOil2DSolver(GasOil_RZ* _model);

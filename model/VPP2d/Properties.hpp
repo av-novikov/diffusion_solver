@@ -201,9 +201,9 @@ namespace vpp2d
 		// Data set (pressure, gas volume factor) ([Pa], [m3/m3])
 		std::vector< std::pair<double, double> > B_w;
 
-		// Data set (pressure, oil volume factor) ([Pa], [cP])
+		// Data set (pressure, oil viscosity) ([Pa], [cP])
 		std::vector< std::pair<double, double> > visc_o;
-		// Data set (pressure, gas volume factor) ([Pa], [cP])
+		// Data set (pressure, water viscosity) ([Pa], [cP])
 		std::vector< std::pair<double, double> > visc_w;
 
 		// Data set (pressure, gas volume factor) ([Pa], [1])

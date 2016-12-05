@@ -288,7 +288,7 @@ void VPPSolver::LeftBoundAppr(int MZ, int key)
 		
 		C[i][i] = 1.0;
 		B[i][i] = -1.0;
-		RightSide[i][0] = model->cells[i / Variable::size].u_next.values[i % Variable::size] - 
+		RightSide[i][0] = -model->cells[i / Variable::size].u_next.values[i % Variable::size] + 
 						model->cells[int(i / Variable::size) + model->cellsNum_z + 2].u_next.values[i % Variable::size];
 	}
 

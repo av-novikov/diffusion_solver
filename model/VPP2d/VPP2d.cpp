@@ -370,7 +370,6 @@ void VPP2d::solve_eqMiddle(int cur)
 
 	int neighbor[4];
 	getNeighborIdx(cur, neighbor);
-	adouble tmp[Variable::size];
 	for (int i = 0; i < 4; i++)
 	{
 		const Cell& beta = cells[neighbor[i]];

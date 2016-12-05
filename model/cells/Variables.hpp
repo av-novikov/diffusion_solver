@@ -15,7 +15,6 @@ struct Var1phase
 		};
 	};
 };
-
 struct Var1phaseNIT 
 {
 	static const int size = 2;
@@ -29,7 +28,6 @@ struct Var1phaseNIT
 		};
 	};
 };
-
 struct Var2phase 
 {
 	static const int size = 3;
@@ -45,7 +43,16 @@ struct Var2phase
 	};
 	bool SATUR;
 };
+struct TapeVarGasOil
+{
+	static const int size = 3;
 
+	adouble p;
+	adouble s;
+	adouble p_bub;
+
+	bool SATUR;
+};
 struct Var2phaseNIT
 {
 	static const int size = 4;
@@ -62,7 +69,6 @@ struct Var2phaseNIT
 	};
 	bool SATUR;
 };
-
 struct VarSimpleAcid
 {
 	static const int size = 5;
@@ -107,7 +113,6 @@ struct VarSimpleVPP
 	VarSimpleVPP() {};
 	~VarSimpleVPP() {};
 };
-
 struct TapeVarSimpleVPP
 {
 	static const int size = 3;

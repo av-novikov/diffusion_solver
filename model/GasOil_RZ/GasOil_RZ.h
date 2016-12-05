@@ -7,12 +7,19 @@
 #include <map>
 #include <string>
 
+#include "model/cells/Variables.hpp"
 #include "model/GasOil_RZ/Properties.hpp"
 #include "model/AbstractModel.hpp"
 
 namespace gasOil_rz
 {
+	static const int stencil = 5;
+	static const int Lstencil = 3;
+	static const int Rstencil = 2;
+	static const int Vstencil = 2;
+
 	typedef Var2phase Variable;
+	typedef TapeVarGasOil TapeVariable;
 	typedef NewCylCell2D<Variable, Skeleton_Props> Cell;
 	template <typename TVariable> using TCell = NewCylCell2D<TVariable, Skeleton_Props>;
 
@@ -25,9 +32,6 @@ namespace gasOil_rz
 		friend class GasOil2DSolver;	
 
 	protected:
-		static const int size;
-		static const int schemeVarNum;
-		static const int boundVarNum;
 
 		// Continuum properties
 		int skeletonsNum;
@@ -39,10 +43,6 @@ namespace gasOil_rz
 		int cellsNum_r;
 		// Number of cells in vertical direction
 		int cellsNum_z;
-
-		// Gas content in oil
-		//Interpolate* Rs;
-		//Interpolate* Prs;
 
 		// BHP will be converted to the depth
 		double depth_point;
@@ -78,13 +78,6 @@ namespace gasOil_rz
 			else
 				return cur;
 		};
-		inline int getUpwindIdxTape(int cur, int beta, int tapeIdx) const
-		{
-			if (cells[cur].u_next.p < cells[beta].u_next.p)
-				return tapeIdx;
-			else
-				return 0;
-		};
 		inline void getNeighborIdx(int cur, int* const neighbor)
 		{
 			neighbor[0] = cur - cellsNum_z - 2; 
@@ -119,7 +112,7 @@ namespace gasOil_rz
 			const int idx = getSkeletonIdx(cell);
 			return props_sk[idx].m * props_sk[idx].beta;
 		};
-		inline double getTrans(Cell& cell, Cell& beta)
+		inline double getTrans(const Cell& cell, const Cell& beta) const 
 		{
 			double k1, k2, S;
 
@@ -139,7 +132,7 @@ namespace gasOil_rz
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
 		};
-		inline double getKr_oil(double sat_oil) const
+		/*inline double getKr_oil(double sat_oil) const
 		{
 			if(sat_oil > 1.0)
 				return 1.0;
@@ -222,7 +215,7 @@ namespace gasOil_rz
 				return 0.0;
 			else
 				return props_oil.Rs->DSolve(p_bub);
-		};
+		};*/
 		inline void solveP_bub()
 		{
 			int idx;
@@ -232,7 +225,7 @@ namespace gasOil_rz
 				{
 					idx = i * (cellsNum_z + 2) + j;
 
-					Var2phase& next = cells[idx].u_next;
+					Variable& next = cells[idx].u_next;
 
 					if (next.SATUR)
 					{
@@ -258,16 +251,7 @@ namespace gasOil_rz
 					}
 				}
 		};
-
 		// Thermal functions
-		inline double getRho_oil(double p, double p_bub, bool SATUR) const
-		{
-			return (props_oil.dens_stc + props_oil.getRs(p, p_bub, SATUR) * props_gas.dens_stc) / props_oil.getB(p, p_bub, SATUR);
-		};
-		inline double getRho_gas(double p) const
-		{
-			return props_gas.dens_stc / props_gas.getB(p);
-		};
 		inline double getNablaP(Cell& cell, int varNum, int axis)
 		{
 			Cell* nebr1;
@@ -327,16 +311,16 @@ namespace gasOil_rz
 			switch(axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPerm_r(cell.r) * props_oil.getKr(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPerm_r(cell.r) * props_oil.getKr(var->s).value() / props_oil.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->perm_z * props_oil.getKr(var->s) / props_oil.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->perm_z * props_oil.getKr(var->s).value() / props_oil.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getGasVelocity(Cell& cell, int varNum, int axis)
 		{
 			const int idx = getSkeletonIdx( cell );
 
-			Var2phase* var;
+			Variable* var;
 			switch(varNum)
 			{
 			case PREV:
@@ -353,12 +337,13 @@ namespace gasOil_rz
 			switch(axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPerm_r(cell.r) * props_gas.getKr(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPerm_r(cell.r) * props_gas.getKr(var->s).value() / props_gas.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -props_sk[idx].perm_z * props_gas.getKr(var->s) / props_gas.visc * getNablaP(cell, varNum, axis);
+				return -props_sk[idx].perm_z * props_gas.getKr(var->s).value() / props_gas.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 
+		/*
 		// First eqn
 		double solve_eq1(int cur);
 		double solve_eq11(int cur);
@@ -391,7 +376,13 @@ namespace gasOil_rz
 		double solve_eqRight_ds(int cur);
 		double solve_eqRight_dp_beta(int cur);
 		double solve_eqRight_ds_beta(int cur);
-		void setRightIndependent(double* x, int cur);
+		void setRightIndependent(double* x, int cur);*/
+
+		void setVariables(int cur);
+		void solve_eqMiddle(int cur);
+		void solve_eqLeft(int cur);
+		void solve_eqRight(int cur);
+		void solve_eqVertical(int cur);
 
 		// Finds functional
 		double solveH();
@@ -400,6 +391,9 @@ namespace gasOil_rz
 		GasOil_RZ();
 		~GasOil_RZ();
 	
+		double* x;
+		double* y;
+
 		void setPeriod(int period);
 		double getRate(int cur);
 	};
