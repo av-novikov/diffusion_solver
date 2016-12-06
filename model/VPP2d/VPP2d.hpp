@@ -105,6 +105,8 @@ namespace vpp2d
 			else {
 				k1 = (cell.r > cell.props->radius_eff ? cell.props->perm_r : cell.props->perm_eff);
 				k2 = (beta.r > beta.props->radius_eff ? beta.props->perm_r : beta.props->perm_eff);
+				if (k1 == 0.0 && k2 == 0.0)
+					return 0.0;
 				Square = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
 				return 2.0 * k1 * k2 * Square / (k1 * beta.hr + k2 * cell.hr);
 			}
