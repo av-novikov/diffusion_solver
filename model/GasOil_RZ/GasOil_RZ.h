@@ -102,16 +102,6 @@ namespace gasOil_rz
 		};
 
 		// Solving coefficients
-		inline double getPoro(double p, Cell& cell) const
-		{
-			const int idx = getSkeletonIdx(cell);
-			return props_sk[idx].m * (1.0 + props_sk[idx].beta * (p /*- props_sk[idx].p_init*/) );
-		};
-		inline double getPoro_dp(Cell& cell) const
-		{
-			const int idx = getSkeletonIdx(cell);
-			return props_sk[idx].m * props_sk[idx].beta;
-		};
 		inline double getTrans(const Cell& cell, const Cell& beta) const 
 		{
 			double k1, k2, S;
@@ -132,90 +122,7 @@ namespace gasOil_rz
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
 		};
-		/*inline double getKr_oil(double sat_oil) const
-		{
-			if(sat_oil > 1.0)
-				return 1.0;
-			else
-				return props_oil.kr->Solve(sat_oil);
-		};
-		inline double getKr_oil_ds(double sat_oil) const
-		{
-			if(sat_oil > 1.0)
-				return props_oil.kr->DSolve(1.0);
-			else
-				return props_oil.kr->DSolve(sat_oil);
-		};
-		inline double getKr_gas(double sat_oil) const
-		{
-			if(sat_oil > 1.0)
-				return 0.0;
-			else
-				return props_gas.kr->Solve(sat_oil);
-		};
-		inline double getKr_gas_ds(double sat_oil) const
-		{
-			if(sat_oil > 1.0)
-				return props_gas.kr->DSolve(1.0);
-			else
-				return props_gas.kr->DSolve(sat_oil);
-		};
-		inline double getB_oil(double p, double p_bub, bool SATUR) const
-		{
-			if(SATUR)
-				return props_oil.b->Solve(p);
-			else
-				return props_oil.b->Solve(p_bub) * (1.0 + props_oil.beta * (p_bub - p));
-		};
-		inline double getBoreB_oil(double p, double p_bub, bool SATUR) const
-		{
-			//return props_oil.b_bore;
-			return getB_oil(p, p_bub, SATUR);
-		};
-		inline double getB_oil_dp(double p, double p_bub, bool SATUR) const
-		{
-			if(SATUR)
-				return props_oil.b->DSolve(p);
-			else
-				return -props_oil.b->Solve(p_bub) * props_oil.beta;
-		};
-		inline double getB_oil_dp_bub(double p, double p_bub, bool SATUR) const
-		{
-			if (SATUR)
-				return 0.0;
-			else
-				return props_oil.b->Solve(p_bub) * props_oil.beta + 
-						(1 - props_oil.beta * (p - p_bub)) * props_oil.b->DSolve(p_bub);
-		};
-		inline double getB_gas(double p) const
-		{
-			return props_gas.b->Solve(p);
-		};
-		inline double getB_gas_dp(double p) const
-		{
-			return props_gas.b->DSolve(p);
-		};
-		inline double getRs(double p, double p_bub, bool SATUR) const
-		{
-			if(SATUR)
-				return props_oil.Rs->Solve(p);
-			else
-				return props_oil.Rs->Solve(p_bub);
-		};
-		inline double getRs_dp(double p, double p_bub, bool SATUR) const
-		{
-			if(SATUR)
-				return props_oil.Rs->DSolve(p);
-			else
-				return 0.0;
-		};
-		inline double getRs_dp_bub(double p_bub, bool SATUR) const
-		{
-			if (SATUR)
-				return 0.0;
-			else
-				return props_oil.Rs->DSolve(p_bub);
-		};*/
+
 		inline void solveP_bub()
 		{
 			int idx;
@@ -225,11 +132,12 @@ namespace gasOil_rz
 				{
 					idx = i * (cellsNum_z + 2) + j;
 
+					Skeleton_Props* props = cells[idx].props;
 					Variable& next = cells[idx].u_next;
 
 					if (next.SATUR)
 					{
-						if (next.s > 1.0 + EQUALITY_TOLERANCE)
+						if ((next.s > 1.0 + EQUALITY_TOLERANCE) || (next.p > props_oil.p_sat))
 						{
 							next.SATUR = false;
 //							next.s = 1.0;
@@ -238,16 +146,15 @@ namespace gasOil_rz
 						else
 							next.p_bub = next.p;
 					}
-					else 
+					else
 					{
-						if (next.p_bub > next.p + EQUALITY_TOLERANCE)
-						{
-							next.SATUR = true;
-//							next.p_bub = next.p;
-							next.s -= 0.01;
-						}
-						else
-							next.s = 1.0;
+							if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+							{
+								next.SATUR = true;
+								next.s -= 0.01;
+							}
+							else
+								next.s = 1.0;
 					}
 				}
 		};
@@ -342,41 +249,6 @@ namespace gasOil_rz
 				return -props_sk[idx].perm_z * props_gas.getKr(var->s).value() / props_gas.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
-
-		/*
-		// First eqn
-		double solve_eq1(int cur);
-		double solve_eq11(int cur);
-		double solve_eq1_dp(int cur);
-		double solve_eq1_ds(int cur);
-		double solve_eq1_dp_beta(int cur, int beta);
-		double solve_eq1_ds_beta(int cur, int beta);
-
-		// Second eqn
-		double solve_eq2(int cur);
-		double solve_eq22(int cur);
-		double solve_eq2_dp(int cur);
-		double solve_eq2_ds(int cur);
-		double solve_eq2_dp_beta(int cur, int beta);
-		double solve_eq2_ds_beta(int cur, int beta);
-		void setMiddleIndependent(double* x, int cur);
-
-		// Left boundary condition
-		double solve_eqLeft(int cur);
-		double solve_eqLLeft(int cur);
-		double solve_eqLeft_dp(int cur);
-		double solve_eqLeft_ds(int cur);
-		double solve_eqLeft_dp_beta(int cur);
-		double solve_eqLeft_ds_beta(int cur);
-		void setLeftIndependent(double* x, int cur);
-
-		// Right boundary condition
-		double solve_eqRight(int cur);
-		double solve_eqRight_dp(int cur);
-		double solve_eqRight_ds(int cur);
-		double solve_eqRight_dp_beta(int cur);
-		double solve_eqRight_ds_beta(int cur);
-		void setRightIndependent(double* x, int cur);*/
 
 		void setVariables(int cur);
 		void solve_eqMiddle(int cur);

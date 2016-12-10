@@ -63,6 +63,8 @@ namespace gasOil_rz
 
 	struct Oil_Props
 	{
+		double p_sat;
+
 		// Viscosity [cP]
 		double visc;
 		Interpolate* visc_table;
@@ -88,7 +90,9 @@ namespace gasOil_rz
 		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
 		{
 			adouble tmp;
+			//adouble isAboveSat = (p > (adouble)p_sat);
 			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub) * (1.0 + beta * (p_bub - p)));
+			//condassign(tmp, isAboveSat, (adouble)(b->Solve(p_sat) * (1.0 + beta * (p_sat - p))));
 			return tmp;
 		};
 		inline adouble getBoreB(adouble p, adouble p_bub, adouble SATUR) const
@@ -102,7 +106,9 @@ namespace gasOil_rz
 		inline adouble getRs(adouble p, adouble p_bub, adouble SATUR) const
 		{
 			adouble tmp;
+			//adouble isAboveSat = (p > (adouble)p_sat);
 			condassign(tmp, SATUR, Rs->Solve(p), Rs->Solve(p_bub));
+			//condassign(tmp, isAboveSat, (adouble)(Rs->Solve(p_sat)));
 			return tmp;
 		};
 	};

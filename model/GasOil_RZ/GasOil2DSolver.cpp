@@ -264,15 +264,18 @@ void GasOil2DSolver::construction_from_fz(int N, int n, int key)
 		{
 			for(int j = 0; j < model->cellsNum_z+2; j++)
 			{
-				Var2phase& var = model->cells[i*(model->cellsNum_z+2) + j].u_next;
-				var.p += fz[i][2*j+1];
-				if(var.SATUR)
+				Variable& next = model->cells[i*(model->cellsNum_z+2) + j].u_next;
+				next.p += fz[i][2*j+1];
+				if(next.SATUR)
 				{
-					var.s += fz[i][2 * j + 2];
+					next.s += fz[i][2 * j + 2];
 				}
 				else
 				{
-					var.p_bub += fz[i][2 * j + 2];
+					if (model->props_oil.p_sat < next.p)
+						next.p_bub = model->props_oil.p_sat;
+					else
+						next.p_bub += fz[i][2 * j + 2];
 				}
 			}
 		}
