@@ -16,9 +16,9 @@
 #include "snapshotter/VTKSnapshotter.h"
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
-
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/VPP2d/VPP2d.hpp"
+#include "model/Bingham1d/Bingham1d.hpp"
 
 #include <cmath>
 
@@ -43,6 +43,10 @@ template <>
 VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
 {
 	pattern = prefix + "VPP2d_%{STEP}.vtp";
+}
+VTKSnapshotter<bing1d::Bingham1d>::VTKSnapshotter()
+{
+	pattern = prefix + "Bing1d_%{STEP}.vtp";
 }
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()
@@ -207,7 +211,6 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
-
 template <>
 void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 {
@@ -361,7 +364,6 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
-
 template <>
 void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 {
@@ -502,8 +504,81 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
+template <>
+void VTKSnapshotter<bing1d::Bingham1d>::dump_all(int i)
+{
+	using bing1d::Cell;
+
+	// Grid
+	auto grid = vtkSmartPointer<vtkPolyData>::New();
+
+	// Points
+	auto points = vtkSmartPointer<vtkPoints>::New();
+
+	Cell& cell = model->cells[0];
+	points->InsertNextPoint(r_dim * (0.9 * cell.r), 0.0, 0.0);
+	points->InsertNextPoint(r_dim * (0.9 * cell.r), -r_dim * model->props_sk.height, 0.0);
+
+	for (int k = 1; k < nx; k++)
+	{
+		Cell& cell = model->cells[k];
+		points->InsertNextPoint(r_dim * (cell.r - cell.hr / 2.0), 0.0, 0.0);
+		points->InsertNextPoint(r_dim * (cell.r - cell.hr / 2.0), -r_dim * model->props_sk.height, 0.0);
+	}
+	grid->SetPoints(points);
+
+	// Data
+	auto polygons = vtkSmartPointer<vtkCellArray>::New();
+	auto polygon = vtkSmartPointer<vtkPolygon>::New();
+	polygon->GetPointIds()->SetNumberOfIds(4);
+
+	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+	auto vel_oil = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_oil->SetName("oilVelocity");
+
+	int k, j, idx, idx1;
+
+	cell = model->cells[0];
+	polygon->GetPointIds()->SetId(0, 0);
+	polygon->GetPointIds()->SetId(1, 2);
+	polygon->GetPointIds()->SetId(2, 3);
+	polygon->GetPointIds()->SetId(3, 1);
+	polygons->InsertNextCell(polygon);
+	pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
+	vel_oil->InsertNextValue(0.0);
+
+
+	// Middle cells
+	for (k = 1; k < nx - 1; k++)
+	{
+		Cell& cell = model->cells[k];
+
+		polygon->GetPointIds()->SetId(0, 2 * k);
+		polygon->GetPointIds()->SetId(1, 2 * k + 2);
+		polygon->GetPointIds()->SetId(2, 2 * k + 3);
+		polygon->GetPointIds()->SetId(3, 2 * k + 1);
+		polygons->InsertNextCell(polygon);
+
+		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
+		vel_oil->InsertNextValue( r_dim / t_dim * model->getOilVelocity(cell) );
+	}
+
+	grid->SetPolys(polygons);
+
+	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(pres);
+	fd->AddArray(vel_oil);
+
+	// Writing
+	auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+
+	writer->SetFileName(getFileName(i).c_str());
+	writer->SetInputData(grid);
+	writer->Write();
+}
 
 template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;
-
 template class VTKSnapshotter<acid2d::Acid2d>;
 template class VTKSnapshotter<vpp2d::VPP2d>;
+template class VTKSnapshotter<bing1d::Bingham1d>;

@@ -3,31 +3,29 @@
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/VPP2d/VPP2d.hpp"
+#include "model/Bingham1d/Bingham1d.hpp"
 
 #include <iomanip>
 
 using namespace std;
 
 template <class modelType>
-AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size()-1])
+AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
 	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
-	idx1 = int( (model->perfIntervals[0].first + model->perfIntervals[0].second) / 2 );
+	idx1 = int((model->perfIntervals[0].first + model->perfIntervals[0].second) / 2);
 	//idx2 = idx1 + model->cellsNum_z + 1;
 
 	t_dim = model->t_dim;
 }
-
-
 template <class modelType>
 AbstractSolver<modelType>::~AbstractSolver()
 {
 }
-
 template <class modelType>
 void AbstractSolver<modelType>::start()
 {
@@ -50,33 +48,28 @@ void AbstractSolver<modelType>::start()
 		model->snapshot_all(counter++);
 	writeData();
 }
-
 template <class modelType>
 void AbstractSolver<modelType>::fill()
 {
 }
-
 template <class modelType>
 void AbstractSolver<modelType>::copyIterLayer()
 {
 	for (int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_iter = model->cells[i].u_next;
 }
-
 template <class modelType>
 void AbstractSolver<modelType>::revertIterLayer()
 {
 	for (int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_next = model->cells[i].u_iter;
 }
-
 template <class modelType>
 void AbstractSolver<modelType>::copyTimeLayer()
 {
 	for(int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_prev = model->cells[i].u_iter = model->cells[i].u_next;
 }
-
 template <class modelType>
 double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 {
@@ -105,7 +98,6 @@ double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 	
 	return relErr;
 }
-
 template <>
 double AbstractSolver<gasOil_rz::GasOil_RZ>::convergance(int& ind, int& varInd)
 {
@@ -150,7 +142,6 @@ double AbstractSolver<gasOil_rz::GasOil_RZ>::convergance(int& ind, int& varInd)
 
 	return relErr;
 }
-
 template <class modelType>
 double AbstractSolver<modelType>::averValue(const int varInd)
 {
@@ -163,7 +154,6 @@ double AbstractSolver<modelType>::averValue(const int varInd)
 	
 	return tmp / model->Volume;
 }
-
 template <>
 double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
 {
@@ -185,7 +175,6 @@ double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
 
 	return tmp / model->Volume;
 }
-
 template <class modelType>
 void AbstractSolver<modelType>::construct_solution()
 {
@@ -193,3 +182,4 @@ void AbstractSolver<modelType>::construct_solution()
 
 template class AbstractSolver<gasOil_rz::GasOil_RZ>;
 template class AbstractSolver<vpp2d::VPP2d>;
+template class AbstractSolver<bing1d::Bingham1d>;

@@ -2,9 +2,9 @@
 #include "model/cells/Variables.hpp"
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
-
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/VPP2d/VPP2d.hpp"
+#include "model/Bingham1d/Bingham1d.hpp"
 
 using namespace std;
 
@@ -88,3 +88,4 @@ void AbstractModel<varType, propsType, cellType, modelType>::snapshot_all(int i)
 template class AbstractModel<Var2phase, gasOil_rz::Properties, gasOil_rz::TCell, gasOil_rz::GasOil_RZ>;
 template class AbstractModel<VarSimpleAcid, acid2d::Properties, acid2d::TCell, acid2d::Acid2d>;
 template class AbstractModel<VarSimpleVPP<double>, vpp2d::Properties, vpp2d::TCell, vpp2d::VPP2d>;
+template class AbstractModel<Var1phase, bing1d::Properties, RadialCell, bing1d::Bingham1d>;

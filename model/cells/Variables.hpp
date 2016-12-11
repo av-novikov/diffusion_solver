@@ -15,6 +15,11 @@ struct Var1phase
 		};
 	};
 };
+struct TapeVar1Phase
+{
+	static const int size = 1;
+	adouble p;
+};
 struct Var1phaseNIT 
 {
 	static const int size = 2;

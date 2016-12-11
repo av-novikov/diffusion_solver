@@ -5,6 +5,7 @@
 
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/VPP2d/VPP2d.hpp"
+#include "model/Bingham1d/Bingham1d.hpp"
 
 using namespace std;
 
@@ -29,6 +30,8 @@ void Snapshotter<modelType>::setModel(modelType* _model)
 	P_dim = model->P_dim;
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
+
+	nx = model->cellsNum_r + 2;
 }
 
 template <>
@@ -93,6 +96,6 @@ string Snapshotter<modelType>::getFileName(int i)
 }
 
 template class Snapshotter<gasOil_rz::GasOil_RZ>;
-
 template class Snapshotter<acid2d::Acid2d>;
 template class Snapshotter<vpp2d::VPP2d>;
+template class Snapshotter<bing1d::Bingham1d>;

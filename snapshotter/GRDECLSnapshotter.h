@@ -9,11 +9,17 @@ class GRDECLSnapshotter : public Snapshotter<modelType>
 protected:
 
 public:
-	GRDECLSnapshotter();
-	~GRDECLSnapshotter();
+	GRDECLSnapshotter()
+	{
+		pattern = prefix + "snap_%{STEP}.grdecl";
+	};
+	~GRDECLSnapshotter()
+	{
 
-	void dump(int i);
-	void dump_all(int i);
+	};
+
+	void dump(int i) {};
+	void dump_all(int i) {};
 };
 
 #endif /* GRDECLSNAPSHOTTER_H_ */

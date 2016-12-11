@@ -252,7 +252,7 @@ namespace acid2d
 		{
 			Cell* nebr1;
 			Cell* nebr2;
-			double h, r_eff;
+			double h;
 
 			switch (axis)
 			{
