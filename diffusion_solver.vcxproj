@@ -50,7 +50,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\gtest\googletest-master\googletest\include;C:\Program Files (x86)\VTK\include\vtk-6.3;C:\proj\diffusion_solver;C:\paralution-1.1.0\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\gtest\googletest-master\googletest\include;C:\Program Files (x86)\VTK\include\vtk-6.3;C:\proj\diffusion_solver;C:\paralution-1.1.0\src;C:\proj\adolc\adolc_nosparse_win32\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -61,8 +61,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;paralution.lib;gtestd.lib;gtest_main-mdd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\gtest\googletest-master\googletest\msvc\gtest-md\Debug;C:\Program Files (x86)\VTK\lib;C:\paralution-1.1.0\visualstudio\paralution_omp\Win32\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;paralution.lib;adolc.lib;gtestd.lib;gtest_main-mdd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\gtest\googletest-master\googletest\msvc\gtest-md\Debug;C:\Program Files (x86)\VTK\lib;C:\paralution-1.1.0\visualstudio\paralution_omp\Win32\Debug;%(AdditionalLibraryDirectories);C:\proj\adolc\adolc_nosparse_win32\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -71,7 +71,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>Full</Optimization>
-      <AdditionalIncludeDirectories>C:\gtest\googletest-master\googletest\include;C:\Program Files (x86)\VTK\include\vtk-6.3;C:\proj\diffusion_solver;C:\paralution-1.1.0\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\gtest\googletest-master\googletest\include;C:\Program Files (x86)\VTK\include\vtk-6.3;C:\proj\diffusion_solver;C:\paralution-1.1.0\src;C:\proj\adolc\adolc_nosparse_win32\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader />
@@ -80,8 +80,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;paralution.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\gtest\googletest-master\googletest\msvc\gtest-md\Release;C:\Program Files (x86)\VTK\lib;C:\paralution-1.1.0\visualstudio\paralution_omp\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vtkCommonCore-6.3.lib;vtkCommonDataModel-6.3.lib;vtkFiltersCore-6.3.lib;vtkIOCore-6.3.lib;vtkIOXML-6.3.lib;paralution.lib;adolc.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\gtest\googletest-master\googletest\msvc\gtest-md\Release;C:\Program Files (x86)\VTK\lib;C:\paralution-1.1.0\visualstudio\paralution_omp\Win32\Release;%(AdditionalLibraryDirectories);C:\proj\adolc\adolc_nosparse_win32\lib</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -94,53 +94,29 @@
     <ClInclude Include="method\ParalutionInterface.h" />
     <ClInclude Include="method\pointers.h" />
     <ClInclude Include="method\sweep.h" />
-    <ClInclude Include="model\3D\GasOil_3D\GasOil3DSolver.h" />
-    <ClInclude Include="model\3D\GasOil_3D\GasOil_3D.h" />
-    <ClInclude Include="model\3D\GasOil_3D\Par3DSolver.h" />
-    <ClInclude Include="model\3D\GasOil_3D_NIT\GasOil3DNITSolver.h" />
-    <ClInclude Include="model\3D\GasOil_3D_NIT\GasOil_3D_NIT.h" />
-    <ClInclude Include="model\3D\Perforation\GasOil_Perf.h" />
-    <ClInclude Include="model\3D\Perforation\GasOil_Perf_NIT.h" />
-    <ClInclude Include="model\3D\Perforation\OilPerfNITSolver.h" />
-    <ClInclude Include="model\3D\Perforation\Oil_Perf_NIT.h" />
-    <ClInclude Include="model\3D\Perforation\ParPerfNITSolver.h" />
-    <ClInclude Include="model\3D\Perforation\ParPerfSolver.h" />
     <ClInclude Include="model\AbstractModel.hpp" />
     <ClInclude Include="model\AbstractSolver.hpp" />
+    <ClInclude Include="model\Acid\2d\Acid2d.hpp" />
+    <ClInclude Include="model\Bingham1d\Bingham1d.hpp" />
+    <ClInclude Include="model\Bingham1d\BingSolver.hpp" />
     <ClInclude Include="model\cells\AbstractCell.hpp" />
     <ClInclude Include="model\cells\CylCell2D.h" />
     <ClInclude Include="model\cells\CylCell3D.h" />
     <ClInclude Include="model\cells\CylCellPerf.h" />
     <ClInclude Include="model\cells\Iterators.h" />
     <ClInclude Include="model\cells\RadialCell.hpp" />
-    <ClInclude Include="model\cells\stencils\Stencil.h" />
     <ClInclude Include="model\cells\Variables.hpp" />
-    <ClInclude Include="model\Gas1D\Gas1D.h" />
-    <ClInclude Include="model\Gas1D\Gas1DSolver.h" />
-    <ClInclude Include="model\Gas1D\Gas1D_simple.h" />
     <ClInclude Include="model\GasOil_RZ\GasOil2DSolver.h" />
     <ClInclude Include="model\GasOil_RZ\GasOil_RZ.h" />
-    <ClInclude Include="model\gasoil_rz_nit\GasOil2DNITSolver.h" />
-    <ClInclude Include="model\gasoil_rz_nit\GasOil_RZ_NIT.h" />
-    <ClInclude Include="model\oil1d\Oil1D.h" />
-    <ClInclude Include="model\Oil1D\Oil1DSolver.h" />
-    <ClInclude Include="model\Oil1D_NIT\Oil1DNITSolver.h" />
-    <ClInclude Include="model\Oil1D_NIT\Oil1D_NIT.h" />
-    <ClInclude Include="model\Oil_RZ\OilRZSolver.h" />
-    <ClInclude Include="model\Oil_RZ\Oil_RZ.h" />
-    <ClInclude Include="model\Oil_RZ_NIT\OilRZNITSolver.h" />
-    <ClInclude Include="model\Oil_RZ_NIT\Oil_RZ_NIT.h" />
+    <ClInclude Include="model\GasOil_RZ\Properties.hpp" />
+    <ClInclude Include="model\VPP2d\Properties.hpp" />
+    <ClInclude Include="model\VPP2d\VPP2d.hpp" />
+    <ClInclude Include="model\VPP2d\VPPSolver.hpp" />
     <ClInclude Include="props\Scene.h" />
     <ClInclude Include="Scene.h" />
-    <ClInclude Include="Scene_OMP.h" />
     <ClInclude Include="snapshotter\GRDECLSnapshotter.h" />
     <ClInclude Include="snapshotter\Snapshotter.h" />
     <ClInclude Include="snapshotter\VTKSnapshotter.h" />
-    <ClInclude Include="tests\base-test.h" />
-    <ClInclude Include="tests\gas1D-test.h" />
-    <ClInclude Include="tests\gas1Dsimple-test.h" />
-    <ClInclude Include="tests\iterators-test.h" />
-    <ClInclude Include="tests\oil1D-test.h" />
     <ClInclude Include="util\Interpolate.h" />
     <ClInclude Include="util\utils.h" />
   </ItemGroup>
@@ -149,50 +125,19 @@
     <ClCompile Include="method\mcmath.cpp" />
     <ClCompile Include="method\ParalutionInterface.cpp" />
     <ClCompile Include="method\sweep.cpp" />
-    <ClCompile Include="model\3D\GasOil_3D\GasOil3DSolver.cpp" />
-    <ClCompile Include="model\3D\GasOil_3D\GasOil_3D.cpp" />
-    <ClCompile Include="model\3D\GasOil_3D\Par3DSolver.cpp" />
-    <ClCompile Include="model\3D\GasOil_3D_NIT\GasOil3DNITSolver.cpp" />
-    <ClCompile Include="model\3D\GasOil_3D_NIT\GasOil_3D_NIT.cpp" />
-    <ClCompile Include="model\3D\Perforation\GasOil_Perf.cpp" />
-    <ClCompile Include="model\3D\Perforation\GasOil_Perf_NIT.cpp" />
-    <ClCompile Include="model\3D\Perforation\OilPerfNITSolver.cpp" />
-    <ClCompile Include="model\3D\Perforation\Oil_Perf_NIT.cpp" />
-    <ClCompile Include="model\3D\Perforation\ParPerfNITSolver.cpp" />
-    <ClCompile Include="model\3D\Perforation\ParPerfSolver.cpp" />
     <ClCompile Include="model\AbstractModel.cpp" />
     <ClCompile Include="model\AbstractSolver.cpp" />
-    <ClCompile Include="model\cells\AbstractCell.cpp" />
-    <ClCompile Include="model\cells\CylCell2D.cpp" />
+    <ClCompile Include="model\Acid\2d\Acid2d.cpp" />
+    <ClCompile Include="model\Bingham1d\Bingham1d.cpp" />
+    <ClCompile Include="model\Bingham1d\BingSolver.cpp" />
     <ClCompile Include="model\cells\CylCell3D.cpp" />
     <ClCompile Include="model\cells\CylCellPerf.cpp" />
-    <ClCompile Include="model\cells\RadialCell.cpp" />
-    <ClCompile Include="model\cells\stencils\Stencil.cpp" />
-    <ClCompile Include="model\Gas1D\Gas1D.cpp" />
-    <ClCompile Include="model\Gas1D\Gas1DSolver.cpp" />
-    <ClCompile Include="model\Gas1D\Gas1D_simple.cpp" />
     <ClCompile Include="model\GasOil_RZ\GasOil2DSolver.cpp" />
     <ClCompile Include="model\GasOil_RZ\GasOil_RZ.cpp" />
-    <ClCompile Include="model\gasoil_rz_nit\GasOil2DNITSolver.cpp" />
-    <ClCompile Include="model\gasoil_rz_nit\GasOil_RZ_NIT.cpp" />
-    <ClCompile Include="model\Oil1D\Oil1D.cpp" />
-    <ClCompile Include="model\Oil1D\Oil1DSolver.cpp" />
-    <ClCompile Include="model\Oil1D_NIT\Oil1DNITSolver.cpp" />
-    <ClCompile Include="model\Oil1D_NIT\Oil1D_NIT.cpp" />
-    <ClCompile Include="model\Oil_RZ\OilRZSolver.cpp" />
-    <ClCompile Include="model\Oil_RZ\Oil_RZ.cpp" />
-    <ClCompile Include="model\Oil_RZ_NIT\OilRZNITSolver.cpp" />
-    <ClCompile Include="model\Oil_RZ_NIT\Oil_RZ_NIT.cpp" />
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="snapshotter\GRDECLSnapshotter.cpp" />
+    <ClCompile Include="model\VPP2d\VPP2d.cpp" />
+    <ClCompile Include="model\VPP2d\VPPSolver.cpp" />
     <ClCompile Include="snapshotter\Snapshotter.cpp" />
     <ClCompile Include="snapshotter\VTKSnapshotter.cpp" />
-    <ClCompile Include="tests\base-test.cpp" />
-    <ClCompile Include="tests\gas1D-test.cpp" />
-    <ClCompile Include="tests\gas1Dsimple-test.cpp" />
-    <ClCompile Include="tests\iterators-test.cpp" />
-    <ClCompile Include="tests\oil1D-test.cpp" />
-    <ClCompile Include="tests\tester.cpp" />
     <ClCompile Include="util\Interpolate.cpp" />
   </ItemGroup>
   <ItemGroup>
