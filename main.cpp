@@ -25,15 +25,15 @@ gasOil_rz::Properties* getProps()
 {
 	gasOil_rz::Properties* props = new gasOil_rz::Properties();
 
-	props->cellsNum_r = 50;
-	props->cellsNum_z = 5;
+	props->cellsNum_r = 20;
+	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(100.0 * 86400.0);
 	props->timePeriods.push_back(140.0 * 86400.0);
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(50.0);
+	props->rates.push_back(150.0);
 	props->rates.push_back(0.0);
 
 	props->ht = 100.0;
@@ -45,10 +45,10 @@ gasOil_rz::Properties* getProps()
 	props->r_w = 0.1;
 	props->r_e = 1000.0;
 
-	props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(1, 1));
 
 	gasOil_rz::Skeleton_Props tmp;
-	tmp.cellsNum_z = 5;
+	tmp.cellsNum_z = 1;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
 	tmp.p_bub = 75.625 * 1.0e+5;
@@ -72,8 +72,8 @@ gasOil_rz::Properties* getProps()
 	props->props_oil.visc = 1.0;
 	props->props_oil.b_bore = 1.0;
 	props->props_oil.dens_stc = 887.261;
-	props->props_oil.beta = 0.5 * 1.e-9;
-	props->props_oil.p_sat = 150.0 * 1.0e+5;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.p_sat = 75.625 * 1.0e+5;
 
 	props->props_gas.visc = 0.03;
 	props->props_gas.dens_stc = 0.8;

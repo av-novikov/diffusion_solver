@@ -243,7 +243,7 @@ void GasOil2DSolver::solveStep()
 		Solve(model->cellsNum_r+1, 2*(model->cellsNum_z+2), PRES);
 		construction_from_fz(model->cellsNum_r+2, 2*(model->cellsNum_z+2), PRES);
 		model->solveP_bub();
- 
+		model->snapshot_all(iterations + 1);
 		err_newton = convergance(cellIdx, varIdx);
 
 		averPres = averValue(0);					averSat = averValue(1);
@@ -272,9 +272,9 @@ void GasOil2DSolver::construction_from_fz(int N, int n, int key)
 				}
 				else
 				{
-					if (model->props_oil.p_sat < next.p)
-						next.p_bub = model->props_oil.p_sat;
-					else
+				//	if (model->props_oil.p_sat < next.p)
+				//		next.p_bub = model->props_oil.p_sat;
+				//	else
 						next.p_bub += fz[i][2 * j + 2];
 				}
 			}
@@ -448,41 +448,54 @@ void GasOil2DSolver::MiddleAppr(int current, int MZ, int key)
 		for(cell_idx = current * (model->cellsNum_z+2) + 1; cell_idx < (current+1) * (model->cellsNum_z+2) - 1; cell_idx++)
 		{
 			model->setVariables(cell_idx);
+			Variable& next = model->cells[cell_idx].u_next;
 
 			model->solve_eqMiddle(cell_idx);
-			for (int i = 0; i < Variable::size-1; i++)
-				RightSide[idx + i][0] = -model->y[i];
+			for (int i = 0; i < Variable::size - 1; i++)
+			{
+				if (i == 0 || (i == 1 && next.p <= model->props_oil.p_sat))
+					RightSide[idx + i][0] = -model->y[i];
+				else
+					RightSide[idx + i][0] = 0.0;
+			}
 
 			jacobian(mid, Variable::size-1, Variable::size * stencil, model->x, jac);
 			for (int i = 0; i < Variable::size-1; i++)
 			{
 				// i - equation index
-				B[idx + i][idx] = jac[i][0];
-				C[idx + i][idx] = jac[i][Variable::size];
-				A[idx + i][idx] = jac[i][Variable::size * 2];
-				B[idx + i][idx - Variable::size + 1] = jac[i][Variable::size * 3];
-				B[idx + i][idx + Variable::size - 1] = jac[i][Variable::size * 4];
+				if (i == 0 || (i == 1 && next.p <= model->props_oil.p_sat))
+				{
+					B[idx + i][idx] = jac[i][0];
+					C[idx + i][idx] = jac[i][Variable::size];
+					A[idx + i][idx] = jac[i][Variable::size * 2];
+					B[idx + i][idx - Variable::size + 1] = jac[i][Variable::size * 3];
+					B[idx + i][idx + Variable::size - 1] = jac[i][Variable::size * 4];
 
-				if (model->cells[cell_idx].u_next.SATUR)
-					B[idx + i][idx + 1] = jac[i][1];
+					if (model->cells[cell_idx].u_next.SATUR)
+						B[idx + i][idx + 1] = jac[i][1];
+					else
+						B[idx + i][idx + 1] = jac[i][2];
+					if (model->cells[cell_idx - model->cellsNum_z - 2].u_next.SATUR)
+						C[idx + i][idx + 1] = jac[i][Variable::size + 1];
+					else
+						C[idx + i][idx + 1] = jac[i][Variable::size + 2];
+					if (model->cells[cell_idx + model->cellsNum_z + 2].u_next.SATUR)
+						A[idx + i][idx + 1] = jac[i][Variable::size * 2 + 1];
+					else
+						A[idx + i][idx + 1] = jac[i][Variable::size * 2 + 2];
+					if (model->cells[cell_idx - 1].u_next.SATUR)
+						B[idx + i][idx + 1 - Variable::size + 1] = jac[i][Variable::size * 3 + 1];
+					else
+						B[idx + i][idx + 1 - Variable::size + 1] = jac[i][Variable::size * 3 + 2];
+					if (model->cells[cell_idx + 1].u_next.SATUR)
+						B[idx + i][idx + 1 + Variable::size - 1] = jac[i][Variable::size * 4 + 1];
+					else
+						B[idx + i][idx + 1 + Variable::size - 1] = jac[i][Variable::size * 4 + 2];
+				}
 				else
-					B[idx + i][idx + 1] = jac[i][2];
-				if (model->cells[cell_idx - model->cellsNum_z - 2].u_next.SATUR)
-					C[idx + i][idx + 1] = jac[i][Variable::size + 1];
-				else 
-					C[idx + i][idx + 1] = jac[i][Variable::size + 2];
-				if (model->cells[cell_idx + model->cellsNum_z + 2].u_next.SATUR)
-					A[idx + i][idx + 1] = jac[i][Variable::size * 2 + 1];
-				else
-					A[idx + i][idx + 1] = jac[i][Variable::size * 2 + 2];
-				if (model->cells[cell_idx - 1].u_next.SATUR)
-					B[idx + i][idx + 1 - Variable::size + 1] = jac[i][Variable::size * 3 + 1];
-				else 
-					B[idx + i][idx + 1 - Variable::size + 1] = jac[i][Variable::size * 3 + 2];
-				if (model->cells[cell_idx + 1].u_next.SATUR)
-					B[idx + i][idx + 1 + Variable::size - 1] = jac[i][Variable::size * 4 + 1];
-				else
-					B[idx + i][idx + 1 + Variable::size - 1] = jac[i][Variable::size * 4 + 2];
+				{
+					B[idx + i][idx + i] = 1.0;
+				}
 			}
 
 			idx += Variable::size - 1;
