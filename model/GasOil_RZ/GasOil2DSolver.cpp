@@ -243,7 +243,7 @@ void GasOil2DSolver::solveStep()
 		Solve(model->cellsNum_r+1, 2*(model->cellsNum_z+2), PRES);
 		construction_from_fz(model->cellsNum_r+2, 2*(model->cellsNum_z+2), PRES);
 		model->solveP_bub();
-		model->snapshot_all(iterations + 1);
+
 		err_newton = convergance(cellIdx, varIdx);
 
 		averPres = averValue(0);					averSat = averValue(1);

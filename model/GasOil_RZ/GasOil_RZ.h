@@ -152,7 +152,7 @@ namespace gasOil_rz
 						{
 							next.SATUR = true;
 							next.s -= 0.01;
-							next.p_bub = next.p;
+//							next.p_bub = next.p;
 						}
 						else
 							next.s = 1.0;
