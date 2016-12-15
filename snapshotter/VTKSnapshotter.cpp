@@ -19,8 +19,11 @@
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
+#include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 
 #include <cmath>
+
+#define VIEW_MULTIPLIER 0.1
 
 using namespace std;
 
@@ -47,6 +50,10 @@ VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
 VTKSnapshotter<bing1d::Bingham1d>::VTKSnapshotter()
 {
 	pattern = prefix + "Bing1d_%{STEP}.vtp";
+}
+VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::VTKSnapshotter()
+{
+	pattern = prefix + "GasOil_El_%{STEP}.vtp";
 }
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()
@@ -578,7 +585,93 @@ void VTKSnapshotter<bing1d::Bingham1d>::dump_all(int i)
 	writer->Write();
 }
 
+template <>
+void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int i)
+{
+	using gasOil_elliptic::Cell;
+	using gasOil_elliptic::Point;
+
+	// Grid
+	vtkSmartPointer<vtkUnstructuredGrid> grid =
+		vtkSmartPointer<vtkUnstructuredGrid>::New();
+
+	// Points
+	vtkSmartPointer<vtkPoints> points =
+		vtkSmartPointer<vtkPoints>::New();
+	for (const auto& cell : model->cells)
+	{
+		Point point = getCartesian<Cell>(cell.mu - cell.hmu, cell.nu - cell.hnu, cell.z - cell.hz);
+		points->InsertNextPoint(r_dim * point[0] * VIEW_MULTIPLIER,
+								r_dim * point[1] * VIEW_MULTIPLIER,
+								r_dim * point[2]);
+	}	
+	grid->SetPoints(points);
+
+	// Data
+	auto hexs = vtkSmartPointer<vtkCellArray>::New();
+	auto polygon = vtkSmartPointer<vtkPolygon>::New();
+	polygon->GetPointIds()->SetNumberOfIds(4);
+	auto pres =	vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
+	p_bub->SetName("buble_point");
+	auto sat_oil = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_oil->SetName("oilSaturation");
+	auto sat_gas = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_gas->SetName("gasSaturation");
+	auto satur = vtkSmartPointer<vtkIntArray>::New();
+	satur->SetName("SATUR");
+	auto vel_oil = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_oil->SetName("oilVelocity");
+	vel_oil->SetNumberOfComponents(3);
+	auto vel_gas = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_gas->SetName("gasVelocity");
+	vel_gas->SetNumberOfComponents(3);
+
+	int idx [3];
+
+	double vel[3];
+
+	for (const auto& cell : model->cells)
+	{
+		if (cell.V == 0.0)
+			continue;
+		
+		// N = mu+1 + (Nmu+2) * nu + (Nmu+2) * Nnu * (z+1)
+		idx[2] = cell.num / ((model->cellsNum_mu + 2) * model->cellsNum_nu);	// z+1
+		idx[1] = (cell.num % ((model->cellsNum_mu + 2) * model->cellsNum_nu)) / (model->cellsNum_mu + 2);	// nu
+		idx[0] = (cell.num % ((model->cellsNum_mu + 2) * model->cellsNum_nu)) % (model->cellsNum_mu + 2);	// mu+1
+
+		auto hex = vtkSmartPointer<vtkHexahedron>::New();
+		/*hex->GetPointIds()->SetId(0, );
+		hex->GetPointIds()->SetId(1, );
+		hex->GetPointIds()->SetId(2, );
+		hex->GetPointIds()->SetId(3, );
+		hex->GetPointIds()->SetId(4, );
+		hex->GetPointIds()->SetId(5, );
+		hex->GetPointIds()->SetId(6, );
+		hex->GetPointIds()->SetId(7, );*/
+	}
+
+	grid->SetCells(VTK_HEXAHEDRON, hexs);
+	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(pres);
+	fd->AddArray(p_bub);
+	fd->AddArray(satur);
+	fd->AddArray(sat_oil);
+	fd->AddArray(sat_gas);
+	fd->AddArray(vel_oil);
+	fd->AddArray(vel_gas);
+
+	// Writing
+	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+	writer->SetFileName(getFileName(i).c_str());
+	writer->SetInputData(grid);
+	writer->Write();
+}
+
 template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;
 template class VTKSnapshotter<acid2d::Acid2d>;
 template class VTKSnapshotter<vpp2d::VPP2d>;
 template class VTKSnapshotter<bing1d::Bingham1d>;
+template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;

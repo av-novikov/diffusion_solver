@@ -10,9 +10,6 @@
 
 #include "model/cells/AbstractCell.hpp"
 
-struct EmptyStruct
-{};
-
 template <typename varType>
 class CylCell2D : public AbstractCell<varType>
 {

@@ -4,6 +4,7 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
+#include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 
 #include <iomanip>
 
@@ -183,3 +184,4 @@ void AbstractSolver<modelType>::construct_solution()
 template class AbstractSolver<gasOil_rz::GasOil_RZ>;
 template class AbstractSolver<vpp2d::VPP2d>;
 template class AbstractSolver<bing1d::Bingham1d>;
+template class AbstractSolver<gasOil_elliptic::GasOil_Elliptic>;

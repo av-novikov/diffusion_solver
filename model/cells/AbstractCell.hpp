@@ -4,6 +4,12 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iostream>
+#include <array>
+
+struct EmptyStruct
+{};
+
+template <int N> using TPoint = std::array<double, N>;
 
 template <typename varType>
 class AbstractCell

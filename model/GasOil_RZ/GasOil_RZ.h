@@ -44,11 +44,6 @@ namespace gasOil_rz
 		// Number of cells in vertical direction
 		int cellsNum_z;
 
-		// BHP will be converted to the depth
-		double depth_point;
-		// During the time flow rate decreases 'e' times in well test [sec] 
-		double alpha;
-
 		void setInitialState();
 		// Set all properties
 		void setProps(Properties& props);

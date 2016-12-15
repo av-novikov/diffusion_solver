@@ -55,19 +55,28 @@ class AbstractModel
 		bool leftBoundIsRate;
 		// If right boundary condition would be 1st type
 		bool rightBoundIsPres;
+		// BHP will be converted to the depth
+		double depth_point;
+		// During the time flow rate decreases 'e' times in well test [sec] 
+		double alpha;
 
 		virtual void buildGridLog() = 0;
 		virtual void setProps(propsType& props) = 0;
 		virtual void makeDimLess() = 0;
 		virtual void setPerforated() = 0;
-		virtual void setInitialState();
+		virtual void setInitialState()
+		{
+			std::vector<cellType<varType> >::iterator it;
+			for (it = cells.begin(); it != cells.end(); ++it)
+				it->u_prev = it->u_iter = it->u_next = varInit;
+		};
 		
 		Snapshotter<modelType>* snapshotter;
 		bool isWriteSnaps;
 
 	public:
-		AbstractModel();
-		virtual ~AbstractModel();		
+		AbstractModel() { isWriteSnaps = true; };
+		virtual ~AbstractModel() {};
 	
 		// Dimensions
 		double t_dim;
@@ -77,15 +86,37 @@ class AbstractModel
 		double T_dim;
 		double Q_dim;
 
-		void setSnapshotter(std::string type, modelType* model);
+		void setSnapshotter(std::string type, modelType* model)
+		{
+			if (type == "VTK") {
+				snapshotter = new VTKSnapshotter<modelType>();
+				snapshotter->setModel(model);
+				isWriteSnaps = true;
+			}
+			else if (type == "GRDECL") {
+				snapshotter = new GRDECLSnapshotter<modelType>();
+				snapshotter->setModel(model);
+				isWriteSnaps = true;
+			}
+			else {
+				isWriteSnaps = false;
+			}
+		};
 
-		void load(propsType& props);
+		void load(propsType& props)
+		{
+			setProps(props);
+
+			buildGridLog();
+			setPerforated();
+			setInitialState();
+		};
 		virtual void setPeriod(int period) = 0;
-		virtual void setWellborePeriod(int period, double cut_t);
-		int getCellsNum();
+		virtual void setWellborePeriod(int period, double cut_t) {};
+		int getCellsNum() {	return cellsNum; };
 
-		void snapshot(int i);
-		void snapshot_all(int i);
+		void snapshot(int i) { snapshotter->dump(i); };
+		void snapshot_all(int i) { snapshotter->dump_all(i); }
 };
 
 #endif /* ABSTRACTMODEL_HPP_ */

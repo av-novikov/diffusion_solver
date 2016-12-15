@@ -40,9 +40,6 @@ namespace vpp2d
 		// Number of cells in vertical direction
 		int cellsNum_z;
 
-		// BHP will be converted to the depth
-		double depth_point;
-
 		void setInitialState();
 		// Set all properties
 		void setProps(Properties& props);
