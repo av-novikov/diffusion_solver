@@ -21,15 +21,21 @@ public:
 
 	PropsType* props;
 
+	bool isGhost;
+
 	inline std::array<double, 3> getCartesian() const
 	{
 		return { a * cosh(mu) * cos(nu), a * sinh(mu) * sin(nu), z };
 	};
 
-	EllipticCell() {};
+	EllipticCell() : isGhost(false) {};
 	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz) : AbstractCell<varType>(_num), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz)
 	{
 		V = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu)) * hz;
+		if (V == 0.0)
+			isGhost = true;
+		else
+			isGhost = false;
 	};
 	~EllipticCell() {};
 };

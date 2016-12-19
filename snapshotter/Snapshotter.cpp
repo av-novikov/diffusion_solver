@@ -48,6 +48,21 @@ void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
 }
 
 template <>
+void Snapshotter<gasOil_elliptic::GasOil_Elliptic>::setModel(gasOil_elliptic::GasOil_Elliptic* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_mu + 2;
+	ny = model->cellsNum_nu;
+	nz = model->cellsNum_z + 2;
+}
+
+template <>
 void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
 {
 	model = _model;

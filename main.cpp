@@ -218,9 +218,9 @@ gasOil_elliptic::Properties* getProps()
 {
 	gasOil_elliptic::Properties* props = new gasOil_elliptic::Properties();
 
-	props->cellsNum_mu = 20;
+	props->cellsNum_mu = 10;
 	props->cellsNum_nu = 20;
-	props->cellsNum_z = 1;
+	props->cellsNum_z = 5;
 
 	props->timePeriods.push_back(10.0 * 86400.0);
 
@@ -234,14 +234,15 @@ gasOil_elliptic::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->r_w = 0.1;
+	props->r_w = 10.0;
 	props->r_e = 1000.0;
 	props->l = 100.0;
 
 	props->perfIntervals.push_back(make_pair(1, 1));
+	props->depth_point = 0.0;
 
 	gasOil_elliptic::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
 	tmp.p_bub = 70.625 * 1.0e+5;
@@ -304,7 +305,8 @@ int main(int argc, char** argv)
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.getModel()->snapshot_all(0);
+	//scene.start();
 
 	return 0;
 }
