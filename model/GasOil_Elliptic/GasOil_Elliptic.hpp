@@ -30,6 +30,7 @@ namespace gasOil_elliptic
 		// Continuum properties
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
+		std::vector<Skeleton_Props>::iterator sk_well;
 		Oil_Props props_oil;
 		Gas_Props props_gas;
 

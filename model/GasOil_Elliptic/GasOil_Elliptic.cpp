@@ -32,10 +32,12 @@ void GasOil_Elliptic::setProps(Properties& props)
 
 	skeletonsNum = props.props_sk.size();
 	props_sk = props.props_sk;
-	for (int j = 0; j < skeletonsNum; j++)
+	for (auto sk = props_sk.begin(); sk != props_sk.end(); ++sk)
 	{
-		props_sk[j].perm_mu = MilliDarcyToM2(props_sk[j].perm_mu);
-		props_sk[j].perm_z = MilliDarcyToM2(props_sk[j].perm_z);
+		sk->perm_mu = MilliDarcyToM2(sk->perm_mu);
+		sk->perm_z = MilliDarcyToM2(sk->perm_z);
+		if (sk->isWellHere)
+			sk_well = sk;
 	}
 
 	periodsNum = props.timePeriods.size();
@@ -197,11 +199,17 @@ void GasOil_Elliptic::buildGridLog()
 	const double mu_e = asinh(2.0 * r_e / l);
 	double hmu = (mu_e - mu_w) / (double)cellsNum_mu;
 	const double hnu = 2.0 * M_PI / (double)cellsNum_nu;
-	double hz = sk_it->height;
+	double hz1, hz2, hz;
 
 	double r_prev = mu_w;
 	double logMax = log(mu_e / mu_w);
 	double logStep = logMax / (double)cellsNum_mu;
+
+	double z_prev1 = r_w;	double z_prev2 = r_w;
+	double logMax_z1 = log((sk_well->h_well - sk_well->h1) / r_w);
+	double logMax_z2 = log((sk_well->h2 - sk_well->h_well) / r_w);
+	double logStep_z1 = 2.0 * logMax_z1 / (double)sk_well->cellsNum_z;
+	double logStep_z2 = 2.0 * logMax_z2 / (double)sk_well->cellsNum_z;
 
 	double cm_mu = mu_w;
 	double cm_nu = 0.0;
@@ -218,16 +226,35 @@ void GasOil_Elliptic::buildGridLog()
 		hmu = r_prev * (exp(logStep) - 1.0);
 		cm_mu = mu_w;
 
-		hz = 0.0;
+		hz = hz1 = hz2 = 0.0;
 		cm_z = sk_it->h1;
 		cm_nu = (double)k * 2.0 * M_PI / (double)cellsNum_nu;
+		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)sk_well->cellsNum_z);
+		z_prev2 = r_w;
 
 		// Left border
 		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
-			hz = (sk_it->h2 - sk_it->h1) / (double)(sk_it->cellsNum_z);
-			cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+			if (!sk_it->isWellHere)
+			{
+				hz = (sk_it->h2 - sk_it->h1) / (double)(sk_it->cellsNum_z);
+				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+			}
+			else
+			{
+				if (cm_z < sk_it->h_well)
+				{
+					hz = z_prev1 * (exp(logStep_z1) - 1.0);
+					z_prev1 *= exp(-logStep_z1);
+				}
+				else
+				{
+					hz = z_prev2 * (exp(logStep_z2) - 1.0);
+					z_prev2 *= exp(logStep_z2);
+				}
+				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+			}
 
 			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz));
 			cells_z++;
@@ -247,12 +274,31 @@ void GasOil_Elliptic::buildGridLog()
 			cm_z = sk_it->h1;
 			cm_mu = r_prev * (exp(logStep) + 1.0) / 2.0;
 			hmu = r_prev * (exp(logStep) - 1.0);
+			z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)sk_well->cellsNum_z);
+			z_prev2 = r_w;
 
 			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, 0.0));
 			for (int i = 0; i < cellsNum_z; i++)
 			{
-				hz = (sk_it->h2 - sk_it->h1) / (double)(sk_it->cellsNum_z);
-				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+				if (!sk_it->isWellHere)
+				{
+					hz = (sk_it->h2 - sk_it->h1) / (double)(sk_it->cellsNum_z);
+					cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+				}
+				else
+				{
+					if (cm_z < sk_it->h_well)
+					{
+						hz = z_prev1 * (exp(logStep_z1) - 1.0);
+						z_prev1 *= exp(-logStep_z1);
+					}
+					else
+					{
+						hz = z_prev2 * (exp(logStep_z2) - 1.0);
+						z_prev2 *= exp(logStep_z2);
+					}
+					cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+				}
 
 				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, hz));
 				Volume += cells[cells.size() - 1].V;
@@ -273,12 +319,32 @@ void GasOil_Elliptic::buildGridLog()
 		sk_it = props_sk.begin();	cells_z = 0;
 		cm_z = sk_it->h1;
 		cm_mu = mu_e;
+		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)sk_well->cellsNum_z);
+		z_prev2 = r_w;
 
 		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
-			hz = (sk_it->h2 - sk_it->h1) / (double)(sk_it->cellsNum_z);
-			cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+			if (!sk_it->isWellHere)
+			{
+				hz = (sk_it->h2 - sk_it->h1) / (double)(sk_it->cellsNum_z);
+				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+			}
+			else
+			{
+				if (cm_z < sk_it->h_well)
+				{
+					hz = z_prev1 * (exp(logStep_z1) - 1.0);
+					z_prev1 *= exp(-logStep_z1);
+				}
+				else
+				{
+					hz = z_prev2 * (exp(logStep_z2) - 1.0);
+					z_prev2 *= exp(logStep_z2);
+				}
+				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
+
+			}
 
 			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz));
 			cells_z++;
