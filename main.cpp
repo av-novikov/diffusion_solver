@@ -242,6 +242,7 @@ gasOil_elliptic::Properties* getProps()
 	props->depth_point = 0.0;
 
 	gasOil_elliptic::Skeleton_Props tmp;
+	tmp.isWellHere = true;
 	tmp.cellsNum_z = 5;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
@@ -249,6 +250,7 @@ gasOil_elliptic::Properties* getProps()
 	tmp.s_init = 1.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
+	tmp.h_well = 5.0;
 	tmp.height = 10.0;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 20.0;

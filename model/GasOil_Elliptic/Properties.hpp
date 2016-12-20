@@ -10,6 +10,8 @@ namespace gasOil_elliptic
 {
 	struct Skeleton_Props
 	{
+		bool isWellHere = false;
+
 		// Porosity in STC
 		double m;
 		inline adouble getPoro(adouble p) const
@@ -47,6 +49,7 @@ namespace gasOil_elliptic
 
 		// Top and bottom depth of perforation
 		double h1, h2;
+		double h_well;
 		// Height of formation [m]
 		double height;
 
