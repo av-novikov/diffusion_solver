@@ -104,89 +104,6 @@ void GasOil_Elliptic::makeDimLess()
 void GasOil_Elliptic::setInitialState()
 {
 };
-/*void GasOil_Elliptic::buildGridLog()
-{
-	cells.reserve(cellsNum);
-
-	Volume = 0.0;
-	int counter = 0;
-	int skel_idx = 0, cells_z = 0;
-
-	const double mu_w = asinh(4.0 * r_w / l);
-	const double mu_e = asinh(2.0 * r_e / l);
-	const double hmu = (mu_e - mu_w) / (double)cellsNum_mu;
-	const double hnu = 2.0 * M_PI / (double)cellsNum_nu;
-	double hz = props_sk[skel_idx].height;
-
-	double cm_mu = mu_w;
-	double cm_nu = 0.0;
-	double cm_z = props_sk[skel_idx].h1;
-
-	counter = 0;
-	
-	// Top
-	for (int j = 0; j < cellsNum_nu; j++)
-	{
-		cm_mu = mu_w;
-
-		cells.push_back( Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0) );
-		for (int i = 0; i < cellsNum_mu; i++)
-		{
-			cells.push_back( Cell(counter++, cm_mu + hmu / 2.0, cm_nu, cm_z, hmu, hnu, 0.0) );
-			cm_mu += hmu;
-		}
-		cells.push_back( Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0) );
-
-		cm_nu += hnu;
-	}
-
-	// Middle
-	for (int k = 0; k < cellsNum_z; k++)
-	{
-		hz = (props_sk[skel_idx].h2 - props_sk[skel_idx].h1) / (double)(props_sk[skel_idx].cellsNum_z);
-		cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
-
-		cm_nu = 0.0;
-		for (int j = 0; j < cellsNum_nu; j++)
-		{
-			cm_mu = mu_w;
-
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz));
-			for (int i = 0; i < cellsNum_mu; i++)
-			{
-				cells.push_back( Cell(counter++, cm_mu + hmu / 2.0, cm_nu, cm_z, hmu, hnu, hz) );
-				cm_mu += hmu;
-			}
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz));
-
-			cm_nu += hnu;
-		}
-
-		cells_z++;
-		if (cells_z >= props_sk[skel_idx].cellsNum_z)
-		{
-			cells_z = 0;
-			skel_idx++;
-		}
-	}
-
-	// Bottom
-	for (int j = 0; j < cellsNum_nu; j++)
-	{
-		cm_mu = mu_w;
-
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
-		for (int i = 0; i < cellsNum_mu; i++)
-		{
-			cells.push_back(Cell(counter++, cm_mu + hmu / 2.0, cm_nu, cm_z, hmu, hnu, 0.0));
-			cm_mu += hmu;
-		}
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
-
-		cm_nu += hnu;
-	}
-};*/
-
 void GasOil_Elliptic::buildGridLog()
 {
 	cells.reserve(cellsNum);
@@ -205,11 +122,12 @@ void GasOil_Elliptic::buildGridLog()
 	double logMax = log(mu_e / mu_w);
 	double logStep = logMax / (double)cellsNum_mu;
 
+	double upcoord;
 	double z_prev1 = r_w;	double z_prev2 = r_w;
 	double logMax_z1 = log((sk_well->h_well - sk_well->h1) / r_w);
 	double logMax_z2 = log((sk_well->h2 - sk_well->h_well) / r_w);
-	double logStep_z1 = 2.0 * logMax_z1 / (double)sk_well->cellsNum_z;
-	double logStep_z2 = 2.0 * logMax_z2 / (double)sk_well->cellsNum_z;
+	double logStep_z1 = 2.0 * logMax_z1 / (double)(sk_well->cellsNum_z - 1);
+	double logStep_z2 = 2.0 * logMax_z2 / (double)(sk_well->cellsNum_z - 1);
 
 	double cm_mu = mu_w;
 	double cm_nu = 0.0;
@@ -229,11 +147,11 @@ void GasOil_Elliptic::buildGridLog()
 		hz = hz1 = hz2 = 0.0;
 		cm_z = sk_it->h1;
 		cm_nu = (double)k * 2.0 * M_PI / (double)cellsNum_nu;
-		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)sk_well->cellsNum_z);
+		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 		z_prev2 = r_w;
 
 		// Left border
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, 0.0));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
 			if (!sk_it->isWellHere)
@@ -243,11 +161,14 @@ void GasOil_Elliptic::buildGridLog()
 			}
 			else
 			{
-				if (cm_z < sk_it->h_well)
+				upcoord = cm_z + hz / 2.0 + r_w;
+				if (upcoord < sk_it->h_well)
 				{
 					hz = z_prev1 * (exp(logStep_z1) - 1.0);
 					z_prev1 *= exp(-logStep_z1);
 				}
+				else if (upcoord < sk_it->h_well + r_w)
+					hz = 2 * r_w;
 				else
 				{
 					hz = z_prev2 * (exp(logStep_z2) - 1.0);
@@ -256,7 +177,7 @@ void GasOil_Elliptic::buildGridLog()
 				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 			}
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz));
 			cells_z++;
 
 			if (cells_z >= sk_it->cellsNum_z)
@@ -265,16 +186,16 @@ void GasOil_Elliptic::buildGridLog()
 				++sk_it;
 			}
 		}
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, mu_w, hnu, 0.0));
 
 		// Middle cells
 		for (int j = 0; j < cellsNum_mu; j++)
 		{
-			sk_it = props_sk.begin();	cells_z = 0;
+			sk_it = props_sk.begin();	cells_z = 0;	hz = 0.0;
 			cm_z = sk_it->h1;
 			cm_mu = r_prev * (exp(logStep) + 1.0) / 2.0;
 			hmu = r_prev * (exp(logStep) - 1.0);
-			z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)sk_well->cellsNum_z);
+			z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 			z_prev2 = r_w;
 
 			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, 0.0));
@@ -287,11 +208,14 @@ void GasOil_Elliptic::buildGridLog()
 				}
 				else
 				{
-					if (cm_z < sk_it->h_well)
+					upcoord = cm_z + hz / 2.0 + r_w;
+					if (upcoord < sk_it->h_well)
 					{
 						hz = z_prev1 * (exp(logStep_z1) - 1.0);
 						z_prev1 *= exp(-logStep_z1);
 					}
+					else if (upcoord < sk_it->h_well + r_w)
+						hz = 2 * r_w;
 					else
 					{
 						hz = z_prev2 * (exp(logStep_z2) - 1.0);
@@ -316,10 +240,10 @@ void GasOil_Elliptic::buildGridLog()
 		}
 
 		// Right border
-		sk_it = props_sk.begin();	cells_z = 0;
+		sk_it = props_sk.begin();	cells_z = 0;	hz = 0.0;
 		cm_z = sk_it->h1;
 		cm_mu = mu_e;
-		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)sk_well->cellsNum_z);
+		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 		z_prev2 = r_w;
 
 		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
@@ -332,11 +256,14 @@ void GasOil_Elliptic::buildGridLog()
 			}
 			else
 			{
-				if (cm_z < sk_it->h_well)
+				upcoord = cm_z + hz / 2.0 + r_w;
+				if (upcoord < sk_it->h_well)
 				{
 					hz = z_prev1 * (exp(logStep_z1) - 1.0);
 					z_prev1 *= exp(-logStep_z1);
 				}
+				else if (upcoord < sk_it->h_well + r_w)
+					hz = 2 * r_w;
 				else
 				{
 					hz = z_prev2 * (exp(logStep_z2) - 1.0);
@@ -358,8 +285,9 @@ void GasOil_Elliptic::buildGridLog()
 		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0));
 	}
 }
-
 void GasOil_Elliptic::setPerforated()
 {}
-void GasOil_Elliptic::setPeriod(int period) {}
+void GasOil_Elliptic::setPeriod(int period)
+{
+};
 

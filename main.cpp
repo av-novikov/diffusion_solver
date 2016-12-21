@@ -220,7 +220,7 @@ gasOil_elliptic::Properties* getProps()
 
 	props->cellsNum_mu = 10;
 	props->cellsNum_nu = 20;
-	props->cellsNum_z = 8;
+	props->cellsNum_z = 9;
 
 	props->timePeriods.push_back(10.0 * 86400.0);
 
@@ -234,7 +234,7 @@ gasOil_elliptic::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->r_w = 1.0;
+	props->r_w = 10.0;
 	props->r_e = 1000.0;
 	props->l = 100.0;
 
@@ -243,15 +243,15 @@ gasOil_elliptic::Properties* getProps()
 
 	gasOil_elliptic::Skeleton_Props tmp;
 	tmp.isWellHere = true;
-	tmp.cellsNum_z = 8;
+	tmp.cellsNum_z = 9;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
 	tmp.p_bub = 70.625 * 1.0e+5;
 	tmp.s_init = 1.0;
 	tmp.h1 = 0.0;
-	tmp.h2 = 50.0;
-	tmp.h_well = 25.0;
-	tmp.height = 50.0;
+	tmp.h2 = 100.0;
+	tmp.h_well = 50.0;
+	tmp.height = 100.0;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 20.0;
 	tmp.dens_stc = 2000.0;

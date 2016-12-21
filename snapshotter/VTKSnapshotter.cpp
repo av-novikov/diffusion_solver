@@ -718,7 +718,7 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 		for (int j = 1; j < nz; j++)
 		{
 			Cell& cell = model->cells[j + m * nx * nz];
-			Point point = getCartesian<Cell>(cell.mu * 0.95, cell.nu - cell.hnu / 2.0, cell.z - cell.hz / 2.0);
+			Point point = getCartesian<Cell>(0, cell.nu - cell.hnu / 2.0, cell.z - cell.hz / 2.0);
 			points->InsertNextPoint(r_dim * point[0] * VIEW_MULTIPLIER,
 									r_dim * point[1] * VIEW_MULTIPLIER,
 									-r_dim * point[2]);
