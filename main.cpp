@@ -234,7 +234,7 @@ gasOil_elliptic::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->r_w = 10.0;
+	props->r_w = 0.1;
 	props->r_e = 1000.0;
 	props->l = 100.0;
 
@@ -249,9 +249,9 @@ gasOil_elliptic::Properties* getProps()
 	tmp.p_bub = 70.625 * 1.0e+5;
 	tmp.s_init = 1.0;
 	tmp.h1 = 0.0;
-	tmp.h2 = 100.0;
-	tmp.h_well = 50.0;
-	tmp.height = 100.0;
+	tmp.h2 = 10.0;
+	tmp.h_well = 5.0;
+	tmp.height = 10.0;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 20.0;
 	tmp.dens_stc = 2000.0;

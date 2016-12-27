@@ -53,6 +53,7 @@ namespace gasOil_elliptic
 		// Height of formation [m]
 		double height;
 
+		int start_z;
 		int cellsNum_z;
 
 		// Connate saturations

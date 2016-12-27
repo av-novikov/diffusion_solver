@@ -32,8 +32,10 @@ void GasOil_Elliptic::setProps(Properties& props)
 
 	skeletonsNum = props.props_sk.size();
 	props_sk = props.props_sk;
+	int idx_z = 1;
 	for (auto sk = props_sk.begin(); sk != props_sk.end(); ++sk)
 	{
+		sk->start_z = idx_z;	 idx_z += sk->cellsNum_z;
 		sk->perm_mu = MilliDarcyToM2(sk->perm_mu);
 		sk->perm_z = MilliDarcyToM2(sk->perm_z);
 		if (sk->isWellHere)
@@ -162,12 +164,12 @@ void GasOil_Elliptic::buildGridLog()
 			else
 			{
 				upcoord = cm_z + hz / 2.0 + r_w;
-				if (upcoord < sk_it->h_well)
+				if (upcoord < sk_it->h_well - EQUALITY_TOLERANCE)
 				{
 					hz = z_prev1 * (exp(logStep_z1) - 1.0);
 					z_prev1 *= exp(-logStep_z1);
 				}
-				else if (upcoord < sk_it->h_well + r_w)
+				else if (upcoord < sk_it->h_well + r_w - EQUALITY_TOLERANCE)
 					hz = 2 * r_w;
 				else
 				{
@@ -209,12 +211,12 @@ void GasOil_Elliptic::buildGridLog()
 				else
 				{
 					upcoord = cm_z + hz / 2.0 + r_w;
-					if (upcoord < sk_it->h_well)
+					if (upcoord < sk_it->h_well - EQUALITY_TOLERANCE)
 					{
 						hz = z_prev1 * (exp(logStep_z1) - 1.0);
 						z_prev1 *= exp(-logStep_z1);
 					}
-					else if (upcoord < sk_it->h_well + r_w)
+					else if (upcoord < sk_it->h_well + r_w - EQUALITY_TOLERANCE)
 						hz = 2 * r_w;
 					else
 					{
@@ -257,12 +259,12 @@ void GasOil_Elliptic::buildGridLog()
 			else
 			{
 				upcoord = cm_z + hz / 2.0 + r_w;
-				if (upcoord < sk_it->h_well)
+				if (upcoord < sk_it->h_well - EQUALITY_TOLERANCE)
 				{
 					hz = z_prev1 * (exp(logStep_z1) - 1.0);
 					z_prev1 *= exp(-logStep_z1);
 				}
-				else if (upcoord < sk_it->h_well + r_w)
+				else if (upcoord < sk_it->h_well + r_w - EQUALITY_TOLERANCE)
 					hz = 2 * r_w;
 				else
 				{
@@ -284,6 +286,27 @@ void GasOil_Elliptic::buildGridLog()
 		}
 		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0));
 	}
+
+	setUnused();
+	buildWellCells();
+}
+void GasOil_Elliptic::setUnused()
+{
+	for (const auto& sk : props_sk)
+	{
+		if (sk.isWellHere)
+		{
+			for (int j = 0; j < cellsNum_nu; j++)
+			{
+				const int idx = sk.start_z + (sk.cellsNum_z - 1) / 2 +
+								(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
+				cells[idx].isUsed = false;
+			}
+		}
+	}
+}
+void GasOil_Elliptic::buildWellCells()
+{
 }
 void GasOil_Elliptic::setPerforated()
 {}

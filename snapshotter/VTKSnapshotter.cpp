@@ -767,35 +767,38 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 		// Left
 		for (j = 0; j < nz - 2; j++)
 		{
-			Cell& cell = model->cells[l*nx*nz + j + 1];
+			const Cell& cell = model->cells[l*nx*nz + j + 1];
 
-			vtkSmartPointer<vtkHexahedron> hex =
-				vtkSmartPointer<vtkHexahedron>::New();
-			hex->GetPointIds()->SetId(0, j + l * nx * (nz - 1));
-			hex->GetPointIds()->SetId(1, j + (l + 1) * nx * (nz - 1));
-			hex->GetPointIds()->SetId(2, j + (l + 1) * nx * (nz - 1) + 1);
-			hex->GetPointIds()->SetId(3, j + l * nx * (nz - 1) + 1);
+			if (cell.isUsed)
+			{
+				vtkSmartPointer<vtkHexahedron> hex =
+					vtkSmartPointer<vtkHexahedron>::New();
+				hex->GetPointIds()->SetId(0, j + l * nx * (nz - 1));
+				hex->GetPointIds()->SetId(1, j + (l + 1) * nx * (nz - 1));
+				hex->GetPointIds()->SetId(2, j + (l + 1) * nx * (nz - 1) + 1);
+				hex->GetPointIds()->SetId(3, j + l * nx * (nz - 1) + 1);
 
-			hex->GetPointIds()->SetId(4, j + l * nx * (nz - 1) + (nz - 1));
-			hex->GetPointIds()->SetId(5, j + (l + 1) * nx * (nz - 1) + (nz - 1));
-			hex->GetPointIds()->SetId(6, j + (l + 1) * nx * (nz - 1) + 1 + (nz - 1));
-			hex->GetPointIds()->SetId(7, j + l * nx * (nz - 1) + 1 + (nz - 1));
+				hex->GetPointIds()->SetId(4, j + l * nx * (nz - 1) + (nz - 1));
+				hex->GetPointIds()->SetId(5, j + (l + 1) * nx * (nz - 1) + (nz - 1));
+				hex->GetPointIds()->SetId(6, j + (l + 1) * nx * (nz - 1) + 1 + (nz - 1));
+				hex->GetPointIds()->SetId(7, j + l * nx * (nz - 1) + 1 + (nz - 1));
 
-			hexs->InsertNextCell(hex);
+				hexs->InsertNextCell(hex);
 
-			pres->InsertNextValue(cell.u_next.p * P_dim);
-			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim);
-			sat_oil->InsertNextValue(cell.u_next.s);
-			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
-			satur->InsertNextValue(cell.u_next.SATUR);
-			vel[0] = 0.0;
-			vel[1] = 0.0;
-			vel[2] = 0.0;
-			vel_oil->InsertNextTuple(vel);
-			vel[0] = 0.0;
-			vel[1] = 0.0;
-			vel[2] = 0.0;
-			vel_gas->InsertNextTuple(vel);
+				pres->InsertNextValue(cell.u_next.p * P_dim);
+				p_bub->InsertNextValue(cell.u_next.p_bub * P_dim);
+				sat_oil->InsertNextValue(cell.u_next.s);
+				sat_gas->InsertNextValue(1.0 - cell.u_next.s);
+				satur->InsertNextValue(cell.u_next.SATUR);
+				vel[0] = 0.0;
+				vel[1] = 0.0;
+				vel[2] = 0.0;
+				vel_oil->InsertNextTuple(vel);
+				vel[0] = 0.0;
+				vel[1] = 0.0;
+				vel[2] = 0.0;
+				vel_gas->InsertNextTuple(vel);
+			}
 		}
 
 		// Middle cells
@@ -803,7 +806,7 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 		{
 			for (j = 0; j < nz - 2; j++)
 			{
-				Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
+				const Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
 
 				vtkSmartPointer<vtkHexahedron> hex =
 					vtkSmartPointer<vtkHexahedron>::New();
@@ -839,35 +842,38 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 	// Last segment - left
 	for (j = 0; j < nz - 2; j++)
 	{
-		Cell& cell = model->cells[l*nx*nz + j + 1];
+		const Cell& cell = model->cells[l*nx*nz + j + 1];
 
-		vtkSmartPointer<vtkHexahedron> hex =
-			vtkSmartPointer<vtkHexahedron>::New();
-		hex->GetPointIds()->SetId(0, j + l * nx * (nz - 1));
-		hex->GetPointIds()->SetId(1, j);
-		hex->GetPointIds()->SetId(2, j + 1);
-		hex->GetPointIds()->SetId(3, j + l * nx * (nz - 1) + 1);
+		if (cell.isUsed)
+		{
+			vtkSmartPointer<vtkHexahedron> hex =
+				vtkSmartPointer<vtkHexahedron>::New();
+			hex->GetPointIds()->SetId(0, j + l * nx * (nz - 1));
+			hex->GetPointIds()->SetId(1, j);
+			hex->GetPointIds()->SetId(2, j + 1);
+			hex->GetPointIds()->SetId(3, j + l * nx * (nz - 1) + 1);
 
-		hex->GetPointIds()->SetId(4, j + l * nx * (nz - 1) + (nz - 1));
-		hex->GetPointIds()->SetId(5, j + (nz - 1));
-		hex->GetPointIds()->SetId(6, j + 1 + (nz - 1));
-		hex->GetPointIds()->SetId(7, j + l * nx * (nz - 1) + 1 + (nz - 1));
+			hex->GetPointIds()->SetId(4, j + l * nx * (nz - 1) + (nz - 1));
+			hex->GetPointIds()->SetId(5, j + (nz - 1));
+			hex->GetPointIds()->SetId(6, j + 1 + (nz - 1));
+			hex->GetPointIds()->SetId(7, j + l * nx * (nz - 1) + 1 + (nz - 1));
 
-		hexs->InsertNextCell(hex);
+			hexs->InsertNextCell(hex);
 
-		pres->InsertNextValue(cell.u_next.p * P_dim);
-		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim);
-		sat_oil->InsertNextValue(cell.u_next.s);
-		sat_gas->InsertNextValue(1.0 - cell.u_next.s);
-		satur->InsertNextValue(cell.u_next.SATUR);
-		vel[0] = 0.0;
-		vel[1] = 0.0;
-		vel[2] = 0.0;
-		vel_oil->InsertNextTuple(vel);
-		vel[0] = 0.0;
-		vel[1] = 0.0;
-		vel[2] = 0.0;
-		vel_gas->InsertNextTuple(vel);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
+			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim);
+			sat_oil->InsertNextValue(cell.u_next.s);
+			sat_gas->InsertNextValue(1.0 - cell.u_next.s);
+			satur->InsertNextValue(cell.u_next.SATUR);
+			vel[0] = 0.0;
+			vel[1] = 0.0;
+			vel[2] = 0.0;
+			vel_oil->InsertNextTuple(vel);
+			vel[0] = 0.0;
+			vel[1] = 0.0;
+			vel[2] = 0.0;
+			vel_gas->InsertNextTuple(vel);
+		}
 	}
 
 	// Last segment - middle
@@ -875,7 +881,7 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 	{
 		for (j = 0; j < nz - 2; j++)
 		{
-			Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
+			const Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
 
 			vtkSmartPointer<vtkHexahedron> hex =
 				vtkSmartPointer<vtkHexahedron>::New();

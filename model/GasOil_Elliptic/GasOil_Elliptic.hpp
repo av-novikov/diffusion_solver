@@ -44,7 +44,11 @@ namespace gasOil_elliptic
 		void makeDimLess();
 		void buildGridLog();
 		void setPerforated();
+		void setUnused();
+		void buildWellCells();
 
+		std::vector<Cell> wellCells;
+		std::map<int,int> wellNebrMap;
 	public:
 		GasOil_Elliptic();
 		~GasOil_Elliptic();
