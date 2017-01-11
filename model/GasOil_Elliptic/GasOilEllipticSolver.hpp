@@ -17,8 +17,6 @@ namespace gasOil_elliptic
 		void control() {};
 		void doNextStep() {};
 		void solveStep() {};
-		void writeData() {};
-
 	public:
 		GasOilEllipticSolver(GasOil_Elliptic* _model);
 		~GasOilEllipticSolver();

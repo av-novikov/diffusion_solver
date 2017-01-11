@@ -105,6 +105,38 @@ void GasOil_Elliptic::makeDimLess()
 };
 void GasOil_Elliptic::setInitialState()
 {
+	vector<Cell>::iterator it;
+	for (it = cells.begin(); it != cells.end(); ++it)
+	{
+		const Skeleton_Props& props = props_sk[getSkeletonIdx(*it)];
+		it->props = const_cast<Skeleton_Props*>(&props);
+		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
+		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_bub;
+		it->u_prev.s = it->u_iter.s = it->u_next.s = props.s_init;
+		if (props.p_init > props_oil.p_sat)
+		{
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
+			it->u_prev.s = it->u_iter.s = it->u_next.s = 1.0;
+		}
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
+	}
+
+	for (it = wellCells.begin(); it != wellCells.end(); ++it)
+	{
+		const Skeleton_Props& props = props_sk[getSkeletonIdx(*it)];
+		it->props = const_cast<Skeleton_Props*>(&props);
+		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
+		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_bub;
+		it->u_prev.s = it->u_iter.s = it->u_next.s = props.s_init;
+		if (props.p_init > props_oil.p_sat)
+		{
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
+			it->u_prev.s = it->u_iter.s = it->u_next.s = 1.0;
+		}
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
+	}
 };
 void GasOil_Elliptic::buildGridLog()
 {
@@ -307,10 +339,107 @@ void GasOil_Elliptic::setUnused()
 }
 void GasOil_Elliptic::buildWellCells()
 {
+	int counter = 0;
+	for (const auto& sk : props_sk)
+	{
+		if (sk.isWellHere)
+		{
+			// lateral
+			for (int j = 0; j < cellsNum_nu; j++)
+			{
+				const int idx = sk.start_z + (sk.cellsNum_z - 1) / 2 +
+					(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
+				const Cell& cell = cells[idx];
+
+				wellCells.push_back(Cell(counter, cell.mu + cell.hmu / 2.0, cell.nu, cell.z,
+													0.0, cell.hnu, cell.hz));
+				wellNebrMap[counter++] = idx + cellsNum_z + 2;
+			}
+
+			// top
+			for (int j = 0; j < cellsNum_nu; j++)
+			{
+				const int idx = sk.start_z + (sk.cellsNum_z - 1) / 2 +
+					(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
+				const Cell& cell = cells[idx];
+
+				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz,
+													cell.hmu, cell.hnu, 0.0));
+				wellNebrMap[counter++] = idx - 1;
+			}
+
+			// bot 
+			for (int j = 0; j < cellsNum_nu; j++)
+			{
+				const int idx = sk.start_z + (sk.cellsNum_z - 1) / 2 +
+					(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
+				const Cell& cell = cells[idx];
+
+				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz,
+					cell.hmu, cell.hnu, 0.0));
+				wellNebrMap[counter++] = idx + 1;
+			}
+		}
+	}
 }
 void GasOil_Elliptic::setPerforated()
-{}
+{
+	height_perf = 0.0;
+
+	// lateral
+	for (int i = 0; i < cellsNum_nu; i++)
+	{
+		Qcell[i] = 0.0;
+		const Cell& cell = wellCells[i];
+		height_perf += Cell::a * sqrt(sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hnu * cell.hz;
+	}
+
+	// top
+	for (int i = cellsNum_nu; i < 2 * cellsNum_nu; i++)
+	{
+		Qcell[i] = 0.0;
+		const Cell& cell = wellCells[i];
+		height_perf += Cell::a * Cell::a * (sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hnu * cell.hmu;
+	}
+
+	// bot
+	for (int i = 2 * cellsNum_nu; i < 3 * cellsNum_nu; i++)
+	{
+		Qcell[i] = 0.0;
+		const Cell& cell = wellCells[i];
+		height_perf += Cell::a * Cell::a * (sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hnu * cell.hmu;
+	}
+}
 void GasOil_Elliptic::setPeriod(int period)
 {
+	if (leftBoundIsRate)
+	{
+		Q_sum = rate[period];
+
+		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = Q_sum * cells[it->first].hz / height_perf;
+		}
+		else {
+			map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = it->second * Q_sum / rate[period - 1];
+		}
+	}
+	else
+	{
+		Pwf = pwf[period];
+		Q_sum = 0.0;
+	}
+
+	for (int i = 0; i < skeletonsNum; i++)
+	{
+		props_sk[i].radius_eff_mu = props_sk[i].radiuses_eff[period];
+		props_sk[i].perm_eff_mu = props_sk[i].perms_eff[period];
+		props_sk[i].radius_eff_z = props_sk[i].radiuses_eff[period];
+		props_sk[i].perm_eff_z = props_sk[i].perms_eff[period];
+		props_sk[i].skin = props_sk[i].skins[period];
+	}
 };
 

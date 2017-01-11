@@ -24,6 +24,7 @@ namespace gasOil_elliptic
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
+		template<typename> friend class AbstractSolver;
 		friend class GasOilEllipticSolver;
 	protected:
 
@@ -49,6 +50,18 @@ namespace gasOil_elliptic
 
 		std::vector<Cell> wellCells;
 		std::map<int,int> wellNebrMap;
+
+		inline int getSkeletonIdx(const Cell& cell) const
+		{
+			int idx = 0;
+			while (idx < props_sk.size())
+			{
+				if (cell.z <= props_sk[idx].h2 + EQUALITY_TOLERANCE)
+					return idx;
+				idx++;
+			}
+			exit(-1);
+		};
 	public:
 		GasOil_Elliptic();
 		~GasOil_Elliptic();

@@ -56,8 +56,19 @@ void AbstractSolver<modelType>::fill()
 template <class modelType>
 void AbstractSolver<modelType>::copyIterLayer()
 {
-	for (int i = 0; i < model->cells.size(); i++)
-		model->cells[i].u_iter = model->cells[i].u_next;
+	for (auto& cell : model->cells)
+		cell.u_iter = cell.u_next;
+//	for (int i = 0; i < model->cells.size(); i++)
+//		model->cells[i].u_iter = model->cells[i].u_next;
+}
+template <>
+void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyIterLayer()
+{
+	for (auto& cell : model->cells)
+		cell.u_iter = cell.u_next;
+
+	for (auto& cell : model->wellCells)
+		cell.u_iter = cell.u_next;
 }
 template <class modelType>
 void AbstractSolver<modelType>::revertIterLayer()
@@ -68,8 +79,19 @@ void AbstractSolver<modelType>::revertIterLayer()
 template <class modelType>
 void AbstractSolver<modelType>::copyTimeLayer()
 {
-	for(int i = 0; i < model->cells.size(); i++)
-		model->cells[i].u_prev = model->cells[i].u_iter = model->cells[i].u_next;
+	for (auto& cell : model->cells)
+		cell.u_prev = cell.u_iter = cell.u_next;
+	//for(int i = 0; i < model->cells.size(); i++)
+	//	model->cells[i].u_prev = model->cells[i].u_iter = model->cells[i].u_next;
+}
+template <>
+void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyTimeLayer()
+{
+	for (auto& cell : model->cells)
+		cell.u_prev = cell.u_iter = cell.u_next;
+
+	for (auto& cell : model->wellCells)
+		cell.u_prev = cell.u_iter = cell.u_next;
 }
 template <class modelType>
 double AbstractSolver<modelType>::convergance(int& ind, int& varInd)

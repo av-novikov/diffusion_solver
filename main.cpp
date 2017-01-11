@@ -307,8 +307,8 @@ int main(int argc, char** argv)
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.getModel()->snapshot_all(0);
-	//scene.start();
+	//scene.getModel()->snapshot_all(0);
+	scene.start();
 
 	return 0;
 }
