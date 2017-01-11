@@ -33,7 +33,6 @@ class AbstractSolver {
 		double convergance(int& ind, int& varInd);
 		double averValue(int varInd);
 		
-		virtual void construct_solution();
 		virtual void writeData() = 0;
 		virtual void control() = 0;
 		virtual void doNextStep() = 0;

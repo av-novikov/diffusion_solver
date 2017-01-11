@@ -65,10 +65,11 @@ inline bool IsNan(double a)
 	return false;
 };
 
-inline double sign(int a)
+template <typename TData>
+double sign(TData a)
 {
-	if (a > 0) return 1.0;
-	else if (a < 0) return -1.0;
+	if (a > (TData)0) return 1.0;
+	else if (a < (TData)0) return -1.0;
 	else return 0.0;
 };
 

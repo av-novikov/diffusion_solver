@@ -14,6 +14,7 @@ namespace gasOil_elliptic
 	class GasOilEllipticSolver : public AbstractSolver<GasOil_Elliptic>
 	{
 	protected:
+		void writeData() {};
 		void control() {};
 		void doNextStep() {};
 		void solveStep() {};
