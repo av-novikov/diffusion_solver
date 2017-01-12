@@ -8,9 +8,13 @@ using namespace gasOil_elliptic;
 
 GasOil_Elliptic::GasOil_Elliptic()
 {
+	x = new double[stencil * Variable::size];
+	y = new double[Variable::size - 1];
 };
 GasOil_Elliptic::~GasOil_Elliptic()
 {
+	delete x;
+	delete y;
 };
 void GasOil_Elliptic::setProps(Properties& props)
 {
@@ -59,9 +63,30 @@ void GasOil_Elliptic::setProps(Properties& props)
 		}
 	}
 
+	// Temporal properties
+	ht = props.ht;
+	ht_min = props.ht_min;
+	ht_max = props.ht_max;
+
+	// Oil properties
+	props_oil = props.props_oil;
+	props_oil.visc = cPToPaSec(props_oil.visc);
+
+	// Gas properties
+	props_gas = props.props_gas;
+	props_gas.visc = cPToPaSec(props_gas.visc);
+
 	makeDimLess();
 
 	Cell::a = l / 2;
+
+	// Data sets
+	props_oil.kr = setDataset(props.kr_oil, 1.0, 1.0);
+	props_gas.kr = setDataset(props.kr_gas, 1.0, 1.0);
+
+	props_oil.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
+	props_gas.b = setDataset(props.B_gas, P_dim / BAR_TO_PA, 1.0);
+	props_oil.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
 };
 void GasOil_Elliptic::makeDimLess()
 {
@@ -102,6 +127,26 @@ void GasOil_Elliptic::makeDimLess()
 			props_sk[i].radiuses_eff[j] /= R_dim;
 		}
 	}
+
+	Q_dim = R_dim * R_dim * R_dim / t_dim;
+	for (int i = 0; i < periodsNum; i++)
+	{
+		period[i] /= t_dim;
+		if (leftBoundIsRate)
+			rate[i] /= Q_dim;
+		else
+			pwf[i] /= P_dim;
+	}
+
+	// Oil properties
+	props_oil.visc /= (P_dim * t_dim);
+	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_oil.beta /= (1.0 / P_dim);
+	props_oil.p_sat /= P_dim;
+
+	// Gas properties
+	props_gas.visc /= (P_dim * t_dim);
+	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 };
 void GasOil_Elliptic::setInitialState()
 {
@@ -497,6 +542,100 @@ void GasOil_Elliptic::solve_eqMiddle(int cur)
 				/ props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR) +
 				props_gas.getKr(upwd.s) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p));
 	}
+
+	for (int i = 0; i < Variable::size - 1; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+
+void GasOil_Elliptic::solve_eqLeft(int cur)
+{
+	const Cell& cell = cells[cur];
+	const Cell& beta1 = cells[cur + cellsNum_z + 2];
+	const Cell& beta2 = cells[cur + 2 * cellsNum_z + 4];
+
+	trace_on(left);
+	adouble h[Variable::size - 1];
+	TapeVariable var[3];
+	adouble leftIsRate = leftBoundIsRate;
+	for (int i = 0; i < 3; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].p_bub <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr1 = var[1];
+	const TapeVariable& nebr2 = var[2];
+	const int upwd_idx = (getUpwindIdx(cur, cur + cellsNum_z + 2) == cur) ? 0 : 1;
+	TapeVariable& upwd = var[upwd_idx];
+
+	condassign(h[0], leftIsRate,
+		(adouble)(getTrans(cells[cur], cells[cur + cellsNum_z + 2])) * props_oil.getKr(upwd.s) /
+		props_oil.getViscosity(next.p) / props_oil.getBoreB(next.p, next.p_bub, next.SATUR) *
+		(nebr1.p - next.p) - Qcell[cur],
+		next.p - Pwf);
+
+	adouble satur = cell.u_next.SATUR;
+	condassign(h[1], satur,
+		(next.s - nebr1.s) / (adouble)(cell.r - beta1.r) - (nebr1.s - nebr2.s) / (adouble)(beta1.r - beta2.r),
+		(next.p_bub - nebr1.p_bub) / (adouble)(cell.r - beta1.r) - (nebr1.p_bub - nebr2.p_bub) / (adouble)(beta1.r - beta2.r));
+
+	for (int i = 0; i < Variable::size - 1; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+void GasOil_Elliptic::solve_eqRight(int cur)
+{
+	const Cell& cell = cells[cur];
+
+	trace_on(right);
+	adouble h[Variable::size - 1];
+	TapeVariable var[2];
+	adouble rightIsPres = rightBoundIsPres;
+	for (int i = 0; i < 2; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].p_bub <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr = var[1];
+
+	condassign(h[0], rightIsPres, next.p - (adouble)(cell.props->p_out), next.p - (adouble)(nebr.p));
+	adouble satur = cell.u_next.SATUR;
+	condassign(h[1], satur, next.s - nebr.s, next.p_bub - nebr.p_bub);
+
+	for (int i = 0; i < Variable::size - 1; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
+void GasOil_Elliptic::solve_eqVertical(int cur)
+{
+	const Cell& cell = cells[cur];
+
+	trace_on(vertical);
+	adouble h[Variable::size - 1];
+	TapeVariable var[2];
+
+	for (int i = 0; i < 2; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].p_bub <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr = var[1];
+
+	h[0] = next.p - nebr.p;
+	adouble satur = cell.u_next.SATUR;
+	condassign(h[1], satur, next.s - nebr.s, next.p_bub - nebr.p_bub);
 
 	for (int i = 0; i < Variable::size - 1; i++)
 		h[i] >>= y[i];

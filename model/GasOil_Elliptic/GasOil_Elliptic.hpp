@@ -183,9 +183,9 @@ namespace gasOil_elliptic
 
 		//void setVariables(int cur);
 		void solve_eqMiddle(int cur);
-		//void solve_eqLeft(int cur);
-		//void solve_eqRight(int cur);
-		//void solve_eqVertical(int cur);
+		void solve_eqLeft(int cur);
+		void solve_eqRight(int cur);
+		void solve_eqVertical(int cur);
 
 	public:
 		GasOil_Elliptic();
