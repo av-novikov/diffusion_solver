@@ -4,6 +4,9 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <initializer_list>
+
+#define ADOLC_ADVANCED_BRANCHING
 
 #include "model/cells/Variables.hpp"
 #include "model/GasOil_Elliptic/Properties.hpp"
@@ -57,6 +60,15 @@ namespace gasOil_elliptic
 		std::vector<Cell> wellCells;
 		std::map<int,int> wellNebrMap;
 
+		inline const Cell& getUpwindIdx(const Cell& cell, const Cell& nebr) const
+		{
+			assert(cell.isUsed);
+			assert(nebr.isUsed);
+			if (cell.u_next.p < nebr.u_next.p)
+				return nebr;
+			else
+				return cell;
+		};
 		inline int getSkeletonIdx(const Cell& cell) const
 		{
 			int idx = 0;
@@ -68,7 +80,70 @@ namespace gasOil_elliptic
 			}
 			exit(-1);
 		};
-		inline double getTrans(Cell& cell, Cell& beta) const
+		inline Cell& getCell(const int num)
+		{
+			return cells[num];
+		};
+		inline Cell& getCell(const int num, const int beta)
+		{
+			Cell& nebr = cells[beta];
+			if (nebr.isUsed)
+				return nebr;
+			else
+				return wellCells[wellNebrMap.at(num)];
+		};
+		inline const Cell& getCell(const int num) const
+		{
+			return cells[num];
+		};
+		inline const Cell& getCell(const int num, const int beta) const
+		{
+			const Cell& nebr = cells[beta];
+			if (nebr.isUsed)
+				return nebr;
+			else
+				return wellCells[wellNebrMap.at(num)];
+		};
+		inline void getNeighbors(const Cell& cell, Cell** const neighbor)
+		{
+			// FIXME: Only for inner cells
+			assert(cell.isUsed);
+
+			neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
+			neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
+			neighbor[2] = &getCell(cell.num, cell.num - 1);
+			neighbor[3] = &getCell(cell.num, cell.num + 1);
+
+			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
+				neighbor[4] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+			else
+				neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
+			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
+				neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
+			else
+				neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+		};
+		inline void getStencil(const Cell& cell, Cell** const neighbor)
+		{
+			// FIXME: Only for inner cells
+			assert(cell.isUsed);
+
+			neighbor[0] = &getCell(cell.num);
+			neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
+			neighbor[2] = &getCell(cell.num, cell.num + cellsNum_z + 2);
+			neighbor[3] = &getCell(cell.num, cell.num - 1);
+			neighbor[4] = &getCell(cell.num, cell.num + 1);
+
+			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
+				neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+			else
+				neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
+			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
+				neighbor[6] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
+			else
+				neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+		};
+		inline double getTrans(const Cell& cell, const Cell& beta) const
 		{
 			double k1, k2, S;
 
@@ -79,7 +154,7 @@ namespace gasOil_elliptic
 				k2 = (dz2 > beta.props->radius_eff_z ? beta.props->perm_z : beta.props->perm_eff_z);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
-				S = Cell::a * Cell::a * (sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hmu * cell.hnu;
+				S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hmu * cell.hnu;
 				return 2.0 * k1 * k2 * S / (k1 * beta.hz + k2 * cell.hz);
 			}
 			else if (fabs(cell.mu - beta.mu) > EQUALITY_TOLERANCE) {
@@ -87,24 +162,31 @@ namespace gasOil_elliptic
 				k2 = (beta.mu > beta.props->radius_eff_mu ? beta.props->perm_mu : beta.props->perm_eff_mu);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
-				const double eccentr = 1.0 / cosh(cell.mu + sign(beta.mu - cell.mu) * cell.hmu / 2.0);
-				S = Cell::a * cosh(cell.mu + sign(beta.mu - cell.mu) * cell.hmu / 2.0) * cell.hz * (boost::math::ellint_2(eccentr, cell.nu + cell.hnu / 2.0) - boost::math::ellint_2(eccentr, cell.nu - cell.hnu / 2.0));
-				// S = Cell::a * cosh(cell.mu + sign(beta.mu - cell.mu) * cell.hmu / 2.0) * cell.hz * sqrt(1.0 - eccentr * eccentr * cos(cell.nu) * cos(cell.nu)) * cell.hnu;
-				return 2.0 * k1 * k2 * S / Cell::a / 
-					( k1 * beta.hmu * sqrt(sinh(beta.mu) * sinh(beta.mu) * cos(beta.nu) * cos(beta.nu) + cosh(beta.mu) * cosh(beta.mu) * sin(beta.nu) * sin(beta.nu))
-					+ k2 * cell.hmu * sqrt(sinh(cell.mu) * sinh(cell.mu) * cos(cell.nu) * cos(cell.nu) + cosh(cell.mu) * cosh(cell.mu) * sin(cell.nu) * sin(cell.nu)) );
+
+				const double mu = cell.mu + sign(beta.mu - cell.mu) * cell.hmu / 2.0;
+				S = Cell::getH(mu, cell.nu) * cell.hnu * cell.hz;
+				return 2.0 * k1 * k2 * S /
+					( k1 * beta.hmu * Cell::getH(beta.mu, beta.nu)
+					+ k2 * cell.hmu * Cell::getH(cell.mu, cell.nu) );
 			}
 			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE) {
 				k1 = (cell.mu > cell.props->radius_eff_mu ? cell.props->perm_mu : cell.props->perm_eff_mu);
 				if (k1 == 0.0)
 					return 0.0;
 				const double nu = cell.nu + sign(beta.nu - cell.nu) * cell.hnu / 2.0;
-				S = cell.hz * Cell::a * cell.hmu * sqrt(sinh(cell.mu) * sinh(cell.mu) * cos(nu) * cos(nu) + cosh(cell.mu) * cosh(cell.mu) * sin(nu) * sin(nu));
-				return 2.0 * k1 * S / Cell::a / 
-					( beta.hnu * sqrt(sinh(beta.mu) * sinh(beta.mu) * cos(beta.nu) * cos(beta.nu) + cosh(beta.mu) * cosh(beta.mu) * sin(beta.nu) * sin(beta.nu)) + 
-					+ cell.hnu * sqrt(sinh(cell.mu) * sinh(cell.mu) * cos(cell.nu) * cos(cell.nu) + cosh(cell.mu) * cosh(cell.mu) * sin(cell.nu) * sin(cell.nu)));
+				S = cell.hz * cell.hmu * Cell::getH(cell.mu, nu);
+				return 2.0 * k1 * S /
+					( beta.hnu * Cell::getH(beta.mu, beta.nu) + 
+					+ cell.hnu * Cell::getH(cell.mu, cell.mu) );
 			}
 		};
+
+		//void setVariables(int cur);
+		void solve_eqMiddle(int cur);
+		//void solve_eqLeft(int cur);
+		//void solve_eqRight(int cur);
+		//void solve_eqVertical(int cur);
+
 	public:
 		GasOil_Elliptic();
 		~GasOil_Elliptic();

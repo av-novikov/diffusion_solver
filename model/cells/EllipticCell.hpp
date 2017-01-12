@@ -32,7 +32,7 @@ public:
 	EllipticCell() : isGhost(false), isUsed(true) {};
 	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz) : AbstractCell<varType>(_num), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz)
 	{
-		V = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu)) * hz;
+		V = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu)) * hmu * hnu * hz;
 		if (V == 0.0)
 			isGhost = true;
 		else
@@ -41,6 +41,11 @@ public:
 		isUsed = true;
 	};
 	~EllipticCell() {};
+
+	static double getH(const double mu, const double nu)
+	{
+		return a * sqrt(sinh(mu) * sinh(mu) + sin(nu) * sin(nu));
+	};
 };
 
 template <typename varType, typename PropsType>

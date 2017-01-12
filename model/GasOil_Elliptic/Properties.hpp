@@ -8,6 +8,11 @@
 
 namespace gasOil_elliptic
 {
+	const int mid = 1;
+	const int left = 2;
+	const int right = 3;
+	const int vertical = 4;
+
 	struct Skeleton_Props
 	{
 		bool isWellHere = false;

@@ -353,7 +353,7 @@ void GasOil_Elliptic::buildWellCells()
 
 				wellCells.push_back(Cell(counter, cell.mu + cell.hmu / 2.0, cell.nu, cell.z,
 													0.0, cell.hnu, cell.hz));
-				wellNebrMap[counter++] = idx + cellsNum_z + 2;
+				wellNebrMap[idx + cellsNum_z + 2] = counter++;
 			}
 
 			// top
@@ -365,7 +365,7 @@ void GasOil_Elliptic::buildWellCells()
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz,
 													cell.hmu, cell.hnu, 0.0));
-				wellNebrMap[counter++] = idx - 1;
+				wellNebrMap[idx - 1] = counter++;
 			}
 
 			// bot 
@@ -377,7 +377,7 @@ void GasOil_Elliptic::buildWellCells()
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz,
 					cell.hmu, cell.hnu, 0.0));
-				wellNebrMap[counter++] = idx + 1;
+				wellNebrMap[idx + 1] = counter++;
 			}
 		}
 	}
@@ -443,3 +443,63 @@ void GasOil_Elliptic::setPeriod(int period)
 	}
 };
 
+void GasOil_Elliptic::solve_eqMiddle(int cur)
+{
+	const Cell& cell = cells[cur];
+	const Skeleton_Props& props = *cell.props;
+
+	trace_on(mid);
+
+	adouble h[Variable::size - 1];
+	TapeVariable var[stencil];
+	const Variable& prev = cell.u_prev;
+
+	for (int i = 0; i < stencil; i++)
+	{
+		var[i].p <<= x[i * Variable::size];
+		var[i].s <<= x[i * Variable::size + 1];
+		var[i].p_bub <<= x[i * Variable::size + 2];
+	}
+
+	const TapeVariable& next = var[0];
+	adouble satur = cell.u_next.SATUR;
+
+	condassign(h[0], satur,
+		props.getPoro(next.p) * next.s / props_oil.getB(next.p, next.p_bub, satur) -
+		props.getPoro(prev.p) * prev.s / props_oil.getB(prev.p, prev.p_bub, prev.SATUR),
+		props.getPoro(next.p) / props_oil.getB(next.p, next.p_bub, satur) -
+		props.getPoro(prev.p) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR));
+
+	condassign(h[1], satur,
+		props.getPoro(next.p) * ((1.0 - next.s) / props_gas.getB(next.p) +
+			next.s * props_oil.getRs(next.p, next.p_bub, satur) / props_oil.getB(next.p, next.p_bub, satur)) -
+		props.getPoro(prev.p) * ((1.0 - prev.s) / props_gas.getB(prev.p) +
+			prev.s * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR)),
+		props.getPoro(next.p) * props_oil.getRs(next.p, next.p_bub, satur) / props_oil.getB(next.p, next.p_bub, satur) -
+		props.getPoro(prev.p) * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR));
+
+	Cell* neighbor[6];
+	getNeighbors(cell, neighbor);
+	adouble tmp[Variable::size - 1];
+	for (int i = 0; i < 6; i++)
+	{
+		const Cell& beta = *neighbor[i];
+		const int upwd_idx = (getUpwindIdx(cell, beta).num == cur) ? 0 : i + 1;
+		const TapeVariable& nebr = var[i + 1];
+		TapeVariable& upwd = var[upwd_idx];
+
+		h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			props_oil.getKr(upwd.s) / props_oil.getViscosity(upwd.p) /
+			props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR);
+
+		h[1] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			(props_oil.getKr(upwd.s) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR)
+				/ props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR) +
+				props_gas.getKr(upwd.s) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p));
+	}
+
+	for (int i = 0; i < Variable::size - 1; i++)
+		h[i] >>= y[i];
+
+	trace_off();
+}
