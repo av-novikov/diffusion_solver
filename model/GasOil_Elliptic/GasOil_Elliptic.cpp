@@ -31,7 +31,6 @@ void GasOil_Elliptic::setProps(Properties& props)
 	cellsNum = (cellsNum_mu + 2) * (cellsNum_z + 2) * cellsNum_nu;
 
 	// Setting skeleton properties
-	perfIntervals = props.perfIntervals;
 	depth_point = props.depth_point;
 
 	skeletonsNum = props.props_sk.size();
@@ -397,8 +396,9 @@ void GasOil_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu + cell.hmu / 2.0, cell.nu, cell.z,
-													0.0, cell.hnu, cell.hz));
-				wellNebrMap[idx + cellsNum_z + 2] = counter++;
+													0.0, cell.hnu, cell.hz, true));
+				wellNebrMap[idx + cellsNum_z + 2] = counter;
+				nebrMap[counter++] = make_pair<int, int>(idx + cellsNum_z + 2, idx + 2 * cellsNum_z + 4);
 			}
 
 			// top
@@ -409,8 +409,9 @@ void GasOil_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz,
-													cell.hmu, cell.hnu, 0.0));
-				wellNebrMap[idx - 1] = counter++;
+													cell.hmu, cell.hnu, 0.0, true));
+				wellNebrMap[idx - 1] = counter;
+				nebrMap[counter++] = make_pair<int, int>(idx - 1, idx - 2);
 			}
 
 			// bot 
@@ -421,8 +422,9 @@ void GasOil_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz,
-					cell.hmu, cell.hnu, 0.0));
-				wellNebrMap[idx + 1] = counter++;
+					cell.hmu, cell.hnu, 0.0, true));
+				wellNebrMap[idx + 1] = counter;
+				nebrMap[counter++] = make_pair<int, int>(idx + 1, idx + 2);
 			}
 		}
 	}
@@ -487,6 +489,36 @@ void GasOil_Elliptic::setPeriod(int period)
 		props_sk[i].skin = props_sk[i].skins[period];
 	}
 };
+void GasOil_Elliptic::setRateDeviation(int num, double ratio)
+{
+	Qcell[num] += Q_sum * ratio;
+}
+double GasOil_Elliptic::solveH()
+{
+	double H = 0.0;
+	double p1, p0;
+
+	map<int, double>::iterator it = Qcell.begin();
+	for (int i = 0; i < Qcell.size() - 1; i++)
+	{
+		p0 = cells[it->first].u_next.p;
+		p1 = cells[(++it)->first].u_next.p;
+
+		H += (p1 - p0) * (p1 - p0) / 2.0;
+	}
+
+	return H;
+}
+double GasOil_Elliptic::getRate(int cur) const 
+{
+	const Cell& cell = wellCells[cur];
+	const Cell& beta = cells[nebrMap.at(cur).first];
+	const Variable& upwd = getUpwindCell(cell, beta).u_next;
+	const Variable& next = wellCells[cur].u_next;
+	return getTrans(cell, beta) * props_oil.getKr(upwd.s).value() /
+		props_oil.getViscosity(next.p).value() / props_oil.getBoreB(next.p, next.p_bub, next.SATUR).value() *
+		(beta.u_next.p - next.p);
+}
 
 void GasOil_Elliptic::solve_eqMiddle(int cur)
 {
@@ -529,7 +561,7 @@ void GasOil_Elliptic::solve_eqMiddle(int cur)
 	for (int i = 0; i < 6; i++)
 	{
 		const Cell& beta = *neighbor[i];
-		const int upwd_idx = (getUpwindIdx(cell, beta).num == cur) ? 0 : i + 1;
+		const int upwd_idx = (getUpwindCell(cell, beta).num == cur) ? 0 : i + 1;
 		const TapeVariable& nebr = var[i + 1];
 		TapeVariable& upwd = var[upwd_idx];
 
@@ -548,12 +580,23 @@ void GasOil_Elliptic::solve_eqMiddle(int cur)
 
 	trace_off();
 }
-
-void GasOil_Elliptic::solve_eqLeft(int cur)
+void GasOil_Elliptic::solve_eqWell(int cur)
 {
-	const Cell& cell = cells[cur];
-	const Cell& beta1 = cells[cur + cellsNum_z + 2];
-	const Cell& beta2 = cells[cur + 2 * cellsNum_z + 4];
+	const Cell& cell = wellCells[cur];
+	const Cell& beta1 = cells[ nebrMap[cur].first ];
+	const Cell& beta2 = cells[ nebrMap[cur].second ];
+	double dist1, dist2;
+	if (cell.hz == 0)
+	{
+		dist1 = cell.z - beta1.z;
+		dist2 = beta1.z - beta2.z;
+	}
+	else
+	{
+		dist1 = Cell::getH((cell.mu + beta1.mu) / 2.0, cell.nu) * (cell.mu - beta1.mu);
+		dist2 = Cell::getH((beta2.mu + beta1.mu) / 2.0, cell.nu) * (beta1.mu - beta2.mu);
+	}
+
 
 	trace_on(left);
 	adouble h[Variable::size - 1];
@@ -569,19 +612,19 @@ void GasOil_Elliptic::solve_eqLeft(int cur)
 	const TapeVariable& next = var[0];
 	const TapeVariable& nebr1 = var[1];
 	const TapeVariable& nebr2 = var[2];
-	const int upwd_idx = (getUpwindIdx(cur, cur + cellsNum_z + 2) == cur) ? 0 : 1;
+	const int upwd_idx = (getUpwindCell(cell, beta1).num == cur) ? 0 : 1;
 	TapeVariable& upwd = var[upwd_idx];
 
 	condassign(h[0], leftIsRate,
-		(adouble)(getTrans(cells[cur], cells[cur + cellsNum_z + 2])) * props_oil.getKr(upwd.s) /
+		(adouble)(getTrans(cell, beta1)) * props_oil.getKr(upwd.s) /
 		props_oil.getViscosity(next.p) / props_oil.getBoreB(next.p, next.p_bub, next.SATUR) *
 		(nebr1.p - next.p) - Qcell[cur],
 		next.p - Pwf);
 
 	adouble satur = cell.u_next.SATUR;
 	condassign(h[1], satur,
-		(next.s - nebr1.s) / (adouble)(cell.r - beta1.r) - (nebr1.s - nebr2.s) / (adouble)(beta1.r - beta2.r),
-		(next.p_bub - nebr1.p_bub) / (adouble)(cell.r - beta1.r) - (nebr1.p_bub - nebr2.p_bub) / (adouble)(beta1.r - beta2.r));
+		(next.s - nebr1.s) / (adouble)(dist1) - (nebr1.s - nebr2.s) / (adouble)(dist2),
+		(next.p_bub - nebr1.p_bub) / (adouble)(dist1) - (nebr1.p_bub - nebr2.p_bub) / (adouble)(dist2));
 
 	for (int i = 0; i < Variable::size - 1; i++)
 		h[i] >>= y[i];
@@ -641,4 +684,72 @@ void GasOil_Elliptic::solve_eqVertical(int cur)
 		h[i] >>= y[i];
 
 	trace_off();
+}
+void GasOil_Elliptic::setVariables(const Cell& cell)
+{
+	assert(cell.isUsed);
+
+	if (cell.isWell) // Well
+	{
+		const Variable& next = cell.u_next;
+		const Variable& nebr1 = cells[nebrMap[cell.num].first].u_next;
+		const Variable& nebr2 = cells[nebrMap[cell.num].second].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr1.values[i];
+			x[2 * Variable::size + i] = nebr2.values[i];
+		}
+	} 
+	else if (cell.hmu == 0.0) // Right
+	{
+		const Variable& next = cell.u_next;
+		const Variable& nebr = cells[cell.num - cellsNum_z - 2].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+	}
+	else if (cell.num % (cellsNum_z + 2) == 0) // Top
+	{
+		const Variable& next = cell.u_next;
+		const Variable& nebr = cells[cell.num + 1].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+	}
+	else if ((cell.num + 1) % (cellsNum_z + 2) == 0) // Bottom
+	{
+		const Variable& next = cell.u_next;
+		const Variable& nebr = cells[cell.num - 1].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+	}
+	else // Middle
+	{
+		const Variable& next = cell.u_next;
+		Cell* neighbor [6];
+		getNeighbors(cell, neighbor);
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+
+			for (int j = 0; j < 6; j++)
+			{
+				const Variable& nebr = neighbor[j]->u_next;
+				x[(j + 1) * Variable::size + i] = nebr.values[i];
+			}
+		}
+	}
 }

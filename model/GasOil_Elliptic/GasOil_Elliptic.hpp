@@ -56,11 +56,14 @@ namespace gasOil_elliptic
 		void setPerforated();
 		void setUnused();
 		void buildWellCells();
-
+		void setRateDeviation(int num, double ratio);
+		double solveH();
+		
 		std::vector<Cell> wellCells;
 		std::map<int,int> wellNebrMap;
+		std::map<int, std::pair<int, int> > nebrMap;
 
-		inline const Cell& getUpwindIdx(const Cell& cell, const Cell& nebr) const
+		inline const Cell& getUpwindCell(const Cell& cell, const Cell& nebr) const
 		{
 			assert(cell.isUsed);
 			assert(nebr.isUsed);
@@ -183,9 +186,10 @@ namespace gasOil_elliptic
 
 		//void setVariables(int cur);
 		void solve_eqMiddle(int cur);
-		void solve_eqLeft(int cur);
+		void solve_eqWell(int cur);
 		void solve_eqRight(int cur);
 		void solve_eqVertical(int cur);
+		void setVariables(const Cell& cell);
 
 	public:
 		GasOil_Elliptic();
@@ -195,6 +199,7 @@ namespace gasOil_elliptic
 		double* y;
 
 		void setPeriod(int period);
+		double getRate(int cur) const;
 	};
 };
 

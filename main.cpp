@@ -238,7 +238,6 @@ gasOil_elliptic::Properties* getProps()
 	props->r_e = 1000.0;
 	props->l = 100.0;
 
-	props->perfIntervals.push_back(make_pair(1, 1));
 	props->depth_point = 0.0;
 
 	gasOil_elliptic::Skeleton_Props tmp;

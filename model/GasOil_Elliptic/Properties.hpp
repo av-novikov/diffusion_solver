@@ -163,8 +163,6 @@ namespace gasOil_elliptic
 		// If right boundary condition would be 1st type
 		bool rightBoundIsPres;
 
-		// Perforated intervals
-		std::vector<std::pair<int, int> > perfIntervals;
 		// Time step limits
 		// Initial time step [sec]
 		double ht;
