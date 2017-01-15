@@ -3,6 +3,13 @@
 
 #include "model/cells/AbstractCell.hpp"
 
+#define MIDDLE	0
+#define LEFT	1
+#define RIGHT	2
+#define TOP		3
+#define BOTTOM	4
+#define WELL	5
+
 template <typename varType, typename PropsType = EmptyStruct>
 class EllipticCell : public AbstractCell<varType>
 {
@@ -20,35 +27,18 @@ public:
 	double hz;
 
 	PropsType* props;
-
-	bool isGhost;
 	bool isUsed;
-	bool isWell;
+	const int type;
 
 	inline std::array<double, 3> getCartesian() const
 	{
 		return { a * cosh(mu) * cos(nu), a * sinh(mu) * sin(nu), z };
 	};
 
-	EllipticCell() : isGhost(false), isUsed(true), isWell(false) {};
-	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz) : AbstractCell<varType>(_num), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz)
+	EllipticCell() : isUsed(true) {};
+	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz, int _type) : AbstractCell<varType>(_num), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz), type(_type)
 	{
 		V = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu)) * hmu * hnu * hz;
-		if (V == 0.0)
-			isGhost = true;
-		else
-			isGhost = false;
-
-		isUsed = true;
-		isWell = false;
-	};
-	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz, bool _isWell) : AbstractCell<varType>(_num), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz), isWell(_isWell)
-	{
-		V = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu)) * hmu * hnu * hz;
-		if (V == 0.0)
-			isGhost = true;
-		else
-			isGhost = false;
 
 		isUsed = true;
 	};

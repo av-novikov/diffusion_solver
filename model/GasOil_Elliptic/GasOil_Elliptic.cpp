@@ -229,7 +229,7 @@ void GasOil_Elliptic::buildGridLog()
 		z_prev2 = r_w;
 
 		// Left border
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, 0.0));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, 0.0, LEFT));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
 			if (!sk_it->isWellHere)
@@ -255,7 +255,7 @@ void GasOil_Elliptic::buildGridLog()
 				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 			}
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, LEFT));
 			cells_z++;
 
 			if (cells_z >= sk_it->cellsNum_z)
@@ -264,7 +264,7 @@ void GasOil_Elliptic::buildGridLog()
 				++sk_it;
 			}
 		}
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, mu_w, hnu, 0.0));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, mu_w, hnu, 0.0, LEFT));
 
 		// Middle cells
 		for (int j = 0; j < cellsNum_mu; j++)
@@ -276,7 +276,7 @@ void GasOil_Elliptic::buildGridLog()
 			z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 			z_prev2 = r_w;
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, 0.0));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, 0.0, TOP));
 			for (int i = 0; i < cellsNum_z; i++)
 			{
 				if (!sk_it->isWellHere)
@@ -302,7 +302,7 @@ void GasOil_Elliptic::buildGridLog()
 					cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 				}
 
-				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, hz));
+				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, hz, MIDDLE));
 				Volume += cells[cells.size() - 1].V;
 				cells_z++;
 
@@ -312,7 +312,7 @@ void GasOil_Elliptic::buildGridLog()
 					++sk_it;
 				}
 			}
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, hmu, hnu, 0.0));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, hmu, hnu, 0.0, BOTTOM));
 
 			r_prev *= exp(logStep);
 		}
@@ -324,7 +324,7 @@ void GasOil_Elliptic::buildGridLog()
 		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 		z_prev2 = r_w;
 
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0, RIGHT));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
 			if (!sk_it->isWellHere)
@@ -351,7 +351,7 @@ void GasOil_Elliptic::buildGridLog()
 
 			}
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz, RIGHT));
 			cells_z++;
 
 			if (cells_z >= sk_it->cellsNum_z)
@@ -360,7 +360,7 @@ void GasOil_Elliptic::buildGridLog()
 				++sk_it;
 			}
 		}
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0, RIGHT));
 	}
 
 	setUnused();
@@ -396,7 +396,7 @@ void GasOil_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu + cell.hmu / 2.0, cell.nu, cell.z,
-													0.0, cell.hnu, cell.hz, true));
+													0.0, cell.hnu, cell.hz, WELL));
 				wellNebrMap[idx + cellsNum_z + 2] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx + cellsNum_z + 2, idx + 2 * cellsNum_z + 4);
 			}
@@ -409,7 +409,7 @@ void GasOil_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz,
-													cell.hmu, cell.hnu, 0.0, true));
+													cell.hmu, cell.hnu, 0.0, WELL));
 				wellNebrMap[idx - 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx - 1, idx - 2);
 			}
@@ -422,7 +422,7 @@ void GasOil_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz,
-					cell.hmu, cell.hnu, 0.0, true));
+					cell.hmu, cell.hnu, 0.0, WELL));
 				wellNebrMap[idx + 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx + 1, idx + 2);
 			}
@@ -689,7 +689,7 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 {
 	assert(cell.isUsed);
 
-	if (cell.isWell) // Well
+	if (cell.type == WELL) // Well
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr1 = cells[nebrMap[cell.num].first].u_next;
@@ -702,7 +702,7 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 			x[2 * Variable::size + i] = nebr2.values[i];
 		}
 	} 
-	else if (cell.hmu == 0.0) // Right
+	else if (cell.type == RIGHT) // Right
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num - cellsNum_z - 2].u_next;
@@ -713,7 +713,7 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 			x[Variable::size + i] = nebr.values[i];
 		}
 	}
-	else if (cell.num % (cellsNum_z + 2) == 0) // Top
+	else if (cell.type == TOP) // Top
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num + 1].u_next;
@@ -724,7 +724,7 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 			x[Variable::size + i] = nebr.values[i];
 		}
 	}
-	else if ((cell.num + 1) % (cellsNum_z + 2) == 0) // Bottom
+	else if (cell.type == BOTTOM) // Bottom
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num - 1].u_next;

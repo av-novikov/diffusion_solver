@@ -63,6 +63,15 @@ namespace gasOil_elliptic
 		std::map<int,int> wellNebrMap;
 		std::map<int, std::pair<int, int> > nebrMap;
 
+		inline int getIdx(const int i) const
+		{
+			if (i < 0)
+				return cellsNum + i;
+			else if (i > cellsNum)
+				return i - cellsNum;
+			else
+				return i;
+		}
 		inline const Cell& getUpwindCell(const Cell& cell, const Cell& nebr) const
 		{
 			assert(cell.isUsed);
@@ -181,6 +190,39 @@ namespace gasOil_elliptic
 				return 2.0 * k1 * S /
 					( beta.hnu * Cell::getH(beta.mu, beta.nu) + 
 					+ cell.hnu * Cell::getH(cell.mu, cell.mu) );
+			}
+		};
+		inline void solveP_bub()
+		{
+			int idx;
+
+			for (auto& cell : cells)
+			{
+				const Skeleton_Props* props = cell.props;
+				Variable& next = cell.u_next;
+
+				if (next.SATUR)
+				{
+					if ((next.s > 1.0 + EQUALITY_TOLERANCE) || (next.p > props_oil.p_sat))
+					{
+						next.SATUR = false;
+						//							next.s = 1.0;
+						next.p_bub -= 0.01 * next.p_bub;
+					}
+					else
+						next.p_bub = next.p;
+				}
+				else
+				{
+					if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+					{
+						next.SATUR = true;
+						next.s -= 0.01;
+						//							next.p_bub = next.p;
+					}
+					else
+						next.s = 1.0;
+				}
 			}
 		};
 
