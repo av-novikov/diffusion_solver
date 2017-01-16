@@ -198,19 +198,34 @@ void GasOilEllipticSolver::doNextStep()
 void GasOilEllipticSolver::fill()
 {
 	int counter = 0;
+	int i;
+	Cell* neighbor [7];
 
 	for (const auto& cell : model->cells)
 	{
 		if (cell.isUsed)
 		{
 			model->setVariables(cell);
+			model->getStencil(cell, neighbor);
 
+			i = 0;
 			const auto mat_idx = getMatrixStencil(cell);
 			for (const auto& idx : mat_idx)
 			{
-				//a[counter++] = jac[0][];
-				//a[counter++] = jac[0][];
+				a[counter++] = model->jac[0][i * Variable::size];
+				if(neighbor[i]->u_next.SATUR)
+					a[counter++] = model->jac[0][i * Variable::size + 1];
+				else
+					a[counter++] = model->jac[0][i * Variable::size + 2];
+				
+				a[counter++] = model->jac[1][i * Variable::size];
+				if(neighbor[i++]->u_next.SATUR)
+					a[counter++] = model->jac[1][i * Variable::size + 1];
+				else
+					a[counter++] = model->jac[1][i * Variable::size + 2];
 			}
+
+			rhs[2 * cell.num] = -model->y[0];	rhs[2 * cell.num + 1] = -model->y[1];
 
 			//a[counter++]
 		}
@@ -219,6 +234,32 @@ void GasOilEllipticSolver::fill()
 				a[counter++] = 1.0;						rhs[2 * cell.num] = 0.0;
 				a[counter++] = 1.0;						rhs[2 * cell.num + 1] = 0.0;
 		}
+	}
+
+	for (const auto& cell : model->wellCells)
+	{
+		model->setVariables(cell);
+		model->getStencil(cell, neighbor);
+
+		i = 0;
+		const auto mat_idx = getMatrixStencil(cell);
+		for (const auto& idx : mat_idx)
+		{
+			a[counter++] = model->jac[0][i * Variable::size];
+			if (neighbor[i]->u_next.SATUR)
+				a[counter++] = model->jac[0][i * Variable::size + 1];
+			else
+				a[counter++] = model->jac[0][i * Variable::size + 2];
+
+			a[counter++] = model->jac[1][i * Variable::size];
+			if (neighbor[i++]->u_next.SATUR)
+				a[counter++] = model->jac[1][i * Variable::size + 1];
+			else
+				a[counter++] = model->jac[1][i * Variable::size + 2];
+		}
+
+		rhs[2 * (cell.num + model->cellsNum)] = -model->y[0];
+		rhs[2 * (cell.num + model->cellsNum) + 1] = -model->y[1];
 	}
 }
 void GasOilEllipticSolver::fillIndices()
