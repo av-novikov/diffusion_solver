@@ -110,14 +110,20 @@ void GasOilEllipticSolver::copySolution(const paralution::LocalVector<double>& s
 {
 	for (int i = 0; i < model->cellsNum; i++)
 	{
-		model->cells[i].u_next.p += sol[2 * i];
-		model->cells[i].u_next.s += sol[2 * i + 1];
+		Variable& next = model->cells[i].u_next;
+
+		next.p += sol[2 * i];
+		if (next.SATUR)	next.s += sol[2 * i + 1];
+		else			next.p_bub += sol[2 * i + 1];
 	}
 
 	for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
 	{
-		model->wellCells[i - model->cellsNum].u_next.p += sol[2 * i];
-		model->wellCells[i - model->cellsNum].u_next.s += sol[2 * i + 1];
+		Variable& next = model->cells[i].u_next;
+
+		next.p += sol[2 * i];
+		if (next.SATUR)	next.s += sol[2 * i + 1];
+		else			next.p_bub += sol[2 * i + 1];
 	}
 }
 void GasOilEllipticSolver::solveStep()
@@ -191,7 +197,29 @@ void GasOilEllipticSolver::doNextStep()
 }
 void GasOilEllipticSolver::fill()
 {
+	int counter = 0;
 
+	for (const auto& cell : model->cells)
+	{
+		if (cell.isUsed)
+		{
+			model->setVariables(cell);
+
+			const auto mat_idx = getMatrixStencil(cell);
+			for (const auto& idx : mat_idx)
+			{
+				//a[counter++] = jac[0][];
+				//a[counter++] = jac[0][];
+			}
+
+			//a[counter++]
+		}
+		else
+		{
+				a[counter++] = 1.0;						rhs[2 * cell.num] = 0.0;
+				a[counter++] = 1.0;						rhs[2 * cell.num + 1] = 0.0;
+		}
+	}
 }
 void GasOilEllipticSolver::fillIndices()
 {
@@ -201,6 +229,33 @@ void GasOilEllipticSolver::fillIndices()
 	{
 		if (cell.isUsed)
 		{
+			const auto mat_idx = getMatrixStencil(cell);
+			for (const auto& idx : mat_idx)
+			{
+				ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx;
+				ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx + 1;
+				
+				ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx;
+				ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx + 1;
+			}
+		}
+		else
+		{
+				ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * cell.num;
+				ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * cell.num + 1;
+		}
+	}
+
+	for (const auto& cell : model->wellCells)
+	{
+		const auto mat_idx = getMatrixStencil(cell);
+		for (const auto& idx : mat_idx)
+		{
+			ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx;
+			ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx + 1;
+
+			ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx;
+			ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx + 1;
 		}
 	}
 }

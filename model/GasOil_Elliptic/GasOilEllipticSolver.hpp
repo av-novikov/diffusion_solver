@@ -53,6 +53,59 @@ namespace gasOil_elliptic
 			std::cout << "Summary rate deviation = " << DQ * model->Q_dim * 86400.0 << std::endl;
 			std::cout << std::endl;
 		};
+		inline const std::initializer_list<int> getMatrixStencil(const Cell& cell)
+		{
+			int stencil_idx[7];
+
+			if (cell.type == MIDDLE)
+			{
+				stencil_idx[0] = cell.num;
+				stencil_idx[1] = model->getCellIdx(cell.num, cell.num - model->cellsNum_z - 2);
+				stencil_idx[2] = model->getCellIdx(cell.num, cell.num + model->cellsNum_z + 2);
+				stencil_idx[3] = model->getCellIdx(cell.num, cell.num - 1);
+				stencil_idx[4] = model->getCellIdx(cell.num, cell.num + 1);
+
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2))
+					stencil_idx[5] = model->getCellIdx(cell.num, cell.num +
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				else
+					stencil_idx[5] = model->getCellIdx(cell.num, cell.num -
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1))
+					stencil_idx[6] = model->getCellIdx(cell.num, cell.num +
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				else
+					stencil_idx[6] = model->getCellIdx(cell.num, cell.num -
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				return{ stencil_idx[0], stencil_idx[1], stencil_idx[2], stencil_idx[3], stencil_idx[4],
+						stencil_idx[5], stencil_idx[6], stencil_idx[7] };
+			}
+			else if (cell.type == RIGHT)
+			{
+				stencil_idx[0] = cell.num;
+				stencil_idx[1] = cell.num - model->cellsNum_z - 2;
+				return{ stencil_idx[0], stencil_idx[1] };
+			}
+			else if (cell.type == TOP)
+			{
+				stencil_idx[0] = cell.num;
+				stencil_idx[1] = cell.num + 1;
+				return{ stencil_idx[0], stencil_idx[1] };
+			}
+			else if (cell.type == BOTTOM)
+			{
+				stencil_idx[0] = cell.num;
+				stencil_idx[1] = cell.num - 1;
+				return{ stencil_idx[0], stencil_idx[1] };
+			}
+			else
+			{
+				stencil_idx[0] = model->cellsNum + cell.num;
+				stencil_idx[1] = model->nebrMap[cell.num].first;
+				stencil_idx[2] = model->nebrMap[cell.num].second;
+				return{ stencil_idx[0], stencil_idx[1], stencil_idx[2] };
+			}
+		};
 
 		// Sparse matrix solver
 		ParSolver solver;

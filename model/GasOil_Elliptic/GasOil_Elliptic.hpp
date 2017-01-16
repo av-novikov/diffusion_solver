@@ -12,7 +12,8 @@
 #include "model/GasOil_Elliptic/Properties.hpp"
 #include "model/cells/EllipticCell.hpp"
 #include "model/AbstractModel.hpp"
-#include "boost/math/special_functions/ellint_2.hpp"
+
+#include <cassert>
 
 namespace gasOil_elliptic
 {
@@ -63,15 +64,6 @@ namespace gasOil_elliptic
 		std::map<int,int> wellNebrMap;
 		std::map<int, std::pair<int, int> > nebrMap;
 
-		inline int getIdx(const int i) const
-		{
-			if (i < 0)
-				return cellsNum + i;
-			else if (i > cellsNum)
-				return i - cellsNum;
-			else
-				return i;
-		}
 		inline const Cell& getUpwindCell(const Cell& cell, const Cell& nebr) const
 		{
 			assert(cell.isUsed);
@@ -103,6 +95,14 @@ namespace gasOil_elliptic
 				return nebr;
 			else
 				return wellCells[wellNebrMap.at(num)];
+		};
+		inline int getCellIdx(const int num, const int beta)
+		{
+			Cell& nebr = cells[beta];
+			if (nebr.isUsed)
+				return beta;
+			else
+				return cellsNum + wellNebrMap.at(num);
 		};
 		inline const Cell& getCell(const int num) const
 		{
@@ -139,21 +139,58 @@ namespace gasOil_elliptic
 		{
 			// FIXME: Only for inner cells
 			assert(cell.isUsed);
+			switch (cell.type)
+			{
+			case MIDDLE:
+				neighbor[0] = &getCell(cell.num);
+				neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
+				neighbor[2] = &getCell(cell.num, cell.num + cellsNum_z + 2);
+				neighbor[3] = &getCell(cell.num, cell.num - 1);
+				neighbor[4] = &getCell(cell.num, cell.num + 1);
 
-			neighbor[0] = &getCell(cell.num);
-			neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
-			neighbor[2] = &getCell(cell.num, cell.num + cellsNum_z + 2);
-			neighbor[3] = &getCell(cell.num, cell.num - 1);
-			neighbor[4] = &getCell(cell.num, cell.num + 1);
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
+					neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				else
+					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
+					neighbor[6] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
+				else
+					neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				break;
 
-			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
-				neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
-			else
-				neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
-			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
-				neighbor[6] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
-			else
-				neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+			case RIGHT:
+				neighbor[0] = &getCell(cell.num);
+				neighbor[1] = &getCell(cell.num - cellsNum_z - 2);
+				break;
+
+			case TOP:
+				neighbor[0] = &getCell(cell.num);
+				neighbor[1] = &getCell(cell.num + 1);
+				break;
+
+			case BOTTOM:
+				neighbor[0] = &getCell(cell.num);
+				neighbor[1] = &getCell(cell.num - 1);
+				break;
+
+			case WELL_LAT:
+				neighbor[0] = &wellCells[cell.num];
+				neighbor[1] = &cells[ nebrMap[cell.num].first ];
+				neighbor[2] = &cells[ nebrMap[cell.num].second ];
+				break;
+
+			case WELL_TOP:
+				neighbor[0] = &wellCells[cell.num];
+				neighbor[1] = &cells[nebrMap[cell.num].first];
+				neighbor[2] = &cells[nebrMap[cell.num].second];
+				break;
+
+			case WELL_BOT:
+				neighbor[0] = &wellCells[cell.num];
+				neighbor[1] = &cells[nebrMap[cell.num].first];
+				neighbor[2] = &cells[nebrMap[cell.num].second];
+				break;
+			}
 		};
 		inline double getTrans(const Cell& cell, const Cell& beta) const
 		{
@@ -227,10 +264,10 @@ namespace gasOil_elliptic
 		};
 
 		//void setVariables(int cur);
-		void solve_eqMiddle(int cur);
-		void solve_eqWell(int cur);
-		void solve_eqRight(int cur);
-		void solve_eqVertical(int cur);
+		void solve_eqMiddle(const Cell& cell);
+		void solve_eqWell(const Cell& cell);
+		void solve_eqRight(const Cell& cell);
+		void solve_eqVertical(const Cell& cell);
 		void setVariables(const Cell& cell);
 
 	public:
@@ -239,6 +276,7 @@ namespace gasOil_elliptic
 
 		double* x;
 		double* y;
+		double** jac;
 
 		void setPeriod(int period);
 		double getRate(int cur) const;

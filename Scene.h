@@ -12,34 +12,14 @@ protected:
 	methodType* method;
 
 public:
-	Scene()
-	{
-		model = new modelType();
-	}
-	~Scene()
-	{
-		delete model;
-		delete method;
-	}
-	
-	void load(propsType& props)
-	{
-		model->load(props);
-		method = new methodType(model);
-	}
-	void load(propsType& props, int i) {};
-	void setSnapshotterType(std::string type)
-	{
-		model->setSnapshotter(type, model);
-	};
-	void start()
-	{
-		method->start();
-	};
-	modelType* getModel() const
-	{
-		return model;
-	}
+	Scene();
+	~Scene();
+
+	void load(propsType& props);
+	void load(propsType& props, int i);
+	void setSnapshotterType(std::string type);
+	void start();
+	modelType* getModel() const;
 };
 
 #endif /* SCENE_H_ */
