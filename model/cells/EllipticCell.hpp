@@ -4,12 +4,14 @@
 #include "model/cells/AbstractCell.hpp"
 
 #define MIDDLE		0
-#define RIGHT		1
-#define TOP			2
-#define BOTTOM		3
-#define WELL_LAT	4
-#define WELL_TOP	5
-#define WELL_BOT	6
+#define MIDDLE_SIDE	1
+#define RIGHT		2
+#define TOP			3
+#define BOTTOM		4
+#define WELL_LAT	5
+#define WELL_TOP	6
+#define WELL_BOT	7
+#define WELL_SIDE	8
 
 template <typename varType, typename PropsType = EmptyStruct>
 class EllipticCell : public AbstractCell<varType>

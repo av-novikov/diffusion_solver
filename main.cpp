@@ -224,9 +224,10 @@ gasOil_elliptic::Properties* getProps()
 
 	props->timePeriods.push_back(10.0 * 86400.0);
 
-	props->leftBoundIsRate = true;
+	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(10.0);
+	//props->rates.push_back(10.0);
+	props->pwf.push_back(50.0 * 1.E+5);
 
 	props->ht = 100.0;
 	props->ht_min = 100.0;
@@ -234,7 +235,7 @@ gasOil_elliptic::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->r_w = 0.1;
+	props->r_w = 1.0;
 	props->r_e = 1000.0;
 	props->l = 100.0;
 
@@ -244,7 +245,7 @@ gasOil_elliptic::Properties* getProps()
 	tmp.isWellHere = true;
 	tmp.cellsNum_z = 9;
 	tmp.m = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_bub = 200.0 * 1.0e+5;
+	tmp.p_init = tmp.p_out = tmp.p_bub = 70.625 * 1.0e+5;
 	tmp.p_bub = 70.625 * 1.0e+5;
 	tmp.s_init = 1.0;
 	tmp.h1 = 0.0;
@@ -306,8 +307,8 @@ int main(int argc, char** argv)
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.getModel()->snapshot_all(0);
-	//scene.start();
+	//scene.getModel()->snapshot_all(0);
+	scene.start();
 
 	return 0;
 }

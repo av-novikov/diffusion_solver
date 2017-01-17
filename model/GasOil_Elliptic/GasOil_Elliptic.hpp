@@ -121,19 +121,57 @@ namespace gasOil_elliptic
 			// FIXME: Only for inner cells
 			assert(cell.isUsed);
 
-			neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
-			neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
-			neighbor[2] = &getCell(cell.num, cell.num - 1);
-			neighbor[3] = &getCell(cell.num, cell.num + 1);
+			switch (cell.type)
+			{
+			case MIDDLE:
+				if(cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
+					neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
+				else
+				{
+					int nu_idx = cell.num / ((cellsNum_z + 2) * (cellsNum_mu + 2));
+					neighbor[0] = &getCell(cell.num, cellsNum + cell.num - (2 * nu_idx + 1) * (cellsNum_z + 2) * (cellsNum_mu + 2));
+				}
+				neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
+				neighbor[2] = &getCell(cell.num, cell.num - 1);
+				neighbor[3] = &getCell(cell.num, cell.num + 1);
 
-			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
-				neighbor[4] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
-			else
-				neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
-			if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
-				neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
-			else
-				neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
+					neighbor[4] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				else
+					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
+					neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
+				else
+					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				break;
+
+			case RIGHT:
+				neighbor[0] = &getCell(cell.num - cellsNum_z - 2);
+				break;
+
+			case TOP:
+				neighbor[0] = &getCell(cell.num + 1);
+				break;
+
+			case BOTTOM:
+				neighbor[0] = &getCell(cell.num - 1);
+				break;
+
+			case WELL_LAT:
+				neighbor[0] = &cells[nebrMap[cell.num].first];
+				neighbor[1] = &cells[nebrMap[cell.num].second];
+				break;
+
+			case WELL_TOP:
+				neighbor[0] = &cells[nebrMap[cell.num].first];
+				neighbor[1] = &cells[nebrMap[cell.num].second];
+				break;
+
+			case WELL_BOT:
+				neighbor[0] = &cells[nebrMap[cell.num].first];
+				neighbor[1] = &cells[nebrMap[cell.num].second];
+				break;
+			}
 		};
 		inline void getStencil(const Cell& cell, Cell** const neighbor)
 		{
@@ -143,7 +181,13 @@ namespace gasOil_elliptic
 			{
 			case MIDDLE:
 				neighbor[0] = &getCell(cell.num);
-				neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
+				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
+					neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
+				else
+				{
+					int nu_idx = cell.num / ((cellsNum_z + 2) * (cellsNum_mu + 2));
+					neighbor[1] = &getCell(cell.num, cellsNum + cell.num - (2 * nu_idx + 1) * (cellsNum_z + 2) * (cellsNum_mu + 2));
+				}
 				neighbor[2] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[3] = &getCell(cell.num, cell.num - 1);
 				neighbor[4] = &getCell(cell.num, cell.num + 1);

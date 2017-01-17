@@ -447,7 +447,7 @@ void GasOil_Elliptic::setPerforated()
 	{
 		Qcell[i] = 0.0;
 		const Cell& cell = wellCells[i];
-		height_perf += Cell::a * sqrt(sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hnu * cell.hz;
+		height_perf += Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hz;
 	}
 
 	// top
@@ -455,7 +455,7 @@ void GasOil_Elliptic::setPerforated()
 	{
 		Qcell[i] = 0.0;
 		const Cell& cell = wellCells[i];
-		height_perf += Cell::a * Cell::a * (sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hnu * cell.hmu;
+		height_perf += Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
 	}
 
 	// bot
@@ -463,7 +463,7 @@ void GasOil_Elliptic::setPerforated()
 	{
 		Qcell[i] = 0.0;
 		const Cell& cell = wellCells[i];
-		height_perf += Cell::a * Cell::a * (sinh(cell.mu) * sinh(cell.mu) + sin(cell.nu) * sin(cell.nu)) * cell.hnu * cell.hmu;
+		height_perf += Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
 	}
 }
 void GasOil_Elliptic::setPeriod(int period)
@@ -472,10 +472,20 @@ void GasOil_Elliptic::setPeriod(int period)
 	{
 		Q_sum = rate[period];
 
-		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) {
+		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE)
+		{
 			map<int, double>::iterator it;
+			double S;
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)
-				it->second = Q_sum * cells[it->first].hz / height_perf;
+			{
+				const Cell& cell = wellCells[it->first];
+				if (cell.type == WELL_LAT)
+					S = Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hz;
+				else
+					S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
+
+				it->second = Q_sum * S / height_perf;
+			}
 		}
 		else {
 			map<int, double>::iterator it;

@@ -119,7 +119,7 @@ void GasOilEllipticSolver::copySolution(const paralution::LocalVector<double>& s
 
 	for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
 	{
-		Variable& next = model->cells[i].u_next;
+		Variable& next = model->wellCells[i - model->cellsNum].u_next;
 
 		next.p += sol[2 * i];
 		if (next.SATUR)	next.s += sol[2 * i + 1];
@@ -219,15 +219,15 @@ void GasOilEllipticSolver::fill()
 					a[counter++] = model->jac[0][i * Variable::size + 2];
 				
 				a[counter++] = model->jac[1][i * Variable::size];
-				if(neighbor[i++]->u_next.SATUR)
+				if(neighbor[i]->u_next.SATUR)
 					a[counter++] = model->jac[1][i * Variable::size + 1];
 				else
 					a[counter++] = model->jac[1][i * Variable::size + 2];
+
+				i++;
 			}
 
 			rhs[2 * cell.num] = -model->y[0];	rhs[2 * cell.num + 1] = -model->y[1];
-
-			//a[counter++]
 		}
 		else
 		{
@@ -252,10 +252,12 @@ void GasOilEllipticSolver::fill()
 				a[counter++] = model->jac[0][i * Variable::size + 2];
 
 			a[counter++] = model->jac[1][i * Variable::size];
-			if (neighbor[i++]->u_next.SATUR)
+			if (neighbor[i]->u_next.SATUR)
 				a[counter++] = model->jac[1][i * Variable::size + 1];
 			else
 				a[counter++] = model->jac[1][i * Variable::size + 2];
+
+			i++;
 		}
 
 		rhs[2 * (cell.num + model->cellsNum)] = -model->y[0];
@@ -299,6 +301,11 @@ void GasOilEllipticSolver::fillIndices()
 			ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx + 1;
 		}
 	}
+
+	elemNum = counter;
+
+	for (int i = 0; i < 2 * (model->cellsNum + model->wellCells.size()); i++)
+		ind_rhs[i] = i;
 }
 
 void GasOilEllipticSolver::fillq()

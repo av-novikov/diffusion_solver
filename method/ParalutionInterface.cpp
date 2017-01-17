@@ -12,20 +12,17 @@ ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 {
 	isAssembled = false;
 	isPrecondBuilt = false;
-	gmres.Init(1.E-15, 1.E-8, 1E+4, 20000);
-	bicgstab.Init(1.E-15, 1.E-8, 1E+4, 20000);
+	gmres.Init(1.E-15, 1.E-8, 1E+4, 10000);
+	bicgstab.Init(1.E-15, 1.E-8, 1E+4, 10000);
 }
-
 ParSolver::~ParSolver()
 {
 }
-
 void ParSolver::Init(int vecSize)
 {
 	matSize = vecSize;
 	x.Allocate("x", vecSize);
 }
-
 void ParSolver::Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs)
 {
 	Mat.Zeros();
@@ -45,12 +42,10 @@ void ParSolver::Assemble(const int* ind_i, const int* ind_j, const double* a, co
 		x.MoveToAccelerator();
 	}	
 }
-
 const paralution::LocalVector<double>& ParSolver::getSolution()
 {
 	return x;
 }
-
 void ParSolver::Solve()
 {
 	SolveGMRES();
@@ -58,7 +53,6 @@ void ParSolver::Solve()
 		
 	x.MoveToHost();
 }
-
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
@@ -67,7 +61,7 @@ void ParSolver::SolveBiCGStab()
 	bicgstab.Build();
 	isAssembled = true;
 
-	bicgstab.Init(1.E-15, 1.E-10, 1E+4, 5000);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+4, 1000);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
@@ -81,22 +75,21 @@ void ParSolver::SolveBiCGStab()
 
 	bicgstab.Clear();
 }
-
 void ParSolver::SolveGMRES()
 {
 	gmres.SetOperator(Mat);
-	p.Set(1.E-10, 1000);
+	p.Set(1.E-6, 100);
 	gmres.SetPreconditioner(p);
 	gmres.Build();
 	isAssembled = true;
 
-	gmres.Init(1.E-15, 1.E-10, 1E+4, 5000);
+	gmres.Init(1.E-15, 1.E-10, 1E+4, 1000);
 	Mat.info();
 
 	//gmres.RecordResidualHistory();
 	gmres.Solve(Rhs, &x);
 	//gmres.RecordHistory(resHistoryFile);
-	//writeSystem();
+	writeSystem();
 
 
 	//getResiduals();
@@ -106,7 +99,6 @@ void ParSolver::SolveGMRES()
 
 	gmres.Clear();
 }
-
 void ParSolver::getResiduals()
 {
 	double tmp;
@@ -125,5 +117,4 @@ void ParSolver::getResiduals()
 	iterNum = i;
 
 	file.close();
-
 }
