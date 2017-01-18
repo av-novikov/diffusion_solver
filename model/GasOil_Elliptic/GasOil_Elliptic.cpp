@@ -264,7 +264,10 @@ void GasOil_Elliptic::buildGridLog()
 				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 			}
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, MIDDLE));
+			if(k % (cellsNum_nu / 2) != 0)
+				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, MIDDLE));
+			else
+				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, MIDDLE_SIDE));
 			cells_z++;
 
 			if (cells_z >= sk_it->cellsNum_z)
@@ -542,6 +545,7 @@ double GasOil_Elliptic::getRate(int cur) const
 void GasOil_Elliptic::solve_eqMiddle(const Cell& cell)
 {
 	const Skeleton_Props& props = *cell.props;
+	const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
 
 	trace_on(mid);
 
@@ -549,7 +553,7 @@ void GasOil_Elliptic::solve_eqMiddle(const Cell& cell)
 	TapeVariable var[stencil];
 	const Variable& prev = cell.u_prev;
 
-	for (int i = 0; i < stencil; i++)
+	for (int i = 0; i < nebrNum + 1; i++)
 	{
 		var[i].p <<= x[i * Variable::size];
 		var[i].s <<= x[i * Variable::size + 1];
@@ -576,7 +580,7 @@ void GasOil_Elliptic::solve_eqMiddle(const Cell& cell)
 	Cell* neighbor[6];
 	getNeighbors(cell, neighbor);
 	adouble tmp[Variable::size - 1];
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < nebrNum; i++)
 	{
 		const Cell& beta = *neighbor[i];
 		const int upwd_idx = (getUpwindCell(cell, beta).num == cell.num) ? 0 : i + 1;
@@ -761,6 +765,7 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 	}
 	else // Middle
 	{
+		const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
 		const Variable& next = cell.u_next;
 		Cell* neighbor [6];
 		getNeighbors(cell, neighbor);
@@ -769,7 +774,7 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 		{
 			x[i] = next.values[i];
 
-			for (int j = 0; j < 6; j++)
+			for (int j = 0; j < nebrNum; j++)
 			{
 				const Variable& nebr = neighbor[j]->u_next;
 				x[(j + 1) * Variable::size + i] = nebr.values[i];

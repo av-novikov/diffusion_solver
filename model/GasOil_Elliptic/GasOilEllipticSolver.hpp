@@ -60,6 +60,7 @@ namespace gasOil_elliptic
 			if (cell.type == MIDDLE)
 			{
 				stencil_idx[0] = cell.num;
+				// Special neighbor search for center cells
 				if (cell.num % ((model->cellsNum_mu + 2) * (model->cellsNum_z + 2)) > model->cellsNum_z + 1)
 					stencil_idx[1] = model->getCellIdx(cell.num, cell.num - model->cellsNum_z - 2);
 				else
@@ -85,6 +86,28 @@ namespace gasOil_elliptic
 					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
 				return{ stencil_idx[0], stencil_idx[1], stencil_idx[2], stencil_idx[3], 
 						stencil_idx[4], stencil_idx[5], stencil_idx[6] };
+			}
+			else if (cell.type == MIDDLE_SIDE)
+			{
+				stencil_idx[0] = cell.num;
+				stencil_idx[1] = model->getCellIdx(cell.num, cell.num + model->cellsNum_z + 2);
+				stencil_idx[2] = model->getCellIdx(cell.num, cell.num - 1);
+				stencil_idx[3] = model->getCellIdx(cell.num, cell.num + 1);
+
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2))
+					stencil_idx[4] = model->getCellIdx(cell.num, cell.num +
+						(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				else
+					stencil_idx[4] = model->getCellIdx(cell.num, cell.num -
+						(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1))
+					stencil_idx[5] = model->getCellIdx(cell.num, cell.num +
+						(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				else
+					stencil_idx[5] = model->getCellIdx(cell.num, cell.num -
+						(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				return{ stencil_idx[0], stencil_idx[1], stencil_idx[2], stencil_idx[3],
+					stencil_idx[4], stencil_idx[5] };
 			}
 			else if (cell.type == RIGHT)
 			{

@@ -124,6 +124,7 @@ namespace gasOil_elliptic
 			switch (cell.type)
 			{
 			case MIDDLE:
+				// Special neighbor search for center cells
 				if(cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
 					neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
 				else
@@ -143,6 +144,21 @@ namespace gasOil_elliptic
 					neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
 				else
 					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				break;
+
+			case MIDDLE_SIDE:
+				neighbor[0] = &getCell(cell.num, cell.num + cellsNum_z + 2);
+				neighbor[1] = &getCell(cell.num, cell.num - 1);
+				neighbor[2] = &getCell(cell.num, cell.num + 1);
+
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
+					neighbor[3] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				else
+					neighbor[3] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
+					neighbor[4] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
+				else
+					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
 			case RIGHT:
@@ -181,6 +197,7 @@ namespace gasOil_elliptic
 			{
 			case MIDDLE:
 				neighbor[0] = &getCell(cell.num);
+				// Special neighbor search for center cells
 				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
 					neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
 				else
@@ -200,6 +217,22 @@ namespace gasOil_elliptic
 					neighbor[6] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
 				else
 					neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				break;
+
+			case MIDDLE_SIDE:
+				neighbor[0] = &getCell(cell.num);
+				neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
+				neighbor[2] = &getCell(cell.num, cell.num - 1);
+				neighbor[3] = &getCell(cell.num, cell.num + 1);
+
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
+					neighbor[4] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
+				else
+					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
+				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
+					neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
+				else
+					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
 			case RIGHT:
