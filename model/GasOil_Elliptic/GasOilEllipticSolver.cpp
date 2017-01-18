@@ -294,11 +294,11 @@ void GasOilEllipticSolver::fillIndices()
 		const auto mat_idx = getMatrixStencil(cell);
 		for (const auto& idx : mat_idx)
 		{
-			ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx;
-			ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx + 1;
+			ind_i[counter] = 2 * (cell.num + model->cellsNum);			ind_j[counter++] = 2 * idx;
+			ind_i[counter] = 2 * (cell.num + model->cellsNum);			ind_j[counter++] = 2 * idx + 1;
 
-			ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx;
-			ind_i[counter] = 2 * cell.num + 1;		ind_j[counter++] = 2 * idx + 1;
+			ind_i[counter] = 2 * (cell.num + model->cellsNum) + 1;		ind_j[counter++] = 2 * idx;
+			ind_i[counter] = 2 * (cell.num + model->cellsNum) + 1;		ind_j[counter++] = 2 * idx + 1;
 		}
 	}
 

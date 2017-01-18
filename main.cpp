@@ -227,7 +227,7 @@ gasOil_elliptic::Properties* getProps()
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(10.0);
-	props->pwf.push_back(50.0 * 1.E+5);
+	props->pwf.push_back(65.0 * 1.E+5);
 
 	props->ht = 100.0;
 	props->ht_min = 100.0;
@@ -235,7 +235,7 @@ gasOil_elliptic::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->r_w = 1.0;
+	props->r_w = 0.1;
 	props->r_e = 1000.0;
 	props->l = 100.0;
 

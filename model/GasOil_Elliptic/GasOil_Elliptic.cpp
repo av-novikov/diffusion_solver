@@ -782,6 +782,6 @@ void GasOil_Elliptic::setVariables(const Cell& cell)
 		}
 
 		solve_eqMiddle(cell);
-		jacobian(mid, Variable::size - 1, Variable::size * stencil, x, jac);
+		jacobian(mid, Variable::size - 1, Variable::size * (nebrNum + 1), x, jac);
 	}
 }
