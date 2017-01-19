@@ -89,7 +89,7 @@ void ParSolver::SolveGMRES()
 	//gmres.RecordResidualHistory();
 	gmres.Solve(Rhs, &x);
 	//gmres.RecordHistory(resHistoryFile);
-	writeSystem();
+	//writeSystem();
 
 
 	//getResiduals();

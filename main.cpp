@@ -229,8 +229,8 @@ gasOil_elliptic::Properties* getProps()
 	//props->rates.push_back(10.0);
 	props->pwf.push_back(65.0 * 1.E+5);
 
-	props->ht = 100.0;
-	props->ht_min = 100.0;
+	props->ht = 10.0;
+	props->ht_min = 10.0;
 	props->ht_max = 100000.0;
 
 	props->alpha = 7200.0;
