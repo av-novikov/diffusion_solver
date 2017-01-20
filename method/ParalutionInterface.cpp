@@ -48,8 +48,8 @@ const paralution::LocalVector<double>& ParSolver::getSolution()
 }
 void ParSolver::Solve()
 {
-	SolveGMRES();
-	//SolveBiCGStab();
+	//SolveGMRES();
+	SolveBiCGStab();
 		
 	x.MoveToHost();
 }
