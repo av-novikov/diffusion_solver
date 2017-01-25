@@ -23,9 +23,9 @@ GasOilEllipticSolver::GasOilEllipticSolver(GasOil_Elliptic* _model) : AbstractSo
 	Tt = model->period[model->period.size() - 1];
 
 	// Memory allocating
-	ind_i = new int[7 * 4 * model->cellsNum];
-	ind_j = new int[7 * 4 * model->cellsNum];
-	a = new double[7 * 4 * model->cellsNum];
+	ind_i = new int[7 * 4 * (model->cellsNum + model->wellCells.size())];
+	ind_j = new int[7 * 4 * (model->cellsNum + model->wellCells.size())];
+	a = new double[7 * 4 * (model->cellsNum + model->wellCells.size())];
 	ind_rhs = new int[2 * (model->cellsNum + model->wellCells.size())];
 	rhs = new double[2 * (model->cellsNum + model->wellCells.size())];
 }
