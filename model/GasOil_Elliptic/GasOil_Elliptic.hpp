@@ -4,7 +4,6 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <initializer_list>
 
 #define ADOLC_ADVANCED_BRANCHING
 

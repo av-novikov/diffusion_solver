@@ -210,7 +210,7 @@ void GasOilEllipticSolver::fill()
 
 			i = 0;
 			const auto mat_idx = getMatrixStencil(cell);
-			for (const auto& idx : mat_idx)
+			for (const int idx : mat_idx)
 			{
 				a[counter++] = model->jac[0][i * Variable::size];
 				if(neighbor[i]->u_next.SATUR)
@@ -243,7 +243,7 @@ void GasOilEllipticSolver::fill()
 
 		i = 0;
 		const auto mat_idx = getMatrixStencil(cell);
-		for (const auto& idx : mat_idx)
+		for (const int idx : mat_idx)
 		{
 			a[counter++] = model->jac[0][i * Variable::size];
 			if (neighbor[i]->u_next.SATUR)
@@ -273,7 +273,7 @@ void GasOilEllipticSolver::fillIndices()
 		if (cell.isUsed)
 		{
 			const auto mat_idx = getMatrixStencil(cell);
-			for (const auto& idx : mat_idx)
+			for (const int idx : mat_idx)
 			{
 				ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx;
 				ind_i[counter] = 2 * cell.num;			ind_j[counter++] = 2 * idx + 1;
@@ -292,7 +292,7 @@ void GasOilEllipticSolver::fillIndices()
 	for (const auto& cell : model->wellCells)
 	{
 		const auto mat_idx = getMatrixStencil(cell);
-		for (const auto& idx : mat_idx)
+		for (const int idx : mat_idx)
 		{
 			ind_i[counter] = 2 * (cell.num + model->cellsNum);			ind_j[counter++] = 2 * idx;
 			ind_i[counter] = 2 * (cell.num + model->cellsNum);			ind_j[counter++] = 2 * idx + 1;
@@ -303,6 +303,11 @@ void GasOilEllipticSolver::fillIndices()
 	}
 
 	elemNum = counter;
+	for (int i = 0; i < elemNum; i++)
+	{
+		if (ind_i[i] > elemNum || ind_j[i] > elemNum || ind_i[i] < 0 || ind_j[i] < 0)
+			exit(-1);
+	}
 
 	for (int i = 0; i < 2 * (model->cellsNum + model->wellCells.size()); i++)
 		ind_rhs[i] = i;
