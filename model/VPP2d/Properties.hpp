@@ -1,9 +1,6 @@
 #ifndef VPP2D_PROPERTIES_HPP_
 #define VPP2D_PROPERTIES_HPP_
 
-#include "adolc/adouble.h"
-#include "adolc/taping.h"
-
 namespace vpp2d
 {
 	const int mid = 1;

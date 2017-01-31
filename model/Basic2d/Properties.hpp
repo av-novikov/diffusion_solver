@@ -1,34 +1,47 @@
-#ifndef GASOILRZ_PROPERTIES_HPP_
-#define GASOILRZ_PROPERTIES_HPP_
-
-#include "util/utils.h"
+#ifndef BASIC2D_PROPERTIES_HPP_
+#define BASIC2D_PROPERTIES_HPP_
 
 #include "adolc/adouble.h"
 #include "adolc/taping.h"
+#include "util/utils.h"
 
-namespace gasOil_rz
+namespace basic2d
 {
+	// ADOLC stencil ids
 	const int mid = 1;
 	const int left = 2;
 	const int right = 3;
 	const int vertical = 4;
-
+		
 	struct Skeleton_Props
 	{
-		// Porosity in STC
-		double m;
+		double beta;
+		double d_pore_r, d_pore_z;
+		double dens_stc;
+		double perm_r;
+		double perm_z;
+
+		double m0;
 		inline adouble getPoro(adouble p) const
 		{
-			return (adouble)(m)* ((adouble)(1.0) + (adouble)(beta)* (p /*- cell.props->p_init*/));
+			return (adouble)(m0)* ((adouble)(1.0) + (adouble)(beta)* (p /*- cell.props->p_init*/));
 		};
-		// Density of skeleton matter in STC [kg/m3]
-		double dens_stc;
-		// Compessibility [1/Pa]
-		double beta;
-		// Permeability along radial direction [mD]
-		double perm_r;
-		// Permeability along vertical direction [mD]
-		double perm_z;
+		inline adouble getPoro(adouble m, adouble p) const
+		{
+			return m * ((adouble)(1.0) + (adouble)(beta)* p);
+		};
+		inline adouble getPermCoseni_r(adouble m) const
+		{
+			return d_pore_r * d_pore_r * m * m * m / (1 - m) / (1 - m) / 150.0;
+		};
+		inline adouble getPermCoseni_z(adouble m) const
+		{
+			return d_pore_z * d_pore_z * m * m * m / (1 - m) / (1 - m) / 150.0;
+		};
+		inline double getInitDiam(double m_init, double k0)
+		{
+			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
+		};
 		inline double getPerm_r(const double r) const
 		{
 			return (r > radius_eff ? perm_r : perm_eff);
@@ -56,11 +69,8 @@ namespace gasOil_rz
 		double s_oc;
 
 		double p_out;
-		double p_init;
-		double p_bub;
-		double s_init;
 	};
-	struct Oil_Props
+	struct Liquid_Props
 	{
 		double p_sat;
 
@@ -79,35 +89,20 @@ namespace gasOil_rz
 		double beta;
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline adouble getKr(adouble sat_oil) const
+		inline adouble getKr(adouble s_l) const
 		{
-			return kr->Solve(sat_oil);
+			return kr->Solve(s_l);
 		};
 
 		// Fluid volume factor
 		Interpolate* b;
-		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
-		{
-			adouble tmp;
-			//adouble isAboveSat = (p > (adouble)p_sat) ? 1.0 : 0.0;
-			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub) * exp(beta * (p_bub - p)));
-			//condassign(tmp, isAboveSat, (adouble)(b->Solve(p_sat) * (1.0 + beta * (p_sat - p))));
-			return tmp;
-		};
-		inline adouble getBoreB(adouble p, adouble p_bub, adouble SATUR) const
-		{
-			//return props_oil.b_bore;
-			return getB(p, p_bub, SATUR);
-		};
 
 		// Gas-oil ratio
 		Interpolate* Rs;
 		inline adouble getRs(adouble p, adouble p_bub, adouble SATUR) const
 		{
 			adouble tmp;
-			//adouble isAboveSat = (p > (adouble)p_sat) ? 1.0 : 0;
 			condassign(tmp, SATUR, Rs->Solve(p), Rs->Solve(p_bub));
-			//condassign(tmp, isAboveSat, (adouble)(Rs->Solve(p_sat)));
 			return tmp;
 		};
 	};
@@ -128,9 +123,9 @@ namespace gasOil_rz
 		double beta;
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline adouble getKr(adouble sat_oil) const
+		inline adouble getKr(adouble s_l) const
 		{
-			return kr->Solve(sat_oil);
+			return kr->Solve(s_l);
 		};
 		// Fluid volume factor
 		Interpolate* b;
@@ -175,30 +170,28 @@ namespace gasOil_rz
 		// Number of cells in vertical direction
 		int cellsNum_z;
 
-		std::vector<Skeleton_Props> props_sk;
-		Oil_Props props_oil;
-		Gas_Props props_gas;
-
 		double depth_point;
 
+		std::vector<Skeleton_Props> props_sk;
+
 		// Data set (saturation, relative oil permeability)
-		std::vector< std::pair<double, double> > kr_oil;
+		std::vector< std::pair<double, double> > kr_l;
 		// Data set (saturation, relative gas permeability)
-		std::vector< std::pair<double, double> > kr_gas;
+		std::vector< std::pair<double, double> > kr_g;
 
 		// Data set (pressure, oil volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double, double> > B_oil;
+		std::vector< std::pair<double, double> > B_l;
 		// Data set (pressure, gas volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double, double> > B_gas;
+		std::vector< std::pair<double, double> > B_g;
 
 		// Data set (pressure, oil viscosity) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_oil;
+		std::vector< std::pair<double, double> > visc_l;
 		// Data set (pressure, gas viscosity) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_gas;
+		std::vector< std::pair<double, double> > visc_g;
 
 		// Data set (pressure, gas content in oil) ([Pa], [m3/m3])
 		std::vector< std::pair<double, double> > Rs;
 	};
 }
 
-#endif /* GASOILRZ_PROPERTIES_HPP_ */
+#endif /* BASIC2D_PROPERTIES_HPP_ */

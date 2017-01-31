@@ -1,5 +1,8 @@
 #include "model/VPP2d/VPP2d.hpp"
 
+#include "adolc/drivers/drivers.h"
+#include "adolc/adolc.h"
+
 #include <cassert>
 #include <map>
 

@@ -74,6 +74,7 @@ struct Var2phaseNIT
 	};
 	bool SATUR;
 };
+
 struct VarSimpleAcid
 {
 	static const int size = 5;
@@ -89,6 +90,16 @@ struct VarSimpleAcid
 			double Ya;
 		};
 	};
+};
+struct TapeVarSimpleAcid
+{
+	static const int size = 3;
+
+	adouble m;
+	adouble p;
+	adouble s;
+	adouble Ys;
+	adouble Ya;
 };
 
 template <typename DataType>
