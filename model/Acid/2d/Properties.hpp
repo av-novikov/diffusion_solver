@@ -4,9 +4,7 @@
 #include <array>
 
 #include "model/Basic2d/Properties.hpp"
-
-#include "adolc/adouble.h"
-#include "adolc/taping.h"
+#include "model/Acid/2d/Reactions.hpp"
 
 namespace acid2d
 {
@@ -16,33 +14,35 @@ namespace acid2d
 	const int right = basic2d::right;
 	const int vertical = basic2d::vertical;
 
-	struct Component
+	struct SolidComponent : Component
 	{
-		static double R;
-		static double T;
-
-		double mol_weight;
-		double rho_stc;
-
-		double stehiometr_mult;
-
-	};
-	struct Mineral
-	{
-		double mol_weight;
-		double rho_stc;
 		double beta;
 		inline adouble getDensity(adouble p) const
 		{
 			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* p);
 		};
 	};
+	struct LiquidComponent : Component
+	{
+		double beta;
+		inline adouble getDensity(adouble p) const
+		{
+			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* p);
+		};
+	};
+	struct GasComponent : Component
+	{
+		double z;
+		Interpolate* z_table;
+		inline adouble getDensity(adouble p) const
+		{
+			return p * (adouble)(mol_weight / (z * R * T));
+		};
+	};
+
 	struct Skeleton_Props : public basic2d::Skeleton_Props
 	{
-		int min_id;
-		static const Mineral calcite;
-		static const Mineral dolomite;
-		Mineral& cur_mineral;
+		SolidComponent& cur_mineral;
 
 		// Initial values
 		double m_init;
@@ -52,32 +52,22 @@ namespace acid2d
 		double Ys_init;
 
 		/*Skeleton_Props(int _min_idx)
-		{ 
-			cur_mineral = 
+		{
+		cur_mineral =
 		};
 		Skeleton_Props(const Skeleton_Props& props) : basic2d::Skeleton_Props(props), mineral(props.mineral) {};
 		Liquid_Props& operator=(const Liquid_Props& props)
 		{
-			basic2d::Liquid_Props::operator=(props);
-			components = props.components;
-			return *this;
+		basic2d::Liquid_Props::operator=(props);
+		components = props.components;
+		return *this;
 		}*/
-	};
-	struct LiquidComponent
-	{
-		double rho_stc;
-		double beta;
-		inline adouble getDensity(adouble p) const
-		{
-			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* p);
-		};
 	};
 	struct Liquid_Props : public basic2d::Liquid_Props
 	{
-		std::array<LiquidComponent, 3> components;
-		const LiquidComponent& acid = components[0];
-		const LiquidComponent& salt = components[1];
-		const LiquidComponent& water = components[2];
+		LiquidComponent& acid;
+		LiquidComponent& salt;
+		LiquidComponent& water;
 
 		inline adouble getDensity(adouble p, adouble Ya, adouble Ys) const
 		{
@@ -95,23 +85,9 @@ namespace acid2d
 			return *this;
 		}
 	};
-	struct GasComponent
-	{
-		static double R;
-		static double T;
-		double rho_stc;
-		double mol_weight;
-		double z;
-		Interpolate* z_table;
-		inline adouble getDensity(adouble p) const
-		{
-			return p * (adouble)(mol_weight / (z * R * T));
-		};
-	};
 	struct Gas_Props : public basic2d::Gas_Props
 	{
-		std::array<GasComponent, 1> components;
-		const GasComponent& co2 = components[0];
+		GasComponent& co2;
 
 		inline adouble getDensity(adouble p) const
 		{

@@ -32,6 +32,8 @@ namespace acid2d
 	protected:
 		// Continuum properties
 		int skeletonsNum;
+		CalciteReaction cal_reac;
+		DolomiteReaction dol_reac;
 		std::vector<Skeleton_Props> props_sk;
 		Liquid_Props props_l;
 		Gas_Props props_g;
