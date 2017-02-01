@@ -86,8 +86,8 @@ struct VarSimpleAcid
 			double m;
 			double p;
 			double s;
-			double Ys;
 			double Ya;
+			double Ys;
 		};
 	};
 };
@@ -98,8 +98,8 @@ struct TapeVarSimpleAcid
 	adouble m;
 	adouble p;
 	adouble s;
-	adouble Ys;
 	adouble Ya;
+	adouble Ys;
 };
 
 template <typename DataType>

@@ -115,6 +115,12 @@ namespace acid2d
 			}
 		};
 
+		void solve_eqMiddle(int cur);
+		void solve_eqLeft(int cur);
+		void solve_eqRight(int cur);
+		void solve_eqVertical(int cur);
+		void setVariables(int cur);
+
 	public:
 		Acid2d();
 		~Acid2d();
@@ -122,7 +128,6 @@ namespace acid2d
 		double* x;
 		double* y;
 
-		//void setPeriod(int period);
 		//double getRate(int cur);
 	};
 };
