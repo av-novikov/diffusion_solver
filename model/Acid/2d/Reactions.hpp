@@ -18,31 +18,31 @@ namespace acid2d
 	};
 
 	// Laboratory
-	Component getCaCO3()
+	inline Component getCaCO3()
 	{
 		Component comp;
 		comp.mol_weight = 100.0;
 		return comp;
 	};
-	Component getHCl()
+	inline Component getHCl()
 	{
 		Component comp;
 		comp.mol_weight = 36.0;
 		return comp;
 	};
-	Component getCaCl2()
+	inline Component getCaCl2()
 	{
 		Component comp;
 		comp.mol_weight = 110;
 		return comp;
 	};
-	Component getH2O()
+	inline Component getH2O()
 	{
 		Component comp;
 		comp.mol_weight = 18.0;
 		return comp;
 	};
-	Component getCO2()
+	inline Component getCO2()
 	{
 		Component comp;
 		comp.mol_weight = 44.0;
@@ -60,6 +60,13 @@ namespace acid2d
 		double m_init;
 		double activation_energy;
 		double reaction_const;
+
+		double reaction_rate;
+		std::array<double, N> defaultSourceRate;
+		inline double getSourceRate(int comp_idx) const
+		{
+			return defaultSourceRate[comp_idx];
+		};
 	};
 
 	static const int calcite_components_num = 5;

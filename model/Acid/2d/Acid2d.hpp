@@ -20,6 +20,7 @@ namespace acid2d
 	typedef TapeVarSimpleAcid TapeVariable;
 	typedef NewCylCell2D<VarSimpleAcid, Skeleton_Props> Cell;
 	template <typename TVariable> using TCell = NewCylCell2D<TVariable, Skeleton_Props>;
+	typedef CalciteReaction CurrentReaction;
 
 	class Acid2d : public basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, Acid2d>
 	{
@@ -32,8 +33,7 @@ namespace acid2d
 	protected:
 		// Continuum properties
 		int skeletonsNum;
-		CalciteReaction cal_reac;
-		DolomiteReaction dol_reac;
+		CurrentReaction reac;
 		std::vector<Skeleton_Props> props_sk;
 		Liquid_Props props_l;
 		Gas_Props props_g;
