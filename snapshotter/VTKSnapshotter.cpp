@@ -20,6 +20,7 @@
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
+#include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
 
 #include <cmath>
 
@@ -54,6 +55,10 @@ VTKSnapshotter<bing1d::Bingham1d>::VTKSnapshotter()
 VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::VTKSnapshotter()
 {
 	pattern = prefix + "GasOil_El_%{STEP}.vtu";
+}
+VTKSnapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>::VTKSnapshotter()
+{
+	pattern = prefix + "GasOilNIT_El_%{STEP}.vtu";
 }
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()
@@ -818,3 +823,4 @@ template class VTKSnapshotter<acid2d::Acid2d>;
 template class VTKSnapshotter<vpp2d::VPP2d>;
 template class VTKSnapshotter<bing1d::Bingham1d>;
 template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;
+template class Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>;
