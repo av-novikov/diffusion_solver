@@ -2,6 +2,7 @@
 #define GASOILNITELLIPTIC_PROPERTIES_HPP_
 
 #include "util/utils.h"
+#include "model/Acid/2d/Reactions.hpp"
 
 #include "adolc/adouble.h"
 #include "adolc/taping.h"
@@ -69,9 +70,20 @@ namespace gasOilnit_elliptic
 		double p_init;
 		double p_bub;
 		double s_init;
+		double t_init;
+
+		// Mass heat capacity [J/kg/K]
+		double c;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda_r;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda_z;
 	};
 	struct Oil_Props
 	{
+		acid2d::Component oil;
+		acid2d::Component gas;
+
 		double p_sat;
 
 		// Viscosity [cP]
@@ -82,7 +94,10 @@ namespace gasOilnit_elliptic
 			return (adouble)(visc);
 		};
 		// Density of fluid in STC [kg/m3]
-		double dens_stc;
+		inline adouble getDensity(adouble p, adouble p_bub, adouble SATUR) const 
+		{
+			return ((adouble)(oil.rho_stc) + (adouble)(gas.rho_stc) * getRs(p, p_bub, SATUR)) / getB(p, p_bub, SATUR);
+		}
 		// Volume factor for well bore
 		double b_bore;
 		// Compessibility [1/Pa]
@@ -120,9 +135,20 @@ namespace gasOilnit_elliptic
 			//condassign(tmp, isAboveSat, (adouble)(Rs->Solve(p_sat)));
 			return tmp;
 		};
+
+		// Mass heat capacity [J/kg/K]
+		double c;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda;
+		// Joule-thompson coefficient [K/Pa]
+		double jt;
+		// Adiabatic coefficient [K/Pa]
+		double ad;
 	};
 	struct Gas_Props
 	{
+		acid2d::Component gas;
+
 		// Viscosity [cP]
 		double visc;
 		Interpolate* visc_table;
@@ -131,7 +157,10 @@ namespace gasOilnit_elliptic
 			return (adouble)(visc);
 		};
 		// Density of fluid in STC [kg/m3]
-		double dens_stc;
+		inline adouble getDensity(adouble p) const
+		{
+			return (adouble)(gas.rho_stc) / getB(p);
+		};
 		// Volume factor for well bore
 		double b_bore;
 		// Compessibility [1/Pa]
@@ -148,6 +177,15 @@ namespace gasOilnit_elliptic
 		{
 			return b->Solve(p);
 		};
+
+		// Mass heat capacity [J/kg/K]
+		double c;
+		// Thermal conductivity coefficient [W/m/K]
+		double lambda;
+		// Joule-thompson coefficient [K/Pa]
+		double jt;
+		// Adiabatic coefficient [K/Pa]
+		double ad;
 	};
 	struct Properties
 	{
@@ -207,6 +245,9 @@ namespace gasOilnit_elliptic
 
 		// Data set (pressure, gas content in oil) ([Pa], [m3/m3])
 		std::vector< std::pair<double, double> > Rs;
+
+		// Heat of phase transition [J/kg]
+		double L;
 	};
 };
 

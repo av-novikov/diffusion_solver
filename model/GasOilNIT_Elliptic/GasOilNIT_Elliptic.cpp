@@ -148,13 +148,14 @@ void GasOilNIT_Elliptic::makeDimLess()
 
 	// Oil properties
 	props_oil.visc /= (P_dim * t_dim);
-	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_oil.oil.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_oil.gas.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
 	props_oil.p_sat /= P_dim;
 
 	// Gas properties
 	props_gas.visc /= (P_dim * t_dim);
-	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_gas.gas.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 };
 void GasOilNIT_Elliptic::setInitialState()
 {
@@ -504,10 +505,10 @@ void GasOilNIT_Elliptic::setPeriod(int period)
 
 	for (int i = 0; i < skeletonsNum; i++)
 	{
-		props_sk[i].radius_eff_mu = props_sk[i].radiuses_eff[period];
+		props_sk[i].radius_eff_mu = asinh(props_sk[i].radiuses_eff[period] / Cell::a);
 		props_sk[i].perm_eff_mu = props_sk[i].perms_eff[period];
 		props_sk[i].radius_eff_z = props_sk[i].radiuses_eff[period];
-		props_sk[i].perm_eff_z = props_sk[i].perms_eff[period];
+		props_sk[i].perm_eff_z = props_sk[i].perm_z / props_sk[i].perm_mu * props_sk[i].perms_eff[period];
 		props_sk[i].skin = props_sk[i].skins[period];
 	}
 };

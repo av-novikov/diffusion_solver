@@ -43,6 +43,9 @@ namespace gasOilnit_elliptic
 		std::vector<Skeleton_Props>::iterator sk_well;
 		Oil_Props props_oil;
 		Gas_Props props_gas;
+		
+		// Heat of phase transition [J/kg]
+		double L;
 
 		double l;
 		int cellsNum_mu;
@@ -337,6 +340,99 @@ namespace gasOilnit_elliptic
 						next.s = 1.0;
 				}
 			}
+		};
+
+		inline double getPerm(const Cell& cell, const int axis) const
+		{
+			if (axis == MU_AXIS)
+				return (cell.mu > cell.props->radius_eff_mu ? cell.props->perm_mu : cell.props->perm_eff_mu);
+			else if (axis == NU_AXIS)
+				return cell.props->perm_mu;
+			else if (axis == Z_AXIS)
+				return (fabs(cell.z - sk_well->h_well) > cell.props->radius_eff_z ? 
+							cell.props->perm_z : 
+							cell.props->perm_eff_z);
+		};
+		inline double getNablaP(Cell& cell, Cell** neighbor, const int axis)
+		{
+			Cell* nebr1;
+			Cell* nebr2;
+			double h, r_eff;
+
+			if(axis == MU_AXIS)
+			{
+				if (cell.type == MIDDLE_SIDE)
+				{
+					nebr1 = &cell;	nebr2 = neighbor[0];
+				}
+				else
+				{
+					nebr1 = neighbor[0];	nebr2 = neighbor[1];
+					r_eff = cell.props->radius_eff_mu;
+					if ((nebr1->mu < r_eff) && (nebr2->mu > r_eff))
+					{
+						if (cell.mu > r_eff)
+							nebr1 = &cell;
+						else
+							nebr2 = &cell;
+					}
+				}
+
+				h = Cell::getH(cell.mu, cell.nu) * (nebr2->mu - nebr1->mu);
+			}
+			else if (axis == NU_AXIS)
+			{
+				if (cell.type == MIDDLE_SIDE)
+				{
+					nebr1 = neighbor[3];	nebr2 = neighbor[4];
+				}
+				else
+				{
+					nebr1 = neighbor[4];	nebr2 = neighbor[5];
+				}
+
+				if (abs(nebr2->nu - nebr1->nu) > 2.0 * cell.hnu + EQUALITY_TOLERANCE)
+					h = Cell::getH(cell.mu, cell.nu) * (nebr2->nu - nebr1->nu + 2.0 * M_PI);
+				else
+					h = Cell::getH(cell.mu, cell.nu) * (nebr2->nu - nebr1->nu);
+			}
+			else if (axis == Z_AXIS)
+			{
+				if (cell.type == MIDDLE_SIDE)
+				{
+					nebr1 = neighbor[1];	nebr2 = neighbor[2];
+				}
+				else
+				{
+					nebr1 = neighbor[2];	nebr2 = neighbor[3];
+
+					r_eff = cell.props->radius_eff_z;
+					const double dz_cur = fabs(cell.z - sk_well->h_well);
+					const double dz1 = fabs(nebr1->z - sk_well->h_well);
+					const double dz2 = fabs(nebr2->z - sk_well->h_well);
+					if ((dz1 < r_eff) && (dz2 > r_eff))
+					{
+						if (dz_cur > r_eff)
+							nebr1 = &cell;
+						else
+							nebr2 = &cell;
+					}
+				}
+
+				h = nebr2->z - nebr1->z;
+			}
+
+			return (nebr2->u_next.p - nebr1->u_next.p) / h;
+		};
+		inline double getOilVelocity(Cell& cell, Cell** neighbor, const int axis)
+		{
+			return -getPerm(cell, axis) * props_oil.getKr(cell.u_next.s).value() /
+						props_oil.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
+		};
+		inline double getGasVelocity(Cell& cell, Cell** neighbor, const int axis)
+		{
+			return -getPerm(cell, axis) * props_gas.getKr(cell.u_next.s).value() /
+				props_gas.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
 		};
 
 		//void setVariables(int cur);

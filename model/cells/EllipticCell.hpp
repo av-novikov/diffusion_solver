@@ -13,6 +13,10 @@
 #define WELL_BOT	7
 #define WELL_SIDE	8
 
+#define MU_AXIS 0
+#define NU_AXIS 1
+#define Z_AXIS 2
+
 template <typename varType, typename PropsType = EmptyStruct>
 class EllipticCell : public AbstractCell<varType>
 {

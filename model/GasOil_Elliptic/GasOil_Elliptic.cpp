@@ -504,10 +504,10 @@ void GasOil_Elliptic::setPeriod(int period)
 
 	for (int i = 0; i < skeletonsNum; i++)
 	{
-		props_sk[i].radius_eff_mu = props_sk[i].radiuses_eff[period];
+		props_sk[i].radius_eff_mu = asinh(props_sk[i].radiuses_eff[period] / Cell::a);
 		props_sk[i].perm_eff_mu = props_sk[i].perms_eff[period];
 		props_sk[i].radius_eff_z = props_sk[i].radiuses_eff[period];
-		props_sk[i].perm_eff_z = props_sk[i].perms_eff[period];
+		props_sk[i].perm_eff_z = props_sk[i].perm_z / props_sk[i].perm_mu * props_sk[i].perms_eff[period];
 		props_sk[i].skin = props_sk[i].skins[period];
 	}
 };
