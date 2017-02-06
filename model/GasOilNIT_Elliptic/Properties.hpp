@@ -26,6 +26,10 @@ namespace gasOilnit_elliptic
 		};
 		// Density of skeleton matter in STC [kg/m3]
 		double dens_stc;
+		inline adouble getDensity(adouble p) const
+		{
+			return (adouble)(dens_stc);
+		};
 		// Compessibility [1/Pa]
 		double beta;
 		// Permeability along radial direction [mD]

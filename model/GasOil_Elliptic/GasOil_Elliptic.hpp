@@ -339,7 +339,6 @@ namespace gasOil_elliptic
 			}
 		};
 
-		//void setVariables(int cur);
 		void solve_eqMiddle(const Cell& cell);
 		void solve_eqWell(const Cell& cell);
 		void solve_eqRight(const Cell& cell);

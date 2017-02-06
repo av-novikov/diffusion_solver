@@ -434,8 +434,82 @@ namespace gasOilnit_elliptic
 			return -getPerm(cell, axis) * props_gas.getKr(cell.u_next.s).value() /
 				props_gas.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
 		};
+		inline double getCn(const Cell& cell) const
+		{
+			return cell.props->getPoro(cell.u_next.p).value() *
+						(cell.u_next.s * props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() * 
+								props_oil.c +
+						(1.0 - cell.u_next.s) * props_gas.getDensity(cell.u_next.p).value() * 
+								props_gas.c) +
+					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->getDensity(cell.u_next.p).value() * 
+								cell.props->c;
+		};
+		inline double getAd(const Cell& cell) const
+		{
+			return cell.props->getPoro(cell.u_next.p).value() *
+						(cell.u_next.s * props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() *
+							props_oil.ad * props_oil.c +
+						(1.0 - cell.u_next.s) * props_gas.getDensity(cell.u_next.p).value() *
+							props_gas.ad * props_gas.c);
+		};
+		inline double getLambda(const Cell& cell, const int axis) const
+		{
+			if (axis == Z_AXIS)
+				return cell.props->getPoro(cell.u_next.p).value() * 
+							(cell.u_next.s * props_oil.lambda +	(1.0 - cell.u_next.s) * props_gas.lambda) +
+						(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_z;
+			else
+				return cell.props->getPoro(cell.u_next.p).value() *
+					(cell.u_next.s * props_oil.lambda + (1.0 - cell.u_next.s) * props_gas.lambda) +
+					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_r;
+		};
+		inline double getLambda(const Cell& cell1, const Cell& cell2) const
+		{
+			if (fabs(cell1.z - cell2.z) > EQUALITY_TOLERANCE) 
+				return (cell1.hz * getLambda(cell2, Z_AXIS) + cell2.hz * getLambda(cell1, Z_AXIS)) / (cell1.hz + cell2.hz);
+			else if (fabs(cell1.mu - cell2.mu) > EQUALITY_TOLERANCE)
+				return (cell1.hmu * getLambda(cell2, MU_AXIS) + cell2.hmu * getLambda(cell1, MU_AXIS)) / 
+					(cell1.hmu + cell2.hmu) / Cell::getH(cell1.mu + sign(cell2.mu - cell1.mu) * cell1.hmu / 2.0, cell1.nu);
+			else if (fabs(cell1.nu - cell2.nu) > EQUALITY_TOLERANCE)
+				return (cell1.hnu * getLambda(cell2, NU_AXIS) + cell2.hnu * getLambda(cell1, NU_AXIS)) /
+					(cell1.hnu + cell2.hnu) / Cell::getH(cell1.mu, cell1.nu + sign(cell2.nu - cell1.nu) * cell1.hnu / 2.0);
+		};
+		inline double getJT(Cell& cell, Cell** neighbor, const int axis)
+		{
+			return props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() * 
+						props_oil.c * props_oil.jt * getOilVelocity(cell, neighbor, axis) +
+					props_gas.getDensity(cell.u_next.p).value() * 
+						props_gas.c * props_gas.jt * getGasVelocity(cell, neighbor, axis);
+		};
+		inline double getA(Cell& cell, Cell** neighbor, const int axis)
+		{
+			return props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() * 
+						props_oil.c * getOilVelocity(cell, neighbor, axis) +
+					props_gas.getDensity(cell.u_next.p).value() * 
+						props_gas.c * getGasVelocity(cell, neighbor, axis);
+		};
+		inline double getPhaseRate(const Cell& cell, Cell** neighbor) const
+		{
+			const Variable& next = cell.u_next;
+			const Variable& prev = cell.u_prev;
 
-		//void setVariables(int cur);
+			double H = 0.0;
+			H = ( cell.props->getPoro(next.p).value() * next.s * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() - 
+				cell.props->getPoro(next.p).value() * next.s * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() ) / ht;
+
+			const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
+			for (int i = 0; i < nebrNum; i++)
+			{
+				const Cell& beta = *neighbor[i];
+				const Variable& upwd = getUpwindCell(cell, beta).u_next;
+
+				H += 1.0 / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) *
+					props_oil.getKr(upwd.s).value() / props_oil.getViscosity(upwd.p).value() * props_oil.getDensity(upwd.p, upwd.p_bub, upwd.SATUR).value();
+			}
+
+			return H;
+		};
+
 		void solve_eqMiddle(const Cell& cell);
 		void solve_eqWell(const Cell& cell);
 		void solve_eqRight(const Cell& cell);
