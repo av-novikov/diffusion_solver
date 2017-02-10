@@ -222,8 +222,8 @@ gasOil_elliptic::Properties* getProps()
 	props->cellsNum_nu = 20;
 	props->cellsNum_z = 9;
 
-	props->timePeriods.push_back(20.0 * 86400.0);
-	props->timePeriods.push_back(40.0 * 86400.0);
+	props->timePeriods.push_back(0.01 * 86400.0);
+	props->timePeriods.push_back(1.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
@@ -255,7 +255,7 @@ gasOil_elliptic::Properties* getProps()
 	tmp.h_well = 5.0;
 	tmp.height = 10.0;
 	tmp.perm_mu = 20.0;
-	tmp.perm_z = 20.0;
+	tmp.perm_z = 2.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);

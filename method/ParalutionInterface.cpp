@@ -67,6 +67,7 @@ void ParSolver::SolveBiCGStab()
 	//bicgstab.RecordResidualHistory();
 	bicgstab.Solve(Rhs, &x);
 	//bicgstab.RecordHistory(resHistoryFile);
+	//writeSystem();
 
 	//getResiduals();
 	//cout << "Initial residual: " << initRes << endl;

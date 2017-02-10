@@ -614,8 +614,8 @@ void GasOil_Elliptic::solve_eqWell(const Cell& cell)
 	}
 	else
 	{
-		dist1 = Cell::getH((cell.mu + beta1.mu) / 2.0, cell.nu) * (cell.mu - beta1.mu);
-		dist2 = Cell::getH((beta2.mu + beta1.mu) / 2.0, cell.nu) * (beta1.mu - beta2.mu);
+		dist1 = Cell::getH(cell.mu, cell.nu) * (cell.mu - beta1.mu);
+		dist2 = Cell::getH(beta1.mu + sign(beta2.mu - beta1.mu) * beta1.hmu / 2.0, cell.nu) * (beta1.mu - beta2.mu);
 	}
 
 	trace_on(left);
