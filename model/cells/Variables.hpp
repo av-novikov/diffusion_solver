@@ -33,6 +33,11 @@ struct Var1phaseNIT
 		};
 	};
 };
+struct TapeVar1PhaseNIT
+{
+	static const int size = 1;
+	adouble t;
+};
 struct Var2phase 
 {
 	static const int size = 3;

@@ -22,6 +22,9 @@
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 #include "model/GasOil_Elliptic/GasOilEllipticSolver.hpp"
 
+#include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
+#include "model/OilNIT_Elliptic/OilNITEllipticSolver.hpp"
+
 using namespace std;
 
 /*gasOil_rz::Properties* getProps()
@@ -213,8 +216,7 @@ using namespace std;
 
 	return props;
 }*/
-
-gasOil_elliptic::Properties* getProps()
+/*gasOil_elliptic::Properties* getProps()
 {
 	gasOil_elliptic::Properties* props = new gasOil_elliptic::Properties();
 
@@ -222,8 +224,8 @@ gasOil_elliptic::Properties* getProps()
 	props->cellsNum_nu = 20;
 	props->cellsNum_z = 9;
 
-	props->timePeriods.push_back(0.01 * 86400.0);
-	props->timePeriods.push_back(1.0 * 86400.0);
+	props->timePeriods.push_back(10.0 * 86400.0);
+	props->timePeriods.push_back(25.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
@@ -290,6 +292,66 @@ gasOil_elliptic::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
 
 	return props;
+}*/
+oilnit_elliptic::Properties* getProps()
+{
+	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
+
+	props->cellsNum_mu = 10;
+	props->cellsNum_nu = 20;
+	props->cellsNum_z = 9;
+
+	props->timePeriods.push_back(10.0 * 86400.0);
+	props->timePeriods.push_back(20.0 * 86400.0);
+
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	//props->rates.push_back(200.0);
+	//props->rates.push_back(0.0);
+	props->pwf.push_back(150.0 * 1.E+5);
+	props->pwf.push_back(200.0 * 1.E+5);
+
+	props->ht = 100.0;
+	props->ht_min = 100.0;
+	props->ht_max = 1000000.0;
+
+	props->alpha = 7200.0;
+
+	props->r_w = 0.1;
+	props->r_e = 1000.0;
+	props->l = 100.0;
+
+	props->depth_point = 0.0;
+
+	oilnit_elliptic::Skeleton_Props tmp;
+	tmp.isWellHere = true;
+	tmp.cellsNum_z = 9;
+	tmp.m = 0.1;
+	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
+	tmp.h1 = 0.0;
+	tmp.h2 = 10.0;
+	tmp.h_well = 5.0;
+	tmp.height = 10.0;
+	tmp.perm_mu = 20.0;
+	tmp.perm_z = 2.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(1.0 * props->r_w);
+	tmp.radiuses_eff.push_back(1.0 * props->r_w);
+
+	props->props_sk.push_back(tmp);
+
+	props->depth_point = 0.0;
+
+	props->props_oil.visc = 1.0;
+	props->props_oil.oil.rho_stc = 887.261;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.p_sat = 70.625 * 1.0e+5;
+
+	return props;
 }
 
 int main(int argc, char** argv)
@@ -306,11 +368,17 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	gasOil_elliptic::Properties* props = getProps();
-	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
+	oilnit_elliptic::Properties* props = getProps();
+	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();
+
+	/*gasOil_elliptic::Properties* props = getProps();
+	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
 
 	return 0;
 }

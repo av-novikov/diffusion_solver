@@ -5,6 +5,7 @@
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
+#include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
 
 #include <iomanip>
@@ -26,6 +27,16 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 }
 template <>
 AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::AbstractSolver(gasOil_elliptic::GasOil_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
+{
+	newton_step = 1.0;
+	isWellboreAffect = false;
+	cur_t = cur_t_log = 0.0;
+	curTimePeriod = 0;
+
+	t_dim = model->t_dim;
+}
+template <>
+AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::AbstractSolver(oilnit_elliptic::OilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
 	isWellboreAffect = false;
@@ -92,6 +103,15 @@ void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyIterLayer()
 		cell.u_iter = cell.u_next;
 }
 template <>
+void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyIterLayer()
+{
+	for (auto& cell : model->cells)
+		cell.u_iter = cell.u_next;
+
+	for (auto& cell : model->wellCells)
+		cell.u_iter = cell.u_next;
+}
+template <>
 void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyIterLayer()
 {
 	for (auto& cell : model->cells)
@@ -116,6 +136,15 @@ void AbstractSolver<modelType>::copyTimeLayer()
 }
 template <>
 void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyTimeLayer()
+{
+	for (auto& cell : model->cells)
+		cell.u_prev = cell.u_iter = cell.u_next;
+
+	for (auto& cell : model->wellCells)
+		cell.u_prev = cell.u_iter = cell.u_next;
+}
+template <>
+void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyTimeLayer()
 {
 	for (auto& cell : model->cells)
 		cell.u_prev = cell.u_iter = cell.u_next;
@@ -283,6 +312,48 @@ double AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::convergance(int& ind, i
 	return relErr;
 }
 template <>
+double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int j = 0; j < model->cells.size(); j++)
+	{
+		const auto& cell = model->cells[j];
+		var_next = cell.u_next.p;	var_iter = cell.u_iter.p;
+		if (fabs(var_next) > EQUALITY_TOLERANCE)
+		{
+			cur_relErr = fabs((var_next - var_iter) / var_next);
+			if (cur_relErr > relErr)
+			{
+				relErr = cur_relErr;
+				ind = j;
+				varInd = 0;
+			}
+		}
+	}
+
+	for (int j = 0; j < model->wellCells.size(); j++)
+	{
+		const auto& cell = model->wellCells[j];
+		var_next = cell.u_next.p;	var_iter = cell.u_iter.p;
+		if (fabs(var_next) > EQUALITY_TOLERANCE)
+		{
+			cur_relErr = fabs((var_next - var_iter) / var_next);
+			if (cur_relErr > relErr)
+			{
+				relErr = cur_relErr;
+				ind = j;
+				varInd = 0;
+			}
+		}
+	}
+
+	return relErr;
+}
+template <>
 double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -428,6 +499,19 @@ double AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::averValue(const int var
 	return tmp / model->Volume;
 }
 template <>
+double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::averValue(const int varInd)
+{
+	double tmp = 0.0;
+
+	for (const auto& cell : model->cells)
+		tmp += cell.u_next.values[varInd] * cell.V;
+
+	for (const auto& cell : model->wellCells)
+		tmp += cell.u_next.values[varInd] * cell.V;
+
+	return tmp / model->Volume;
+}
+template <>
 double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::averValue(const int varInd)
 {
 	double tmp = 0.0;
@@ -466,4 +550,5 @@ template class AbstractSolver<gasOil_rz::GasOil_RZ>;
 template class AbstractSolver<vpp2d::VPP2d>;
 template class AbstractSolver<bing1d::Bingham1d>;
 template class AbstractSolver<gasOil_elliptic::GasOil_Elliptic>;
+template class AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>;
 template class AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>;

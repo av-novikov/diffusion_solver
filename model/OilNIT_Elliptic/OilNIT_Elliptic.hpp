@@ -1,5 +1,5 @@
-#ifndef GASOILNITELLIPTIC_HPP_
-#define GASOILNITELLIPTIC_HPP_
+#ifndef OILNITELLIPTIC_HPP_
+#define OILNITELLIPTIC_HPP_
 
 #include <vector>
 #include <map>
@@ -8,33 +8,35 @@
 #define ADOLC_ADVANCED_BRANCHING
 
 #include "model/cells/Variables.hpp"
-#include "model/GasOilNIT_Elliptic/Properties.hpp"
+#include "model/OilNIT_Elliptic/Properties.hpp"
 #include "model/cells/EllipticCell.hpp"
 #include "model/AbstractModel.hpp"
 
 #include <cassert>
 
-namespace gasOilnit_elliptic
+namespace oilnit_elliptic
 {
 	static const int stencil = 7;
-	static const int Lstencil = 3;
+	static const int Lstencil = 2;
+	static const int TLstencil = 3;
 	static const int Rstencil = 2;
 	static const int Vstencil = 2;
 
-	typedef Var2phaseNIT Variable;
-	typedef TapeVarGasOil TapeVariable;
+	typedef Var1phaseNIT Variable;
+	typedef TapeVar1Phase TapeVariable;
+	typedef TapeVar1PhaseNIT TapeVariableNIT;
 	typedef EllipticCell<Variable, Skeleton_Props> Cell;
 	typedef Cell::Point Point;
 	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
 
-	class GasOilNIT_Elliptic : public AbstractModel<Variable, Properties, TCell, GasOilNIT_Elliptic>
+	class OilNIT_Elliptic : public AbstractModel<Variable, Properties, TCell, OilNIT_Elliptic>
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
 		template<typename> friend class AbstractSolver;
-		friend class GasOilNITEllipticSolver;
+		friend class OilNITEllipticSolver;
 	protected:
 
 		// Continuum properties
@@ -42,7 +44,6 @@ namespace gasOilnit_elliptic
 		std::vector<Skeleton_Props> props_sk;
 		std::vector<Skeleton_Props>::iterator sk_well;
 		Oil_Props props_oil;
-		Gas_Props props_gas;
 		
 		// Heat of phase transition [J/kg]
 		double L;
@@ -62,10 +63,64 @@ namespace gasOilnit_elliptic
 		void setRateDeviation(int num, double ratio);
 		double solveH();
 
+		double Q_sum_quater;
+		std::map<int, double> Qcell_ellipse;
 		std::vector<Cell> wellCells;
 		std::map<int, int> wellNebrMap;
 		std::map<int, std::pair<int, int> > nebrMap;
 
+		inline const std::vector<int> getSymmetricalWellIndices(const int idx)
+		{
+			std::vector<int> indices;
+			const Cell& cell = wellCells[idx];
+			if (cell.type == WELL_LAT)
+			{
+				if (cell.nu == 0.0 || cell.nu == M_PI_2)
+				{
+					indices.resize(2);
+					indices[0] = idx;
+					indices[1] = idx + cellsNum_nu / 2;
+				}
+				else
+				{
+					indices.resize(4);
+					indices[0] = idx;
+					indices[1] = cellsNum_nu - idx;
+					indices[2] = cellsNum_nu / 2 + idx;
+					indices[3] = cellsNum_nu / 2 - idx;
+				}
+			}
+			else if (cell.type == WELL_TOP)
+			{
+				const int topStartIdx = cellsNum_nu;
+				const int botStartIdx = 2 * cellsNum_nu;
+
+				if (cell.nu == 0.0 || cell.nu == M_PI_2)
+				{
+					indices.resize(4);
+					indices[0] = topStartIdx + idx;
+					indices[1] = topStartIdx + idx + cellsNum_nu / 2;
+
+					indices[2] = botStartIdx + idx;
+					indices[3] = botStartIdx + idx + cellsNum_nu / 2;
+				}
+				else
+				{
+					indices.resize(8);
+					indices[0] = topStartIdx + idx;
+					indices[1] = topStartIdx + cellsNum_nu - idx;
+					indices[2] = topStartIdx + cellsNum_nu / 2 + idx;
+					indices[3] = topStartIdx + cellsNum_nu / 2 - idx;
+
+					indices[4] = botStartIdx + idx;
+					indices[5] = botStartIdx + cellsNum_nu - idx;
+					indices[6] = botStartIdx + cellsNum_nu / 2 + idx;
+					indices[7] = botStartIdx + cellsNum_nu / 2 - idx;
+				}
+			}
+
+			return indices;
+		};
 		inline const Cell& getUpwindCell(const Cell& cell, const Cell& nebr) const
 		{
 			assert(cell.isUsed);
@@ -255,21 +310,30 @@ namespace gasOilnit_elliptic
 			case WELL_LAT:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
-				neighbor[2] = &cells[nebrMap[cell.num].second];
 				break;
 
 			case WELL_TOP:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
-				neighbor[2] = &cells[nebrMap[cell.num].second];
 				break;
 
 			case WELL_BOT:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
-				neighbor[2] = &cells[nebrMap[cell.num].second];
 				break;
 			}
+		};
+		inline double getDistance(const Cell& cell1, const Cell& cell2) const
+		{
+			double dist;
+			if (fabs(cell1.z - cell2.z) > EQUALITY_TOLERANCE)
+				dist = fabs(cell1.z - cell2.z);
+			else if (fabs(cell1.mu - cell2.mu) > EQUALITY_TOLERANCE)
+				dist = (Cell::getH(cell1.mu, cell1.nu) * cell1.hmu + Cell::getH(cell2.mu, cell2.nu) * cell2.hmu) / 2.0;
+			else if (fabs(cell1.nu - cell2.nu) > EQUALITY_TOLERANCE)
+				dist = (Cell::getH(cell1.mu, cell1.nu) * cell1.hnu + Cell::getH(cell2.mu, cell2.nu) * cell2.hnu) / 2.0;
+
+			return dist;
 		};
 		inline double getTrans(const Cell& cell, const Cell& beta) const
 		{
@@ -282,6 +346,7 @@ namespace gasOilnit_elliptic
 				k2 = (dz2 > beta.props->radius_eff_z ? beta.props->perm_z : beta.props->perm_eff_z);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
+
 				S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hmu * cell.hnu;
 				return 2.0 * k1 * k2 * S / (k1 * beta.hz + k2 * cell.hz);
 			}
@@ -308,38 +373,20 @@ namespace gasOilnit_elliptic
 						+cell.hnu * Cell::getH(cell.mu, cell.mu));
 			}
 		};
-		inline void solveP_bub()
+		inline adouble getDensity(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
 		{
-			int idx;
+			double r1, r2;
+			if (fabs(cell1.z - cell2.z) > EQUALITY_TOLERANCE) {
+				r1 = cell1.hz;		r2 = cell2.hz;
+			} else if (fabs(cell1.mu - cell2.mu) > EQUALITY_TOLERANCE) {
+				r1 = cell1.hmu * Cell::getH(cell1.mu, cell1.nu);
+				r2 = cell2.hmu * Cell::getH(cell2.mu, cell2.nu);
+			} else if (fabs(cell1.nu - cell2.nu) > EQUALITY_TOLERANCE) {
+				r1 = cell1.hnu * Cell::getH(cell1.mu, cell1.nu);
+				r2 = cell2.hnu * Cell::getH(cell2.mu, cell2.nu);
+			}			
 
-			for (auto& cell : cells)
-			{
-				const Skeleton_Props* props = cell.props;
-				Variable& next = cell.u_next;
-
-				if (next.SATUR)
-				{
-					if ((next.s > 1.0 + EQUALITY_TOLERANCE) || (next.p > props_oil.p_sat))
-					{
-						next.SATUR = false;
-						//							next.s = 1.0;
-						next.p_bub -= 0.01 * next.p_bub;
-					}
-					else
-						next.p_bub = next.p;
-				}
-				else
-				{
-					if (next.p_bub > next.p + EQUALITY_TOLERANCE)
-					{
-						next.SATUR = true;
-						next.s -= 0.01;
-						//							next.p_bub = next.p;
-					}
-					else
-						next.s = 1.0;
-				}
-			}
+			return (props_oil.getDensity(p1) * (adouble)r2 + props_oil.getDensity(p2) * (adouble)r1) / (adouble)(r1 + r2);
 		};
 
 		inline double getPerm(const Cell& cell, const int axis) const
@@ -424,43 +471,27 @@ namespace gasOilnit_elliptic
 
 			return (nebr2->u_next.p - nebr1->u_next.p) / h;
 		};
-		inline double getOilVelocity(Cell& cell, Cell** neighbor, const int axis)
+		inline double getVelocity(Cell& cell, Cell** neighbor, const int axis)
 		{
-			return -getPerm(cell, axis) * props_oil.getKr(cell.u_next.s).value() /
-						props_oil.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
-		};
-		inline double getGasVelocity(Cell& cell, Cell** neighbor, const int axis)
-		{
-			return -getPerm(cell, axis) * props_gas.getKr(cell.u_next.s).value() /
-				props_gas.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
+			return -getPerm(cell, axis) / props_oil.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
 		};
 		inline double getCn(const Cell& cell) const
 		{
-			return cell.props->getPoro(cell.u_next.p).value() *
-						(cell.u_next.s * props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() * 
-								props_oil.c +
-						(1.0 - cell.u_next.s) * props_gas.getDensity(cell.u_next.p).value() * 
-								props_gas.c) +
+			return cell.props->getPoro(cell.u_next.p).value() * props_oil.getDensity(cell.u_next.p).value() * props_oil.c +
 					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->getDensity(cell.u_next.p).value() * 
 								cell.props->c;
 		};
 		inline double getAd(const Cell& cell) const
 		{
-			return cell.props->getPoro(cell.u_next.p).value() *
-						(cell.u_next.s * props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() *
-							props_oil.ad * props_oil.c +
-						(1.0 - cell.u_next.s) * props_gas.getDensity(cell.u_next.p).value() *
-							props_gas.ad * props_gas.c);
+			return cell.props->getPoro(cell.u_next.p).value() * (props_oil.getDensity(cell.u_next.p).value() * props_oil.ad * props_oil.c);
 		};
 		inline double getLambda(const Cell& cell, const int axis) const
 		{
 			if (axis == Z_AXIS)
-				return cell.props->getPoro(cell.u_next.p).value() * 
-							(cell.u_next.s * props_oil.lambda +	(1.0 - cell.u_next.s) * props_gas.lambda) +
+				return cell.props->getPoro(cell.u_next.p).value() * props_oil.lambda +
 						(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_z;
 			else
-				return cell.props->getPoro(cell.u_next.p).value() *
-					(cell.u_next.s * props_oil.lambda + (1.0 - cell.u_next.s) * props_gas.lambda) +
+				return cell.props->getPoro(cell.u_next.p).value() * props_oil.lambda +
 					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_r;
 		};
 		inline double getLambda(const Cell& cell1, const Cell& cell2) const
@@ -476,49 +507,46 @@ namespace gasOilnit_elliptic
 		};
 		inline double getJT(Cell& cell, Cell** neighbor, const int axis)
 		{
-			return props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() * 
-						props_oil.c * props_oil.jt * getOilVelocity(cell, neighbor, axis) +
-					props_gas.getDensity(cell.u_next.p).value() * 
-						props_gas.c * props_gas.jt * getGasVelocity(cell, neighbor, axis);
+			return props_oil.getDensity(cell.u_next.p).value() *
+				props_oil.c * props_oil.jt * getVelocity(cell, neighbor, axis);
 		};
 		inline double getA(Cell& cell, Cell** neighbor, const int axis)
 		{
-			return props_oil.getDensity(cell.u_next.p, cell.u_next.p_bub, cell.u_next.SATUR).value() * 
-						props_oil.c * getOilVelocity(cell, neighbor, axis) +
-					props_gas.getDensity(cell.u_next.p).value() * 
-						props_gas.c * getGasVelocity(cell, neighbor, axis);
+			return props_oil.getDensity(cell.u_next.p).value() * 
+						props_oil.c * getVelocity(cell, neighbor, axis);
 		};
-		inline double getPhaseRate(const Cell& cell, Cell** neighbor) const
+		inline double getTherCond(const Cell& cell, const Cell& beta) const 
 		{
-			const Variable& next = cell.u_next;
-			const Variable& prev = cell.u_prev;
+			double S, lambda;
 
-			double H = 0.0;
-			H = ( cell.props->getPoro(next.p).value() * next.s * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() - 
-				cell.props->getPoro(next.p).value() * next.s * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() ) / ht;
-
-			const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
-			for (int i = 0; i < nebrNum; i++)
-			{
-				const Cell& beta = *neighbor[i];
-				const Variable& upwd = getUpwindCell(cell, beta).u_next;
-
-				H += 1.0 / cell.V * getTrans(cell, beta) * (next.p - beta.u_next.p) *
-					props_oil.getKr(upwd.s).value() / props_oil.getViscosity(upwd.p).value() * props_oil.getDensity(upwd.p, upwd.p_bub, upwd.SATUR).value();
+			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE) {
+				lambda = (cell.hz * getLambda(beta, Z_AXIS) + beta.hz * getLambda(cell, Z_AXIS)) / (cell.hz + beta.hz);
+				S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hmu * cell.hnu;
+				return lambda * S;
 			}
-
-			return H;
+			else if (fabs(cell.mu - beta.mu) > EQUALITY_TOLERANCE) {
+				lambda = (cell.hmu * getLambda(beta, MU_AXIS) + beta.hmu * getLambda(cell, MU_AXIS)) / (cell.hmu + beta.hmu);
+				const double mu = cell.mu + sign(beta.mu - cell.mu) * cell.hmu / 2.0;
+				S = Cell::getH(mu, cell.nu) * cell.hnu * cell.hz;
+				return lambda * S;
+			}
+			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE) {
+				lambda = (cell.hnu * getLambda(beta, NU_AXIS) + beta.hnu * getLambda(cell, NU_AXIS)) / (cell.hnu + beta.hnu);
+				const double nu = cell.nu + sign(beta.nu - cell.nu) * cell.hnu / 2.0;
+				S = cell.hz * cell.hmu * Cell::getH(cell.mu, nu);
+				return lambda * S;
+			}
 		};
 
-		void solve_eqMiddle(const Cell& cell);
-		void solve_eqWell(const Cell& cell);
-		void solve_eqRight(const Cell& cell);
-		void solve_eqVertical(const Cell& cell);
-		void setVariables(const Cell& cell);
+		void solve_eqMiddle(const Cell& cell, const int val);
+		void solve_eqWell(const Cell& cell, const int val);
+		void solve_eqRight(const Cell& cell, const int val);
+		void solve_eqVertical(const Cell& cell, const int val);
+		void setVariables(const Cell& cell, const int val);
 
 	public:
-		GasOilNIT_Elliptic();
-		~GasOilNIT_Elliptic();
+		OilNIT_Elliptic();
+		~OilNIT_Elliptic();
 
 		double* x;
 		double* y;
@@ -529,4 +557,4 @@ namespace gasOilnit_elliptic
 	};
 };
 
-#endif /* GASOILNITELLIPTIC_HPP_ */
+#endif /* OILNITELLIPTIC_HPP_ */
