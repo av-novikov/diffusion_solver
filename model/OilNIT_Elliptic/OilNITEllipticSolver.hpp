@@ -16,6 +16,7 @@ namespace oilnit_elliptic
 	{
 	protected:
 		std::ofstream plot_Pdyn;
+		std::ofstream plot_Tdyn;
 		std::ofstream plot_qcells;
 
 		int n;
@@ -52,13 +53,13 @@ namespace oilnit_elliptic
 			std::cout << "Summary rate deviation = " << DQ * model->Q_dim * 86400.0 << std::endl;
 			std::cout << std::endl;
 		};
-		inline const std::vector<int> getMatrixStencil(const Cell& cell)
+		inline const std::vector<int> getMatrixStencil(const Cell& cell, const int val)
 		{
 			std::vector<int> stencil_idx;
 
 			if (cell.type == MIDDLE)
 			{
-				stencil_idx.resize(7);
+				stencil_idx.resize(stencil);
 				stencil_idx[0] = cell.num;
 				// Special neighbor search for center cells
 				if (cell.num % ((model->cellsNum_mu + 2) * (model->cellsNum_z + 2)) > model->cellsNum_z + 1)
@@ -88,7 +89,7 @@ namespace oilnit_elliptic
 			}
 			else if (cell.type == MIDDLE_SIDE)
 			{
-				stencil_idx.resize(6);
+				stencil_idx.resize(stencil - 1);
 				stencil_idx[0] = cell.num;
 				stencil_idx[1] = model->getCellIdx(cell.num, cell.num + model->cellsNum_z + 2);
 				stencil_idx[2] = model->getCellIdx(cell.num, cell.num - 1);
@@ -110,49 +111,57 @@ namespace oilnit_elliptic
 			}
 			else if (cell.type == RIGHT)
 			{
-				stencil_idx.resize(2);
+				stencil_idx.resize(Rstencil);
 				stencil_idx[0] = cell.num;
 				stencil_idx[1] = cell.num - model->cellsNum_z - 2;
 				return stencil_idx;
 			}
 			else if (cell.type == TOP)
 			{
-				stencil_idx.resize(2);
+				stencil_idx.resize(Vstencil);
 				stencil_idx[0] = cell.num;
 				stencil_idx[1] = cell.num + 1;
 				return stencil_idx;
 			}
 			else if (cell.type == BOTTOM)
 			{
-				stencil_idx.resize(2);
+				stencil_idx.resize(Vstencil);
 				stencil_idx[0] = cell.num;
 				stencil_idx[1] = cell.num - 1;
 				return stencil_idx;
 			}
 			else
 			{
-				stencil_idx.resize(2);
-				stencil_idx[0] = model->cellsNum + cell.num;
-				stencil_idx[1] = model->nebrMap[cell.num].first;
-				return stencil_idx;
+				if (val == TEMP)
+				{
+					stencil_idx.resize(TLstencil);
+					stencil_idx[0] = model->cellsNum + cell.num;
+					stencil_idx[1] = model->nebrMap[cell.num].first;
+					stencil_idx[2] = model->nebrMap[cell.num].second;
+					return stencil_idx;
+				}
+				else if (val == PRES)
+				{
+					stencil_idx.resize(Lstencil);
+					stencil_idx[0] = model->cellsNum + cell.num;
+					stencil_idx[1] = model->nebrMap[cell.num].first;
+					return stencil_idx;
+				}
 			}
 		};
 
 		// Sparse matrix solver
-		ParSolver solver;
+		ParSolver pres_solver, temp_solver;
 
-		void fill();
+		void fill(const int val);
 		void fillIndices();
-		void copySolution(const paralution::LocalVector<double>& sol);
+		void copySolution(const paralution::LocalVector<double>& sol, const int val);
 
 		// Coordinate form of sparse matrix & dense vector
-		int* ind_i;
-		int* ind_j;
-		double* a;
-		int* ind_rhs;
-		double* rhs;
+		int *ind_i, *ind_j, *tind_i, *tind_j, *ind_rhs;
+		double *a, *rhs;
 		// Number of non-zero elements in sparse matrix
-		int elemNum;
+		int elemNum, telemNum;
 
 	public:
 		OilNITEllipticSolver(OilNIT_Elliptic* _model);

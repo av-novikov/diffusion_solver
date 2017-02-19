@@ -87,9 +87,13 @@ void OilNIT_Elliptic::setProps(Properties& props)
 void OilNIT_Elliptic::makeDimLess()
 {
 	// Main units
-	R_dim = r_e / 10.0;
+	R_dim = r_e;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
+	if (props_sk[0].t_init != 0.0)
+		T_dim = fabs(props_sk[0].t_init);
+	else
+		T_dim = 1.0;
 
 	// Temporal properties
 	ht /= t_dim;
@@ -115,6 +119,11 @@ void OilNIT_Elliptic::makeDimLess()
 		props_sk[i].height /= R_dim;
 		props_sk[i].p_init /= P_dim;
 		props_sk[i].p_out /= P_dim;
+		props_sk[i].t_init /= T_dim;
+
+		props_sk[i].c = props_sk[i].c / R_dim / R_dim * T_dim * t_dim * t_dim;
+		props_sk[i].lambda_r = props_sk[i].lambda_r * T_dim * t_dim / P_dim / R_dim / R_dim;
+		props_sk[i].lambda_z = props_sk[i].lambda_z * T_dim * t_dim / P_dim / R_dim / R_dim;
 
 		for (int j = 0; j < periodsNum; j++)
 		{
@@ -139,6 +148,10 @@ void OilNIT_Elliptic::makeDimLess()
 	props_oil.gas.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
 	props_oil.p_sat /= P_dim;
+	props_oil.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_oil.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_oil.jt = props_oil.jt * P_dim / T_dim;
+	props_oil.ad = props_oil.ad * P_dim / T_dim;
 };
 void OilNIT_Elliptic::setInitialState()
 {
@@ -537,7 +550,7 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 	const Skeleton_Props& props = *cell.props;
 	const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
 
-	if (val == 0)
+	if (val == TEMP)
 	{
 		trace_on(tmid);
 
@@ -559,15 +572,16 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 		{
 			const Cell& beta = *neighbor[i];
 			const TapeVariableNIT& nebr = var[i + 1];
-
-			//h[0] += ht * ((max(0.0, getA(cell, neighbor, ) + getTherCond(cell, beta) / cell.V) * (next.t - nebr.t) + b * (cell.u_next.p - beta.u_next.p)) / getDistance(cell, beta);
+			const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta), neighbor);
+		
+			h[0] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (cell.u_next.p - beta.u_next.p)) / getDistance(cell, beta);
 		}
 
 		h[0] >>= y[0];
 
 		trace_off();
 	}
-	else if (val == 1)
+	else if (val == PRES)
 	{
 		trace_on(mid);
 
@@ -600,7 +614,7 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 }
 void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 {
-	if (val == 0)
+	if (val == TEMP)
 	{
 		const Cell& beta1 = cells[nebrMap[cell.num].first];
 		const Cell& beta2 = cells[nebrMap[cell.num].second];
@@ -613,8 +627,8 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		}
 		else
 		{
-			dist1 = Cell::getH(cell.mu, cell.nu) * (cell.mu - beta1.mu);
-			dist2 = (Cell::getH(beta1.mu, beta1.nu) * beta1.hmu + Cell::getH(beta2.mu, beta2.nu) * beta2.hnu) / 2.0;
+			dist1 = Cell::getH(cell.mu, cell.nu) * cell.mu - Cell::getH(beta1.mu, beta1.nu) * beta1.mu;
+			dist2 = Cell::getH(beta1.mu, beta1.nu) * beta1.mu - Cell::getH(beta2.mu, beta2.nu) * beta2.mu;
 		}
 
 		trace_on(tleft);
@@ -627,19 +641,14 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		const TapeVariableNIT& nebr1 = var[1];
 		const TapeVariableNIT& nebr2 = var[2];
 
-		h[0] = (next.t - nebr1.t) / (adouble)(dist1)-(nebr1.t - nebr2.t) / (adouble)(dist2);
+		h[0] = (next.t - nebr1.t) / (adouble)(dist1) - (nebr1.t - nebr2.t) / (adouble)(dist2);
 		h[0] >>= y[0];
 
 		trace_off();
 	}
-	else if (val == 1)
+	else if (val == PRES)
 	{
 		const Cell& beta = cells[nebrMap[cell.num].first];
-		double dist;
-		if (cell.hz == 0)
-			dist = cell.z - beta.z;
-		else
-			dist = Cell::getH(cell.mu, cell.nu) * (cell.mu - beta.mu);
 
 		trace_on(left);
 		adouble h[Variable::size - 1];
@@ -663,7 +672,7 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 }
 void OilNIT_Elliptic::solve_eqRight(const Cell& cell, const int val)
 {
-	if (val == 0)
+	if (val == TEMP)
 	{
 		trace_on(tright);
 		adouble h[Variable::size - 1];
@@ -674,12 +683,12 @@ void OilNIT_Elliptic::solve_eqRight(const Cell& cell, const int val)
 		const TapeVariableNIT& next = var[0];
 		const TapeVariableNIT& nebr = var[1];
 
-		h[0] = next.t - (adouble)(cell.props->t_out);
+		h[0] = next.t - (adouble)(cell.props->t_init);
 		h[0] >>= y[0];
 
 		trace_off();
 	}
-	else if (val == 1)
+	else if (val == PRES)
 	{
 		trace_on(right);
 		adouble h[Variable::size - 1];
@@ -700,7 +709,7 @@ void OilNIT_Elliptic::solve_eqRight(const Cell& cell, const int val)
 }
 void OilNIT_Elliptic::solve_eqVertical(const Cell& cell, const int val)
 {
-	if(val == 0)
+	if(val == TEMP)
 	{
 		trace_on(tvertical);
 		adouble h[Variable::size - 1];
@@ -717,7 +726,7 @@ void OilNIT_Elliptic::solve_eqVertical(const Cell& cell, const int val)
 
 		trace_off();
 	}
-	else if (val == 1)
+	else if (val == PRES)
 	{
 		trace_on(vertical);
 		adouble h[Variable::size - 1];
@@ -741,7 +750,7 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 
 	if (cell.type == WELL_LAT || cell.type == WELL_TOP || cell.type == WELL_BOT) // Well
 	{
-		if (val == 0)
+		if (val == TEMP)
 		{
 			const Variable& next = cell.u_next;
 			const Variable& nebr1 = cells[nebrMap[cell.num].first].u_next;
@@ -752,9 +761,9 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			x[2] = nebr2.values[val];
 
 			solve_eqWell(cell, val);
-			jacobian(left, Variable::size - 1, (Variable::size - 1) * TLstencil, x, jac);
+			jacobian(tleft, Variable::size - 1, (Variable::size - 1) * TLstencil, x, jac);
 		}
-		else if (val == 1)
+		else if (val == PRES)
 		{
 			const Variable& next = cell.u_next;
 			const Variable& nebr = cells[nebrMap[cell.num].first].u_next;
@@ -775,7 +784,10 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 		x[1] = nebr.values[ val ];
 
 		solve_eqRight(cell, val);
-		jacobian(right, Variable::size - 1, (Variable::size - 1) * Rstencil, x, jac);
+		if (val == TEMP)
+			jacobian(tright, Variable::size - 1, (Variable::size - 1) * Rstencil, x, jac);
+		else if (val == PRES)
+			jacobian(right, Variable::size - 1, (Variable::size - 1) * Rstencil, x, jac);
 	}
 	else if (cell.type == TOP) // Top
 	{
@@ -786,7 +798,10 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 		x[1] = nebr.values[ val ];
 
 		solve_eqVertical(cell, val);
-		jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		if (val == TEMP)
+			jacobian(tvertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		else if (val == PRES)
+			jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
 	}
 	else if (cell.type == BOTTOM) // Bottom
 	{
@@ -797,7 +812,10 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 		x[1] = nebr.values[ val ];
 
 		solve_eqVertical(cell, val);
-		jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		if (val == TEMP)
+			jacobian(tvertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		else if (val == PRES)
+			jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
 	}
 	else // Middle
 	{
@@ -811,6 +829,9 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 				x[(j + 1)] = neighbor[j]->u_next.values[ val ];
 
 		solve_eqMiddle(cell, val);
-		jacobian(mid, Variable::size - 1, (Variable::size - 1) * (nebrNum + 1), x, jac);
+		if (val == TEMP)
+			jacobian(tmid, Variable::size - 1, (Variable::size - 1) * (nebrNum + 1), x, jac);
+		else if (val == PRES)
+			jacobian(mid, Variable::size - 1, (Variable::size - 1) * (nebrNum + 1), x, jac);
 	}
 }

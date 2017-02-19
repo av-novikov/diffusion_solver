@@ -5,10 +5,6 @@
 #include <cmath>
 #include <iostream>
 
-#define TEMP 0
-#define PRES 1
-#define SAT 2
-
 template <class modelType>
 class AbstractSolver {
 	protected:

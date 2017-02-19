@@ -7,6 +7,7 @@ OilNITEllipticSolver::OilNITEllipticSolver(OilNIT_Elliptic* _model) : AbstractSo
 {
 	// Output streams
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
+	plot_Tdyn.open("snaps/T_dyn.dat", ofstream::out);
 	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
 
 	// Flow rate optimization structures
@@ -25,6 +26,8 @@ OilNITEllipticSolver::OilNITEllipticSolver(OilNIT_Elliptic* _model) : AbstractSo
 	// Memory allocating
 	ind_i = new int[stencil * (model->cellsNum + model->wellCells.size())];
 	ind_j = new int[stencil * (model->cellsNum + model->wellCells.size())];
+	tind_i = new int[stencil * (model->cellsNum + model->wellCells.size())];
+	tind_j = new int[stencil * (model->cellsNum + model->wellCells.size())];
 	a = new double[stencil * (model->cellsNum + model->wellCells.size())];
 	ind_rhs = new int[model->cellsNum + model->wellCells.size()];
 	rhs = new double[model->cellsNum + model->wellCells.size()];
@@ -32,27 +35,35 @@ OilNITEllipticSolver::OilNITEllipticSolver(OilNIT_Elliptic* _model) : AbstractSo
 OilNITEllipticSolver::~OilNITEllipticSolver()
 {
 	plot_Pdyn.close();
+	plot_Tdyn.close();
 	plot_qcells.close();
+
+	delete[] ind_i, ind_j, tind_i, tind_j, ind_rhs;
+	delete[] a, rhs;
+
 }
 void OilNITEllipticSolver::writeData()
 {
-	double p = 0.0, s = 0.0, q = 0;
+	double p = 0.0, t = 0.0, q = 0.0;
 
 	plot_qcells << cur_t * t_dim / 3600.0;
+	plot_Tdyn << cur_t * t_dim / 3600.0;
 	plot_Pdyn << cur_t * t_dim / 3600.0;
 
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
 		p += model->wellCells[it->first].u_next.p * model->P_dim;
+		t += model->wellCells[it->first].u_next.t * model->T_dim;
 		if (model->leftBoundIsRate) {
 			plot_Pdyn << "\t" << model->wellCells[it->first].u_next.p * model->P_dim / BAR_TO_PA;
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		} else
 		{
-			//plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
 			q += model->getRate(it->first);
 		}
+		plot_Tdyn << "\t" << model->wellCells[it->first].u_next.t * model->T_dim;
 	}
 
 	plot_Pdyn << "\t" << p / (double)(model->Qcell.size()) / BAR_TO_PA << endl;
@@ -61,6 +72,8 @@ void OilNITEllipticSolver::writeData()
 		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;
 	else
 		plot_qcells << "\t" << q * model->Q_dim * 86400.0 << endl;
+
+	plot_Tdyn << "\t" << t / (double)(model->Qcell.size()) << endl;
 }
 void OilNITEllipticSolver::control()
 {
@@ -89,7 +102,8 @@ void OilNITEllipticSolver::start()
 	iterations = 8;
 
 	fillIndices();
-	solver.Init(model->cellsNum + model->wellCells.size());
+	pres_solver.Init(model->cellsNum + model->wellCells.size());
+	temp_solver.Init(model->cellsNum + model->wellCells.size());
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -105,13 +119,13 @@ void OilNITEllipticSolver::start()
 		model->snapshot_all(counter++);
 	writeData();
 }
-void OilNITEllipticSolver::copySolution(const paralution::LocalVector<double>& sol)
+void OilNITEllipticSolver::copySolution(const paralution::LocalVector<double>& sol, const int val)
 {
 	for (int i = 0; i < model->cellsNum; i++)
-		model->cells[i].u_next.p += sol[i];
+		model->cells[i].u_next.values[val] += sol[i];
 
 	for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
-		model->wellCells[i - model->cellsNum].u_next.p += sol[i];
+		model->wellCells[i - model->cellsNum].u_next.values[val] += sol[i];
 }
 void OilNITEllipticSolver::solveStep()
 {
@@ -126,10 +140,10 @@ void OilNITEllipticSolver::solveStep()
 	{
 		copyIterLayer();
 
-		fill();
-		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve();
-		copySolution(solver.getSolution());
+		fill(PRES);
+		pres_solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
+		pres_solver.Solve();
+		copySolution(pres_solver.getSolution(), PRES);
 
 		err_newton = convergance(cellIdx, varIdx);
 
@@ -139,6 +153,11 @@ void OilNITEllipticSolver::solveStep()
 
 		iterations++;
 	}
+
+	fill(TEMP);
+	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
+	temp_solver.Solve();
+	copySolution(temp_solver.getSolution(), TEMP);
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
@@ -179,7 +198,7 @@ void OilNITEllipticSolver::doNextStep()
 		}
 	}
 }
-void OilNITEllipticSolver::fill()
+void OilNITEllipticSolver::fill(const int val)
 {
 	int counter = 0;
 	int i;
@@ -189,10 +208,10 @@ void OilNITEllipticSolver::fill()
 	{
 		if (cell.isUsed)
 		{
-			model->setVariables(cell, PRES);
+			model->setVariables(cell, val);
 
 			i = 0;
-			const auto mat_idx = getMatrixStencil(cell);
+			const auto mat_idx = getMatrixStencil(cell, val);
 			for (const int idx : mat_idx)
 			{
 				a[counter++] = model->jac[0][i];	i++;
@@ -208,10 +227,10 @@ void OilNITEllipticSolver::fill()
 
 	for (const auto& cell : model->wellCells)
 	{
-		model->setVariables(cell, PRES);
+		model->setVariables(cell, val);
 
 		i = 0;
-		const auto mat_idx = getMatrixStencil(cell);
+		const auto mat_idx = getMatrixStencil(cell, val);
 		for (const int idx : mat_idx)
 		{
 			a[counter++] = model->jac[0][i];
@@ -223,34 +242,47 @@ void OilNITEllipticSolver::fill()
 }
 void OilNITEllipticSolver::fillIndices()
 {
-	int counter = 0;
+	int pres_counter = 0, temp_counter = 0;
 
 	for (const auto& cell : model->cells)
 	{
 		if (cell.isUsed)
 		{
-			const auto mat_idx = getMatrixStencil(cell);
-			for (const int idx : mat_idx)
+			const auto pres_idx = getMatrixStencil(cell, PRES);
+			for (const int idx : pres_idx)
 			{
-				ind_i[counter] = cell.num;			ind_j[counter++] = idx;
+				ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = idx;
+			}
+
+			const auto temp_idx = getMatrixStencil(cell, TEMP);
+			for (const int idx : temp_idx)
+			{
+				tind_i[temp_counter] = cell.num;			tind_j[temp_counter++] = idx;
 			}
 		}
 		else
 		{
-			ind_i[counter] = cell.num;			ind_j[counter++] = cell.num;
+			ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = cell.num;
+			tind_i[temp_counter] = cell.num;		tind_j[temp_counter++] = cell.num;
 		}
 	}
 
 	for (const auto& cell : model->wellCells)
 	{
-		const auto mat_idx = getMatrixStencil(cell);
-		for (const int idx : mat_idx)
+		const auto pres_idx = getMatrixStencil(cell, PRES);
+		for (const int idx : pres_idx)
 		{
-			ind_i[counter] = cell.num + model->cellsNum;			ind_j[counter++] = idx;
+			ind_i[pres_counter] = cell.num + model->cellsNum;			ind_j[pres_counter++] = idx;
+		}
+
+		const auto temp_idx = getMatrixStencil(cell, TEMP);
+		for (const int idx : temp_idx)
+		{
+			tind_i[temp_counter] = cell.num + model->cellsNum;			tind_j[temp_counter++] = idx;
 		}
 	}
 
-	elemNum = counter;
+	elemNum = pres_counter;		telemNum = temp_counter;
 
 	for (int i = 0; i < model->cellsNum + model->wellCells.size(); i++)
 		ind_rhs[i] = i;

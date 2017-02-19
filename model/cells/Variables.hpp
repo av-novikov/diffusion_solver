@@ -3,6 +3,10 @@
 
 #include "adolc/adouble.h"
 
+#define TEMP 0
+#define PRES 1
+#define SAT 2
+
 struct Var1phase 
 {
 	static const int size = 1;

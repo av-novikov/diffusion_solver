@@ -246,7 +246,7 @@ namespace oilnit_elliptic
 				break;
 			}
 		};
-		inline void getStencil(const Cell& cell, Cell** const neighbor)
+		/*inline void getStencil(const Cell& cell, Cell** const neighbor)
 		{
 			// FIXME: Only for inner cells
 			assert(cell.isUsed);
@@ -322,7 +322,7 @@ namespace oilnit_elliptic
 				neighbor[1] = &cells[nebrMap[cell.num].first];
 				break;
 			}
-		};
+		};*/
 		inline double getDistance(const Cell& cell1, const Cell& cell2) const
 		{
 			double dist;
@@ -425,7 +425,7 @@ namespace oilnit_elliptic
 					}
 				}
 
-				h = Cell::getH(cell.mu, cell.nu) * (nebr2->mu - nebr1->mu);
+				h = Cell::getH(nebr2->mu, nebr2->nu) * nebr2->mu - Cell::getH(nebr1->mu, nebr1->nu) * nebr1->mu;
 			}
 			else if (axis == NU_AXIS)
 			{
@@ -441,7 +441,7 @@ namespace oilnit_elliptic
 				if (abs(nebr2->nu - nebr1->nu) > 2.0 * cell.hnu + EQUALITY_TOLERANCE)
 					h = Cell::getH(cell.mu, cell.nu) * (nebr2->nu - nebr1->nu + 2.0 * M_PI);
 				else
-					h = Cell::getH(cell.mu, cell.nu) * (nebr2->nu - nebr1->nu);
+					h = Cell::getH(nebr2->mu, nebr2->nu) * nebr2->nu - Cell::getH(nebr1->mu, nebr1->nu) * nebr1->nu;
 			}
 			else if (axis == Z_AXIS)
 			{
@@ -494,17 +494,6 @@ namespace oilnit_elliptic
 				return cell.props->getPoro(cell.u_next.p).value() * props_oil.lambda +
 					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_r;
 		};
-		inline double getLambda(const Cell& cell1, const Cell& cell2) const
-		{
-			if (fabs(cell1.z - cell2.z) > EQUALITY_TOLERANCE) 
-				return (cell1.hz * getLambda(cell2, Z_AXIS) + cell2.hz * getLambda(cell1, Z_AXIS)) / (cell1.hz + cell2.hz);
-			else if (fabs(cell1.mu - cell2.mu) > EQUALITY_TOLERANCE)
-				return (cell1.hmu * getLambda(cell2, MU_AXIS) + cell2.hmu * getLambda(cell1, MU_AXIS)) / 
-					(cell1.hmu + cell2.hmu);
-			else if (fabs(cell1.nu - cell2.nu) > EQUALITY_TOLERANCE)
-				return (cell1.hnu * getLambda(cell2, NU_AXIS) + cell2.hnu * getLambda(cell1, NU_AXIS)) /
-					(cell1.hnu + cell2.hnu);
-		};
 		inline double getJT(Cell& cell, Cell** neighbor, const int axis)
 		{
 			return props_oil.getDensity(cell.u_next.p).value() *
@@ -515,27 +504,38 @@ namespace oilnit_elliptic
 			return props_oil.getDensity(cell.u_next.p).value() * 
 						props_oil.c * getVelocity(cell, neighbor, axis);
 		};
-		inline double getTherCond(const Cell& cell, const Cell& beta) const 
+		struct DivIndices 
 		{
-			double S, lambda;
+			double ther;
+			double pres;
+			DivIndices(double _ther, double _pres) : ther(_ther), pres(_pres) {};
+		};
+		inline DivIndices getDivCoeff(Cell& cell, Cell& beta, Cell** neighbor)
+		{
+			double r1, r2, lambda, a;
+			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
+			{
+				a = std::max(0.0, sign(cell.z - beta.z) * getA(cell, neighbor, Z_AXIS));
+				r1 = cell.hz;		r2 = beta.hz;
+				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
+			}
+			else if (fabs(cell.mu - beta.mu) > EQUALITY_TOLERANCE)
+			{
+				a = std::max(0.0, sign(cell.mu - beta.mu) * getA(cell, neighbor, MU_AXIS));
+				r1 = cell.hmu * Cell::getH(cell.mu, cell.nu);
+				r2 = beta.hmu * Cell::getH(beta.mu, beta.nu);
+				lambda = (r1 * getLambda(beta, MU_AXIS) + r2 * getLambda(cell, MU_AXIS)) / (r1 + r2) / r1;
+			}
+			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE)
+			{
+				a = std::max(0.0, sign(cell.nu - beta.nu) * getA(cell, neighbor, NU_AXIS));
+				r1 = cell.hnu * Cell::getH(cell.mu, cell.nu);
+				r2 = beta.hnu * Cell::getH(beta.mu, beta.nu);
+				lambda = (r1 * getLambda(beta, NU_AXIS) + r2 * getLambda(cell, NU_AXIS)) / (r1 + r2) / r1;
+			}
 
-			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE) {
-				lambda = (cell.hz * getLambda(beta, Z_AXIS) + beta.hz * getLambda(cell, Z_AXIS)) / (cell.hz + beta.hz);
-				S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hmu * cell.hnu;
-				return lambda * S;
-			}
-			else if (fabs(cell.mu - beta.mu) > EQUALITY_TOLERANCE) {
-				lambda = (cell.hmu * getLambda(beta, MU_AXIS) + beta.hmu * getLambda(cell, MU_AXIS)) / (cell.hmu + beta.hmu);
-				const double mu = cell.mu + sign(beta.mu - cell.mu) * cell.hmu / 2.0;
-				S = Cell::getH(mu, cell.nu) * cell.hnu * cell.hz;
-				return lambda * S;
-			}
-			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE) {
-				lambda = (cell.hnu * getLambda(beta, NU_AXIS) + beta.hnu * getLambda(cell, NU_AXIS)) / (cell.hnu + beta.hnu);
-				const double nu = cell.nu + sign(beta.nu - cell.nu) * cell.hnu / 2.0;
-				S = cell.hz * cell.hmu * Cell::getH(cell.mu, nu);
-				return lambda * S;
-			}
+			DivIndices coeff (a + lambda, a * props_oil.jt);
+			return coeff;
 		};
 
 		void solve_eqMiddle(const Cell& cell, const int val);
