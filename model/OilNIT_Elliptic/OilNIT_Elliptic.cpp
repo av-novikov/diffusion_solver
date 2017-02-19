@@ -39,6 +39,8 @@ void OilNIT_Elliptic::setProps(Properties& props)
 	cellsNum_z = props.cellsNum_z;
 	cellsNum = (cellsNum_mu + 2) * (cellsNum_z + 2) * cellsNum_nu;
 
+	perfIntervals = props.perfIntervals;
+
 	// Setting skeleton properties
 	depth_point = props.depth_point;
 
@@ -426,7 +428,27 @@ void OilNIT_Elliptic::setPerforated()
 {
 	height_perf = 0.0;
 
-	// lateral
+	for (auto perfInt : perfIntervals)
+	{
+		for (int i = perfInt.first; i <= perfInt.second; i++)
+		{
+			const auto indices = getPerforationIndices(i);
+			for (auto ind : indices)
+			{
+				Qcell[ind] = 0.0;
+				const Cell& cell = wellCells[ind];
+				if(cell.type == WELL_LAT)
+					height_perf += Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hz;
+				else
+					height_perf += Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
+			}
+
+			Qcell_ellipse[ indices[0] ] = 0.0;
+			Qcell_ellipse[ indices[2] ] = 0.0;
+		};
+	};
+
+	/*// lateral
 	for (int i = 0; i < cellsNum_nu; i++)
 	{
 		Qcell[i] = 0.0;
@@ -452,7 +474,7 @@ void OilNIT_Elliptic::setPerforated()
 		Qcell[i] = 0.0;
 		const Cell& cell = wellCells[i];
 		height_perf += Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
-	}
+	}*/
 }
 void OilNIT_Elliptic::setPeriod(int period)	
 {
@@ -515,7 +537,7 @@ void OilNIT_Elliptic::setPeriod(int period)
 };
 void OilNIT_Elliptic::setRateDeviation(int num, double ratio)
 {
-	const auto indices = getSymmetricalWellIndices(num);
+	const auto indices = getPerforationIndices(num);
 
 	Qcell_ellipse[num] += Q_sum_quater * ratio;
 	for (const auto& idx : indices)
@@ -660,9 +682,16 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		const TapeVariable& next = var[0];
 		const TapeVariable& nebr = var[1];
 
+		double rate;
+		auto it = Qcell.find(cell.num);
+		if (it != Qcell.end())
+			rate = Qcell[cell.num];
+		else
+			rate = 0.0;
+
 		condassign(h[0], leftIsRate,
 			(adouble)(getTrans(cell, beta)) * props_oil.getDensity(next.p) / props_oil.oil.rho_stc /
-			props_oil.getViscosity(next.p) * (nebr.p - next.p) - Qcell[cell.num],
+			props_oil.getViscosity(next.p) * (nebr.p - next.p) - rate,
 			next.p - Pwf);
 
 		h[0] >>= y[0];

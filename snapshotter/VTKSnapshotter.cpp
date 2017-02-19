@@ -872,6 +872,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 	double vel[3];
 	int l, j, k;
+	Cell* neighbor[6];
 
 	for (l = 0; l < ny - 1; l++)
 	{
@@ -959,6 +960,8 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 			temp->InsertNextValue(cell.u_next.t * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim);
+
+			model->getNeighbors(cell, neighbor);
 			vel[0] = 0.0;
 			vel[1] = 0.0;
 			vel[2] = 0.0;
@@ -989,6 +992,8 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 			pres->InsertNextValue(cell.u_next.p * P_dim);
 			temp->InsertNextValue(cell.u_next.t * T_dim);
+			
+			model->getNeighbors(cell, neighbor);
 			vel[0] = 0.0;// r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
 			vel[1] = 0.0;// r_dim / t_dim * (sin(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) + cos(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
 			vel[2] = 0.0;// r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);
