@@ -46,7 +46,7 @@ namespace oilnit_elliptic
 			for (it = model->Qcell_ellipse.begin(); it != model->Qcell_ellipse.end(); ++it)
 			{
 				std::cout << "Rate in " << it->first << " = " << it->second * model->Q_dim * 86400.0 << "\t";
-				std::cout << "Press in " << it->first << " = " << model->cells[it->first].u_next.p * model->P_dim / BAR_TO_PA << std::endl;
+				std::cout << "Press in " << it->first << " = " << model->wellCells[it->first].u_next.p * model->P_dim / BAR_TO_PA << std::endl;
 				DQ -= it->second;
 				k++;
 			}

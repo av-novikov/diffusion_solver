@@ -187,6 +187,10 @@ void OilNITEllipticSolver::doNextStep()
 				{
 					q[i] += mult * dq[i];
 					it->second = q[i];
+					auto indices = model->getPerforationIndicesSameType(it->first);
+					for (auto& idx : indices)
+						model->Qcell[idx] = it->second;
+
 					i++;	++it;
 				}
 

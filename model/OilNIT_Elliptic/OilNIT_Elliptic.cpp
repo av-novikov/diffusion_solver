@@ -537,7 +537,7 @@ void OilNIT_Elliptic::setPeriod(int period)
 };
 void OilNIT_Elliptic::setRateDeviation(int num, double ratio)
 {
-	const auto indices = getPerforationIndices(num);
+	const auto indices = getPerforationIndicesSameType(num);
 
 	Qcell_ellipse[num] += Q_sum_quater * ratio;
 	for (const auto& idx : indices)
@@ -551,8 +551,8 @@ double OilNIT_Elliptic::solveH()
 	map<int, double>::iterator it = Qcell.begin();
 	for (int i = 0; i < Qcell.size() - 1; i++)
 	{
-		p0 = cells[it->first].u_next.p;
-		p1 = cells[(++it)->first].u_next.p;
+		p0 = wellCells[it->first].u_next.p;
+		p1 = wellCells[(++it)->first].u_next.p;
 
 		H += (p1 - p0) * (p1 - p0) / 2.0;
 	}
@@ -663,7 +663,14 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		const TapeVariableNIT& nebr1 = var[1];
 		const TapeVariableNIT& nebr2 = var[2];
 
-		h[0] = (next.t - nebr1.t) / (adouble)(dist1) - (nebr1.t - nebr2.t) / (adouble)(dist2);
+		adouble isPerforated;
+		auto it = Qcell.find(cell.num);
+		if (it != Qcell.end())
+			isPerforated = true;
+		else
+			isPerforated = false;
+
+		condassign(h[0], isPerforated, (next.t - nebr1.t) / (adouble)(dist1) - (nebr1.t - nebr2.t) / (adouble)(dist2), next.t - nebr1.t);
 		h[0] >>= y[0];
 
 		trace_off();
@@ -675,7 +682,6 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		trace_on(left);
 		adouble h[Variable::size - 1];
 		TapeVariable var[Lstencil];
-		adouble leftIsRate = leftBoundIsRate;
 		for (int i = 0; i < Lstencil; i++)
 			var[i].p <<= x[i];
 
@@ -683,16 +689,28 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		const TapeVariable& nebr = var[1];
 
 		double rate;
+		adouble leftIsRate = leftBoundIsRate;
+		adouble leftPresPerforated, leftPresNonPerforated;
 		auto it = Qcell.find(cell.num);
 		if (it != Qcell.end())
+		{
+			leftPresPerforated = !leftBoundIsRate;
+			leftPresNonPerforated = false;
 			rate = Qcell[cell.num];
+		}
 		else
+		{
 			rate = 0.0;
+			leftPresPerforated = false;
+			leftPresNonPerforated = !leftBoundIsRate;
+		}
 
 		condassign(h[0], leftIsRate,
 			(adouble)(getTrans(cell, beta)) * props_oil.getDensity(next.p) / props_oil.oil.rho_stc /
 			props_oil.getViscosity(next.p) * (nebr.p - next.p) - rate,
 			next.p - Pwf);
+		condassign(h[0], leftPresPerforated, next.p - Pwf);
+		condassign(h[0], leftPresNonPerforated, next.p - nebr.p);
 
 		h[0] >>= y[0];
 

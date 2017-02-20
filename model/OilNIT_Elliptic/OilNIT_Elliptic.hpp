@@ -77,7 +77,7 @@ namespace oilnit_elliptic
 		{
 			const Cell& cell = wellCells[idx];
 			if (cell.type == WELL_LAT)
-				if (cell.nu == 0.0 || cell.nu == M_PI_2)
+				if (cell.nu == 0.0 || cell.nu == M_PI)
 					return{ idx, idx + cellsNum_nu, idx + 2 * cellsNum_nu };
 				else
 					return{ idx, cellsNum_nu - idx, cellsNum_nu + idx,
@@ -85,6 +85,21 @@ namespace oilnit_elliptic
 			else if (cell.type == WELL_TOP)
 				return{ idx - cellsNum_nu, 2 * cellsNum_nu - idx,
 						idx, 3 * cellsNum_nu - idx, cellsNum_nu + idx, 4 * cellsNum_nu - idx };
+		};
+		inline const std::vector<int> getPerforationIndicesSameType(const int idx)
+		{
+			const Cell& cell = wellCells[idx];
+			
+			if (cell.type == WELL_LAT)
+				if (cell.nu == 0.0 || cell.nu == M_PI)
+					return{ 0, cellsNum_nu / 2};
+				else
+					return{ idx % (cellsNum_nu / 2), cellsNum_nu - (idx % (cellsNum_nu / 2))};
+			else
+			{
+				const int startIdx = cellsNum_nu + (idx % (cellsNum_nu / 2));
+				return{ startIdx, 3 * cellsNum_nu - startIdx, cellsNum_nu + startIdx, 4 * cellsNum_nu - startIdx };
+			}
 		};
 		inline const std::vector<int> getSymmetricalWellIndices(const int idx)
 		{
