@@ -16,6 +16,10 @@
 
 namespace gasOilnit_elliptic
 {
+	static const int MU_AXIS = 0;
+	static const int NU_AXIS = 1;
+	static const int Z_AXIS = 2;
+
 	static const int stencil = 7;
 	static const int Lstencil = 3;
 	static const int Rstencil = 2;

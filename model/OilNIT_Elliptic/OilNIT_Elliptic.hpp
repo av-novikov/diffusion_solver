@@ -16,6 +16,10 @@
 
 namespace oilnit_elliptic
 {
+	static const int MU_AXIS = 0;
+	static const int NU_AXIS = 1;
+	static const int Z_AXIS = 2;
+
 	static const int stencil = 7;
 	static const int Lstencil = 2;
 	static const int TLstencil = 3;
@@ -200,7 +204,8 @@ namespace oilnit_elliptic
 				else
 				{
 					int nu_idx = cell.num / ((cellsNum_z + 2) * (cellsNum_mu + 2));
-					neighbor[0] = &getCell(cell.num, cellsNum + cell.num - (2 * nu_idx + 1) * (cellsNum_z + 2) * (cellsNum_mu + 2));
+					neighbor[0] = &getCell(cell.num, cellsNum + cell.num - 
+						2 * nu_idx * (cellsNum_z + 2) * (cellsNum_mu + 2));
 				}
 				neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[2] = &getCell(cell.num, cell.num - 1);
@@ -379,11 +384,17 @@ namespace oilnit_elliptic
 				k1 = (cell.mu > cell.props->radius_eff_mu ? cell.props->perm_mu : cell.props->perm_eff_mu);
 				if (k1 == 0.0)
 					return 0.0;
-				const double nu = cell.nu + sign(beta.nu - cell.nu) * cell.hnu / 2.0;
+
+				double nu;
+				if (fabs(beta.nu - cell.nu) > 2.0 * cell.hnu + EQUALITY_TOLERANCE)
+					nu = (cell.nu > beta.nu ? beta.nu - beta.hnu / 2 : cell.nu - cell.hnu / 2.0);
+				else
+					nu = cell.nu + sign(beta.nu - cell.nu) * cell.hnu / 2.0;
 				S = cell.hz * cell.hmu * Cell::getH(cell.mu, nu);
+
 				return 2.0 * k1 * S /
 					(beta.hnu * Cell::getH(beta.mu, beta.nu) +
-						+cell.hnu * Cell::getH(cell.mu, cell.mu));
+						+cell.hnu * Cell::getH(cell.mu, cell.nu));
 			}
 		};
 		inline adouble getDensity(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
@@ -397,7 +408,7 @@ namespace oilnit_elliptic
 			} else if (fabs(cell1.nu - cell2.nu) > EQUALITY_TOLERANCE) {
 				r1 = cell1.hnu * Cell::getH(cell1.mu, cell1.nu);
 				r2 = cell2.hnu * Cell::getH(cell2.mu, cell2.nu);
-			}			
+			}
 
 			return (props_oil.getDensity(p1) * (adouble)r2 + props_oil.getDensity(p2) * (adouble)r1) / (adouble)(r1 + r2);
 		};
@@ -438,7 +449,10 @@ namespace oilnit_elliptic
 					}
 				}
 
-				h = Cell::getH(nebr2->mu, nebr2->nu) * nebr2->mu - Cell::getH(nebr1->mu, nebr1->nu) * nebr1->mu;
+				if(sin(nebr1->nu) * sin(nebr2->nu) < 0.0)
+					h = Cell::getH(cell.mu, cell.nu) * (nebr2->mu + nebr1->mu);
+				else
+					h =	Cell::getH(cell.mu, cell.nu) * (nebr2->mu - nebr1->mu);
 			}
 			else if (axis == NU_AXIS)
 			{
@@ -451,10 +465,10 @@ namespace oilnit_elliptic
 					nebr1 = neighbor[4];	nebr2 = neighbor[5];
 				}
 
-				if (abs(nebr2->nu - nebr1->nu) > 2.0 * cell.hnu + EQUALITY_TOLERANCE)
+				if (fabs(nebr2->nu - nebr1->nu) > 2.0 * cell.hnu + EQUALITY_TOLERANCE)
 					h = Cell::getH(cell.mu, cell.nu) * (nebr2->nu - nebr1->nu + 2.0 * M_PI);
 				else
-					h = Cell::getH(nebr2->mu, nebr2->nu) * nebr2->nu - Cell::getH(nebr1->mu, nebr1->nu) * nebr1->nu;
+					h = Cell::getH(cell.mu, cell.nu) * (nebr2->nu - nebr1->nu);
 			}
 			else if (axis == Z_AXIS)
 			{

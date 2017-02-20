@@ -11,6 +11,9 @@
 
 namespace vpp2d
 {
+	static const int R_AXIS = 0;
+	static const int Z_AXIS = 1;
+
 	typedef VarSimpleVPP<double> Variable;
 	typedef TapeVarSimpleVPP TapeVariable;
 	typedef NewCylCell2D<Variable, Skeleton_Props> Cell;

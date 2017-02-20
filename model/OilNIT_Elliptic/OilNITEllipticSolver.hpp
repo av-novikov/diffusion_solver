@@ -67,7 +67,7 @@ namespace oilnit_elliptic
 				else
 				{
 					int nu_idx = cell.num / ((model->cellsNum_z + 2) * (model->cellsNum_mu + 2));
-					stencil_idx[1] = model->getCellIdx(cell.num, model->cellsNum + cell.num - (2 * nu_idx + 1) * (model->cellsNum_z + 2) * (model->cellsNum_mu + 2));
+					stencil_idx[1] = model->getCellIdx(cell.num, model->cellsNum + cell.num - 2 * nu_idx * (model->cellsNum_z + 2) * (model->cellsNum_mu + 2));
 				}
 				stencil_idx[2] = model->getCellIdx(cell.num, cell.num + model->cellsNum_z + 2);
 				stencil_idx[3] = model->getCellIdx(cell.num, cell.num - 1);

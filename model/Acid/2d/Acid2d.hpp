@@ -11,6 +11,9 @@
 
 namespace acid2d
 {
+	static const int R_AXIS = 0;
+	static const int Z_AXIS = 1;
+
 	static const int stencil = basic2d::stencil;
 	static const int Lstencil = basic2d::Lstencil_injector;
 	static const int Rstencil = basic2d::Rstencil_injector;

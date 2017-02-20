@@ -81,7 +81,7 @@ void VTKSnapshotter<modelType>::dump_all(int i)
 template <>
 void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 {
-	using gasOil_rz::Cell;
+	using namespace gasOil_rz;
 
 	// Grid
 	vtkSmartPointer<vtkPolyData> grid =
@@ -231,7 +231,7 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 template <>
 void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 {
-	using acid2d::Cell;
+	using namespace acid2d;
 
 	// Grid
 	vtkSmartPointer<vtkPolyData> grid =
@@ -384,7 +384,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 template <>
 void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 {
-	using vpp2d::Cell;
+	using namespace vpp2d;
 
 	// Grid
 	vtkSmartPointer<vtkPolyData> grid =
@@ -524,7 +524,7 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 template <>
 void VTKSnapshotter<bing1d::Bingham1d>::dump_all(int i)
 {
-	using bing1d::Cell;
+	using namespace bing1d;
 
 	// Grid
 	auto grid = vtkSmartPointer<vtkPolyData>::New();
@@ -597,8 +597,7 @@ void VTKSnapshotter<bing1d::Bingham1d>::dump_all(int i)
 template <>
 void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 {
-	using gasOil_elliptic::Cell;
-	using gasOil_elliptic::Point;
+	using namespace gasOil_elliptic;
 
 	// Grid
 	auto grid =	vtkSmartPointer<vtkUnstructuredGrid>::New();
@@ -824,8 +823,7 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 }
 void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 {
-	using oilnit_elliptic::Cell;
-	using oilnit_elliptic::Point;
+	using namespace oilnit_elliptic;
 
 	// Grid
 	auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
@@ -879,7 +877,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 		// Left
 		for (j = 0; j < nz - 2; j++)
 		{
-			const Cell& cell = model->cells[l*nx*nz + j + 1];
+			Cell& cell = model->cells[l*nx*nz + j + 1];
 
 			if (cell.isUsed)
 			{
@@ -899,9 +897,14 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
 				pres->InsertNextValue(cell.u_next.p * P_dim);
-				vel[0] = 0.0;
-				vel[1] = 0.0;
-				vel[2] = 0.0;
+
+				model->getNeighbors(cell, neighbor);
+				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+					model->getVelocity(cell, neighbor, NU_AXIS),
+					model->getVelocity(cell, neighbor, Z_AXIS));
+				vel[0] = vel_cart[0] * r_dim / t_dim;
+				vel[1] = vel_cart[1] * r_dim / t_dim;
+				vel[2] = -vel_cart[2] * r_dim / t_dim;
 				vel_oil->InsertNextTuple(vel);
 			}
 		}
@@ -911,7 +914,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 		{
 			for (j = 0; j < nz - 2; j++)
 			{
-				const Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
+				Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
 
 				vtkSmartPointer<vtkHexahedron> hex =
 					vtkSmartPointer<vtkHexahedron>::New();
@@ -929,9 +932,14 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
 				pres->InsertNextValue(cell.u_next.p * P_dim);
-				vel[0] = 0.0;// r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
-				vel[1] = 0.0;// r_dim / t_dim * (sin(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) + cos(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
-				vel[2] = 0.0;// r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);
+
+				model->getNeighbors(cell, neighbor);
+				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+					model->getVelocity(cell, neighbor, NU_AXIS),
+					model->getVelocity(cell, neighbor, Z_AXIS));
+				vel[0] = vel_cart[0] * r_dim / t_dim;
+				vel[1] = vel_cart[1] * r_dim / t_dim;
+				vel[2] = -vel_cart[2] * r_dim / t_dim;
 				vel_oil->InsertNextTuple(vel);
 			}
 		}
@@ -940,7 +948,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 	// Last segment - left
 	for (j = 0; j < nz - 2; j++)
 	{
-		const Cell& cell = model->cells[l*nx*nz + j + 1];
+		Cell& cell = model->cells[l*nx*nz + j + 1];
 
 		if (cell.isUsed)
 		{
@@ -962,9 +970,12 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 			pres->InsertNextValue(cell.u_next.p * P_dim);
 
 			model->getNeighbors(cell, neighbor);
-			vel[0] = 0.0;
-			vel[1] = 0.0;
-			vel[2] = 0.0;
+			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+				model->getVelocity(cell, neighbor, NU_AXIS),
+				model->getVelocity(cell, neighbor, Z_AXIS));
+			vel[0] = vel_cart[0] * r_dim / t_dim;
+			vel[1] = vel_cart[1] * r_dim / t_dim;
+			vel[2] = -vel_cart[2] * r_dim / t_dim;
 			vel_oil->InsertNextTuple(vel);
 		}
 	}
@@ -974,7 +985,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 	{
 		for (j = 0; j < nz - 2; j++)
 		{
-			const Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
+			Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
 
 			vtkSmartPointer<vtkHexahedron> hex =
 				vtkSmartPointer<vtkHexahedron>::New();
@@ -994,9 +1005,12 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 			temp->InsertNextValue(cell.u_next.t * T_dim);
 			
 			model->getNeighbors(cell, neighbor);
-			vel[0] = 0.0;// r_dim / t_dim * (cos(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) - sin(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
-			vel[1] = 0.0;// r_dim / t_dim * (sin(cell.phi) * model->getOilVelocity(cell, NEXT, R_AXIS) + cos(cell.phi) * model->getOilVelocity(cell, NEXT, PHI_AXIS));
-			vel[2] = 0.0;// r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);
+			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+													model->getVelocity(cell, neighbor, NU_AXIS), 
+													model->getVelocity(cell, neighbor, Z_AXIS));
+			vel[0] = vel_cart[0] * r_dim / t_dim;
+			vel[1] = vel_cart[1] * r_dim / t_dim;
+			vel[2] = -vel_cart[2] * r_dim / t_dim;
 			vel_oil->InsertNextTuple(vel);
 		}
 	}

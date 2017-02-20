@@ -13,6 +13,9 @@
 
 namespace gasOil_rz
 {
+	static const int R_AXIS = 0;
+	static const int Z_AXIS = 1;
+
 	static const int stencil = 5;
 	static const int Lstencil = 3;
 	static const int Rstencil = 2;

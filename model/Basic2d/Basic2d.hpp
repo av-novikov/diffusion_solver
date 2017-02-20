@@ -11,6 +11,9 @@
 
 namespace basic2d
 {
+	static const int R_AXIS = 0;
+	static const int Z_AXIS = 1;
+
 	static const int stencil = 5;
 	static const int Lstencil_producer = 3;
 	static const int Rstencil_producer = 2;

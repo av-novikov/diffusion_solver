@@ -358,5 +358,4 @@ namespace gasOil_elliptic
 	};
 };
 
-
 #endif /* GASOILELLIPTIC_HPP_ */

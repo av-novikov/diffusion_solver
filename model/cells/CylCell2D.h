@@ -5,9 +5,6 @@
 #define ITER 1
 #define NEXT 2
 
-#define R_AXIS 0
-#define Z_AXIS 1
-
 #include "model/cells/AbstractCell.hpp"
 
 template <typename varType>

@@ -13,10 +13,6 @@
 #define WELL_BOT	7
 #define WELL_SIDE	8
 
-#define MU_AXIS 0
-#define NU_AXIS 1
-#define Z_AXIS 2
-
 template <typename varType, typename PropsType = EmptyStruct>
 class EllipticCell : public AbstractCell<varType>
 {
@@ -40,6 +36,12 @@ public:
 	inline std::array<double, 3> getCartesian() const
 	{
 		return { a * cosh(mu) * cos(nu), a * sinh(mu) * sin(nu), z };
+	};
+	inline std::array<double, 3> getVectorCartesian(double u_mu, double u_nu, double u_z) const
+	{
+		const double u_x = a * (sinh(mu) * cos(nu) * u_mu - cosh(mu) * sin(nu) * u_nu);
+		const double u_y = a * (cosh(mu) * sin(nu) * u_mu - sinh(mu) * cos(nu) * u_nu);
+		return{ u_x, u_y, u_z };
 	};
 
 	EllipticCell() : isUsed(true) {};

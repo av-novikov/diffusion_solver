@@ -99,7 +99,6 @@ using namespace std;
 
 	return props;
 }
-
 /*vpp2d::Properties* getProps()
 {
 	vpp2d::Properties* props = new vpp2d::Properties();
@@ -344,7 +343,7 @@ oilnit_elliptic::Properties* getProps()
 
 	tmp.skins.push_back(0.0);
 	//tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(1.0 * props->r_w);
+	tmp.radiuses_eff.push_back(0.0 * props->r_w);
 	//tmp.radiuses_eff.push_back(1.0 * props->r_w);
 
 	props->props_sk.push_back(tmp);
