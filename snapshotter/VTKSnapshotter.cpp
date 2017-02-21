@@ -25,7 +25,7 @@
 
 #include <cmath>
 
-#define VIEW_MULTIPLIER 0.01
+#define VIEW_MULTIPLIER 1
 
 using namespace std;
 

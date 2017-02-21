@@ -649,8 +649,8 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		}
 		else
 		{
-			dist1 = Cell::getH(cell.mu, cell.nu) * cell.mu - Cell::getH(beta1.mu, beta1.nu) * beta1.mu;
-			dist2 = Cell::getH(beta1.mu, beta1.nu) * beta1.mu - Cell::getH(beta2.mu, beta2.nu) * beta2.mu;
+			dist1 = Cell::getH(cell.mu + sign(beta1.mu - cell.mu) * cell.hmu / 2.0, cell.nu) * (cell.mu - beta1.mu);
+			dist2 = Cell::getH(beta1.mu + sign(beta2.mu - beta1.mu) * beta1.hmu / 2.0, beta1.nu) * (beta1.mu - beta2.mu);
 		}
 
 		trace_on(tleft);
