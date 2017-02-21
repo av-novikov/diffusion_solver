@@ -176,7 +176,7 @@ void OilNITEllipticSolver::doNextStep()
 			double mult = 0.9;
 			double H = H0;
 
-			while (H > H0 / 50.0 || H > 0.05)
+			while (H > H0 / 1000.0 || H > 0.05)
 			{
 				solveDq(mult);
 

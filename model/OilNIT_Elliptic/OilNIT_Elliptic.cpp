@@ -403,7 +403,7 @@ void OilNIT_Elliptic::buildWellCells()
 					(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
 				const Cell& cell = cells[idx];
 
-				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz,
+				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz / 2.0,
 					cell.hmu, cell.hnu, 0.0, WELL_TOP));
 				wellNebrMap[idx - 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx - 1, idx - 2);
@@ -416,7 +416,7 @@ void OilNIT_Elliptic::buildWellCells()
 					(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
 				const Cell& cell = cells[idx];
 
-				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz,
+				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz / 2.0,
 					cell.hmu, cell.hnu, 0.0, WELL_BOT));
 				wellNebrMap[idx + 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx + 1, idx + 2);
@@ -595,7 +595,7 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 			const Cell& beta = *neighbor[i];
 			const TapeVariableNIT& nebr = var[i + 1];
 			const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta), neighbor);
-		
+
 			h[0] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (cell.u_next.p - beta.u_next.p)) / getDistance(cell, beta);
 		}
 

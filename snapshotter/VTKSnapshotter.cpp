@@ -864,6 +864,8 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 	pres->SetName("pressure");
 	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
 	temp->SetName("temperature");
+	auto perm_xy = vtkSmartPointer<vtkDoubleArray>::New();
+	perm_xy->SetName("perm_xy");
 	auto vel_oil = vtkSmartPointer<vtkDoubleArray>::New();
 	vel_oil->SetName("oilVelocity");
 	vel_oil->SetNumberOfComponents(3);
@@ -897,6 +899,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
 				pres->InsertNextValue(cell.u_next.p * P_dim);
+				perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 				model->getNeighbors(cell, neighbor);
 				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
@@ -932,6 +935,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
 				pres->InsertNextValue(cell.u_next.p * P_dim);
+				perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 				model->getNeighbors(cell, neighbor);
 				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
@@ -968,6 +972,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 			temp->InsertNextValue(cell.u_next.t * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim);
+			perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 			model->getNeighbors(cell, neighbor);
 			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
@@ -1003,6 +1008,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 			pres->InsertNextValue(cell.u_next.p * P_dim);
 			temp->InsertNextValue(cell.u_next.t * T_dim);
+			perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 			
 			model->getNeighbors(cell, neighbor);
 			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
@@ -1019,6 +1025,7 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(pres);
 	fd->AddArray(temp);
+	fd->AddArray(perm_xy);
 	fd->AddArray(vel_oil);
 
 	// Writing

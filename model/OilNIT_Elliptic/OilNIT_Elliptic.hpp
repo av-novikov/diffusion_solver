@@ -356,6 +356,20 @@ namespace oilnit_elliptic
 				break;
 			}
 		};*/
+		inline double getPerm_mu(const Cell& cell) const
+		{
+			if (cos(cell.nu) > 0.0)
+				return cell.props->perm_mu;
+			else
+				return cell.props->perm_mu / 2.0;
+		};
+		inline double getPerm_z(const Cell& cell) const
+		{
+			if (cos(cell.nu) > 0.0)
+				return cell.props->perm_z;
+			else
+				return cell.props->perm_z / 2.0;
+		};
 		inline double getDistance(const Cell& cell1, const Cell& cell2) const
 		{
 			double dist;
@@ -381,8 +395,8 @@ namespace oilnit_elliptic
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE) {
 				const double dz1 = fabs(cell.z - sk_well->h_well);
 				const double dz2 = fabs(beta.z - sk_well->h_well);
-				k1 = (dz1 > cell.props->radius_eff_z ? cell.props->perm_z : cell.props->perm_eff_z);
-				k2 = (dz2 > beta.props->radius_eff_z ? beta.props->perm_z : beta.props->perm_eff_z);
+				k1 = (dz1 > cell.props->radius_eff_z ? getPerm_z(cell) : cell.props->perm_eff_z);
+				k2 = (dz2 > beta.props->radius_eff_z ? getPerm_z(beta) : beta.props->perm_eff_z);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
@@ -391,8 +405,8 @@ namespace oilnit_elliptic
 			}
 			else if (fabs(cell.mu - beta.mu) > EQUALITY_TOLERANCE ||
 				(sin(cell.nu) * sin(beta.nu) < 0.0 && fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE)) {
-				k1 = (cell.mu > cell.props->radius_eff_mu ? cell.props->perm_mu : cell.props->perm_eff_mu);
-				k2 = (beta.mu > beta.props->radius_eff_mu ? beta.props->perm_mu : beta.props->perm_eff_mu);
+				k1 = (cell.mu > cell.props->radius_eff_mu ? getPerm_mu(cell) : cell.props->perm_eff_mu);
+				k2 = (beta.mu > beta.props->radius_eff_mu ? getPerm_mu(beta) : beta.props->perm_eff_mu);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
@@ -407,8 +421,9 @@ namespace oilnit_elliptic
 						+ k2 * cell.hmu * Cell::getH(cell.mu, cell.nu));
 			}
 			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE) {
-				k1 = (cell.mu > cell.props->radius_eff_mu ? cell.props->perm_mu : cell.props->perm_eff_mu);
-				if (k1 == 0.0)
+				k1 = (cell.mu > cell.props->radius_eff_mu ? getPerm_mu(cell) : cell.props->perm_eff_mu);
+				k2 = (beta.mu > beta.props->radius_eff_mu ? getPerm_mu(beta) : beta.props->perm_eff_mu);
+				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
 				double nu;
@@ -418,9 +433,9 @@ namespace oilnit_elliptic
 					nu = cell.nu + sign(beta.nu - cell.nu) * cell.hnu / 2.0;
 				S = cell.hz * cell.hmu * Cell::getH(cell.mu, nu);
 
-				return 2.0 * k1 * S /
-					(beta.hnu * Cell::getH(beta.mu, beta.nu) +
-						+cell.hnu * Cell::getH(cell.mu, cell.nu));
+				return 2.0 * k1 * k2 * S /
+					(k1 * beta.hnu * Cell::getH(beta.mu, beta.nu) +
+						+ k2 * cell.hnu * Cell::getH(cell.mu, cell.nu));
 			}
 		};
 		inline adouble getDensity(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
@@ -443,12 +458,12 @@ namespace oilnit_elliptic
 		inline double getPerm(const Cell& cell, const int axis) const
 		{
 			if (axis == MU_AXIS)
-				return (cell.mu > cell.props->radius_eff_mu ? cell.props->perm_mu : cell.props->perm_eff_mu);
+				return (cell.mu > cell.props->radius_eff_mu ? getPerm_mu(cell) : cell.props->perm_eff_mu);
 			else if (axis == NU_AXIS)
-				return cell.props->perm_mu;
+				return getPerm_mu(cell);
 			else if (axis == Z_AXIS)
 				return (fabs(cell.z - sk_well->h_well) > cell.props->radius_eff_z ? 
-							cell.props->perm_z : 
+							getPerm_z(cell) : 
 							cell.props->perm_eff_z);
 		};
 		inline double getNablaP(Cell& cell, Cell** neighbor, const int axis)
@@ -566,10 +581,11 @@ namespace oilnit_elliptic
 		};
 		inline DivIndices getDivCoeff(Cell& cell, Cell& beta, Cell** neighbor)
 		{
-			double r1, r2, lambda, a;
+			double r1, r2, lambda, A, a;
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 			{
-				a = std::max(0.0, sign(cell.z - beta.z) * getA(cell, neighbor, Z_AXIS));
+				A = getA(cell, neighbor, Z_AXIS);
+				a = sign(A) * std::max(0.0, sign(cell.z - beta.z) * A);
 				r1 = cell.hz;		r2 = beta.hz;
 				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
 			}
@@ -581,14 +597,16 @@ namespace oilnit_elliptic
 					dmu = 1.0;
 				else
 					dmu = sign(cell.mu - beta.mu);
-				a = std::max(0.0, dmu * getA(cell, neighbor, MU_AXIS));
+				A = getA(cell, neighbor, MU_AXIS);
+				a = sign(A) * std::max(0.0, dmu * A);
 				r1 = cell.hmu * Cell::getH(cell.mu, cell.nu);
 				r2 = beta.hmu * Cell::getH(beta.mu, beta.nu);
 				lambda = (r1 * getLambda(beta, MU_AXIS) + r2 * getLambda(cell, MU_AXIS)) / (r1 + r2) / r1;
 			}
 			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE)
 			{
-				a = std::max(0.0, sign(cell.nu - beta.nu) * getA(cell, neighbor, NU_AXIS));
+				A = getA(cell, neighbor, NU_AXIS);
+				a = sign(A) * std::max(0.0, sign(cell.nu - beta.nu) * A);
 				r1 = cell.hnu * Cell::getH(cell.mu, cell.nu);
 				r2 = beta.hnu * Cell::getH(beta.mu, beta.nu);
 				lambda = (r1 * getLambda(beta, NU_AXIS) + r2 * getLambda(cell, NU_AXIS)) / (r1 + r2) / r1;
