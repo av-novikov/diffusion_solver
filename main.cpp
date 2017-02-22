@@ -342,9 +342,9 @@ oilnit_elliptic::Properties* getProps()
 	tmp.lambda_r = tmp.lambda_z = 0.0;// 5.0;
 	tmp.c = 1800.0;
 
-	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(5.0);
 	//tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(0.0 * props->r_w);
+	tmp.radiuses_eff.push_back(5.0 * props->r_w);
 	//tmp.radiuses_eff.push_back(0.0 * props->r_w);
 
 	props->props_sk.push_back(tmp);
