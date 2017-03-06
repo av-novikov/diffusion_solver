@@ -36,14 +36,6 @@ namespace gasOilnit_elliptic
 		double perm_mu;
 		// Permeability along vertical direction [mD]
 		double perm_z;
-		inline double getPerm_mu(const double mu) const
-		{
-			return (mu > radius_eff_mu ? perm_mu : perm_eff_mu);
-		};
-		inline double getPerm_z(const double z) const
-		{
-			return (z > radius_eff_z ? perm_z : perm_eff_z);
-		};
 
 		// Permeability of colmatage zone [mD]
 		std::vector<double> perms_eff;

@@ -48,9 +48,6 @@ namespace oilnit_elliptic
 		std::vector<Skeleton_Props> props_sk;
 		std::vector<Skeleton_Props>::iterator sk_well;
 		Oil_Props props_oil;
-		
-		// Heat of phase transition [J/kg]
-		double L;
 
 		double l;
 		int cellsNum_mu;
@@ -205,6 +202,13 @@ namespace oilnit_elliptic
 			else
 				return wellCells[wellNebrMap.at(num)];
 		};
+		inline double getDamagedPerm(const Skeleton_Props& props, const int i) const
+		{
+			const double R = log((cosh(M_PI * l / props.height) - cos(2.0 * M_PI * props.h_well / props.height)) / 
+								(cosh(M_PI * r_w / props.height) - cos(2.0 * M_PI * props.h_well / props.height)) * 
+								(cosh(M_PI * l / props.height) - 1.0) / (cosh(M_PI * r_w / props.height) - 1.0));
+			return props.perm_mu / (props.skins[i] / 0.08 / R / log(props.radiuses_eff[i] / r_w) + 1.0);
+		};
 		inline void getNeighbors(const Cell& cell, Cell** const neighbor)
 		{
 			// FIXME: Only for inner cells
@@ -279,96 +283,27 @@ namespace oilnit_elliptic
 				break;
 			}
 		};
-		/*inline void getStencil(const Cell& cell, Cell** const neighbor)
-		{
-			// FIXME: Only for inner cells
-			assert(cell.isUsed);
-			switch (cell.type)
-			{
-			case MIDDLE:
-				neighbor[0] = &getCell(cell.num);
-				// Special neighbor search for center cells
-				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
-					neighbor[1] = &getCell(cell.num, cell.num - cellsNum_z - 2);
-				else
-				{
-					int nu_idx = cell.num / ((cellsNum_z + 2) * (cellsNum_mu + 2));
-					neighbor[1] = &getCell(cell.num, cellsNum + cell.num - (2 * nu_idx + 1) * (cellsNum_z + 2) * (cellsNum_mu + 2));
-				}
-				neighbor[2] = &getCell(cell.num, cell.num + cellsNum_z + 2);
-				neighbor[3] = &getCell(cell.num, cell.num - 1);
-				neighbor[4] = &getCell(cell.num, cell.num + 1);
-
-				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
-					neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
-				else
-					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
-				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
-					neighbor[6] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
-				else
-					neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
-				break;
-
-			case MIDDLE_SIDE:
-				neighbor[0] = &getCell(cell.num);
-				neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
-				neighbor[2] = &getCell(cell.num, cell.num - 1);
-				neighbor[3] = &getCell(cell.num, cell.num + 1);
-
-				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2))
-					neighbor[4] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
-				else
-					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2));
-				if (cell.num < (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1))
-					neighbor[5] = &getCell(cell.num, cell.num + (cellsNum_mu + 2) * (cellsNum_z + 2));
-				else
-					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
-				break;
-
-			case RIGHT:
-				neighbor[0] = &getCell(cell.num);
-				neighbor[1] = &getCell(cell.num - cellsNum_z - 2);
-				break;
-
-			case TOP:
-				neighbor[0] = &getCell(cell.num);
-				neighbor[1] = &getCell(cell.num + 1);
-				break;
-
-			case BOTTOM:
-				neighbor[0] = &getCell(cell.num);
-				neighbor[1] = &getCell(cell.num - 1);
-				break;
-
-			case WELL_LAT:
-				neighbor[0] = &wellCells[cell.num];
-				neighbor[1] = &cells[nebrMap[cell.num].first];
-				break;
-
-			case WELL_TOP:
-				neighbor[0] = &wellCells[cell.num];
-				neighbor[1] = &cells[nebrMap[cell.num].first];
-				break;
-
-			case WELL_BOT:
-				neighbor[0] = &wellCells[cell.num];
-				neighbor[1] = &cells[nebrMap[cell.num].first];
-				break;
-			}
-		};*/
 		inline double getPerm_mu(const Cell& cell) const
 		{
+			const double dz = fabs(cell.z - sk_well->h_well);
+			const double kmu = ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu)
+									? cell.props->perm_eff_mu : cell.props->perm_mu);
+
 			if (cos(cell.nu) > 0.0)
-				return cell.props->perm_mu;
+				return kmu;
 			else
-				return cell.props->perm_mu / 2.0;
+				return kmu / 2.0;
 		};
 		inline double getPerm_z(const Cell& cell) const
 		{
+			const double dz = fabs(cell.z - sk_well->h_well);
+			const double kz = ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) 
+									? cell.props->perm_eff_z : cell.props->perm_z);
+
 			if (cos(cell.nu) > 0.0)
-				return cell.props->perm_z;
+				return kz;
 			else
-				return cell.props->perm_z / 2.0;
+				return kz / 2.0;
 		};
 		inline double getPerm_mu_eff(const Cell& cell) const
 		{
@@ -409,8 +344,8 @@ namespace oilnit_elliptic
 			const double dz2 = fabs(beta.z - sk_well->h_well);
 
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE) {
-				k1 = ((dz1 <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) ? getPerm_z_eff(cell) : getPerm_z(cell));
-				k2 = ((dz2 <= beta.props->radius_eff_z && beta.mu <= beta.props->radius_eff_mu) ? getPerm_z_eff(beta) : getPerm_z(beta));
+				k1 = getPerm_z(cell);
+				k2 = getPerm_z(beta);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
@@ -420,8 +355,8 @@ namespace oilnit_elliptic
 			else if (fabs(cell.mu - beta.mu) > EQUALITY_TOLERANCE ||
 				(sin(cell.nu) * sin(beta.nu) < 0.0 && fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE)) {
 
-				k1 = ((dz1 <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) ? getPerm_mu_eff(cell) : getPerm_mu(cell));
-				k2 = ((dz2 <= beta.props->radius_eff_z && beta.mu <= beta.props->radius_eff_mu) ? getPerm_mu_eff(beta) : getPerm_mu(beta));
+				k1 = getPerm_mu(cell);
+				k2 = getPerm_mu(beta);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
@@ -436,8 +371,8 @@ namespace oilnit_elliptic
 						+ k2 * cell.hmu * Cell::getH(cell.mu, cell.nu));
 			}
 			else if (fabs(cell.nu - beta.nu) > EQUALITY_TOLERANCE) {
-				k1 = ((dz1 <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) ? getPerm_mu_eff(cell) : getPerm_mu(cell));
-				k2 = ((dz2 <= beta.props->radius_eff_z && beta.mu <= beta.props->radius_eff_mu) ? getPerm_mu_eff(beta) : getPerm_mu(beta));
+				k1 = getPerm_mu(cell);
+				k2 = getPerm_mu(beta);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
@@ -472,14 +407,12 @@ namespace oilnit_elliptic
 
 		inline double getPerm(const Cell& cell, const int axis) const
 		{
-			const double dz = fabs(cell.z - sk_well->h_well);
-
 			if (axis == MU_AXIS)
-				return ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) ? getPerm_mu_eff(cell) : getPerm_mu(cell));
+				return getPerm_mu(cell);
 			else if (axis == NU_AXIS)
-				return ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) ? getPerm_mu_eff(cell) : getPerm_mu(cell));
+				return getPerm_mu(cell);
 			else if (axis == Z_AXIS)
-				return ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) ? getPerm_z_eff(cell) : getPerm_z(cell));
+				return getPerm_z(cell);
 		};
 		inline double getNablaP(Cell& cell, Cell** neighbor, const int axis)
 		{

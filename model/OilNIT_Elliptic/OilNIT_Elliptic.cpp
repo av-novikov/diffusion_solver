@@ -67,7 +67,7 @@ void OilNIT_Elliptic::setProps(Properties& props)
 		for (int j = 0; j < skeletonsNum; j++)
 		{
 			if (props_sk[j].radiuses_eff[i] > props.r_w)
-				props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[j].perm_mu * log(props.props_sk[j].radiuses_eff[i] / props.r_w) / (log(props.props_sk[j].radiuses_eff[i] / props.r_w) + props.props_sk[j].skins[i])));
+				props_sk[j].perms_eff.push_back(getDamagedPerm(props_sk[j], i));
 			else
 				props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[j].perm_mu));
 		}
@@ -529,9 +529,11 @@ void OilNIT_Elliptic::setPeriod(int period)
 	for (int i = 0; i < skeletonsNum; i++)
 	{
 		props_sk[i].radius_eff_mu = asinh(props_sk[i].radiuses_eff[period] / Cell::a);
-		props_sk[i].perm_eff_mu = props_sk[i].perms_eff[period];
 		props_sk[i].radius_eff_z = props_sk[i].radiuses_eff[period];
+
+		props_sk[i].perm_eff_mu = props_sk[i].perms_eff[period];
 		props_sk[i].perm_eff_z = props_sk[i].perm_z / props_sk[i].perm_mu * props_sk[i].perms_eff[period];
+
 		props_sk[i].skin = props_sk[i].skins[period];
 	}
 };
