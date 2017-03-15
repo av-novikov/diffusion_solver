@@ -56,7 +56,7 @@ namespace gasOil_elliptic
 		std::vector<int> stencil_idx;
 		inline void getMatrixStencil(const Cell& cell)
 		{
-			if (cell.type == MIDDLE)
+			if (cell.type == Type::MIDDLE)
 			{
 				stencil_idx.resize(7);
 				stencil_idx[0] = cell.num;
@@ -86,7 +86,7 @@ namespace gasOil_elliptic
 					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
 				//return stencil_idx;
 			}
-			else if (cell.type == MIDDLE_SIDE)
+			else if (cell.type == Type::MIDDLE_SIDE)
 			{
 				stencil_idx.resize(6);
 				stencil_idx[0] = cell.num;
@@ -108,21 +108,21 @@ namespace gasOil_elliptic
 						(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
 				//return stencil_idx;
 			}
-			else if (cell.type == RIGHT)
+			else if (cell.type == Type::RIGHT)
 			{
 				stencil_idx.resize(2);
 				stencil_idx[0] = cell.num;
 				stencil_idx[1] = cell.num - model->cellsNum_z - 2;
 				//return stencil_idx;
 			}
-			else if (cell.type == TOP)
+			else if (cell.type == Type::TOP)
 			{
 				stencil_idx.resize(2);
 				stencil_idx[0] = cell.num;
 				stencil_idx[1] = cell.num + 1;
 				//return stencil_idx;
 			}
-			else if (cell.type == BOTTOM)
+			else if (cell.type == Type::BOTTOM)
 			{
 				stencil_idx.resize(2);
 				stencil_idx[0] = cell.num;

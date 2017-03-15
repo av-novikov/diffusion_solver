@@ -3,16 +3,6 @@
 
 #include "model/cells/AbstractCell.hpp"
 
-#define MIDDLE		0
-#define MIDDLE_SIDE	1
-#define RIGHT		2
-#define TOP			3
-#define BOTTOM		4
-#define WELL_LAT	5
-#define WELL_TOP	6
-#define WELL_BOT	7
-#define WELL_SIDE	8
-
 template <typename varType, typename PropsType = EmptyStruct>
 class EllipticCell : public AbstractCell<varType>
 {
@@ -31,7 +21,6 @@ public:
 
 	PropsType* props;
 	bool isUsed;
-	const int type;
 
 	inline std::array<double, 3> getCartesian() const
 	{
@@ -45,7 +34,7 @@ public:
 	};
 
 	EllipticCell() : isUsed(true) {};
-	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz, int _type) : AbstractCell<varType>(_num), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz), type(_type)
+	EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz, const Type _type) : AbstractCell<varType>(_num, _type), mu(_mu), nu(_nu), z(_z), hmu(_hmu), hnu(_hnu), hz(_hz)
 	{
 		V = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu)) * hmu * hnu * hz;
 

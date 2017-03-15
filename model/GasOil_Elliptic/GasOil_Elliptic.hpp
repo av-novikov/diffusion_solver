@@ -26,6 +26,7 @@ namespace gasOil_elliptic
 	typedef EllipticCell<Variable, Skeleton_Props> Cell;
 	typedef Cell::Point Point;
 	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
+	typedef Cell::Type Type;
 
 	class GasOil_Elliptic : public AbstractModel<Variable, Properties, TCell, GasOil_Elliptic>
 	{
@@ -122,7 +123,7 @@ namespace gasOil_elliptic
 
 			switch (cell.type)
 			{
-			case MIDDLE:
+			case Type::MIDDLE:
 				// Special neighbor search for center cells
 				if(cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
 					neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
@@ -145,7 +146,7 @@ namespace gasOil_elliptic
 					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case MIDDLE_SIDE:
+			case Type::MIDDLE_SIDE:
 				neighbor[0] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[1] = &getCell(cell.num, cell.num - 1);
 				neighbor[2] = &getCell(cell.num, cell.num + 1);
@@ -160,29 +161,29 @@ namespace gasOil_elliptic
 					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case RIGHT:
+			case Type::RIGHT:
 				neighbor[0] = &getCell(cell.num - cellsNum_z - 2);
 				break;
 
-			case TOP:
+			case Type::TOP:
 				neighbor[0] = &getCell(cell.num + 1);
 				break;
 
-			case BOTTOM:
+			case Type::BOTTOM:
 				neighbor[0] = &getCell(cell.num - 1);
 				break;
 
-			case WELL_LAT:
+			case Type::WELL_LAT:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_TOP:
+			case Type::WELL_TOP:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_BOT:
+			case Type::WELL_BOT:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
@@ -194,7 +195,7 @@ namespace gasOil_elliptic
 			assert(cell.isUsed);
 			switch (cell.type)
 			{
-			case MIDDLE:
+			case Type::MIDDLE:
 				neighbor[0] = &getCell(cell.num);
 				// Special neighbor search for center cells
 				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
@@ -218,7 +219,7 @@ namespace gasOil_elliptic
 					neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case MIDDLE_SIDE:
+			case Type::MIDDLE_SIDE:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[2] = &getCell(cell.num, cell.num - 1);
@@ -234,34 +235,34 @@ namespace gasOil_elliptic
 					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case RIGHT:
+			case Type::RIGHT:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num - cellsNum_z - 2);
 				break;
 
-			case TOP:
+			case Type::TOP:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num + 1);
 				break;
 
-			case BOTTOM:
+			case Type::BOTTOM:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num - 1);
 				break;
 
-			case WELL_LAT:
+			case Type::WELL_LAT:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[ nebrMap[cell.num].first ];
 				neighbor[2] = &cells[ nebrMap[cell.num].second ];
 				break;
 
-			case WELL_TOP:
+			case Type::WELL_TOP:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
 				neighbor[2] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_BOT:
+			case Type::WELL_BOT:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
 				neighbor[2] = &cells[nebrMap[cell.num].second];

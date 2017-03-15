@@ -15,8 +15,8 @@ namespace acid2d
 	static const int Z_AXIS = 1;
 
 	static const int stencil = basic2d::stencil;
-	static const int Lstencil = basic2d::Lstencil_injector;
-	static const int Rstencil = basic2d::Rstencil_injector;
+	static const int Lstencil = basic2d::Lstencil;
+	static const int Rstencil = basic2d::Rstencil;
 	static const int Vstencil = basic2d::Vstencil;
 
 	typedef VarSimpleAcid Variable;
@@ -34,17 +34,11 @@ namespace acid2d
 		friend class Acid2dSolver;
 
 	protected:
-		// Continuum properties
-		int skeletonsNum;
+
 		CurrentReaction reac;
 		std::vector<Skeleton_Props> props_sk;
 		Liquid_Props props_l;
 		Gas_Props props_g;
-
-		// Number of cells in radial direction
-		int cellsNum_r;
-		// Number of cells in vertical direction
-		int cellsNum_z;
 
 		void setProps(Properties& props);
 		void makeDimLess();
@@ -90,9 +84,9 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s).value() / props_l.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s, 0.0).value() / props_l.visc * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_l.getKr(var->s).value() / props_l.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_l.getKr(var->s, 0.0).value() / props_l.visc * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getGasVelocity(Cell& cell, int varNum, int axis)
@@ -114,17 +108,16 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s).value() / props_g.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s, 0.0).value() / props_g.visc * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->s).value() / props_g.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->s, 0.0).value() / props_g.visc * getNablaP(cell, varNum, axis);
 			}
 		};
 
-		void solve_eqMiddle(int cur);
-		void solve_eqLeft(int cur);
-		void solve_eqRight(int cur);
-		void solve_eqVertical(int cur);
-		void setVariables(int cur);
+		void solve_eqMiddle(const Cell& cell);
+		void solve_eqLeft(const Cell& cell);
+		void solve_eqRight(const Cell& cell);
+		void solve_eqVertical(const Cell& cell);
 
 	public:
 		Acid2d();
@@ -132,6 +125,7 @@ namespace acid2d
 
 		double* x;
 		double* y;
+		double** jac;
 
 		//double getRate(int cur);
 	};

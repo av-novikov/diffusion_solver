@@ -15,10 +15,8 @@ namespace basic2d
 	static const int Z_AXIS = 1;
 
 	static const int stencil = 5;
-	static const int Lstencil_producer = 3;
-	static const int Rstencil_producer = 2;
-	static const int Lstencil_injector = 2;
-	static const int Rstencil_injector = 3;
+	static const int Lstencil = 3;
+	static const int Rstencil = 3;
 	static const int Vstencil = 2;
 
 	template <typename varType, typename propsType, typename sk_propsType,
@@ -29,9 +27,10 @@ namespace basic2d
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
-	
 	public:
 		typedef cellType<varType> Cell;
+		typename typedef Cell::Type Type;
+
 	protected:
 
 		std::vector<sk_propsType> props_sk;
@@ -186,13 +185,13 @@ namespace basic2d
 			double cm_r = r_w;
 
 			// Left border
-			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0));
+			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0, Type::TOP));
 			for (int i = 0; i < cellsNum_z; i++)
 			{
 				hz = (props_sk[skel_idx].h2 - props_sk[skel_idx].h1) / (double)(props_sk[skel_idx].cellsNum_z);
 				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 
-				cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, hz));
+				cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, hz, Type::WELL_LAT));
 				cells_z++;
 
 				if (cells_z >= props_sk[skel_idx].cellsNum_z)
@@ -201,7 +200,7 @@ namespace basic2d
 					skel_idx++;
 				}
 			}
-			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0));
+			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0, Type::BOTTOM));
 
 			// Middle cells
 			for (int j = 0; j < cellsNum_r; j++)
@@ -211,13 +210,13 @@ namespace basic2d
 				cm_r = r_prev * (exp(logStep) + 1.0) / 2.0;
 				hr = r_prev * (exp(logStep) - 1.0);
 
-				cells.push_back(Cell(counter++, cm_r, cm_z, hr, 0.0));
+				cells.push_back(Cell(counter++, cm_r, cm_z, hr, 0.0, Type::TOP));
 				for (int i = 0; i < cellsNum_z; i++)
 				{
 					hz = (props_sk[skel_idx].h2 - props_sk[skel_idx].h1) / (double)(props_sk[skel_idx].cellsNum_z);
 					cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 
-					cells.push_back(Cell(counter++, cm_r, cm_z, hr, hz));
+					cells.push_back(Cell(counter++, cm_r, cm_z, hr, hz, Type::MIDDLE));
 					Volume += cells[cells.size() - 1].V;
 					cells_z++;
 
@@ -227,7 +226,7 @@ namespace basic2d
 						skel_idx++;
 					}
 				}
-				cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, hr, 0.0));
+				cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, hr, 0.0, Type::BOTTOM));
 
 				r_prev = r_prev * exp(logStep);
 			}
@@ -236,14 +235,14 @@ namespace basic2d
 			cm_z = props_sk[0].h1;
 			cm_r = r_e;
 
-			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0));
+			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0, Type::TOP));
 			skel_idx = 0;	cells_z = 0;
 			for (int i = 0; i < cellsNum_z; i++)
 			{
 				hz = (props_sk[skel_idx].h2 - props_sk[skel_idx].h1) / (double)(props_sk[skel_idx].cellsNum_z);
 				cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 
-				cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, hz));
+				cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, hz, Type::RIGHT));
 				cells_z++;
 
 				if (cells_z >= props_sk[skel_idx].cellsNum_z)
@@ -252,7 +251,7 @@ namespace basic2d
 					skel_idx++;
 				}
 			}
-			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0));
+			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0, Type::BOTTOM));
 		}
 		void setPerforated()
 		{
@@ -361,6 +360,80 @@ namespace basic2d
 			}
 			exit(-1);
 		};
+
+		void setVariables(const Cell& cell)
+		{
+			if (cell.type == Type::WELL_LAT)
+			{
+				// Left
+				const Variable& next = cell.u_next;
+				const Variable& nebr1 = cells[cell.num + cellsNum_z + 2].u_next;
+				const Variable& nebr2 = cells[cell.num + 2 * cellsNum_z + 4].u_next;
+
+				for (int i = 0; i < Variable::size; i++)
+				{
+					x[i] = next.values[i];
+					x[Variable::size + i] = nebr1.values[i];
+					x[2 * Variable::size + i] = nebr2.values[i];
+				}
+			}
+			else if (cell.type == Type::RIGHT)
+			{
+				// Right
+				const Variable& next = cells[cell.num].u_next;
+				const Variable& nebr1 = cells[cell.num - cellsNum_z - 2].u_next;
+				const Variable& nebr2 = cells[cell.num - 2 * cellsNum_z - 4].u_next;
+
+				for (int i = 0; i < Variable::size; i++)
+				{
+					x[i] = next.values[i];
+					x[Variable::size + i] = nebr1.values[i];
+					x[2 * Variable::size + i] = nebr2.values[i];
+				}
+			}
+			else if (cell.type == Type::TOP)
+			{
+				// Top
+				const Variable& next = cells[cell.num].u_next;
+				const Variable& nebr = cells[cell.num + 1].u_next;
+
+				for (int i = 0; i < Variable::size; i++)
+				{
+					x[i] = next.values[i];
+					x[Variable::size + i] = nebr.values[i];
+				}
+			}
+			else if (cell.type == Type::BOTTOM)
+			{
+				// Bottom
+				const Variable& next = cells[cell.num].u_next;
+				const Variable& nebr = cells[cell.num - 1].u_next;
+
+				for (int i = 0; i < Variable::size; i++)
+				{
+					x[i] = next.values[i];
+					x[Variable::size + i] = nebr.values[i];
+				}
+			}
+			else if (cell.type == Type::MIDDLE)
+			{
+				// Middle
+				const Variable& next = cells[cell.num].u_next;
+				int neighbor[stencil-1];
+				getNeighborIdx(cell.num, neighbor);
+
+				for (int i = 0; i < Variable::size; i++)
+				{
+					x[i] = next.values[i];
+
+					for (int j = 0; j < 4; j++)
+					{
+						const Variable& nebr = cells[neighbor[j]].u_next;
+						x[(j + 1) * Variable::size + i] = nebr.values[i];
+					}
+				}
+			}
+		}
 
 	public:
 		Basic2d() {};

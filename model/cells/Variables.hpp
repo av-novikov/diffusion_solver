@@ -84,6 +84,32 @@ struct Var2phaseNIT
 	bool SATUR;
 };
 
+struct VarBlackOil
+{
+	static const int size = 4;
+
+	union {
+		double values[4];
+		struct
+		{
+			double p;
+			double s_w;
+			double s_o;
+			double p_bub;
+		};
+	};
+	bool SATUR;
+};
+struct TapeVarBlackOil
+{
+	static const int size = 4;
+
+	adouble p;
+	adouble s_w;
+	adouble s_o;
+	adouble p_bub;
+};
+
 struct VarSimpleAcid
 {
 	static const int size = 5;
@@ -102,7 +128,7 @@ struct VarSimpleAcid
 };
 struct TapeVarSimpleAcid
 {
-	static const int size = 3;
+	static const int size = 5;
 
 	adouble m;
 	adouble p;

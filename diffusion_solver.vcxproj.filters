@@ -48,9 +48,6 @@
     <ClInclude Include="model\cells\RadialCell.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="props\Scene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -102,15 +99,54 @@
     <ClInclude Include="model\Bingham1d\BingSolver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="model\cells\EllipticCell.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\GasOil_Elliptic\Properties.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\GasOil_Elliptic\GasOil_Elliptic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\GasOil_Elliptic\GasOilEllipticSolver.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Basic2d\Basic2d.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Basic2d\Properties.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Acid\2d\Properties.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Acid\2d\Reactions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\GasOilNIT_Elliptic\GasOilNIT_Elliptic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\GasOilNIT_Elliptic\GasOilNITEllipticSolver.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\GasOilNIT_Elliptic\Properties.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\OilNIT_Elliptic\OilNIT_Elliptic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\OilNIT_Elliptic\OilNITEllipticSolver.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\BlackOil_RZ\BlackOil_RZ.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model\BlackOil_RZ\Properties.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="model\AbstractModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="model\AbstractSolver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="model\cells\CylCell3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="model\GasOil_RZ\GasOil2DSolver.cpp">
@@ -156,6 +192,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="model\Bingham1d\BingSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\GasOil_Elliptic\GasOil_Elliptic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\GasOil_Elliptic\GasOilEllipticSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\GasOilNIT_Elliptic\GasOilNIT_Elliptic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\GasOilNIT_Elliptic\GasOilNITEllipticSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\OilNIT_Elliptic\OilNIT_Elliptic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\OilNIT_Elliptic\OilNITEllipticSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model\BlackOil_RZ\BlackOil_RZ.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

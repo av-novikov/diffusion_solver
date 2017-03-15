@@ -31,6 +31,7 @@ namespace oilnit_elliptic
 	typedef TapeVar1PhaseNIT TapeVariableNIT;
 	typedef EllipticCell<Variable, Skeleton_Props> Cell;
 	typedef Cell::Point Point;
+	typedef Cell::Type Type;
 	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
 
 	class OilNIT_Elliptic : public AbstractModel<Variable, Properties, TCell, OilNIT_Elliptic>
@@ -73,13 +74,13 @@ namespace oilnit_elliptic
 		inline const std::vector<int> getPerforationIndices(const int idx)
 		{
 			const Cell& cell = wellCells[idx];
-			if (cell.type == WELL_LAT)
+			if (cell.type == Type::WELL_LAT)
 				if (cell.nu == 0.0 || cell.nu == M_PI)
 					return{ idx, idx + cellsNum_nu, idx + 2 * cellsNum_nu };
 				else
 					return{ idx, cellsNum_nu - idx, cellsNum_nu + idx,
 							2 * cellsNum_nu - idx, 2 * cellsNum_nu + idx, 3 * cellsNum_nu - idx };
-			else if (cell.type == WELL_TOP)
+			else if (cell.type == Type::WELL_TOP)
 				return{ idx - cellsNum_nu, 2 * cellsNum_nu - idx,
 						idx, 3 * cellsNum_nu - idx, cellsNum_nu + idx, 4 * cellsNum_nu - idx };
 		};
@@ -87,7 +88,7 @@ namespace oilnit_elliptic
 		{
 			const Cell& cell = wellCells[idx];
 			
-			if (cell.type == WELL_LAT)
+			if (cell.type == Type::WELL_LAT)
 				if (cell.nu == 0.0 || cell.nu == M_PI)
 					return{ 0, cellsNum_nu / 2};
 				else
@@ -102,7 +103,7 @@ namespace oilnit_elliptic
 		{
 			std::vector<int> indices;
 			const Cell& cell = wellCells[idx];
-			if (cell.type == WELL_LAT)
+			if (cell.type == Type::WELL_LAT)
 			{
 				if (cell.nu == 0.0 || cell.nu == M_PI_2)
 				{
@@ -119,7 +120,7 @@ namespace oilnit_elliptic
 					indices[3] = cellsNum_nu / 2 - idx;
 				}
 			}
-			else if (cell.type == WELL_TOP)
+			else if (cell.type == Type::WELL_TOP)
 			{
 				const int topStartIdx = cellsNum_nu;
 				const int botStartIdx = 2 * cellsNum_nu;
@@ -216,7 +217,7 @@ namespace oilnit_elliptic
 
 			switch (cell.type)
 			{
-			case MIDDLE:
+			case Type::MIDDLE:
 				// Special neighbor search for center cells
 				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
 					neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
@@ -240,7 +241,7 @@ namespace oilnit_elliptic
 					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case MIDDLE_SIDE:
+			case Type::MIDDLE_SIDE:
 				neighbor[0] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[1] = &getCell(cell.num, cell.num - 1);
 				neighbor[2] = &getCell(cell.num, cell.num + 1);
@@ -255,29 +256,29 @@ namespace oilnit_elliptic
 					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case RIGHT:
+			case Type::RIGHT:
 				neighbor[0] = &getCell(cell.num - cellsNum_z - 2);
 				break;
 
-			case TOP:
+			case Type::TOP:
 				neighbor[0] = &getCell(cell.num + 1);
 				break;
 
-			case BOTTOM:
+			case Type::BOTTOM:
 				neighbor[0] = &getCell(cell.num - 1);
 				break;
 
-			case WELL_LAT:
+			case Type::WELL_LAT:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_TOP:
+			case Type::WELL_TOP:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_BOT:
+			case Type::WELL_BOT:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
@@ -422,7 +423,7 @@ namespace oilnit_elliptic
 
 			if(axis == MU_AXIS)
 			{
-				if (cell.type == MIDDLE_SIDE)
+				if (cell.type == Type::MIDDLE_SIDE)
 				{
 					nebr1 = &cell;	nebr2 = neighbor[0];
 				}
@@ -446,7 +447,7 @@ namespace oilnit_elliptic
 			}
 			else if (axis == NU_AXIS)
 			{
-				if (cell.type == MIDDLE_SIDE)
+				if (cell.type == Type::MIDDLE_SIDE)
 				{
 					nebr1 = neighbor[3];	nebr2 = neighbor[4];
 				}
@@ -462,7 +463,7 @@ namespace oilnit_elliptic
 			}
 			else if (axis == Z_AXIS)
 			{
-				if (cell.type == MIDDLE_SIDE)
+				if (cell.type == Type::MIDDLE_SIDE)
 				{
 					nebr1 = neighbor[1];	nebr2 = neighbor[2];
 				}

@@ -29,6 +29,7 @@ namespace gasOilnit_elliptic
 	typedef TapeVarGasOil TapeVariable;
 	typedef EllipticCell<Variable, Skeleton_Props> Cell;
 	typedef Cell::Point Point;
+	typedef Cell::Type Type;
 	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
 
 	class GasOilNIT_Elliptic : public AbstractModel<Variable, Properties, TCell, GasOilNIT_Elliptic>
@@ -129,7 +130,7 @@ namespace gasOilnit_elliptic
 
 			switch (cell.type)
 			{
-			case MIDDLE:
+			case Type::MIDDLE:
 				// Special neighbor search for center cells
 				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
 					neighbor[0] = &getCell(cell.num, cell.num - cellsNum_z - 2);
@@ -152,7 +153,7 @@ namespace gasOilnit_elliptic
 					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case MIDDLE_SIDE:
+			case Type::MIDDLE_SIDE:
 				neighbor[0] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[1] = &getCell(cell.num, cell.num - 1);
 				neighbor[2] = &getCell(cell.num, cell.num + 1);
@@ -167,29 +168,29 @@ namespace gasOilnit_elliptic
 					neighbor[4] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case RIGHT:
+			case Type::RIGHT:
 				neighbor[0] = &getCell(cell.num - cellsNum_z - 2);
 				break;
 
-			case TOP:
+			case Type::TOP:
 				neighbor[0] = &getCell(cell.num + 1);
 				break;
 
-			case BOTTOM:
+			case Type::BOTTOM:
 				neighbor[0] = &getCell(cell.num - 1);
 				break;
 
-			case WELL_LAT:
+			case Type::WELL_LAT:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_TOP:
+			case Type::WELL_TOP:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_BOT:
+			case Type::WELL_BOT:
 				neighbor[0] = &cells[nebrMap[cell.num].first];
 				neighbor[1] = &cells[nebrMap[cell.num].second];
 				break;
@@ -201,7 +202,7 @@ namespace gasOilnit_elliptic
 			assert(cell.isUsed);
 			switch (cell.type)
 			{
-			case MIDDLE:
+			case Type::MIDDLE:
 				neighbor[0] = &getCell(cell.num);
 				// Special neighbor search for center cells
 				if (cell.num % ((cellsNum_mu + 2) * (cellsNum_z + 2)) > cellsNum_z + 1)
@@ -225,7 +226,7 @@ namespace gasOilnit_elliptic
 					neighbor[6] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case MIDDLE_SIDE:
+			case Type::MIDDLE_SIDE:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num, cell.num + cellsNum_z + 2);
 				neighbor[2] = &getCell(cell.num, cell.num - 1);
@@ -241,34 +242,34 @@ namespace gasOilnit_elliptic
 					neighbor[5] = &getCell(cell.num, cell.num - (cellsNum_mu + 2) * (cellsNum_z + 2) * (cellsNum_nu - 1));
 				break;
 
-			case RIGHT:
+			case Type::RIGHT:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num - cellsNum_z - 2);
 				break;
 
-			case TOP:
+			case Type::TOP:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num + 1);
 				break;
 
-			case BOTTOM:
+			case Type::BOTTOM:
 				neighbor[0] = &getCell(cell.num);
 				neighbor[1] = &getCell(cell.num - 1);
 				break;
 
-			case WELL_LAT:
+			case Type::WELL_LAT:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
 				neighbor[2] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_TOP:
+			case Type::WELL_TOP:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
 				neighbor[2] = &cells[nebrMap[cell.num].second];
 				break;
 
-			case WELL_BOT:
+			case Type::WELL_BOT:
 				neighbor[0] = &wellCells[cell.num];
 				neighbor[1] = &cells[nebrMap[cell.num].first];
 				neighbor[2] = &cells[nebrMap[cell.num].second];
@@ -365,7 +366,7 @@ namespace gasOilnit_elliptic
 
 			if(axis == MU_AXIS)
 			{
-				if (cell.type == MIDDLE_SIDE)
+				if (cell.type == Type::MIDDLE_SIDE)
 				{
 					nebr1 = &cell;	nebr2 = neighbor[0];
 				}
@@ -386,7 +387,7 @@ namespace gasOilnit_elliptic
 			}
 			else if (axis == NU_AXIS)
 			{
-				if (cell.type == MIDDLE_SIDE)
+				if (cell.type == Type::MIDDLE_SIDE)
 				{
 					nebr1 = neighbor[3];	nebr2 = neighbor[4];
 				}
@@ -402,7 +403,7 @@ namespace gasOilnit_elliptic
 			}
 			else if (axis == Z_AXIS)
 			{
-				if (cell.type == MIDDLE_SIDE)
+				if (cell.type == Type::MIDDLE_SIDE)
 				{
 					nebr1 = neighbor[1];	nebr2 = neighbor[2];
 				}
@@ -501,7 +502,7 @@ namespace gasOilnit_elliptic
 			H = ( cell.props->getPoro(next.p).value() * next.s * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() - 
 				cell.props->getPoro(next.p).value() * next.s * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() ) / ht;
 
-			const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
+			const int nebrNum = (cell.type == Type::MIDDLE) ? 6 : 5;
 			for (int i = 0; i < nebrNum; i++)
 			{
 				const Cell& beta = *neighbor[i];

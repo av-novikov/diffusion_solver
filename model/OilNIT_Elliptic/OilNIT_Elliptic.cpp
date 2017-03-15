@@ -221,7 +221,7 @@ void OilNIT_Elliptic::buildGridLog()
 		z_prev2 = r_w;
 
 		// Left border
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, 0.0, TOP));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, 0.0, Type::TOP));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
 			if (!sk_it->isWellHere)
@@ -248,9 +248,9 @@ void OilNIT_Elliptic::buildGridLog()
 			}
 
 			if (k % (cellsNum_nu / 2) != 0)
-				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, MIDDLE));
+				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, Type::MIDDLE));
 			else
-				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, MIDDLE_SIDE));
+				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, mu_w, hnu, hz, Type::MIDDLE_SIDE));
 			cells_z++;
 
 			if (cells_z >= sk_it->cellsNum_z)
@@ -259,7 +259,7 @@ void OilNIT_Elliptic::buildGridLog()
 				++sk_it;
 			}
 		}
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, mu_w, hnu, 0.0, BOTTOM));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, mu_w, hnu, 0.0, Type::BOTTOM));
 
 		// Middle cells
 		for (int j = 0; j < cellsNum_mu; j++)
@@ -271,7 +271,7 @@ void OilNIT_Elliptic::buildGridLog()
 			z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 			z_prev2 = r_w;
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, 0.0, TOP));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, 0.0, Type::TOP));
 			for (int i = 0; i < cellsNum_z; i++)
 			{
 				if (!sk_it->isWellHere)
@@ -297,7 +297,7 @@ void OilNIT_Elliptic::buildGridLog()
 					cm_z += (cells[cells.size() - 1].hz + hz) / 2.0;
 				}
 
-				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, hz, MIDDLE));
+				cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, hmu, hnu, hz, Type::MIDDLE));
 				Volume += cells[cells.size() - 1].V;
 				cells_z++;
 
@@ -307,7 +307,7 @@ void OilNIT_Elliptic::buildGridLog()
 					++sk_it;
 				}
 			}
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, hmu, hnu, 0.0, BOTTOM));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, hmu, hnu, 0.0, Type::BOTTOM));
 
 			r_prev *= exp(logStep);
 		}
@@ -319,7 +319,7 @@ void OilNIT_Elliptic::buildGridLog()
 		z_prev1 = (sk_well->h_well - sk_well->h1) * pow((sk_well->h_well - sk_well->h1) / r_w, -2.0 / (double)(sk_well->cellsNum_z - 1));
 		z_prev2 = r_w;
 
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0, RIGHT));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, 0.0, Type::RIGHT));
 		for (int i = 0; i < cellsNum_z; i++)
 		{
 			if (!sk_it->isWellHere)
@@ -346,7 +346,7 @@ void OilNIT_Elliptic::buildGridLog()
 
 			}
 
-			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz, RIGHT));
+			cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z, 0.0, hnu, hz, Type::RIGHT));
 			cells_z++;
 
 			if (cells_z >= sk_it->cellsNum_z)
@@ -355,7 +355,7 @@ void OilNIT_Elliptic::buildGridLog()
 				++sk_it;
 			}
 		}
-		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0, RIGHT));
+		cells.push_back(Cell(counter++, cm_mu, cm_nu, cm_z + hz / 2.0, 0.0, hnu, 0.0, Type::RIGHT));
 	}
 
 	setUnused();
@@ -391,7 +391,7 @@ void OilNIT_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu + cell.hmu / 2.0, cell.nu, cell.z,
-					0.0, cell.hnu, cell.hz, WELL_LAT));
+					0.0, cell.hnu, cell.hz, Type::WELL_LAT));
 				wellNebrMap[idx + cellsNum_z + 2] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx + cellsNum_z + 2, idx + 2 * cellsNum_z + 4);
 			}
@@ -404,7 +404,7 @@ void OilNIT_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z - cell.hz / 2.0,
-					cell.hmu, cell.hnu, 0.0, WELL_TOP));
+					cell.hmu, cell.hnu, 0.0, Type::WELL_TOP));
 				wellNebrMap[idx - 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx - 1, idx - 2);
 			}
@@ -417,7 +417,7 @@ void OilNIT_Elliptic::buildWellCells()
 				const Cell& cell = cells[idx];
 
 				wellCells.push_back(Cell(counter, cell.mu, cell.nu, cell.z + cell.hz / 2.0,
-					cell.hmu, cell.hnu, 0.0, WELL_BOT));
+					cell.hmu, cell.hnu, 0.0, Type::WELL_BOT));
 				wellNebrMap[idx + 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx + 1, idx + 2);
 			}
@@ -437,7 +437,7 @@ void OilNIT_Elliptic::setPerforated()
 			{
 				Qcell[ind] = 0.0;
 				const Cell& cell = wellCells[ind];
-				if(cell.type == WELL_LAT)
+				if(cell.type == Type::WELL_LAT)
 					height_perf += Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hz;
 				else
 					height_perf += Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
@@ -490,7 +490,7 @@ void OilNIT_Elliptic::setPeriod(int period)
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)
 			{
 				const Cell& cell = wellCells[it->first];
-				if (cell.type == WELL_LAT)
+				if (cell.type == Type::WELL_LAT)
 					S = Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hz;
 				else
 					S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
@@ -572,7 +572,7 @@ double OilNIT_Elliptic::getRate(int cur) const
 void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 {
 	const Skeleton_Props& props = *cell.props;
-	const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
+	const int nebrNum = (cell.type == Type::MIDDLE) ? 6 : 5;
 
 	if (val == TEMP)
 	{
@@ -797,7 +797,7 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 {
 	assert(cell.isUsed);
 
-	if (cell.type == WELL_LAT || cell.type == WELL_TOP || cell.type == WELL_BOT) // Well
+	if (cell.type == Type::WELL_LAT || cell.type == Type::WELL_TOP || cell.type == Type::WELL_BOT) // Well
 	{
 		if (val == TEMP)
 		{
@@ -824,7 +824,7 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			jacobian(left, Variable::size - 1, (Variable::size - 1) * Lstencil, x, jac);
 		}
 	}
-	else if (cell.type == RIGHT) // Right
+	else if (cell.type == Type::RIGHT) // Right
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num - cellsNum_z - 2].u_next;
@@ -838,7 +838,7 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 		else if (val == PRES)
 			jacobian(right, Variable::size - 1, (Variable::size - 1) * Rstencil, x, jac);
 	}
-	else if (cell.type == TOP) // Top
+	else if (cell.type == Type::TOP) // Top
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num + 1].u_next;
@@ -852,7 +852,7 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 		else if (val == PRES)
 			jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
 	}
-	else if (cell.type == BOTTOM) // Bottom
+	else if (cell.type == Type::BOTTOM) // Bottom
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num - 1].u_next;
@@ -868,7 +868,7 @@ void OilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 	}
 	else // Middle
 	{
-		const int nebrNum = (cell.type == MIDDLE) ? 6 : 5;
+		const int nebrNum = (cell.type == Type::MIDDLE) ? 6 : 5;
 		const Variable& next = cell.u_next;
 		Cell* neighbor[6];
 		getNeighbors(cell, neighbor);

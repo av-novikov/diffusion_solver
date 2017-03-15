@@ -22,9 +22,10 @@ namespace basic2d
 		double perm_z;
 
 		double m0;
+		double p_ref;
 		inline adouble getPoro(adouble p) const
 		{
-			return (adouble)(m0)* ((adouble)(1.0) + (adouble)(beta)* (p /*- cell.props->p_init*/));
+			return (adouble)(m0)* ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
 		};
 		inline adouble getPoro(adouble m, adouble p) const
 		{
@@ -89,9 +90,9 @@ namespace basic2d
 		double beta;
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline adouble getKr(adouble s_l) const
+		inline adouble getKr(adouble s_w, adouble s_o) const
 		{
-			return kr->Solve(s_l);
+			return kr->Solve(s_w);
 		};
 
 		// Fluid volume factor
@@ -123,9 +124,9 @@ namespace basic2d
 		double beta;
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline adouble getKr(adouble s_l) const
+		inline adouble getKr(adouble s_w, adouble s_o) const
 		{
-			return kr->Solve(s_l);
+			return kr->Solve(s_w);
 		};
 		// Fluid volume factor
 		Interpolate* b;
@@ -174,22 +175,18 @@ namespace basic2d
 
 		std::vector<Skeleton_Props> props_sk;
 
-		// Data set (saturation, relative oil permeability)
-		std::vector< std::pair<double, double> > kr_l;
-		// Data set (saturation, relative gas permeability)
-		std::vector< std::pair<double, double> > kr_g;
+		std::vector< std::pair<double, double> > kr_wat;
+		std::vector< std::pair<double, double> > kr_oil;
+		std::vector< std::pair<double, double> > kr_gas;
+		
+		std::vector< std::pair<double, double> > B_wat;
+		std::vector< std::pair<double, double> > B_oil;
+		std::vector< std::pair<double, double> > B_gas;
 
-		// Data set (pressure, oil volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double, double> > B_l;
-		// Data set (pressure, gas volume factor) ([Pa], [m3/m3])
-		std::vector< std::pair<double, double> > B_g;
+		std::vector< std::pair<double, double> > visc_wat;
+		std::vector< std::pair<double, double> > visc_oil;
+		std::vector< std::pair<double, double> > visc_gas;
 
-		// Data set (pressure, oil viscosity) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_l;
-		// Data set (pressure, gas viscosity) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_g;
-
-		// Data set (pressure, gas content in oil) ([Pa], [m3/m3])
 		std::vector< std::pair<double, double> > Rs;
 	};
 }
