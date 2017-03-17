@@ -108,6 +108,8 @@ struct TapeVarBlackOil
 	adouble s_w;
 	adouble s_o;
 	adouble p_bub;
+
+	bool SATUR;
 };
 
 struct VarSimpleAcid

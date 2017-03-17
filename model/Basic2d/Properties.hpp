@@ -97,6 +97,12 @@ namespace basic2d
 
 		// Fluid volume factor
 		Interpolate* b;
+		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
+		{
+			adouble tmp;
+			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
+			return tmp;
+		};
 
 		// Gas-oil ratio
 		Interpolate* Rs;
