@@ -13,7 +13,6 @@ GasOil2DSolver::GasOil2DSolver(GasOil_RZ* _model) : AbstractSolver<GasOil_RZ>(_m
 	Initialize(model->cellsNum_r+2, 2*(model->cellsNum_z+2));
 
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
-	plot_Sdyn.open("snaps/S_dyn.dat", ofstream::out);
 	plot_qcells.open("snaps/q_cells.dat", ofstream::out);
 
 	t_dim = model->t_dim;

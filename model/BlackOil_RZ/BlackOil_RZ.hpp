@@ -26,8 +26,7 @@ namespace blackoil_rz
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
-		friend class BlackOilRZSolver;
+		friend class BlackOil2dSolver;
 	protected:
 		std::vector<Skeleton_Props> props_sk;
 		Liquid_Props props_wat, props_oil;
@@ -58,6 +57,10 @@ namespace blackoil_rz
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
 		};
+		inline void solveP_bub()
+		{
+
+		};
 
 		void solve_eqMiddle(const Cell& cell);
 		void solve_eqLeft(const Cell& cell);
@@ -67,6 +70,8 @@ namespace blackoil_rz
 	public:
 		BlackOil_RZ();
 		~BlackOil_RZ();
+
+		double getRate(int cur) const;
 
 		double* x;
 		double* y;

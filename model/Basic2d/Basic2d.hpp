@@ -24,13 +24,14 @@ namespace basic2d
 	class Basic2d : public AbstractModel<varType, propsType, cellType, modelType>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
+		template<typename> friend class Basic2dSolver;
 	public:
 		typedef cellType<varType> Cell;
 		typename typedef Cell::Type Type;
 
+		static const int var_size;
 	protected:
 
 		std::vector<sk_propsType> props_sk;

@@ -2,13 +2,16 @@
 
 using namespace blackoil_rz;
 
+template <>
+const int basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, BlackOil_RZ>::var_size = Variable::size - 1;
+
 BlackOil_RZ::BlackOil_RZ()
 {
-	x = new double[stencil * (Variable::size - 1)];
-	y = new double[Variable::size - 1];
+	x = new double[stencil * var_size];
+	y = new double[var_size];
 
-	jac = new double*[Variable::size - 1];
-	for (int i = 0; i < Variable::size - 1; i++)
+	jac = new double*[var_size];
+	for (int i = 0; i < var_size; i++)
 		jac[i] = new double[stencil * Variable::size];
 };
 BlackOil_RZ::~BlackOil_RZ()
@@ -16,7 +19,7 @@ BlackOil_RZ::~BlackOil_RZ()
 	delete x;
 	delete y;
 
-	for (int i = 0; i < Variable::size - 1; i++)
+	for (int i = 0; i < var_size; i++)
 		delete[] jac[i];
 	delete[] jac;
 };
@@ -56,13 +59,25 @@ void BlackOil_RZ::makeDimLess()
 	props_gas.visc /= (P_dim * t_dim);
 	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 }
+double BlackOil_RZ::getRate(int cur) const
+{
+	const Cell& cell = cells[cur];
+	const Cell& beta = cells[cur + cellsNum_z + 2];
+	const Variable& next = cell.u_next;
+	const Variable& upwd = cells[getUpwindIdx(cur, cur + cellsNum_z + 2)].u_next;
+
+	return getTrans(cell, beta) * props_oil.getKr(upwd.s_w, upwd.s_o).value() /
+		props_oil.getViscosity(next.p).value() /
+		props_oil.getB(next.p, next.p_bub, next.SATUR).value() *
+		(beta.u_next.p - next.p);
+}
 
 void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 {
 	const Skeleton_Props& props = *cell.props;
 
 	trace_on(mid);
-	adouble h[Variable::size - 1];
+	adouble h[var_size];
 	TapeVariable var[stencil];
 	const Variable& prev = cell.u_prev;
 
@@ -91,7 +106,7 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
-	adouble tmp[Variable::size - 1];
+	adouble tmp[var_size];
 	for (int i = 0; i < 4; i++)
 	{
 		const Cell& beta = cells[neighbor[i]];
@@ -117,7 +132,7 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 			props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR));
 	}
 
-	for (int i = 0; i < Variable::size - 1; i++)
+	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
 	trace_off();
@@ -128,7 +143,7 @@ void BlackOil_RZ::solve_eqLeft(const Cell& cell)
 	const Cell& beta2 = cells[cell.num + 2 * cellsNum_z + 4];
 
 	trace_on(left);
-	adouble h[Variable::size - 1];
+	adouble h[var_size];
 	TapeVariable var[Lstencil];
 	for (int i = 0; i < Lstencil; i++)
 	{
@@ -161,7 +176,7 @@ void BlackOil_RZ::solve_eqLeft(const Cell& cell)
 void BlackOil_RZ::solve_eqRight(const Cell& cell)
 {
 	trace_on(right);
-	adouble h[Variable::size - 1];
+	adouble h[var_size];
 	TapeVariable var[Rstencil];
 	adouble rightIsPres = rightBoundIsPres;
 	for (int i = 0; i < Rstencil; i++)
@@ -180,7 +195,7 @@ void BlackOil_RZ::solve_eqRight(const Cell& cell)
 	adouble satur = cell.u_next.SATUR;
 	condassign(h[2], satur, next.s_o - nebr.s_o, next.p_bub - nebr.p_bub);
 
-	for (int i = 0; i < Variable::size - 1; i++)
+	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
 	trace_off();
@@ -188,7 +203,7 @@ void BlackOil_RZ::solve_eqRight(const Cell& cell)
 void BlackOil_RZ::solve_eqVertical(const Cell& cell)
 {
 	trace_on(vertical);
-	adouble h[Variable::size - 1];
+	adouble h[var_size];
 	TapeVariable var[Vstencil];
 
 	for (int i = 0; i < Vstencil; i++)
@@ -207,7 +222,7 @@ void BlackOil_RZ::solve_eqVertical(const Cell& cell)
 	adouble satur = cell.u_next.SATUR;
 	condassign(h[2], satur, next.s_o - nebr.s_o, next.p_bub - nebr.p_bub);
 
-	for (int i = 0; i < Variable::size - 1; i++)
+	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
 	trace_off();

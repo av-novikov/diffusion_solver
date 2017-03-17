@@ -7,6 +7,7 @@
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
+#include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 
 #include <iomanip>
 
@@ -552,3 +553,4 @@ template class AbstractSolver<bing1d::Bingham1d>;
 template class AbstractSolver<gasOil_elliptic::GasOil_Elliptic>;
 template class AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>;
 template class AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>;
+template class AbstractSolver<blackoil_rz::BlackOil_RZ>;

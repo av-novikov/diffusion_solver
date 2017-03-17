@@ -29,9 +29,7 @@ namespace gasOil_rz
 	class GasOil_RZ : public AbstractModel<Variable, Properties, TCell, GasOil_RZ>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
 		friend class GasOil2DSolver;	
 
 	protected:

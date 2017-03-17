@@ -15,6 +15,7 @@ template <typename varType> class cellType, class modelType>
 class AbstractModel
 {
 	template<typename> friend class AbstractSolver;
+	template<typename> friend class Basic2dSolver;
 	template<typename> friend class GRDECLSnapshotter;
 	template<typename> friend class VTKSnapshotter;
 	template<typename> friend class Snapshotter;
