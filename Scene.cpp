@@ -19,6 +19,9 @@
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNITEllipticSolver.hpp"
 
+#include "model/BlackOil_RZ/BlackOil_RZ.hpp"
+#include "model/BlackOil_RZ/BlackOil2DSolver.hpp"
+
 template <class modelType, class methodType, typename propsType>
 Scene<modelType, methodType, propsType>::Scene()
 {
@@ -105,3 +108,4 @@ template class Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties
 template class Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties>;
 template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties>;
 template class Scene<gasOilnit_elliptic::GasOilNIT_Elliptic, gasOilnit_elliptic::GasOilNITEllipticSolver, gasOilnit_elliptic::Properties>;
+template class Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties>;

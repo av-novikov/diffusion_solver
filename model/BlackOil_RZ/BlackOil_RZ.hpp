@@ -5,6 +5,7 @@
 #include "model/cells/Variables.hpp"
 #include "model/cells/CylCell2D.h"
 #include "model/Basic2d/Basic2d.hpp"
+#include "model/Basic2d/Basic2dSolver.hpp"
 #include "util/Interpolate.h"
 
 namespace blackoil_rz
@@ -26,6 +27,7 @@ namespace blackoil_rz
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class VTKSnapshotter;
+		template<typename> friend class basic2d::Basic2dSolver;
 		friend class BlackOil2dSolver;
 	protected:
 		std::vector<Skeleton_Props> props_sk;
@@ -66,6 +68,7 @@ namespace blackoil_rz
 		void solve_eqLeft(const Cell& cell);
 		void solve_eqRight(const Cell& cell);
 		void solve_eqVertical(const Cell& cell);
+		void setVariables(const Cell& cell);
 
 	public:
 		BlackOil_RZ();

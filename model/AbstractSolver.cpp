@@ -91,8 +91,6 @@ void AbstractSolver<modelType>::copyIterLayer()
 {
 	for (auto& cell : model->cells)
 		cell.u_iter = cell.u_next;
-//	for (int i = 0; i < model->cells.size(); i++)
-//		model->cells[i].u_iter = model->cells[i].u_next;
 }
 template <>
 void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyIterLayer()
@@ -132,8 +130,6 @@ void AbstractSolver<modelType>::copyTimeLayer()
 {
 	for (auto& cell : model->cells)
 		cell.u_prev = cell.u_iter = cell.u_next;
-	//for(int i = 0; i < model->cells.size(); i++)
-	//	model->cells[i].u_prev = model->cells[i].u_iter = model->cells[i].u_next;
 }
 template <>
 void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyTimeLayer()
@@ -163,6 +159,7 @@ void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyTimeLayer()
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
 template <class modelType>
+
 double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -229,6 +226,39 @@ double AbstractSolver<gasOil_rz::GasOil_RZ>::convergance(int& ind, int& varInd)
 				ind = j;
 				varInd = 1;
 			}
+		}
+	}
+
+	return relErr;
+}
+template <>
+double AbstractSolver<blackoil_rz::BlackOil_RZ>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+	double var_next, var_iter;
+
+	for (int j = 0; j < model->cells.size(); j++)
+	{
+		blackoil_rz::Cell& cell = model->cells[j];
+
+		for (int i = 0; i < model->var_size; i++)
+		{
+			if (i == 2 && !cell.u_next.SATUR) { var_next = cell.u_next.values[i+1];	var_iter = cell.u_iter.values[i+1]; }
+			else { var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i]; }
+
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = 0;
+				}
+			}
+			else
+				exit(-1);
 		}
 	}
 
@@ -432,6 +462,7 @@ double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::convergance(int& 
 
 	return relErr;
 }
+
 template <class modelType>
 double AbstractSolver<modelType>::averValue(const int varInd)
 {
@@ -462,6 +493,25 @@ double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
 			else
 				tmp += cell.u_next.values[varInd+1] * cell.V;
 		}
+
+	return tmp / model->Volume;
+}
+template <>
+double AbstractSolver<blackoil_rz::BlackOil_RZ>::averValue(const int varInd)
+{
+	double tmp = 0.0;
+
+	if (varInd == 2)
+		for (const auto& cell : model->cells)
+		{
+			if (cell.u_next.SATUR)
+				tmp += cell.u_next.values[varInd] * cell.V;
+			else
+				tmp += cell.u_next.values[varInd + 1] * cell.V;
+		}
+	else
+		for (const auto& cell : model->cells)
+			tmp += cell.u_next.values[varInd] * cell.V;
 
 	return tmp / model->Volume;
 }

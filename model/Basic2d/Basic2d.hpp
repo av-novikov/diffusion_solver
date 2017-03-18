@@ -186,7 +186,7 @@ namespace basic2d
 			double cm_r = r_w;
 
 			// Left border
-			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0, Type::TOP));
+			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0, Type::WELL_LAT));
 			for (int i = 0; i < cellsNum_z; i++)
 			{
 				hz = (props_sk[skel_idx].h2 - props_sk[skel_idx].h1) / (double)(props_sk[skel_idx].cellsNum_z);
@@ -201,7 +201,7 @@ namespace basic2d
 					skel_idx++;
 				}
 			}
-			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0, Type::BOTTOM));
+			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0, Type::WELL_LAT));
 
 			// Middle cells
 			for (int j = 0; j < cellsNum_r; j++)
@@ -236,7 +236,7 @@ namespace basic2d
 			cm_z = props_sk[0].h1;
 			cm_r = r_e;
 
-			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0, Type::TOP));
+			cells.push_back(Cell(counter++, cm_r, cm_z, 0.0, 0.0, Type::RIGHT));
 			skel_idx = 0;	cells_z = 0;
 			for (int i = 0; i < cellsNum_z; i++)
 			{
@@ -252,7 +252,7 @@ namespace basic2d
 					skel_idx++;
 				}
 			}
-			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0, Type::BOTTOM));
+			cells.push_back(Cell(counter++, cm_r, cm_z + hz / 2.0, 0.0, 0.0, Type::RIGHT));
 		}
 		void setPerforated()
 		{
@@ -276,7 +276,7 @@ namespace basic2d
 			double H = 0.0;
 			double p1, p0;
 
-			map<int, double>::iterator it = Qcell.begin();
+			std::map<int, double>::iterator it = Qcell.begin();
 			for (int i = 0; i < Qcell.size() - 1; i++)
 			{
 				p0 = cells[it->first].u_next.p;
@@ -350,6 +350,31 @@ namespace basic2d
 			neighbor[2] = cur - 1;
 			neighbor[3] = cur + 1;
 		};
+		inline void getStencil(const Cell& cell, Cell** const neighbor)
+		{
+			neighbor[0] = &cell;
+			switch (cell.type)
+			{
+			case Type::MIDDLE:
+				neighbor[1] = &cells[cell.num - cellsNum_z - 2];
+				neighbor[2] = &cells[cell.num + cellsNum_z + 2];
+				neighbor[3] = &cells[cell.num - 1];
+				neighbor[4] = &cells[cell.num + 1];
+				break;
+			case Type::WELL_LAT:
+				neighbor[1] = &cells[cell.num + cellsNum_z + 2];
+				neighbor[2] = &cells[cell.num + 2 * cellsNum_z + 4];
+				break;
+			case Type::RIGHT:
+				neighbor[1] = &cells[cell.num - cellsNum_z - 2];
+				neighbor[2] = &cells[cell.num - 2 * cellsNum_z - 4];
+				break;
+			case Type::TOP:
+				neighbor[1] = &cells[cell.num + 1];
+			case Type::BOTTOM:
+				neighbor[1] = &cells[cell.num - 1];
+			}
+		};
 		inline int getSkeletonIdx(const Cell& cell) const
 		{
 			int idx = 0;
@@ -361,80 +386,6 @@ namespace basic2d
 			}
 			exit(-1);
 		};
-
-		void setVariables(const Cell& cell)
-		{
-			if (cell.type == Type::WELL_LAT)
-			{
-				// Left
-				const Variable& next = cell.u_next;
-				const Variable& nebr1 = cells[cell.num + cellsNum_z + 2].u_next;
-				const Variable& nebr2 = cells[cell.num + 2 * cellsNum_z + 4].u_next;
-
-				for (int i = 0; i < Variable::size; i++)
-				{
-					x[i] = next.values[i];
-					x[Variable::size + i] = nebr1.values[i];
-					x[2 * Variable::size + i] = nebr2.values[i];
-				}
-			}
-			else if (cell.type == Type::RIGHT)
-			{
-				// Right
-				const Variable& next = cells[cell.num].u_next;
-				const Variable& nebr1 = cells[cell.num - cellsNum_z - 2].u_next;
-				const Variable& nebr2 = cells[cell.num - 2 * cellsNum_z - 4].u_next;
-
-				for (int i = 0; i < Variable::size; i++)
-				{
-					x[i] = next.values[i];
-					x[Variable::size + i] = nebr1.values[i];
-					x[2 * Variable::size + i] = nebr2.values[i];
-				}
-			}
-			else if (cell.type == Type::TOP)
-			{
-				// Top
-				const Variable& next = cells[cell.num].u_next;
-				const Variable& nebr = cells[cell.num + 1].u_next;
-
-				for (int i = 0; i < Variable::size; i++)
-				{
-					x[i] = next.values[i];
-					x[Variable::size + i] = nebr.values[i];
-				}
-			}
-			else if (cell.type == Type::BOTTOM)
-			{
-				// Bottom
-				const Variable& next = cells[cell.num].u_next;
-				const Variable& nebr = cells[cell.num - 1].u_next;
-
-				for (int i = 0; i < Variable::size; i++)
-				{
-					x[i] = next.values[i];
-					x[Variable::size + i] = nebr.values[i];
-				}
-			}
-			else if (cell.type == Type::MIDDLE)
-			{
-				// Middle
-				const Variable& next = cells[cell.num].u_next;
-				int neighbor[stencil-1];
-				getNeighborIdx(cell.num, neighbor);
-
-				for (int i = 0; i < Variable::size; i++)
-				{
-					x[i] = next.values[i];
-
-					for (int j = 0; j < 4; j++)
-					{
-						const Variable& nebr = cells[neighbor[j]].u_next;
-						x[(j + 1) * Variable::size + i] = nebr.values[i];
-					}
-				}
-			}
-		}
 
 	public:
 		Basic2d() {};

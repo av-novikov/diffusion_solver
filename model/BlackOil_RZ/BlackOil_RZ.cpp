@@ -1,5 +1,8 @@
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 
+#include "adolc/drivers/drivers.h"
+#include "adolc/adolc.h"
+
 using namespace blackoil_rz;
 
 template <>
@@ -226,4 +229,92 @@ void BlackOil_RZ::solve_eqVertical(const Cell& cell)
 		h[i] >>= y[i];
 
 	trace_off();
+}
+void BlackOil_RZ::setVariables(const Cell& cell)
+{
+	if (cell.type == Type::WELL_LAT)
+	{
+		// Left
+		const Variable& next = cell.u_next;
+		const Variable& nebr1 = cells[cell.num + cellsNum_z + 2].u_next;
+		const Variable& nebr2 = cells[cell.num + 2 * cellsNum_z + 4].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr1.values[i];
+			x[2 * Variable::size + i] = nebr2.values[i];
+		}
+
+		solve_eqLeft(cell);
+		jacobian(left, var_size, Variable::size * Lstencil, x, jac);
+	}
+	else if (cell.type == Type::RIGHT)
+	{
+		// Right
+		const Variable& next = cells[cell.num].u_next;
+		const Variable& nebr1 = cells[cell.num - cellsNum_z - 2].u_next;
+		const Variable& nebr2 = cells[cell.num - 2 * cellsNum_z - 4].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr1.values[i];
+			x[2 * Variable::size + i] = nebr2.values[i];
+		}
+
+		solve_eqRight(cell);
+		jacobian(right, var_size, Variable::size * Rstencil, x, jac);
+	}
+	else if (cell.type == Type::TOP)
+	{
+		// Top
+		const Variable& next = cells[cell.num].u_next;
+		const Variable& nebr = cells[cell.num + 1].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+
+		solve_eqVertical(cell);
+		jacobian(vertical, var_size, Variable::size * Vstencil, x, jac);
+	}
+	else if (cell.type == Type::BOTTOM)
+	{
+		// Bottom
+		const Variable& next = cells[cell.num].u_next;
+		const Variable& nebr = cells[cell.num - 1].u_next;
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+			x[Variable::size + i] = nebr.values[i];
+		}
+
+		solve_eqVertical(cell);
+		jacobian(vertical, var_size, Variable::size * Vstencil, x, jac);
+	}
+	else if (cell.type == Type::MIDDLE)
+	{
+		// Middle
+		const Variable& next = cells[cell.num].u_next;
+		int neighbor[stencil - 1];
+		getNeighborIdx(cell.num, neighbor);
+
+		for (int i = 0; i < Variable::size; i++)
+		{
+			x[i] = next.values[i];
+
+			for (int j = 0; j < stencil - 1; j++)
+			{
+				const Variable& nebr = cells[neighbor[j]].u_next;
+				x[(j + 1) * Variable::size + i] = nebr.values[i];
+			}
+		}
+
+		solve_eqMiddle(cell);
+		jacobian(mid, var_size, Variable::size * stencil, x, jac);
+	}
 }

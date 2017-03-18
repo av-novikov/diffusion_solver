@@ -9,6 +9,7 @@
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
+#include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 
 using namespace std;
 
@@ -103,7 +104,6 @@ void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-
 template <>
 void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
 {
@@ -117,7 +117,6 @@ void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-
 template <>
 void Snapshotter<bing1d::Bingham1d>::setModel(bing1d::Bingham1d* _model)
 {
@@ -129,7 +128,19 @@ void Snapshotter<bing1d::Bingham1d>::setModel(bing1d::Bingham1d* _model)
 
 	nx = model->cellsNum_r + 2;
 }
+template <>
+void Snapshotter<blackoil_rz::BlackOil_RZ>::setModel(blackoil_rz::BlackOil_RZ* _model)
+{
+	model = _model;
 
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_z + 2;
+}
 template <class modelType>
 string Snapshotter<modelType>::replace(string filename, string from, string to)
 {
@@ -156,3 +167,4 @@ template class Snapshotter<bing1d::Bingham1d>;
 template class Snapshotter<gasOil_elliptic::GasOil_Elliptic>;
 template class Snapshotter<oilnit_elliptic::OilNIT_Elliptic>;
 template class Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>;
+template class Snapshotter<blackoil_rz::BlackOil_RZ>;

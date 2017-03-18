@@ -1,6 +1,10 @@
 #ifndef BASIC2DSOLVER_HPP_
 #define BASIC2DSOLVER_HPP_
 
+#include <iostream>
+#include <vector>
+#include <map>
+
 #include "model/AbstractSolver.hpp"
 #include "method/sweep.h"
 #include "model/Basic2d/Basic2d.hpp"
@@ -52,7 +56,7 @@ namespace basic2d
 						solveDq(mult);
 
 						int i = 0;
-						map<int, double>::iterator it = model->Qcell.begin();
+						std::map<int, double>::iterator it = model->Qcell.begin();
 
 						while (it != model->Qcell.end())
 						{
@@ -72,7 +76,7 @@ namespace basic2d
 		void fillq()
 		{
 			int i = 0;
-			map<int, double>::iterator it = model->Qcell.begin();
+			std::map<int, double>::iterator it = model->Qcell.begin();
 			while (it != model->Qcell.end())
 			{
 				q[i++] = it->second;
@@ -92,17 +96,17 @@ namespace basic2d
 			solveSystem();
 
 			int i = 0;
-			map<int, double>::iterator it;
+			std::map<int, double>::iterator it;
 			for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 			{
-				cout << "dq[" << it->first << "] = " << dq[i++] * model->Q_dim * 86400.0 << endl;
+				std::cout << "dq[" << it->first << "] = " << dq[i++] * model->Q_dim * 86400.0 << std::endl;
 			}
-			cout << endl;
+			std::cout << std::endl;
 		}
 		void solveSystem()
 		{
 			double s = 0.0, p1, p2;
-			map<int, double>::iterator it;
+			std::map<int, double>::iterator it;
 
 			for (int i = 0; i < n - 1; i++)
 			{
@@ -142,9 +146,9 @@ namespace basic2d
 			ratio = mult * 0.001 / (double)(n);
 
 			int i = 0, j = 0;
-			map<int, double>::iterator it0 = model->Qcell.begin();
-			map<int, double>::iterator it1 = model->Qcell.begin();
-			map<int, double>::iterator it2 = it1;	++it2;
+			std::map<int, double>::iterator it0 = model->Qcell.begin();
+			std::map<int, double>::iterator it1 = model->Qcell.begin();
+			std::map<int, double>::iterator it2 = it1;	++it2;
 			while (it1 != model->Qcell.end())
 			{
 				j = 0;

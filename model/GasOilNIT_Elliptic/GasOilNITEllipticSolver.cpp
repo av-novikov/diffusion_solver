@@ -199,7 +199,7 @@ void GasOilNITEllipticSolver::fill()
 {
 	int counter = 0;
 	int i;
-	Cell* neighbor[7];
+	Cell* neighbor[stencil];
 
 	for (const auto& cell : model->cells)
 	{

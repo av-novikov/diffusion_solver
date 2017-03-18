@@ -22,6 +22,7 @@
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 #include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
+#include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 
 #include <cmath>
 
@@ -34,17 +35,14 @@ VTKSnapshotter<modelType>::VTKSnapshotter()
 {
 	pattern = prefix + "snap_%{STEP}.vtp";
 }
-template <>
 VTKSnapshotter<gasOil_rz::GasOil_RZ>::VTKSnapshotter()
 {
 	pattern = prefix + "GasOil_RZ_%{STEP}.vtp";
 }
-template <>
 VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter()
 {
 	pattern = prefix + "Acid2d_%{STEP}.vtp";
 }
-template <>
 VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
 {
 	pattern = prefix + "VPP2d_%{STEP}.vtp";
@@ -65,6 +63,10 @@ VTKSnapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>::VTKSnapshotter()
 {
 	pattern = prefix + "GasOilNIT_El_%{STEP}.vtu";
 }
+VTKSnapshotter<blackoil_rz::BlackOil_RZ> ::VTKSnapshotter()
+{
+	pattern = prefix + "BlackOil_RZ_%{STEP}.vtu";
+}
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()
 {
@@ -78,7 +80,7 @@ void VTKSnapshotter<modelType>::dump_all(int i)
 {
 }
 
-template <>
+
 void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 {
 	using namespace gasOil_rz;
@@ -228,7 +230,6 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
-template <>
 void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 {
 	using namespace acid2d;
@@ -381,7 +382,6 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
-template <>
 void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 {
 	using namespace vpp2d;
@@ -521,7 +521,6 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
-template <>
 void VTKSnapshotter<bing1d::Bingham1d>::dump_all(int i)
 {
 	using namespace bing1d;
@@ -594,7 +593,6 @@ void VTKSnapshotter<bing1d::Bingham1d>::dump_all(int i)
 	writer->SetInputData(grid);
 	writer->Write();
 }
-template <>
 void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 {
 	using namespace gasOil_elliptic;
@@ -1034,6 +1032,8 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 	writer->SetInputData(grid);
 	writer->Write();
 }
+void VTKSnapshotter<blackoil_rz::BlackOil_RZ>::dump_all(int snap_idx)
+{}
 
 template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;
 template class VTKSnapshotter<acid2d::Acid2d>;
@@ -1042,3 +1042,4 @@ template class VTKSnapshotter<bing1d::Bingham1d>;
 template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;
 template class Snapshotter<oilnit_elliptic::OilNIT_Elliptic>;
 template class Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>;
+template class Snapshotter<blackoil_rz::BlackOil_RZ>;
