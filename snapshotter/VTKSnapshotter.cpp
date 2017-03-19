@@ -65,7 +65,7 @@ VTKSnapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>::VTKSnapshotter()
 }
 VTKSnapshotter<blackoil_rz::BlackOil_RZ> ::VTKSnapshotter()
 {
-	pattern = prefix + "BlackOil_RZ_%{STEP}.vtu";
+	pattern = prefix + "BlackOil_RZ_%{STEP}.vtp";
 }
 template <class modelType>
 VTKSnapshotter<modelType>::~VTKSnapshotter()

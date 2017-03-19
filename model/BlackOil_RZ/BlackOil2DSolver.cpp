@@ -86,12 +86,13 @@ void BlackOil2dSolver::construction_from_fz(int N, int n, int key)
 				next.p += fz[i][2 * j + 1];
 				next.s_w += fz[i][2 * j + 2];
 				if (next.SATUR)
+				{
 					next.s_o += fz[i][2 * j + 3];
+					next.p_bub = next.p;
+				}
 				else
 				{
-					//	if (model->props_oil.p_sat < next.p)
-					//		next.p_bub = model->props_oil.p_sat;
-					//	else
+					next.s_o -= fz[i][2 * j + 2];
 					next.p_bub += fz[i][2 * j + 3];
 				}
 			}

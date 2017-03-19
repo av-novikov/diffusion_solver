@@ -62,7 +62,28 @@ namespace blackoil_rz
 		};
 		inline void solveP_bub()
 		{
-
+			for (auto& cell : cells)
+			{
+				Variable& next = cell.u_next;
+				if (next.SATUR)
+				{
+					if (next.s_o + next.s_w > 1.0 + EQUALITY_TOLERANCE)
+					{
+						next.SATUR = false;
+						next.s_o = 1.0 - next.s_w;
+						next.p_bub = 0.999 * cell.u_iter.p_bub;
+					}
+				}
+				else
+				{
+					if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+					{
+						next.SATUR = true;
+						next.s_o = 0.999 * cell.u_iter.s_o;
+						next.p_bub = next.p;
+					}
+				}
+			}
 		};
 
 		void solve_eqMiddle(const Cell& cell);
