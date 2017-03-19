@@ -57,6 +57,11 @@ namespace acid2d
 		LiquidComponent salt;
 		LiquidComponent water;
 
+		Interpolate* kr;
+		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+		{
+			return kr->Solve(s_w);
+		};
 		inline adouble getDensity(adouble p, adouble Ya, adouble Ys) const
 		{
 			return	acid.getDensity(p) * Ya + 
@@ -67,6 +72,13 @@ namespace acid2d
 	struct Gas_Props : public basic2d::Gas_Props
 	{
 		GasComponent co2;
+
+		// Relative fluid permeability
+		Interpolate* kr;
+		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+		{
+			return kr->Solve(s_w);
+		};
 
 		inline adouble getDensity(adouble p) const
 		{

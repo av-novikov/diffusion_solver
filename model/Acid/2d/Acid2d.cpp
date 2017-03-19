@@ -54,7 +54,6 @@ void Acid2d::makeDimLess()
 	props_l.visc /= (P_dim * t_dim);
 	props_l.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_l.beta /= (1.0 / P_dim);
-	props_l.p_sat /= P_dim;
 
 	// Gas properties
 	props_g.visc /= (P_dim * t_dim);

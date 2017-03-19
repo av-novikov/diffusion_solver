@@ -84,9 +84,9 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s, 0.0).value() / props_l.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s, 0.0, cell.props).value() / props_l.visc * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_l.getKr(var->s, 0.0).value() / props_l.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_l.getKr(var->s, 0.0, cell.props).value() / props_l.visc * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getGasVelocity(Cell& cell, int varNum, int axis)
@@ -108,9 +108,9 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s, 0.0).value() / props_g.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_l.getKr(var->s, 0.0, cell.props).value() / props_g.visc * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->s, 0.0).value() / props_g.visc * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->s, 0.0, cell.props).value() / props_g.visc * getNablaP(cell, varNum, axis);
 			}
 		};
 

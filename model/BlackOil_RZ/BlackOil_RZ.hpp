@@ -30,12 +30,13 @@ namespace blackoil_rz
 		template<typename> friend class basic2d::Basic2dSolver;
 		friend class BlackOil2dSolver;
 	protected:
-		std::vector<Skeleton_Props> props_sk;
-		Liquid_Props props_wat, props_oil;
+		Water_Props props_wat;
+		Oil_Props props_oil;
 		Gas_Props props_gas;
 
 		void setProps(Properties& props);
 		void makeDimLess();
+		void setInitialState();
 
 		// Service functions
 		inline double getTrans(const Cell& cell, const Cell& beta) const

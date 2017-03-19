@@ -29,7 +29,7 @@ namespace basic2d
 		};
 		inline adouble getPoro(adouble m, adouble p) const
 		{
-			return m * ((adouble)(1.0) + (adouble)(beta)* p);
+			return m * ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
 		};
 		inline adouble getPermCoseni_r(adouble m) const
 		{
@@ -66,19 +66,18 @@ namespace basic2d
 		int cellsNum_z;
 
 		// Connate saturations
-		double s_wc;
-		double s_oc;
-
+		double s_wc, s_oc, s_gc;
+		
 		double p_out;
 	};
 	struct Liquid_Props
 	{
-		double p_sat;
+		double p_ref;
 
 		// Viscosity [cP]
 		double visc;
 		Interpolate* visc_table;
-		inline adouble getViscosity(const adouble p) const
+		inline adouble getViscosity(adouble p) const
 		{
 			return (adouble)(visc);
 		};
@@ -88,21 +87,6 @@ namespace basic2d
 		double b_bore;
 		// Compessibility [1/Pa]
 		double beta;
-		// Relative fluid permeability
-		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o) const
-		{
-			return kr->Solve(s_w);
-		};
-
-		// Fluid volume factor
-		Interpolate* b;
-		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
-		{
-			adouble tmp;
-			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
-			return tmp;
-		};
 
 		// Gas-oil ratio
 		Interpolate* Rs;
@@ -126,14 +110,7 @@ namespace basic2d
 		double dens_stc;
 		// Volume factor for well bore
 		double b_bore;
-		// Compessibility [1/Pa]
-		double beta;
-		// Relative fluid permeability
-		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o) const
-		{
-			return kr->Solve(s_w);
-		};
+
 		// Fluid volume factor
 		Interpolate* b;
 		inline adouble getB(adouble p) const

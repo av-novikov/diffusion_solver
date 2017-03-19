@@ -28,6 +28,7 @@ BlackOil_RZ::~BlackOil_RZ()
 };
 void BlackOil_RZ::setProps(Properties& props)
 {
+	props_sk = props.props_sk;
 	setBasicProps(props);
 
 	props_wat = props.props_wat;
@@ -41,26 +42,49 @@ void BlackOil_RZ::setProps(Properties& props)
 	makeDimLess();
 
 	// Data sets
-	props_wat.kr = setDataset(props.kr_wat, 1.0, 1.0);
-	props_oil.kr = setDataset(props.kr_oil, 1.0, 1.0);
-	props_gas.kr = setDataset(props.kr_gas, 1.0, 1.0);
-	props_wat.b = setDataset(props.B_wat, P_dim / BAR_TO_PA, 1.0);
+	//props_wat.kr = setDataset(props.kr_wat, 1.0, 1.0);
+	//props_oil.kr = setDataset(props.kr_oil, 1.0, 1.0);
+	//props_gas.kr = setDataset(props.kr_gas, 1.0, 1.0);
+	//props_wat.b = setDataset(props.B_wat, P_dim / BAR_TO_PA, 1.0);
 	props_oil.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
 	props_gas.b = setDataset(props.B_gas, P_dim / BAR_TO_PA, 1.0);
 	props_oil.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
 }
 void BlackOil_RZ::makeDimLess()
 {
+	for (int j = 0; j < skeletonsNum; j++)
+	{
+		props_sk[j].p_sat /= P_dim;
+	}
+
 	props_wat.visc /= (P_dim * t_dim);
 	props_wat.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_wat.beta /= (1.0 / P_dim);
-	props_wat.p_sat /= P_dim;
+	props_wat.p_ref /= P_dim;
 	props_oil.visc /= (P_dim * t_dim);
 	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
-	props_oil.p_sat /= P_dim;
+	props_oil.p_ref /= P_dim;
 	props_gas.visc /= (P_dim * t_dim);
 	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+}
+void BlackOil_RZ::setInitialState()
+{
+	vector<Cell>::iterator it;
+	for (it = cells.begin(); it != cells.end(); ++it)
+	{
+		Skeleton_Props* props = &props_sk[getSkeletonIdx(*it)];
+		it->u_prev.p = it->u_iter.p = it->u_next.p = props->p_init;
+		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props->p_sat;
+		it->u_prev.s_w = it->u_iter.s_w = it->u_next.s_w = props->sw_init;
+		it->u_prev.s_o = it->u_iter.s_o = it->u_next.s_o = props->so_init;
+		if (props->p_init > props->p_sat)
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
+
+		it->props = props;
+	}
 }
 double BlackOil_RZ::getRate(int cur) const
 {
@@ -69,7 +93,7 @@ double BlackOil_RZ::getRate(int cur) const
 	const Variable& next = cell.u_next;
 	const Variable& upwd = cells[getUpwindIdx(cur, cur + cellsNum_z + 2)].u_next;
 
-	return getTrans(cell, beta) * props_oil.getKr(upwd.s_w, upwd.s_o).value() /
+	return getTrans(cell, beta) * props_oil.getKr(upwd.s_w, upwd.s_o, cell.props).value() /
 		props_oil.getViscosity(next.p).value() /
 		props_oil.getB(next.p, next.p_bub, next.SATUR).value() *
 		(beta.u_next.p - next.p);
@@ -118,20 +142,20 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 		TapeVariable& upwd = var[upwd_idx];
 
 		h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-			props_wat.getKr(upwd.s_w, upwd.s_o) / props_wat.getViscosity(upwd.p) /
+			props_wat.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_wat.getViscosity(upwd.p) /
 			props_wat.getB(upwd.p, upwd.p_bub, upwd.SATUR);
 
 		h[1] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-			props_oil.getKr(upwd.s_w, upwd.s_o) / props_oil.getViscosity(upwd.p) /
+			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p) /
 			props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR);
 
 		condassign(h[2], satur, 
 				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-			(props_oil.getKr(upwd.s_w, upwd.s_o) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
+			(props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
 			props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR) +
-			props_gas.getKr(upwd.s_w, upwd.s_o) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p)),
+			props_gas.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p)),
 				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-			props_oil.getKr(upwd.s_w, upwd.s_o) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
+			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
 			props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR));
 	}
 
@@ -164,7 +188,7 @@ void BlackOil_RZ::solve_eqLeft(const Cell& cell)
 	TapeVariable& upwd = var[upwd_idx];
 
 	condassign(h[0], leftIsRate,
-		getTrans(cell, beta1) * props_oil.getKr(upwd.s_w, upwd.s_o) /
+		getTrans(cell, beta1) * props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) /
 		props_oil.getViscosity(next.p) / props_oil.getB(next.p, next.p_bub, next.SATUR) *
 		(nebr1.p - next.p) - Qcell[cell.num],
 		next.p - Pwf);
@@ -175,6 +199,11 @@ void BlackOil_RZ::solve_eqLeft(const Cell& cell)
 	condassign(h[2], satur,
 		(next.s_o - nebr1.s_o) / (adouble)(cell.r - beta1.r) - (nebr1.s_o - nebr2.s_o) / (adouble)(beta1.r - beta2.r),
 		(next.p_bub - nebr1.p_bub) / (adouble)(cell.r - beta1.r) - (nebr1.p_bub - nebr2.p_bub) / (adouble)(beta1.r - beta2.r));
+
+	for (int i = 0; i < var_size; i++)
+		h[i] >>= y[i];
+
+	trace_off();
 }
 void BlackOil_RZ::solve_eqRight(const Cell& cell)
 {

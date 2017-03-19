@@ -361,7 +361,7 @@ namespace oilnit_elliptic
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 
-				double mu, dmu;
+				double mu;
 				if (sin(cell.nu) * sin(beta.nu) < 0.0)
 					mu = 0.0;
 				else

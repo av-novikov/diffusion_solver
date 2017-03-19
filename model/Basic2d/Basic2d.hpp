@@ -60,7 +60,6 @@ namespace basic2d
 
 			skeletonsNum = props.props_sk.size();
 			checkSkeletons(props.props_sk);
-			props_sk = props.props_sk;
 			for (int j = 0; j < skeletonsNum; j++)
 			{
 				props_sk[j].perm_r = MilliDarcyToM2(props_sk[j].perm_r);
@@ -91,8 +90,6 @@ namespace basic2d
 
 			alpha = props.alpha;
 			depth_point = props.depth_point;
-
-			makeBasicDimLess();
 		};
 		void makeBasicDimLess()
 		{
@@ -125,6 +122,7 @@ namespace basic2d
 				props_sk[i].height /= R_dim;
 				props_sk[i].p_init /= P_dim;
 				props_sk[i].p_out /= P_dim;
+				props_sk[i].p_ref /= P_dim;
 
 				for (int j = 0; j < periodsNum; j++)
 				{

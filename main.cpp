@@ -372,12 +372,12 @@ blackoil_rz::Properties* getProps()
 	props->cellsNum_r = 20;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(365.0 * 86400.0);
-	props->timePeriods.push_back(400.0 * 86400.0);
+	props->timePeriods.push_back(20.0 * 86400.0);
+	props->timePeriods.push_back(40.0 * 86400.0);
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(170.0);
+	props->rates.push_back(10.0);
 	props->rates.push_back(0.0);
 
 	props->ht = 100.0;
@@ -394,8 +394,9 @@ blackoil_rz::Properties* getProps()
 	blackoil_rz::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m0 = 0.1;
-	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
-	//tmp.s_ = 1.0;
+	tmp.p_init = tmp.p_out = tmp.p_sat = tmp.p_ref = 70.625 * 1.0e+5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.s_wc = 0.1;		tmp.s_oc = 0.1;		tmp.s_gc = 0.05;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
 	tmp.height = 10.0;
@@ -405,6 +406,7 @@ blackoil_rz::Properties* getProps()
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
 	tmp.skins.push_back(0.0);
+
 	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
 
@@ -412,18 +414,22 @@ blackoil_rz::Properties* getProps()
 
 	props->depth_point = 0.0;
 
-	props->props_oil.visc = 1.0;
-	props->props_oil.b_bore = 1.0;
+	props->props_oil.visc = 5.0;
 	props->props_oil.dens_stc = 887.261;
 	props->props_oil.beta = 1.0 * 1.e-9;
-	props->props_oil.p_sat = 70.625 * 1.0e+5;
+	props->props_oil.p_ref = tmp.p_ref;
+
+	props->props_wat.visc = 1.0;
+	props->props_wat.dens_stc = 1000.0;
+	props->props_wat.beta = 1.0 * 1.e-9;
+	props->props_wat.p_ref = tmp.p_ref;
 
 	props->props_gas.visc = 0.03;
 	props->props_gas.dens_stc = 0.8;
 
 	// Defining relative permeabilities
-	setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
-	setDataFromFile(props->kr_gas, "props/kgas_tempest.txt");
+	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
+	//setDataFromFile(props->kr_gas, "props/kgas_tempest.txt");
 
 	// Defining volume factors
 	//props->byDefault.B_oil = true;
