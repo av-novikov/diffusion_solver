@@ -94,7 +94,7 @@ namespace basic2d
 		void makeBasicDimLess()
 		{
 			// Main units
-			R_dim = r_w;
+			R_dim = r_e;
 			t_dim = 3600.0;
 			P_dim = props_sk[0].p_init;
 

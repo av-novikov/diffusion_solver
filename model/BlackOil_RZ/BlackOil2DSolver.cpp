@@ -64,8 +64,8 @@ void BlackOil2dSolver::solveStep()
 
 		averVal[0] = averValue(0);	averVal[1] = averValue(1);	averVal[2] = averValue(2);
 		dAverVal[0] = fabs(averVal[0] - averValPrev[0]);
-		dAverVal[0] = fabs(averVal[1] - averValPrev[1]);
-		dAverVal[0] = fabs(averVal[2] - averValPrev[2]);
+		dAverVal[1] = fabs(averVal[1] - averValPrev[1]);
+		dAverVal[2] = fabs(averVal[2] - averValPrev[2]);
 		averValPrev[0] = averVal[0];	averValPrev[1] = averVal[1];	averValPrev[2] = averVal[2];
 
 		iterations++;
@@ -112,7 +112,6 @@ void BlackOil2dSolver::MiddleAppr(int current, int MZ, int key)
 		RightSide[i][0] = 0.0;
 	}
 
-	Cell* neighbor[stencil];
 	if (key == PRES)
 	{
 		int idx = 0;
@@ -234,9 +233,7 @@ void BlackOil2dSolver::LeftBoundAppr(int MZ, int key)
 
 		if (i % var_size == 2)
 		{
-			if (nebr.SATUR == next.SATUR)
-				B[i][i] = -1.0;
-
+			B[i][i] = -1.0;
 			RightSide[i][0] = -next.values[2 + !next.SATUR] + nebr.values[2 + !nebr.SATUR];
 		}
 		else

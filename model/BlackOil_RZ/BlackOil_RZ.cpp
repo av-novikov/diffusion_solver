@@ -128,8 +128,8 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 			next.s_o * props_oil.getRs(next.p, next.p_bub, next.SATUR) / props_oil.getB(next.p, next.p_bub, next.SATUR)) -
 		props.getPoro(prev.p) * ((1.0 - prev.s_o - prev.s_w) / props_gas.getB(prev.p) +
 			prev.s_o * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR)),
-		props.getPoro(prev.p) * ((1.0 - prev.s_o - prev.s_w) / props_gas.getB(prev.p) +
-			prev.s_o * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR)));
+		props.getPoro(next.p) *	next.s_o * props_oil.getRs(next.p, next.p_bub, next.SATUR) / props_oil.getB(next.p, next.p_bub, next.SATUR) - 
+			props.getPoro(prev.p) *	prev.s_o * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR));
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
