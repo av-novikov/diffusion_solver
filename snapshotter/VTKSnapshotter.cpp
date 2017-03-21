@@ -157,7 +157,7 @@ void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 	}
 
 	// Middle cells
-	for(k = 1; k < nx-2; k++)
+	for(k = 1; k < nx-1; k++)
 	{
 		for(j = 0; j < ny-2; j++)
 		{
@@ -308,7 +308,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	}
 
 	// Middle cells
-	for (k = 1; k < nx - 2; k++)
+	for (k = 1; k < nx - 1; k++)
 	{
 		for (j = 0; j < ny - 2; j++)
 		{
@@ -451,7 +451,7 @@ void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 	}
 
 	// Middle cells
-	for (k = 1; k < nx - 2; k++)
+	for (k = 1; k < nx - 1; k++)
 	{
 		for (j = 0; j < ny - 2; j++)
 		{
@@ -1088,7 +1088,7 @@ void VTKSnapshotter<blackoil_rz::BlackOil_RZ>::dump_all(int snap_idx)
 	}
 
 	// Middle cells
-	for (k = 1; k < nx - 2; k++)
+	for (k = 1; k < nx - 1; k++)
 	{
 		for (j = 0; j < ny - 2; j++)
 		{

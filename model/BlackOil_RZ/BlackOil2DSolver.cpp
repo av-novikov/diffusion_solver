@@ -83,17 +83,17 @@ void BlackOil2dSolver::construction_from_fz(int N, int n, int key)
 			for (int j = 0; j < model->cellsNum_z + 2; j++)
 			{
 				Variable& next = model->cells[i*(model->cellsNum_z + 2) + j].u_next;
-				next.p += fz[i][2 * j + 1];
-				next.s_w += fz[i][2 * j + 2];
+				next.p += fz[i][var_size * j + 1];
+				next.s_w += fz[i][var_size * j + 2];
 				if (next.SATUR)
 				{
-					next.s_o += fz[i][2 * j + 3];
+					next.s_o += fz[i][var_size * j + 3];
 					next.p_bub = next.p;
 				}
 				else
 				{
-					next.s_o -= fz[i][2 * j + 2];
-					next.p_bub += fz[i][2 * j + 3];
+					next.s_o -= fz[i][var_size * j + 2];
+					next.p_bub += fz[i][var_size * j + 3];
 				}
 			}
 		}
@@ -227,20 +227,15 @@ void BlackOil2dSolver::LeftBoundAppr(int MZ, int key)
 			A[i][j] = 0.0;
 		}
 		C[i][i] = 1.0;
+		B[i][i] = -1.0;
 
-		const Variable next = model->cells[int(i / var_size)].u_next;
-		const Variable nebr = model->cells[int(i / var_size) + model->cellsNum_z + 2].u_next;
+		const Variable& next = model->cells[int(i / var_size)].u_next;
+		const Variable& nebr = model->cells[int(i / var_size) + model->cellsNum_z + 2].u_next;
 
 		if (i % var_size == 2)
-		{
-			B[i][i] = -1.0;
 			RightSide[i][0] = -next.values[2 + !next.SATUR] + nebr.values[2 + !nebr.SATUR];
-		}
 		else
-		{
-			B[i][i] = -1.0;
 			RightSide[i][0] = -next.values[i % var_size] + nebr.values[i % var_size];
-		}
 	}
 
 	map<int, double>::iterator it;

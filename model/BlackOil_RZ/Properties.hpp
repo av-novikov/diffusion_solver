@@ -33,7 +33,12 @@ namespace blackoil_rz
 		Interpolate* kr;
 		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
 		{
-			return 0.5 * pow((s_w - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0);
+			adouble isAboveZero = (s_w - props->s_wc > 0.0) ? true : false;
+			adouble isAboveCritical = (s_w > 1.0 - props->s_oc - props->s_gc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, pow((s_w - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)1.0);
+			return tmp;
 			//return kr->Solve(s_w);
 		};
 	};
@@ -51,7 +56,12 @@ namespace blackoil_rz
 		Interpolate* kr;
 		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
 		{
-			return pow((s_o - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0);
+			adouble isAboveZero = (s_o - props->s_oc > 0.0) ? true : false;
+			adouble isAboveCritical = (s_o > 1.0 - props->s_wc - props->s_gc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, pow((s_o - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)1.0);
+			return tmp;
 			//return kr->Solve(s_w);
 		};
 	};
@@ -61,7 +71,12 @@ namespace blackoil_rz
 		Interpolate* kr;
 		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
 		{
-			return pow(((adouble)(1.0 - props->s_gc) - s_w - s_o) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0);
+			adouble isAboveZero = (1.0 - s_o - s_w - props->s_gc > 0.0) ? true : false;
+			adouble isAboveCritical = (1.0 - s_o - s_w > 1.0 - props->s_wc - props->s_oc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, 0.5 * pow(((adouble)(1.0 - props->s_gc) - s_w - s_o) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)0.5);
+			return tmp;
 			//return kr->Solve(s_w);
 		};
 	};

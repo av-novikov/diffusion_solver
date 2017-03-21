@@ -10,7 +10,7 @@ const int basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, BlackOil
 
 BlackOil_RZ::BlackOil_RZ()
 {
-	x = new double[stencil * var_size];
+	x = new double[stencil * Variable::size];
 	y = new double[var_size];
 
 	jac = new double*[var_size];
