@@ -104,7 +104,7 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 	const Skeleton_Props& props = *cell.props;
 
 	trace_on(mid);
-	adouble h[var_size];
+	adouble h[var_size], tmp;
 	TapeVariable var[stencil];
 	const Variable& prev = cell.u_prev;
 
@@ -133,7 +133,6 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
-	adouble tmp[var_size];
 	for (int i = 0; i < 4; i++)
 	{
 		const Cell& beta = cells[neighbor[i]];
@@ -149,7 +148,7 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p) /
 			props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR);
 
-		condassign(h[2], satur, 
+		condassign(tmp, satur, 
 				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
 			(props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
 			props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR) +
@@ -157,6 +156,7 @@ void BlackOil_RZ::solve_eqMiddle(const Cell& cell)
 				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
 			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
 			props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR));
+		h[2] += tmp;
 	}
 
 	for (int i = 0; i < var_size; i++)
