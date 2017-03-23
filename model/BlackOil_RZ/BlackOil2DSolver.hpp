@@ -16,6 +16,7 @@ namespace blackoil_rz
 		void solveStep();
 		void writeData();
 		void construction_from_fz(int N, int n, int key);
+		void checkStability();
 
 		static const int var_size = Variable::size - 1;
 		static const int size = Variable::size;

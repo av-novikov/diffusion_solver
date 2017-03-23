@@ -34,11 +34,11 @@ class AbstractSolver {
 		virtual void doNextStep() = 0;
 		virtual void solveStep() = 0;
 
-		// Wellbore storage effect
-		double wellboreDuration;
-		bool isWellboreAffect;
-
 		double newton_step;
+		double chop_mult;
+		double max_sat_change;
+
+		virtual void checkStability();
 
 	public:
 		AbstractSolver(modelType* _model);

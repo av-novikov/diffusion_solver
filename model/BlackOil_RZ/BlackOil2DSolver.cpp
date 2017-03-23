@@ -8,6 +8,9 @@ BlackOil2dSolver::BlackOil2dSolver(BlackOil_RZ* _model) : basic2d::Basic2dSolver
 	P.open("snaps/P.dat", ofstream::out);
 	S.open("snaps/S.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
+
+	chop_mult = 0.1;
+	max_sat_change = 0.1;
 }
 BlackOil2dSolver::~BlackOil2dSolver()
 {
@@ -42,6 +45,79 @@ void BlackOil2dSolver::writeData()
 
 	qcells << endl;
 }
+void BlackOil2dSolver::checkStability()
+{
+	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit + fabs(s_cur - s_crit) * chop_mult;
+	};
+	auto barelyMobilRight = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit - fabs(s_crit - s_cur) * chop_mult;
+	};
+	auto checkBubPoint = [](auto cell, auto next)
+	{
+		if (next.SATUR)
+		{
+			if (next.s_o + next.s_w > 1.0 + EQUALITY_TOLERANCE)
+			{
+				next.SATUR = false;
+				next.s_o = 1.0 - next.s_w;
+				next.p_bub = 0.999 * cell.u_iter.p_bub;
+			}
+		}
+		else
+		{
+			if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+			{
+				next.SATUR = true;
+				next.s_o = 0.999 * cell.u_iter.s_o;
+				next.p_bub = next.p;
+			}
+		}
+	};
+	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
+	{
+		if ((next.s_o - props.s_oc) * (iter.s_o - props.s_oc) < 0.0)
+			next.s_o = barelyMobilLeft(next.s_o, props.s_oc);
+		if ((next.s_o - (1.0 - props.s_wc - props.s_gc)) * (iter.s_o - (1.0 - props.s_wc - props.s_gc)) < 0.0)
+			next.s_o = barelyMobilRight(next.s_o, 1.0 - props.s_wc - props.s_gc);
+		// Water
+		if ((next.s_w - props.s_wc) * (iter.s_w - props.s_wc) < 0.0)
+			next.s_w = barelyMobilLeft(next.s_w, props.s_wc);
+		if ((next.s_w - (1.0 - props.s_oc - props.s_gc)) * (iter.s_w - (1.0 - props.s_oc - props.s_gc)) < 0.0)
+			next.s_w = barelyMobilRight(next.s_w, 1.0 - props.s_oc - props.s_gc);
+		// Gas
+		if ((1.0 - next.s_w - next.s_o - props.s_gc) * (1.0 - iter.s_w - iter.s_o - props.s_gc) < 0.0)
+			if (fabs(next.s_o - iter.s_o) > fabs(next.s_w - iter.s_w))
+				next.s_o = 1.0 - next.s_w - barelyMobilLeft(1.0 - next.s_o - next.s_w, props.s_gc);
+			else
+				next.s_w = 1.0 - next.s_o - barelyMobilLeft(1.0 - next.s_o - next.s_w, props.s_gc);
+		if ((props.s_wc - next.s_w + props.s_oc - next.s_o) * (props.s_wc - iter.s_w + props.s_oc - iter.s_o) < 0.0)
+			if (fabs(next.s_o - iter.s_o) > fabs(next.s_w - iter.s_w))
+				next.s_o = 1.0 - next.s_w - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);
+			else
+				next.s_w = 1.0 - next.s_o - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);
+	};
+	auto checkMaxResidual = [=, this](auto next, auto iter)
+	{
+		if (fabs(next.s_w - iter.s_w) > max_sat_change)
+			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * max_sat_change;
+		if (fabs(next.s_o - iter.s_o) > max_sat_change)
+			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * max_sat_change;
+	};
+
+	for (auto cell : model->cells)
+	{
+		const Skeleton_Props& props = *cell.props;
+		Variable& next = cell.u_next;
+		const Variable& iter = cell.u_iter;
+
+		checkBubPoint(cell, next);
+		checkCritPoints(next, iter, props);
+		checkMaxResidual(next, iter);
+	}
+}
 void BlackOil2dSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -58,7 +134,7 @@ void BlackOil2dSolver::solveStep()
 
 		Solve(model->cellsNum_r + 1, BlackOil_RZ::var_size * (model->cellsNum_z + 2), PRES);
 		construction_from_fz(model->cellsNum_r + 2, BlackOil_RZ::var_size * (model->cellsNum_z + 2), PRES);
-		model->solveP_bub();
+		checkStability();
 
 		err_newton = convergance(cellIdx, varIdx);
 

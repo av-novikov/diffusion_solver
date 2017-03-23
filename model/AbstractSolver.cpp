@@ -17,7 +17,6 @@ template <class modelType>
 AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
-	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -26,31 +25,25 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 
 	t_dim = model->t_dim;
 }
-template <>
 AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::AbstractSolver(gasOil_elliptic::GasOil_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
-	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
 	t_dim = model->t_dim;
 }
-template <>
 AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::AbstractSolver(oilnit_elliptic::OilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
-	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
 	t_dim = model->t_dim;
 }
-template <>
 AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::AbstractSolver(gasOilnit_elliptic::GasOilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
-	isWellboreAffect = false;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -92,7 +85,6 @@ void AbstractSolver<modelType>::copyIterLayer()
 	for (auto& cell : model->cells)
 		cell.u_iter = cell.u_next;
 }
-template <>
 void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyIterLayer()
 {
 	for (auto& cell : model->cells)
@@ -101,7 +93,6 @@ void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyIterLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_iter = cell.u_next;
 }
-template <>
 void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyIterLayer()
 {
 	for (auto& cell : model->cells)
@@ -110,7 +101,6 @@ void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyIterLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_iter = cell.u_next;
 }
-template <>
 void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyIterLayer()
 {
 	for (auto& cell : model->cells)
@@ -131,7 +121,6 @@ void AbstractSolver<modelType>::copyTimeLayer()
 	for (auto& cell : model->cells)
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
-template <>
 void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyTimeLayer()
 {
 	for (auto& cell : model->cells)
@@ -140,7 +129,6 @@ void AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::copyTimeLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
-template <>
 void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyTimeLayer()
 {
 	for (auto& cell : model->cells)
@@ -149,7 +137,6 @@ void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyTimeLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
-template <>
 void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyTimeLayer()
 {
 	for (auto& cell : model->cells)
@@ -187,7 +174,6 @@ double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 	
 	return relErr;
 }
-template <>
 double AbstractSolver<gasOil_rz::GasOil_RZ>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -231,7 +217,6 @@ double AbstractSolver<gasOil_rz::GasOil_RZ>::convergance(int& ind, int& varInd)
 
 	return relErr;
 }
-template <>
 double AbstractSolver<blackoil_rz::BlackOil_RZ>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -264,7 +249,6 @@ double AbstractSolver<blackoil_rz::BlackOil_RZ>::convergance(int& ind, int& varI
 
 	return relErr;
 }
-template <>
 double AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -342,7 +326,6 @@ double AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::convergance(int& ind, i
 
 	return relErr;
 }
-template <>
 double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -384,7 +367,6 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::convergance(int& ind, i
 
 	return relErr;
 }
-template <>
 double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -475,7 +457,6 @@ double AbstractSolver<modelType>::averValue(const int varInd)
 	
 	return tmp / model->Volume;
 }
-template <>
 double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
 {
 	double tmp = 0.0;
@@ -496,7 +477,6 @@ double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
 
 	return tmp / model->Volume;
 }
-template <>
 double AbstractSolver<blackoil_rz::BlackOil_RZ>::averValue(const int varInd)
 {
 	double tmp = 0.0;
@@ -515,7 +495,6 @@ double AbstractSolver<blackoil_rz::BlackOil_RZ>::averValue(const int varInd)
 
 	return tmp / model->Volume;
 }
-template <>
 double AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::averValue(const int varInd)
 {
 	double tmp = 0.0;
@@ -549,7 +528,6 @@ double AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::averValue(const int var
 
 	return tmp / model->Volume;
 }
-template <>
 double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::averValue(const int varInd)
 {
 	double tmp = 0.0;
@@ -562,7 +540,6 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::averValue(const int var
 
 	return tmp / model->Volume;
 }
-template <>
 double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::averValue(const int varInd)
 {
 	double tmp = 0.0;
@@ -595,6 +572,10 @@ double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::averValue(const i
 	}
 
 	return tmp / model->Volume;
+}
+template <class modelType>
+void AbstractSolver<modelType>::checkStability()
+{
 }
 
 template class AbstractSolver<gasOil_rz::GasOil_RZ>;
