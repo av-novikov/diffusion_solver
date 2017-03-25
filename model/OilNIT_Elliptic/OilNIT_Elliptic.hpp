@@ -160,16 +160,17 @@ namespace oilnit_elliptic
 			else
 				return cell;
 		};
-		inline int getSkeletonIdx(const Cell& cell) const
+		inline const int getSkeletonIdx(const Cell& cell) const
 		{
 			int idx = 0;
-			while (idx < props_sk.size())
+			/*while (idx < props_sk.size())
 			{
 				if (cell.z <= props_sk[idx].h2 + EQUALITY_TOLERANCE)
 					return idx;
 				idx++;
-			}
-			exit(-1);
+			}*/
+			const double nu = (cell.nu >= M_PI) ? 2.0 * M_PI - cell.nu : cell.nu;
+			return int(5.0 * (nu - EQUALITY_TOLERANCE) / M_PI);
 		};
 		inline Cell& getCell(const int num)
 		{
@@ -289,36 +290,22 @@ namespace oilnit_elliptic
 			const double dz = fabs(cell.z - sk_well->h_well);
 			const double kmu = ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu)
 									? cell.props->perm_eff_mu : cell.props->perm_mu);
-
-			if (cos(cell.nu) > 0.0)
+			return kmu;
+			/*if (cos(cell.nu) > 0.0)
 				return kmu;
 			else
-				return kmu / 2.0;
+				return kmu / 2.0;*/
 		};
 		inline double getPerm_z(const Cell& cell) const
 		{
 			const double dz = fabs(cell.z - sk_well->h_well);
 			const double kz = ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) 
 									? cell.props->perm_eff_z : cell.props->perm_z);
-
-			if (cos(cell.nu) > 0.0)
+			return kz;
+			/*if (cos(cell.nu) > 0.0)
 				return kz;
 			else
-				return kz / 2.0;
-		};
-		inline double getPerm_mu_eff(const Cell& cell) const
-		{
-			if (cos(cell.nu) > 0.0)
-				return cell.props->perm_eff_mu;
-			else
-				return cell.props->perm_eff_mu / 2.0;
-		};
-		inline double getPerm_z_eff(const Cell& cell) const
-		{
-			if (cos(cell.nu) > 0.0)
-				return cell.props->perm_eff_z;
-			else
-				return cell.props->perm_eff_z / 2.0;
+				return kz / 2.0;*/
 		};
 		inline double getDistance(const Cell& cell1, const Cell& cell2) const
 		{

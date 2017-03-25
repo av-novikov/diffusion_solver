@@ -49,7 +49,8 @@ void OilNIT_Elliptic::setProps(Properties& props)
 	int idx_z = 1;
 	for (auto sk = props_sk.begin(); sk != props_sk.end(); ++sk)
 	{
-		sk->start_z = idx_z;	 idx_z += sk->cellsNum_z;
+		// TODO: some changes
+		sk->start_z = 1;	 idx_z += sk->cellsNum_z;
 		sk->perm_mu = MilliDarcyToM2(sk->perm_mu);
 		sk->perm_z = MilliDarcyToM2(sk->perm_z);
 		if (sk->isWellHere)
@@ -89,7 +90,7 @@ void OilNIT_Elliptic::setProps(Properties& props)
 void OilNIT_Elliptic::makeDimLess()
 {
 	// Main units
-	R_dim = r_e;
+	R_dim = r_e / 20.0;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
 	if (props_sk[0].t_init != 0.0)
@@ -363,26 +364,28 @@ void OilNIT_Elliptic::buildGridLog()
 }
 void OilNIT_Elliptic::setUnused()
 {
-	for (const auto& sk : props_sk)
+	/*for (const auto& sk : props_sk)
 	{
 		if (sk.isWellHere)
-		{
+		{*/
+			const auto& sk = *props_sk.begin();
 			for (int j = 0; j < cellsNum_nu; j++)
 			{
 				const int idx = sk.start_z + (sk.cellsNum_z - 1) / 2 +
 					(cellsNum_mu + 2) * (cellsNum_z + 2) * j;
 				cells[idx].isUsed = false;
 			}
-		}
-	}
+	/*	}
+	}*/
 }
 void OilNIT_Elliptic::buildWellCells()
 {
 	int counter = 0;
-	for (const auto& sk : props_sk)
+	/*for (const auto& sk : props_sk)
 	{
 		if (sk.isWellHere)
-		{
+		{*/
+			const auto sk = *props_sk.begin();
 			// lateral
 			for (int j = 0; j < cellsNum_nu; j++)
 			{
@@ -421,8 +424,8 @@ void OilNIT_Elliptic::buildWellCells()
 				wellNebrMap[idx + 1] = counter;
 				nebrMap[counter++] = make_pair<int, int>(idx + 1, idx + 2);
 			}
-		}
-	}
+		/*}
+	}*/
 }
 void OilNIT_Elliptic::setPerforated()
 {

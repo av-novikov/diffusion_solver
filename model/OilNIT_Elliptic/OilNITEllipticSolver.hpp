@@ -36,6 +36,7 @@ namespace oilnit_elliptic
 		void control();
 		void doNextStep();
 		void solveStep();
+		void solveTempStep();
 		void writeData();
 
 		inline void printWellRates()

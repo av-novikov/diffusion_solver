@@ -56,11 +56,12 @@ void ParSolver::Solve()
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
-	p.Set(1.E-15, 1000);
+	p.Set(1.E-12, 200);
 	bicgstab.SetPreconditioner(p);
 	bicgstab.Build();
 	isAssembled = true;
 
+	bicgstab.Init(1.E-22, 1.E-15, 1E+4, 10000);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
@@ -83,6 +84,7 @@ void ParSolver::SolveGMRES()
 	gmres.Build();
 	isAssembled = true;
 
+	gmres.Init(1.E-22, 1.E-15, 1E+4, 10000);
 	Mat.info();
 
 	//gmres.RecordResidualHistory();

@@ -180,17 +180,18 @@ void OilNITEllipticSolver::solveStep()
 
 		iterations++;
 	}
-
+}
+void OilNITEllipticSolver::solveTempStep()
+{
 	fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
-
-	cout << "Newton Iterations = " << iterations << endl;
 }
 void OilNITEllipticSolver::doNextStep()
 {
 	solveStep();
+	solveTempStep();
 
 	if (n > 1 && model->Q_sum != -model->Q_sum)
 	{
@@ -228,6 +229,8 @@ void OilNITEllipticSolver::doNextStep()
 			}
 		}
 	}
+
+	cout << "Newton Iterations = " << iterations << endl;
 }
 void OilNITEllipticSolver::fill(const int val)
 {
