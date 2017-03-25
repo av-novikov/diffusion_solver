@@ -294,14 +294,14 @@ using namespace std;
 	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
 
 	return props;
-}
+}*/
 oilnit_elliptic::Properties* getProps()
 {
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
 	props->cellsNum_mu = 10;
-	props->cellsNum_nu = 30;
-	props->cellsNum_z = 11;
+	props->cellsNum_nu = 18;
+	props->cellsNum_z = 9;
 
 	props->timePeriods.push_back(100.0 * 86400.0);
 	//props->timePeriods.push_back(20.0 * 86400.0);
@@ -325,12 +325,12 @@ oilnit_elliptic::Properties* getProps()
 
 	props->depth_point = 0.0;
 
-	props->perfIntervals.push_back(make_pair(5, 5));
-	props->perfIntervals.push_back(make_pair(10, 10));
+	props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(6, 6));
 
 	oilnit_elliptic::Skeleton_Props tmp;
 	tmp.isWellHere = true;
-	tmp.cellsNum_z = 11;
+	tmp.cellsNum_z = 9;
 	tmp.m = 0.1;
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
 	tmp.t_init = 0.0;
@@ -364,8 +364,8 @@ oilnit_elliptic::Properties* getProps()
 	props->props_oil.lambda = 0.0;// 0.16;
 	
 	return props;
-}*/
-blackoil_rz::Properties* getProps()
+}
+/*blackoil_rz::Properties* getProps()
 {
 	blackoil_rz::Properties* props = new blackoil_rz::Properties();
 
@@ -441,7 +441,7 @@ blackoil_rz::Properties* getProps()
 	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
 
 	return props;
-}
+}*/
 
 int main(int argc, char** argv)
 {
@@ -457,11 +457,11 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	/*oilnit_elliptic::Properties* props = getProps();
+	oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 
 	/*gasOil_elliptic::Properties* props = getProps();
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
@@ -469,11 +469,11 @@ int main(int argc, char** argv)
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	blackoil_rz::Properties* props = getProps();
+	/*blackoil_rz::Properties* props = getProps();
 	Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	return 0;
 }

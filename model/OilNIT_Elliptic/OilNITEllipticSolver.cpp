@@ -53,17 +53,44 @@ void OilNITEllipticSolver::writeData()
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		p += model->wellCells[it->first].u_next.p * model->P_dim;
-		t += model->wellCells[it->first].u_next.t * model->T_dim;
+		const Cell& cell = model->wellCells[it->first];
+
+		p += cell.u_next.p * model->P_dim;
+		//t += model->wellCells[it->first].u_next.t * model->T_dim;
 		if (model->leftBoundIsRate) {
-			plot_Pdyn << "\t" << model->wellCells[it->first].u_next.p * model->P_dim / BAR_TO_PA;
+			plot_Pdyn << "\t" << cell.u_next.p * model->P_dim / BAR_TO_PA;
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		} else
 		{
 			plot_qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
 			q += model->getRate(it->first);
 		}
-		plot_Tdyn << "\t" << model->wellCells[it->first].u_next.t * model->T_dim;
+
+		plot_Tdyn << "\t" << cell.u_next.t * model->T_dim;
+	}
+
+	//  Temperature averaging
+	for (const auto& perfInt : model->perfIntervals)
+	{
+		const Cell& cell = model->wellCells[perfInt.first];
+		if (cell.num < model->cellsNum_nu / 2)
+		{
+			const auto indices = model->getPerforationIndices(cell.num);
+			vector<double> rates;
+			for (const auto ind : indices)
+				rates.push_back(model->getRate(ind));
+
+			double temp = 0.0, rate = 0.0;
+			for (int i = 0; i < indices.size(); i++)
+			{
+				temp += rates[i] * model->wellCells[indices[i]].u_next.t;
+				rate += rates[i];
+			}
+			if (rate == 0.0)
+				plot_Tdyn << "\t" << 0.0;
+			else
+				plot_Tdyn << "\t" << temp / rate * model->T_dim;
+		}
 	}
 
 	plot_Pdyn << "\t" << p / (double)(model->Qcell.size()) / BAR_TO_PA << endl;
@@ -73,7 +100,7 @@ void OilNITEllipticSolver::writeData()
 	else
 		plot_qcells << "\t" << q * model->Q_dim * 86400.0 << endl;
 
-	plot_Tdyn << "\t" << t / (double)(model->Qcell.size()) << endl;
+	plot_Tdyn << /*"\t" << t / (double)(model->Qcell.size()) <<*/ endl;
 }
 void OilNITEllipticSolver::control()
 {

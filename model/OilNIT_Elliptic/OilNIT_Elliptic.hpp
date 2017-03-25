@@ -71,7 +71,7 @@ namespace oilnit_elliptic
 		std::map<int, int> wellNebrMap;
 		std::map<int, std::pair<int, int> > nebrMap;
 
-		inline const std::vector<int> getPerforationIndices(const int idx)
+		inline const std::vector<int> getPerforationIndices(const int idx) const
 		{
 			const Cell& cell = wellCells[idx];
 			if (cell.type == Type::WELL_LAT)
@@ -84,7 +84,7 @@ namespace oilnit_elliptic
 				return{ idx - cellsNum_nu, 2 * cellsNum_nu - idx,
 						idx, 3 * cellsNum_nu - idx, cellsNum_nu + idx, 4 * cellsNum_nu - idx };
 		};
-		inline const std::vector<int> getPerforationIndicesSameType(const int idx)
+		inline const std::vector<int> getPerforationIndicesSameType(const int idx) const 
 		{
 			const Cell& cell = wellCells[idx];
 			
@@ -99,7 +99,7 @@ namespace oilnit_elliptic
 				return{ startIdx, 3 * cellsNum_nu - startIdx, cellsNum_nu + startIdx, 4 * cellsNum_nu - startIdx };
 			}
 		};
-		inline const std::vector<int> getSymmetricalWellIndices(const int idx)
+		inline const std::vector<int> getSymmetricalWellIndices(const int idx) const
 		{
 			std::vector<int> indices;
 			const Cell& cell = wellCells[idx];
