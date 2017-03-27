@@ -18,7 +18,7 @@ ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 ParSolver::~ParSolver()
 {
 }
-void ParSolver::Init(int vecSize)
+void ParSolver::Init(const int vecSize)
 {
 	matSize = vecSize;
 	x.Allocate("x", vecSize);
@@ -41,10 +41,6 @@ void ParSolver::Assemble(const int* ind_i, const int* ind_j, const double* a, co
 		Rhs.MoveToAccelerator();
 		x.MoveToAccelerator();
 	}	
-}
-const paralution::LocalVector<double>& ParSolver::getSolution()
-{
-	return x;
 }
 void ParSolver::Solve()
 {

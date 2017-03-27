@@ -466,7 +466,7 @@ oilnit_elliptic::Properties* getProps()
 	return props;
 }*/
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	/*gasOil_rz::Properties* props = getProps();
 	Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz::Properties> scene;
@@ -481,7 +481,7 @@ int main(int argc, char** argv)
 	scene.start();*/
 
 	oilnit_elliptic::Properties* props = getProps();
-	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties> scene;
+	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

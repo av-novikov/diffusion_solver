@@ -16,6 +16,7 @@ public:
 	~Scene();
 
 	void load(propsType& props);
+	void load(propsType& props, int argc, char* argv[]);
 	void load(propsType& props, int i);
 	void setSnapshotterType(std::string type);
 	void start();

@@ -7,15 +7,17 @@
 
 class ParSolver
 {
+public:
+	typedef paralution::LocalMatrix<double> Matrix;
+	typedef paralution::LocalVector<double> Vector;
 protected:
-	paralution::LocalVector<double> x;
-	paralution::LocalVector<double> Rhs;
-	paralution::LocalMatrix<double> Mat;
-	paralution::BiCGStab<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > bicgstab;
+	Vector x, Rhs;
+	Matrix Mat;
+	paralution::BiCGStab<Matrix,Vector,double> bicgstab;
 	void SolveBiCGStab();
-	paralution::GMRES<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double > gmres;
+	paralution::GMRES<Matrix,Vector,double> gmres;
 	void SolveGMRES();
-	paralution::ILUT<paralution::LocalMatrix<double>, paralution::LocalVector<double>, double> p;
+	paralution::ILUT<Matrix,Vector,double> p;
 
 	bool isAssembled;
 	bool isPrecondBuilt;
@@ -34,11 +36,11 @@ protected:
 	void getResiduals();
 
 public:
-	void Init(int vecSize);
+	void Init(const int vecSize);
 	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 
-	const paralution::LocalVector<double>& getSolution();
+	const Vector& getSolution() { return x; };
 
 	ParSolver();
 	~ParSolver();

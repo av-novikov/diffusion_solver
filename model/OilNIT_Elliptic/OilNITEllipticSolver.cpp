@@ -1,9 +1,13 @@
 #include "model/OilNIT_Elliptic/OilNITEllipticSolver.hpp"
 
+#include "method/ParalutionInterface.h"
+#include "method/HypreInterface.hpp"
+
 using namespace std;
 using namespace oilnit_elliptic;
 
-OilNITEllipticSolver::OilNITEllipticSolver(OilNIT_Elliptic* _model) : AbstractSolver<OilNIT_Elliptic>(_model)
+template <typename solType>
+OilNITEllipticSolver<solType>::OilNITEllipticSolver(OilNIT_Elliptic* _model) : AbstractSolver<OilNIT_Elliptic>(_model)
 {
 	// Output streams
 	plot_Pdyn.open("snaps/P_dyn.dat", ofstream::out);
@@ -26,23 +30,28 @@ OilNITEllipticSolver::OilNITEllipticSolver(OilNIT_Elliptic* _model) : AbstractSo
 	// Memory allocating
 	ind_i = new int[stencil * (model->cellsNum + model->wellCells.size())];
 	ind_j = new int[stencil * (model->cellsNum + model->wellCells.size())];
+	cols = new int[model->cellsNum + model->wellCells.size()];
 	tind_i = new int[stencil * (model->cellsNum + model->wellCells.size())];
 	tind_j = new int[stencil * (model->cellsNum + model->wellCells.size())];
+	t_cols = new int[model->cellsNum + model->wellCells.size()];
 	a = new double[stencil * (model->cellsNum + model->wellCells.size())];
 	ind_rhs = new int[model->cellsNum + model->wellCells.size()];
 	rhs = new double[model->cellsNum + model->wellCells.size()];
 }
-OilNITEllipticSolver::~OilNITEllipticSolver()
+template <typename solType>
+OilNITEllipticSolver<solType>::~OilNITEllipticSolver()
 {
 	plot_Pdyn.close();
 	plot_Tdyn.close();
 	plot_qcells.close();
 
 	delete[] ind_i, ind_j, tind_i, tind_j, ind_rhs;
+	delete[] cols, t_cols;
 	delete[] a, rhs;
 
 }
-void OilNITEllipticSolver::writeData()
+template <typename solType>
+void OilNITEllipticSolver<solType>::writeData()
 {
 	double p = 0.0, t = 0.0, q = 0.0;
 
@@ -102,7 +111,8 @@ void OilNITEllipticSolver::writeData()
 
 	plot_Tdyn << /*"\t" << t / (double)(model->Qcell.size()) <<*/ endl;
 }
-void OilNITEllipticSolver::control()
+template <typename solType>
+void OilNITEllipticSolver<solType>::control()
 {
 	writeData();
 
@@ -123,7 +133,8 @@ void OilNITEllipticSolver::control()
 
 	cur_t += model->ht;
 }
-void OilNITEllipticSolver::start()
+template <typename solType>
+void OilNITEllipticSolver<solType>::start()
 {
 	int counter = 0;
 	iterations = 8;
@@ -146,7 +157,8 @@ void OilNITEllipticSolver::start()
 		model->snapshot_all(counter++);
 	writeData();
 }
-void OilNITEllipticSolver::copySolution(const paralution::LocalVector<double>& sol, const int val)
+template <typename solType>
+void OilNITEllipticSolver<solType>::copySolution(const Vector& sol, const int val)
 {
 	for (int i = 0; i < model->cellsNum; i++)
 		model->cells[i].u_next.values[val] += sol[i];
@@ -154,7 +166,8 @@ void OilNITEllipticSolver::copySolution(const paralution::LocalVector<double>& s
 	for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
 		model->wellCells[i - model->cellsNum].u_next.values[val] += sol[i];
 }
-void OilNITEllipticSolver::solveStep()
+template <typename solType>
+void OilNITEllipticSolver<solType>::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
@@ -181,14 +194,16 @@ void OilNITEllipticSolver::solveStep()
 		iterations++;
 	}
 }
-void OilNITEllipticSolver::solveTempStep()
+template <typename solType>
+void OilNITEllipticSolver<solType>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
 }
-void OilNITEllipticSolver::doNextStep()
+template <typename solType>
+void OilNITEllipticSolver<solType>::doNextStep()
 {
 	solveStep();
 	solveTempStep();
@@ -232,7 +247,8 @@ void OilNITEllipticSolver::doNextStep()
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
-void OilNITEllipticSolver::fill(const int val)
+template <typename solType>
+void OilNITEllipticSolver<solType>::fill(const int val)
 {
 	int counter = 0;
 	int i;
@@ -274,12 +290,15 @@ void OilNITEllipticSolver::fill(const int val)
 		rhs[cell.num + model->cellsNum] = -model->y[0];
 	}
 }
-void OilNITEllipticSolver::fillIndices()
+template <typename solType>
+void OilNITEllipticSolver<solType>::fillIndices()
 {
 	int pres_counter = 0, temp_counter = 0;
+	int i = 0;
 
 	for (const auto& cell : model->cells)
 	{
+		cols[i] = t_cols[i] = 0;
 		if (cell.isUsed)
 		{
 			const auto pres_idx = getMatrixStencil(cell, PRES);
@@ -287,33 +306,41 @@ void OilNITEllipticSolver::fillIndices()
 			{
 				ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = idx;
 			}
+			cols[i] += pres_idx.size();
 
 			const auto temp_idx = getMatrixStencil(cell, TEMP);
 			for (const int idx : temp_idx)
 			{
 				tind_i[temp_counter] = cell.num;			tind_j[temp_counter++] = idx;
 			}
+			t_cols[i++] += temp_idx.size();
 		}
 		else
 		{
 			ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = cell.num;
+			cols[i]++;
 			tind_i[temp_counter] = cell.num;		tind_j[temp_counter++] = cell.num;
+			cols[i++]++;
 		}
 	}
 
 	for (const auto& cell : model->wellCells)
 	{
+		cols[i] = t_cols[i] = 0;
+
 		const auto pres_idx = getMatrixStencil(cell, PRES);
 		for (const int idx : pres_idx)
 		{
 			ind_i[pres_counter] = cell.num + model->cellsNum;			ind_j[pres_counter++] = idx;
 		}
+		cols[i] += pres_idx.size();
 
 		const auto temp_idx = getMatrixStencil(cell, TEMP);
 		for (const int idx : temp_idx)
 		{
 			tind_i[temp_counter] = cell.num + model->cellsNum;			tind_j[temp_counter++] = idx;
 		}
+		t_cols[i++] += temp_idx.size();
 	}
 
 	elemNum = pres_counter;		telemNum = temp_counter;
@@ -321,8 +348,8 @@ void OilNITEllipticSolver::fillIndices()
 	for (int i = 0; i < model->cellsNum + model->wellCells.size(); i++)
 		ind_rhs[i] = i;
 }
-
-void OilNITEllipticSolver::fillq()
+template <typename solType>
+void OilNITEllipticSolver<solType>::fillq()
 {
 	int i = 0;
 	map<int, double>::iterator it = model->Qcell_ellipse.begin();
@@ -332,12 +359,14 @@ void OilNITEllipticSolver::fillq()
 		++it;
 	}
 }
-void OilNITEllipticSolver::fillDq()
+template <typename solType>
+void OilNITEllipticSolver<solType>::fillDq()
 {
 	for (int i = 0; i < n; i++)
 		dq[i] = 0.0;
 }
-void OilNITEllipticSolver::solveDq(double mult)
+template <typename solType>
+void OilNITEllipticSolver<solType>::solveDq(double mult)
 {
 	fillDq();
 	filldPdQ(mult);
@@ -352,7 +381,8 @@ void OilNITEllipticSolver::solveDq(double mult)
 	}
 	cout << endl;
 }
-void OilNITEllipticSolver::solveSystem()
+template <typename solType>
+void OilNITEllipticSolver<solType>::solveSystem()
 {
 	double s = 0.0, p1, p2;
 	map<int, double>::iterator it;
@@ -389,7 +419,8 @@ void OilNITEllipticSolver::solveSystem()
 	}
 	dq[0] = -s;
 }
-void OilNITEllipticSolver::filldPdQ(double mult)
+template <typename solType>
+void OilNITEllipticSolver<solType>::filldPdQ(double mult)
 {
 	double p1, p2, ratio;
 	ratio = mult * 0.001 / (double)(n);
@@ -425,3 +456,6 @@ void OilNITEllipticSolver::filldPdQ(double mult)
 		++it1;
 	}
 }
+
+template class OilNITEllipticSolver<ParSolver>;
+template class OilNITEllipticSolver<HypreSolver>;

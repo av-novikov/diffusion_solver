@@ -7,13 +7,15 @@
 
 #include "method/sweep.h"
 #include "model/AbstractSolver.hpp"
-#include "method/ParalutionInterface.h"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 
 namespace oilnit_elliptic
 {
+	template <typename solType>
 	class OilNITEllipticSolver : public AbstractSolver<OilNIT_Elliptic>
 	{
+	public:
+		typedef typename solType::Vector Vector;
 	protected:
 		std::ofstream plot_Pdyn;
 		std::ofstream plot_Tdyn;
@@ -152,14 +154,14 @@ namespace oilnit_elliptic
 		};
 
 		// Sparse matrix solver
-		ParSolver pres_solver, temp_solver;
+		solType pres_solver, temp_solver;
 
 		void fill(const int val);
 		void fillIndices();
-		void copySolution(const paralution::LocalVector<double>& sol, const int val);
+		void copySolution(const Vector& sol, const int val);
 
 		// Coordinate form of sparse matrix & dense vector
-		int *ind_i, *ind_j, *tind_i, *tind_j, *ind_rhs;
+		int *ind_i, *ind_j, *tind_i, *tind_j, *ind_rhs, *cols, *t_cols;
 		double *a, *rhs;
 		// Number of non-zero elements in sparse matrix
 		int elemNum, telemNum;

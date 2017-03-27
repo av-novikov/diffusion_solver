@@ -41,7 +41,7 @@ namespace oilnit_elliptic
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractMethod;
 		template<typename> friend class AbstractSolver;
-		friend class OilNITEllipticSolver;
+		template<typename> friend class OilNITEllipticSolver;
 	protected:
 
 		// Continuum properties

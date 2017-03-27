@@ -1,5 +1,9 @@
 #include "Scene.h"
 #include "paralution.hpp"
+#include <mpi.h>
+
+#include "method/ParalutionInterface.h"
+#include "method/HypreInterface.hpp"
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ/GasOil2DSolver.h"
@@ -33,7 +37,6 @@ Scene<modelType, methodType, propsType>::~Scene()
 	delete model;
 	delete method;
 }
-template <>
 Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties>::~Scene()
 {
 	paralution::stop_paralution();
@@ -41,15 +44,20 @@ Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, g
 	delete model;
 	delete method;
 }
-template <>
-Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties>::~Scene()
+Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties>::~Scene()
 {
 	paralution::stop_paralution();
 
 	delete model;
 	delete method;
 }
-template <>
+Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::~Scene()
+{
+	MPI_Finalize();
+
+	delete model;
+	delete method;
+}
 Scene<gasOilnit_elliptic::GasOilNIT_Elliptic, gasOilnit_elliptic::GasOilNITEllipticSolver, gasOilnit_elliptic::Properties>::~Scene()
 {
 	paralution::stop_paralution();
@@ -63,21 +71,24 @@ void Scene<modelType, methodType, propsType>::load(propsType& props)
 	model->load(props);
 	method = new methodType(model);
 }
-template <>
 void Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties>::load(gasOil_elliptic::Properties& props)
 {
 	model->load(props);
 	paralution::init_paralution();
 	method = new gasOil_elliptic::GasOilEllipticSolver(model);
 }
-template <>
-void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props)
+void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props)
 {
 	model->load(props);
 	paralution::init_paralution();
-	method = new oilnit_elliptic::OilNITEllipticSolver(model);
+	method = new oilnit_elliptic::OilNITEllipticSolver<ParSolver>(model);
 }
-template <>
+void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props, int argc, char* argv[])
+{
+	model->load(props);
+	MPI_Init(&argc, &argv);
+	method = new oilnit_elliptic::OilNITEllipticSolver<HypreSolver>(model);
+}
 void Scene<gasOilnit_elliptic::GasOilNIT_Elliptic, gasOilnit_elliptic::GasOilNITEllipticSolver, gasOilnit_elliptic::Properties>::load(gasOilnit_elliptic::Properties& props)
 {
 	model->load(props);
@@ -106,6 +117,7 @@ template class Scene<gasOil_rz::GasOil_RZ, gasOil_rz::GasOil2DSolver, gasOil_rz:
 template class Scene<vpp2d::VPP2d, vpp2d::VPPSolver, vpp2d::Properties>;
 template class Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties>;
 template class Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties>;
-template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver, oilnit_elliptic::Properties>;
+template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties>;
+template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>;
 template class Scene<gasOilnit_elliptic::GasOilNIT_Elliptic, gasOilnit_elliptic::GasOilNITEllipticSolver, gasOilnit_elliptic::Properties>;
 template class Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties>;
