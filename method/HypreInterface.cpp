@@ -34,13 +34,13 @@ void HypreSolver::Init(const int vecSize)
 
 	HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &solver);
 	HYPRE_PCGSetMaxIter(solver, 100);
-	HYPRE_PCGSetTol(solver, 1e-8);
+	HYPRE_PCGSetTol(solver, 1e-15);
 	HYPRE_PCGSetTwoNorm(solver, 1);
 	HYPRE_PCGSetPrintLevel(solver, 2);
 	HYPRE_PCGSetLogging(solver, 1);
 
 	HYPRE_EuclidCreate(MPI_COMM_WORLD, &precond);
-	HYPRE_EuclidSetILUT(precond, 0.01);
+	HYPRE_EuclidSetILUT(precond, 1.e-5);
 	HYPRE_PCGSetPrecond(solver, (HYPRE_PtrToSolverFcn)HYPRE_EuclidSolve,
 		(HYPRE_PtrToSolverFcn)HYPRE_EuclidSetup, precond);
 	
