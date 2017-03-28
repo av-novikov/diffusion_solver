@@ -48,10 +48,9 @@ void HypreSolver::Init(const int vecSize)
 	x_sol = new double[nrows];
 	fill_n(x_values, nrows, 0.0);
 }
-void HypreSolver::Assemble(const int* cols, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs)
+void HypreSolver::Assemble(int* cols, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs)
 {
-	auto cols_hypre = const_cast<HYPRE_Int*>(cols);
-	HYPRE_IJMatrixSetValues(ij_matrix, nrows, cols_hypre, ind_rhs, ind_j, a);
+	HYPRE_IJMatrixSetValues(ij_matrix, nrows, cols, ind_rhs, ind_j, a);
 	HYPRE_IJMatrixAssemble(ij_matrix);
 	HYPRE_IJMatrixGetObject(ij_matrix, (void **)&parcsr_matrix);
 

@@ -184,6 +184,7 @@ void OilNIT_Elliptic::buildGridLog()
 	auto sk_it = props_sk.begin();	int cells_z = 0;
 
 	const double mu_w = asinh(4.0 * r_w / l);
+	mu_init = mu_w / 2.0;
 	const double mu_e = asinh(2.0 * r_e / l);
 	double hmu = (mu_e - mu_w) / (double)cellsNum_mu;
 	const double hnu = 2.0 * M_PI / (double)cellsNum_nu;

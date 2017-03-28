@@ -31,7 +31,7 @@ public:
 	~HypreSolver();
 
 	void Init(const int vecSize);
-	void Assemble(const int* cols, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
+	void Assemble(int* cols, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 	const Vector& getSolution();
 };

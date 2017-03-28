@@ -9,6 +9,7 @@
 #include "util/utils.h"
 #include "method/mcmath.h"
 #include "Scene.h"
+#include "method/HypreInterface.hpp"
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
 #include "model/GasOil_RZ/GasOil2DSolver.h"
@@ -482,7 +483,7 @@ int main(int argc, char* argv[])
 
 	oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
-	scene.load(*props);
+	scene.load(*props/*, argc, argv*/);
 	scene.setSnapshotterType("VTK");
 	scene.start();
 

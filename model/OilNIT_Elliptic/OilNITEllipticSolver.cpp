@@ -166,8 +166,7 @@ void OilNITEllipticSolver<solType>::copySolution(const Vector& sol, const int va
 	for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
 		model->wellCells[i - model->cellsNum].u_next.values[val] += sol[i];
 }
-template <typename solType>
-void OilNITEllipticSolver<solType>::solveStep()
+void OilNITEllipticSolver<ParSolver>::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
@@ -194,11 +193,45 @@ void OilNITEllipticSolver<solType>::solveStep()
 		iterations++;
 	}
 }
-template <typename solType>
-void OilNITEllipticSolver<solType>::solveTempStep()
+void OilNITEllipticSolver<HypreSolver>::solveStep()
+{
+	int cellIdx, varIdx;
+	double err_newton = 1.0;
+	double averPresPrev = averValue(0);
+	double averPres;
+	double dAverPres = 1.0;
+
+	iterations = 0;
+	while (err_newton > 1.e-4 /*&& (dAverSat > 1.e-9 || dAverPres > 1.e-7)*/ && iterations < 10)
+	{
+		copyIterLayer();
+
+		fill(PRES);
+		pres_solver.Assemble(cols, ind_j, a, elemNum, ind_rhs, rhs);
+		pres_solver.Solve();
+		copySolution(pres_solver.getSolution(), PRES);
+
+		err_newton = convergance(cellIdx, varIdx);
+
+		averPres = averValue(0);
+		dAverPres = fabs(averPres - averPresPrev);
+		averPresPrev = averPres;
+
+		model->snapshot_all(iterations + 1);
+		iterations++;
+	}
+}
+void OilNITEllipticSolver<ParSolver>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
+	temp_solver.Solve();
+	copySolution(temp_solver.getSolution(), TEMP);
+}
+void OilNITEllipticSolver<HypreSolver>::solveTempStep()
+{
+	fill(TEMP);
+	temp_solver.Assemble(t_cols, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
 }
@@ -311,7 +344,7 @@ void OilNITEllipticSolver<solType>::fillIndices()
 			const auto temp_idx = getMatrixStencil(cell, TEMP);
 			for (const int idx : temp_idx)
 			{
-				tind_i[temp_counter] = cell.num;			tind_j[temp_counter++] = idx;
+				tind_i[temp_counter] = cell.num;		tind_j[temp_counter++] = idx;
 			}
 			t_cols[i++] += temp_idx.size();
 		}
@@ -320,7 +353,7 @@ void OilNITEllipticSolver<solType>::fillIndices()
 			ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = cell.num;
 			cols[i]++;
 			tind_i[temp_counter] = cell.num;		tind_j[temp_counter++] = cell.num;
-			cols[i++]++;
+			t_cols[i++]++;
 		}
 	}
 
