@@ -140,8 +140,8 @@ void OilNITEllipticSolver<solType>::start()
 	iterations = 8;
 
 	fillIndices();
-	pres_solver.Init(model->cellsNum + model->wellCells.size());
-	temp_solver.Init(model->cellsNum + model->wellCells.size());
+	pres_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-15, 1.e-15);
+	temp_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-8, 1.e-5);
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
@@ -217,7 +217,6 @@ void OilNITEllipticSolver<HypreSolver>::solveStep()
 		dAverPres = fabs(averPres - averPresPrev);
 		averPresPrev = averPres;
 
-		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 }

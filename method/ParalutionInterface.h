@@ -36,7 +36,7 @@ protected:
 	void getResiduals();
 
 public:
-	void Init(const int vecSize);
+	void Init(const int vecSize, const double relTol, const double dropTol);
 	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 

@@ -24,13 +24,14 @@ private:
 	int ilower, iupper, nrows;
 	double *x_values, *x_sol;
 	int* rows;
+	double relTol, dropTol;
 
 public:
 
 	HypreSolver();
 	~HypreSolver();
 
-	void Init(const int vecSize);
+	void Init(const int vecSize, const double _relTol, const double _dropTol);
 	void Assemble(int* cols, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 	const Vector& getSolution();

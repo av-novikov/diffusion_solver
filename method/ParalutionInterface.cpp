@@ -18,7 +18,7 @@ ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 ParSolver::~ParSolver()
 {
 }
-void ParSolver::Init(const int vecSize)
+void ParSolver::Init(const int vecSize, const double relTol, const double dropTol)
 {
 	matSize = vecSize;
 	x.Allocate("x", vecSize);
@@ -63,7 +63,7 @@ void ParSolver::SolveBiCGStab()
 	//bicgstab.RecordResidualHistory();
 	bicgstab.Solve(Rhs, &x);
 	//bicgstab.RecordHistory(resHistoryFile);
-	//writeSystem();
+	writeSystem();
 
 	//getResiduals();
 	//cout << "Initial residual: " << initRes << endl;

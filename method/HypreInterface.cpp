@@ -12,13 +12,18 @@ HypreSolver::~HypreSolver()
 {
 	delete[] x_values, x_sol;
 
+	HYPRE_IJMatrixDestroy(ij_matrix);
+	HYPRE_IJVectorDestroy(b);
+	HYPRE_IJVectorDestroy(x);
+
 	HYPRE_ParCSRPCGDestroy(solver);
 	HYPRE_EuclidDestroy(precond);
 }
-void HypreSolver::Init(const int vecSize)
+void HypreSolver::Init(const int vecSize, const double _relTol, const double _dropTol)
 {
 	ilower = 0;		iupper = vecSize - 1;
 	nrows = vecSize;
+	relTol = _relTol;		dropTol = _dropTol;
 
 	HYPRE_IJMatrixCreate(MPI_COMM_WORLD, ilower, iupper, ilower, iupper, &ij_matrix);
 	HYPRE_IJMatrixSetObjectType(ij_matrix, HYPRE_PARCSR);
@@ -32,16 +37,15 @@ void HypreSolver::Init(const int vecSize)
 	HYPRE_IJVectorSetObjectType(x, HYPRE_PARCSR);
 	HYPRE_IJVectorInitialize(x);
 
-	HYPRE_ParCSRPCGCreate(MPI_COMM_WORLD, &solver);
-	HYPRE_PCGSetMaxIter(solver, 100);
-	HYPRE_PCGSetTol(solver, 1e-15);
-	HYPRE_PCGSetTwoNorm(solver, 1);
-	HYPRE_PCGSetPrintLevel(solver, 2);
-	HYPRE_PCGSetLogging(solver, 1);
+	HYPRE_ParCSRBiCGSTABCreate(MPI_COMM_WORLD, &solver);
+	HYPRE_BiCGSTABSetMaxIter(solver, 200);
+	HYPRE_BiCGSTABSetTol(solver, relTol);
+	HYPRE_BiCGSTABSetPrintLevel(solver, 2);
+	HYPRE_BiCGSTABSetLogging(solver, 1);
 
 	HYPRE_EuclidCreate(MPI_COMM_WORLD, &precond);
-	HYPRE_EuclidSetILUT(precond, 1.e-5);
-	HYPRE_PCGSetPrecond(solver, (HYPRE_PtrToSolverFcn)HYPRE_EuclidSolve,
+	HYPRE_EuclidSetILUT(precond, dropTol);
+	HYPRE_BiCGSTABSetPrecond(solver, (HYPRE_PtrToSolverFcn)HYPRE_EuclidSolve,
 		(HYPRE_PtrToSolverFcn)HYPRE_EuclidSetup, precond);
 	
 	x_values = new double[nrows];
@@ -58,6 +62,9 @@ void HypreSolver::Assemble(int* cols, const int* ind_j, const double* a, const i
 	HYPRE_IJVectorAssemble(b);
 	HYPRE_IJVectorGetObject(b, (void **)&par_b);
 
+	//HYPRE_IJMatrixPrint(ij_matrix, "snaps/mat_out.mtx");
+	//HYPRE_IJVectorPrint(b, "snaps/rhs_out.data");
+
 	HYPRE_IJVectorSetValues(x, nrows, ind_rhs, x_values);	
 	HYPRE_IJVectorAssemble(x);
 	HYPRE_IJVectorGetObject(x, (void **)&par_x);
@@ -66,8 +73,11 @@ void HypreSolver::Assemble(int* cols, const int* ind_j, const double* a, const i
 }
 void HypreSolver::Solve()
 {
-	HYPRE_ParCSRPCGSetup(solver, parcsr_matrix, par_b, par_x);
-	HYPRE_ParCSRPCGSolve(solver, parcsr_matrix, par_b, par_x);
+
+	HYPRE_ParCSRBiCGSTABSetup(solver, parcsr_matrix, par_b, par_x);
+	HYPRE_ParCSRBiCGSTABSolve(solver, parcsr_matrix, par_b, par_x);
+
+	//HYPRE_IJVectorPrint(x, "snaps/x_out.data");
 }
 const HypreSolver::Vector& HypreSolver::getSolution()
 {

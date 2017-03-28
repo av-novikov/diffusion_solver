@@ -90,7 +90,7 @@ void GasOilEllipticSolver::start()
 	iterations = 8;
 
 	fillIndices();
-	solver.Init(2 * (model->cellsNum + model->wellCells.size()));
+	solver.Init(2 * (model->cellsNum + model->wellCells.size()), 1.e-15, 1.e-15);
 
 	model->setPeriod(curTimePeriod);
 	while (cur_t < Tt)
