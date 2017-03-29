@@ -301,11 +301,11 @@ oilnit_elliptic::Properties* getProps()
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
 	props->cellsNum_mu = 10;
-	props->cellsNum_nu = 30;
+	props->cellsNum_nu = 28;
 	props->cellsNum_z = 9;
 
-	props->timePeriods.push_back(100.0 * 86400.0);
-	props->timePeriods.push_back(150.0 * 86400.0);
+	props->timePeriods.push_back(10.0 * 86400.0);
+	props->timePeriods.push_back(15.0 * 86400.0);
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
@@ -314,8 +314,8 @@ oilnit_elliptic::Properties* getProps()
 	//props->pwf.push_back(150.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
 
-	props->ht = 100.0;
-	props->ht_min = 10.0;
+	props->ht = 1000.0;
+	props->ht_min = 100.0;
 	props->ht_max = 1000000.0;
 
 	props->alpha = 7200.0;
@@ -326,24 +326,22 @@ oilnit_elliptic::Properties* getProps()
 
 	props->depth_point = 0.0;
 
-	props->perfIntervals.push_back(make_pair(2, 2));
-	props->perfIntervals.push_back(make_pair(5, 5));
-	props->perfIntervals.push_back(make_pair(8, 8));
-	props->perfIntervals.push_back(make_pair(11, 11));
-	props->perfIntervals.push_back(make_pair(14, 14));
+	props->perfIntervals.push_back(make_pair(4, 4));
+	props->perfIntervals.push_back(make_pair(7, 7));
+	props->perfIntervals.push_back(make_pair(10, 10));
 
 	oilnit_elliptic::Skeleton_Props tmp;
 	tmp.isWellHere = true;
 	tmp.cellsNum_z = 9;
-	tmp.m = 0.1;
+	tmp.m = 0.15;
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
 	tmp.t_init = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
 	tmp.h_well = 5.0;
 	tmp.height = 10.0;
-	tmp.perm_mu = 5.0;
-	tmp.perm_z = 0.5;
+	tmp.perm_mu = 20.0;
+	tmp.perm_z = 2.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.lambda_r = tmp.lambda_z = 0.0;// 5.0;
@@ -356,24 +354,24 @@ oilnit_elliptic::Properties* getProps()
 
 	props->props_sk.push_back(tmp);
 
-	tmp.m = 0.12;
+	tmp.m = 0.10;
 	tmp.perm_mu = 10.0;
 	tmp.perm_z = 1.0;
 	props->props_sk.push_back(tmp);
 
-	tmp.m = 0.14;
-	tmp.perm_mu = 15.0;
-	tmp.perm_z = 1.5;
-	props->props_sk.push_back(tmp);
-
-	tmp.m = 0.16;
+	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
 	props->props_sk.push_back(tmp);
 
-	tmp.m = 0.18;
-	tmp.perm_mu = 25.0;
-	tmp.perm_z = 2.5;
+	tmp.m = 0.2;
+	tmp.perm_mu = 30.0;
+	tmp.perm_z = 3.0;
+	props->props_sk.push_back(tmp);
+
+	tmp.m = 0.15;
+	tmp.perm_mu = 20.0;
+	tmp.perm_z = 2.0;
 	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;

@@ -21,7 +21,7 @@ protected:
 
 	bool isAssembled;
 	bool isPrecondBuilt;
-	int matSize;
+	int matSize, status;
 
 	inline void writeSystem()
 	{
