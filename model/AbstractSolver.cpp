@@ -344,7 +344,7 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::convergance(int& ind, i
 			{
 				relErr = cur_relErr;
 				ind = j;
-				varInd = 0;
+				varInd = PRES;
 			}
 		}
 	}
@@ -360,7 +360,7 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::convergance(int& ind, i
 			{
 				relErr = cur_relErr;
 				ind = j;
-				varInd = 0;
+				varInd = PRES;
 			}
 		}
 	}

@@ -170,12 +170,12 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
-	double averPresPrev = averValue(0);
+	double averPresPrev = averValue(PRES);
 	double averPres;
 	double dAverPres = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 /*&& (dAverSat > 1.e-9 || dAverPres > 1.e-7)*/ && iterations < 10)
+	while (err_newton > 1.e-4 && dAverPres > 1.e-7 && iterations < 10)
 	{
 		copyIterLayer();
 
@@ -186,7 +186,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 
 		err_newton = convergance(cellIdx, varIdx);
 
-		averPres = averValue(0);				
+		averPres = averValue(PRES);
 		dAverPres = fabs(averPres - averPresPrev);	
 		averPresPrev = averPres;
 
@@ -197,7 +197,7 @@ void OilNITEllipticSolver<HypreSolver>::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
-	double averPresPrev = averValue(0);
+	double averPresPrev = averValue(PRES);
 	double averPres;
 	double dAverPres = 1.0;
 
@@ -213,7 +213,7 @@ void OilNITEllipticSolver<HypreSolver>::solveStep()
 
 		err_newton = convergance(cellIdx, varIdx);
 
-		averPres = averValue(0);
+		averPres = averValue(PRES);
 		dAverPres = fabs(averPres - averPresPrev);
 		averPresPrev = averPres;
 
