@@ -56,7 +56,7 @@ namespace oilnit_elliptic
 			std::cout << "Summary rate deviation = " << DQ * model->Q_dim * 86400.0 << std::endl;
 			std::cout << std::endl;
 		};
-		inline const std::vector<int> getMatrixStencil(const Cell& cell, const int val)
+		inline std::vector<int> getMatrixStencil(const Cell& cell, const int val)
 		{
 			std::vector<int> stencil_idx;
 
@@ -165,6 +165,8 @@ namespace oilnit_elliptic
 		double *a, *rhs;
 		// Number of non-zero elements in sparse matrix
 		int elemNum, telemNum;
+
+		std::vector<std::vector<double>> rateRatios;
 
 	public:
 		OilNITEllipticSolver(OilNIT_Elliptic* _model);

@@ -37,6 +37,31 @@ OilNITEllipticSolver<solType>::OilNITEllipticSolver(OilNIT_Elliptic* _model) : A
 	a = new double[stencil * (model->cellsNum + model->wellCells.size())];
 	ind_rhs = new int[model->cellsNum + model->wellCells.size()];
 	rhs = new double[model->cellsNum + model->wellCells.size()];
+
+	rateRatios.resize( model->perfIntervals.size() );
+	double sum;
+	for (int i = 0; i < model->perfIntervals.size(); i++)
+	{
+		const auto& perfInt = model->perfIntervals[i];
+		const Cell& cell = model->wellCells[perfInt.first];
+		auto& rateRatio = rateRatios[i];
+
+		if (cell.num < model->cellsNum_nu / 2)
+		{
+			const auto indices = model->getPerforationIndices(cell.num);
+			sum = 0.0;
+			for (const auto ind : indices)
+			{
+				rateRatio.push_back(model->getRate(ind));
+				sum += rateRatio[rateRatio.size() - 1];
+			}
+
+			if (sum != 0.0)
+				for (int i = 0; i < indices.size(); i++)
+					rateRatio[i] /= sum;
+		}
+	}
+
 }
 template <typename solType>
 OilNITEllipticSolver<solType>::~OilNITEllipticSolver()
@@ -79,26 +104,37 @@ void OilNITEllipticSolver<solType>::writeData()
 	}
 
 	//  Temperature averaging
-	for (const auto& perfInt : model->perfIntervals)
+	for (int j = 0; j < model->perfIntervals.size(); j++)
 	{
+		const auto& perfInt = model->perfIntervals[j];
+		auto& rateRatio = rateRatios[j];
 		const Cell& cell = model->wellCells[perfInt.first];
 		if (cell.num < model->cellsNum_nu / 2)
 		{
 			const auto indices = model->getPerforationIndices(cell.num);
 			vector<double> rates;
+			double rate = 0.0;
 			for (const auto ind : indices)
+			{
 				rates.push_back(model->getRate(ind));
+				rate += rates[rates.size() - 1];
+			}
 
-			double temp = 0.0, rate = 0.0;
+			double temp = 0.0;
 			for (int i = 0; i < indices.size(); i++)
 			{
-				temp += rates[i] * model->wellCells[indices[i]].u_next.t;
-				rate += rates[i];
+				if (fabs(rate) > EQUALITY_TOLERANCE / 10.0)
+				{
+					rates[i] /= rate;
+					temp += rates[i] * model->wellCells[indices[i]].u_next.t;
+				}
+				else 
+					temp += rateRatio[i] * model->wellCells[indices[i]].u_next.t;
 			}
-			if (rate == 0.0)
-				plot_Tdyn << "\t" << 0.0;
-			else
-				plot_Tdyn << "\t" << temp / rate * model->T_dim;
+			if (fabs(rate) > EQUALITY_TOLERANCE / 10.0)
+				rateRatio = rates;
+
+			plot_Tdyn << "\t" << temp * model->T_dim;
 		}
 	}
 
@@ -293,11 +329,12 @@ void OilNITEllipticSolver<solType>::fill(const int val)
 			model->setVariables(cell, val);
 
 			i = 0;
-			const auto mat_idx = getMatrixStencil(cell, val);
+			auto& mat_idx = getMatrixStencil(cell, val);
 			for (const int idx : mat_idx)
 			{
 				a[counter++] = model->jac[0][i];	i++;
 			}
+			mat_idx.clear();
 
 			rhs[cell.num] = -model->y[0];
 		}
@@ -312,12 +349,13 @@ void OilNITEllipticSolver<solType>::fill(const int val)
 		model->setVariables(cell, val);
 
 		i = 0;
-		const auto mat_idx = getMatrixStencil(cell, val);
+		auto& mat_idx = getMatrixStencil(cell, val);
 		for (const int idx : mat_idx)
 		{
 			a[counter++] = model->jac[0][i];
 			i++;
 		}
+		mat_idx.clear();
 
 		rhs[cell.num + model->cellsNum] = -model->y[0];
 	}
@@ -333,19 +371,21 @@ void OilNITEllipticSolver<solType>::fillIndices()
 		cols[i] = t_cols[i] = 0;
 		if (cell.isUsed)
 		{
-			const auto pres_idx = getMatrixStencil(cell, PRES);
+			auto& pres_idx = getMatrixStencil(cell, PRES);
 			for (const int idx : pres_idx)
 			{
 				ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = idx;
 			}
 			cols[i] += pres_idx.size();
+			pres_idx.clear();
 
-			const auto temp_idx = getMatrixStencil(cell, TEMP);
+			auto& temp_idx = getMatrixStencil(cell, TEMP);
 			for (const int idx : temp_idx)
 			{
 				tind_i[temp_counter] = cell.num;		tind_j[temp_counter++] = idx;
 			}
 			t_cols[i++] += temp_idx.size();
+			temp_idx.clear();
 		}
 		else
 		{
@@ -360,19 +400,21 @@ void OilNITEllipticSolver<solType>::fillIndices()
 	{
 		cols[i] = t_cols[i] = 0;
 
-		const auto pres_idx = getMatrixStencil(cell, PRES);
+		auto& pres_idx = getMatrixStencil(cell, PRES);
 		for (const int idx : pres_idx)
 		{
 			ind_i[pres_counter] = cell.num + model->cellsNum;			ind_j[pres_counter++] = idx;
 		}
 		cols[i] += pres_idx.size();
+		pres_idx.clear();
 
-		const auto temp_idx = getMatrixStencil(cell, TEMP);
+		auto& temp_idx = getMatrixStencil(cell, TEMP);
 		for (const int idx : temp_idx)
 		{
 			tind_i[temp_counter] = cell.num + model->cellsNum;			tind_j[temp_counter++] = idx;
 		}
 		t_cols[i++] += temp_idx.size();
+		temp_idx.clear();
 	}
 
 	elemNum = pres_counter;		telemNum = temp_counter;
