@@ -602,7 +602,7 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 			const TapeVariableNIT& nebr = var[i + 1];
 			const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta), neighbor);
 
-			h[0] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (cell.u_next.p - beta.u_next.p)) / getDistance(cell, beta);
+			h[0] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (cell.u_next.p - beta.u_next.p)) / getDistance(beta, cell);
 		}
 
 		h[0] >>= y[0];

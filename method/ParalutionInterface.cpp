@@ -62,7 +62,7 @@ void ParSolver::SolveBiCGStab()
 
 	//bicgstab.RecordResidualHistory();
 	bicgstab.Solve(Rhs, &x);
-	status = bicgstab.GetSolverStatus();
+	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//bicgstab.RecordHistory(resHistoryFile);
 	//writeSystem();
 
@@ -86,7 +86,7 @@ void ParSolver::SolveGMRES()
 
 	//gmres.RecordResidualHistory();
 	gmres.Solve(Rhs, &x);
-	status = bicgstab.GetSolverStatus();
+	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//gmres.RecordHistory(resHistoryFile);
 	//writeSystem();
 

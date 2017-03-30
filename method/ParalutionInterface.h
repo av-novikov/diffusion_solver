@@ -7,6 +7,7 @@
 
 class ParSolver
 {
+	enum class RETURN_TYPE { NO_CRITERIA, ABS_CRITERION, REL_CRITERION, DIV_CRITERIA, MAX_ITER };
 public:
 	typedef paralution::LocalMatrix<double> Matrix;
 	typedef paralution::LocalVector<double> Vector;
@@ -21,7 +22,8 @@ protected:
 
 	bool isAssembled;
 	bool isPrecondBuilt;
-	int matSize, status;
+	int matSize;
+	RETURN_TYPE status;
 
 	inline void writeSystem()
 	{
@@ -34,7 +36,6 @@ protected:
 	int iterNum;
 	const std::string resHistoryFile;
 	void getResiduals();
-
 public:
 	void Init(const int vecSize, const double relTol, const double dropTol);
 	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);

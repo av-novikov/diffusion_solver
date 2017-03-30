@@ -274,7 +274,6 @@ template <typename solType>
 void OilNITEllipticSolver<solType>::doNextStep()
 {
 	solveStep();
-	solveTempStep();
 
 	if (n > 1 && model->Q_sum != -model->Q_sum)
 	{
@@ -313,6 +312,7 @@ void OilNITEllipticSolver<solType>::doNextStep()
 		}
 	}
 
+	solveTempStep();
 	cout << "Newton Iterations = " << iterations << endl;
 }
 template <typename solType>
