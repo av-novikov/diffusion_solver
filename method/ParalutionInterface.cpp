@@ -63,6 +63,7 @@ void ParSolver::SolveBiCGStab()
 	//bicgstab.RecordResidualHistory();
 	bicgstab.Solve(Rhs, &x);
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
+	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
 	//writeSystem();
 

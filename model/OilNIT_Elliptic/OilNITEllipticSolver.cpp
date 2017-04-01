@@ -39,29 +39,6 @@ OilNITEllipticSolver<solType>::OilNITEllipticSolver(OilNIT_Elliptic* _model) : A
 	rhs = new double[model->cellsNum + model->wellCells.size()];
 
 	rateRatios.resize( model->perfIntervals.size() );
-	double sum;
-	for (int i = 0; i < model->perfIntervals.size(); i++)
-	{
-		const auto& perfInt = model->perfIntervals[i];
-		const Cell& cell = model->wellCells[perfInt.first];
-		auto& rateRatio = rateRatios[i];
-
-		if (cell.num < model->cellsNum_nu / 2)
-		{
-			const auto indices = model->getPerforationIndices(cell.num);
-			sum = 0.0;
-			for (const auto ind : indices)
-			{
-				rateRatio.push_back(model->getRate(ind));
-				sum += rateRatio[rateRatio.size() - 1];
-			}
-
-			if (sum != 0.0)
-				for (int i = 0; i < indices.size(); i++)
-					rateRatio[i] /= sum;
-		}
-	}
-
 }
 template <typename solType>
 OilNITEllipticSolver<solType>::~OilNITEllipticSolver()
@@ -180,6 +157,30 @@ void OilNITEllipticSolver<solType>::start()
 	temp_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-8, 1.e-5);
 
 	model->setPeriod(curTimePeriod);
+
+	double sum;
+	for (int i = 0; i < model->perfIntervals.size(); i++)
+	{
+		const auto& perfInt = model->perfIntervals[i];
+		const Cell& cell = model->wellCells[perfInt.first];
+		auto& rateRatio = rateRatios[i];
+
+		if (cell.num < model->cellsNum_nu / 2)
+		{
+			const auto indices = model->getPerforationIndices(cell.num);
+			sum = 0.0;
+			for (const auto ind : indices)
+			{
+				rateRatio.push_back(model->getRate(ind));
+				sum += rateRatio[rateRatio.size() - 1];
+			}
+
+			if (sum != 0.0)
+				for (int i = 0; i < indices.size(); i++)
+					rateRatio[i] /= sum;
+		}
+	}
+
 	while (cur_t < Tt)
 	{
 		control();

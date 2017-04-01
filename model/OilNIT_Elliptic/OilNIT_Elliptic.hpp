@@ -325,7 +325,7 @@ namespace oilnit_elliptic
 			{
 				if (cell2.nu - cell1.nu > cell1.hnu + EQUALITY_TOLERANCE)
 					dist = - (Cell::getH(cell1.mu, cell1.nu) * cell1.hnu + Cell::getH(cell2.mu, cell2.nu) * cell2.hnu) / 2.0;
-				else if (cell2.nu - cell1.nu < - 2.0 * cell1.hnu - EQUALITY_TOLERANCE)
+				else if (cell2.nu - cell1.nu < -cell1.hnu - EQUALITY_TOLERANCE)
 					dist = (Cell::getH(cell1.mu, cell1.nu) * cell1.hnu + Cell::getH(cell2.mu, cell2.nu) * cell2.hnu) / 2.0;
 				else
 					dist = sign(cell2.nu - cell1.nu) * (Cell::getH(cell1.mu, cell1.nu) * cell1.hnu + Cell::getH(cell2.mu, cell2.nu) * cell2.hnu) / 2.0;
@@ -414,7 +414,7 @@ namespace oilnit_elliptic
 		{
 			Cell* nebr1;
 			Cell* nebr2;
-			double r_eff;
+			double h, r_eff;
 
 			if(axis == MU_AXIS)
 			{
@@ -434,6 +434,11 @@ namespace oilnit_elliptic
 							nebr2 = &cell;
 					}
 				}
+
+				if (nebr1->mu == mu_init && nebr2->mu == mu_init)
+					h = Cell::getH(nebr1->mu, nebr1->nu) * (nebr1->mu + nebr2->mu);
+				else
+					h = sign(nebr2->mu - nebr1->mu) * (Cell::getH(nebr1->mu, nebr1->nu) * nebr1->hmu + Cell::getH(nebr2->mu, nebr2->nu) * nebr2->hmu) / 2.0;
 			}
 			else if (axis == NU_AXIS)
 			{
@@ -445,6 +450,13 @@ namespace oilnit_elliptic
 				{
 					nebr1 = neighbor[4];	nebr2 = neighbor[5];
 				}
+
+				if (nebr2->nu - nebr1->nu > 2.0 * nebr1->hnu + EQUALITY_TOLERANCE)
+					h = -(Cell::getH(nebr1->mu, nebr1->nu) * nebr1->hnu + Cell::getH(nebr2->mu, nebr2->nu) * nebr2->hnu) / 2.0;
+				else if (nebr2->nu - nebr1->nu < -2.0 * nebr1->hnu - EQUALITY_TOLERANCE)
+					h = (Cell::getH(nebr1->mu, nebr1->nu) * nebr1->hnu + Cell::getH(nebr2->mu, nebr2->nu) * nebr2->hnu) / 2.0;
+				else
+					h = sign(nebr2->nu - nebr1->nu) * (Cell::getH(nebr1->mu, nebr1->nu) * nebr1->hnu + Cell::getH(nebr2->mu, nebr2->nu) * nebr2->hnu) / 2.0;
 			}
 			else if (axis == Z_AXIS)
 			{
@@ -468,9 +480,11 @@ namespace oilnit_elliptic
 							nebr2 = &cell;
 					}
 				}
+
+				h = nebr2->z - nebr1->z;
 			}
 
-			return (nebr2->u_next.p - nebr1->u_next.p) / getDistance(*nebr1, *nebr2);
+			return (nebr2->u_next.p - nebr1->u_next.p) / h;
 		};
 		inline double getVelocity(Cell& cell, Cell** neighbor, const int axis)
 		{
@@ -517,7 +531,7 @@ namespace oilnit_elliptic
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 			{
 				A = getA(cell, neighbor, Z_AXIS);
-				a = sign(cell.z - beta.z) * std::max(0.0, sign(cell.z - beta.z) * A);
+				a = std::max(0.0, sign(cell.z - beta.z) * A);
 				r1 = cell.hz;		r2 = beta.hz;
 				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
 			}
@@ -530,7 +544,7 @@ namespace oilnit_elliptic
 				else
 					dmu = sign(cell.mu - beta.mu);
 				A = getA(cell, neighbor, MU_AXIS);
-				a = dmu * std::max(0.0, dmu * A);
+				a = std::max(0.0, dmu * A);
 				r1 = cell.hmu * Cell::getH(cell.mu, cell.nu);
 				r2 = beta.hmu * Cell::getH(beta.mu, beta.nu);
 				lambda = (r1 * getLambda(beta, MU_AXIS) + r2 * getLambda(cell, MU_AXIS)) / (r1 + r2) / r1;
@@ -540,7 +554,7 @@ namespace oilnit_elliptic
 				A = getA(cell, neighbor, NU_AXIS);
 
 				const double signum = sign(getDistance(beta, cell));
-				a = signum * std::max(0.0, signum * A);
+				a = std::max(0.0, signum * A);
 				r1 = cell.hnu * Cell::getH(cell.mu, cell.nu);
 				r2 = beta.hnu * Cell::getH(beta.mu, beta.nu);
 				lambda = (r1 * getLambda(beta, NU_AXIS) + r2 * getLambda(cell, NU_AXIS)) / (r1 + r2) / r1;
