@@ -212,6 +212,12 @@ namespace oilnit_elliptic
 								(cosh(M_PI * l / props.height) - 1.0) / (cosh(M_PI * r_w / props.height) - 1.0));
 			return props.perm_mu / (props.skins[i] / 0.08 / R / log(props.radiuses_eff[i] / r_w) + 1.0);
 		};
+		inline double getDamagedWellPerm(const Skeleton_Props& props, const int i) const
+		{
+			const double& rad = props.radiuses_eff[i];
+			return props.perm_mu / (props.skins[i] / log(1.0 / (sqrt(props.perm_mu / props.perm_z) + 1.0) * 
+													sqrt(4.0 / 3.0 * (rad * rad / r_w / r_w + rad / r_w + 1.0))) + 1.0);
+		};
 		inline void getNeighbors(const Cell& cell, Cell** const neighbor)
 		{
 			// FIXME: Only for inner cells
