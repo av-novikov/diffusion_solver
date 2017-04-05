@@ -295,24 +295,18 @@ namespace oilnit_elliptic
 		inline double getPerm_mu(const Cell& cell) const
 		{
 			const double dz = fabs(cell.z - sk_well->h_well);
-			const double kmu = ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu)
-									? cell.props->perm_eff_mu : cell.props->perm_mu);
-			return kmu;
-			/*if (cos(cell.nu) > 0.0)
-				return kmu;
-			else
-				return kmu / 2.0;*/
+			const double rad = getDistanceFromWellbore(dz, cell.mu, M_PI_2);
+			return (rad <= cell.props->radius_eff) ? cell.props->perm_eff_mu : cell.props->perm_mu;
 		};
 		inline double getPerm_z(const Cell& cell) const
 		{
 			const double dz = fabs(cell.z - sk_well->h_well);
-			const double kz = ((dz <= cell.props->radius_eff_z && cell.mu <= cell.props->radius_eff_mu) 
-									? cell.props->perm_eff_z : cell.props->perm_z);
-			return kz;
-			/*if (cos(cell.nu) > 0.0)
-				return kz;
-			else
-				return kz / 2.0;*/
+			const double rad = getDistanceFromWellbore(dz, cell.mu, M_PI_2);
+			return (rad <= cell.props->radius_eff) ? cell.props->perm_eff_z : cell.props->perm_z;
+		};
+		inline double getDistanceFromWellbore(const double dz, const double dmu, const double nu) const
+		{
+			return sqrt(dz * dz + dmu * Cell::getH(dmu, nu) * dmu * Cell::getH(dmu, nu));
 		};
 		inline double getDistance(const Cell& cell1, const Cell& cell2) const
 		{

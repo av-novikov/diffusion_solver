@@ -56,10 +56,8 @@ namespace oilnit_elliptic
 		std::vector<double> radiuses_eff;
 		// Vector of skins
 		std::vector<double> skins;
-		double perm_eff_mu;
-		double perm_eff_z;
-		double radius_eff_mu;
-		double radius_eff_z;
+		double perm_eff_mu, perm_eff_z;
+		double radius_eff_mu, radius_eff_z, radius_eff;
 		double skin;
 
 		// Top and bottom depth of perforation

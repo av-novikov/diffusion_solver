@@ -533,13 +533,16 @@ void OilNIT_Elliptic::setPeriod(int period)
 
 	for (int i = 0; i < skeletonsNum; i++)
 	{
-		props_sk[i].radius_eff_mu = asinh(props_sk[i].radiuses_eff[period] / Cell::a);
-		props_sk[i].radius_eff_z = props_sk[i].radiuses_eff[period];
+		auto& props = props_sk[i];
 
-		props_sk[i].perm_eff_mu = props_sk[i].perms_eff[period];
-		props_sk[i].perm_eff_z = props_sk[i].perm_z / props_sk[i].perm_mu * props_sk[i].perms_eff[period];
+		props.radius_eff_mu = asinh(props.radiuses_eff[period] / Cell::a);
+		props.radius_eff_z = props.radiuses_eff[period];
+		props.radius_eff = props.radiuses_eff[period];
 
-		props_sk[i].skin = props_sk[i].skins[period];
+		props.perm_eff_mu = props_sk[i].perms_eff[period];
+		props.perm_eff_z = props.perm_z / props.perm_mu * props.perms_eff[period];
+
+		props.skin = props.skins[period];
 	}
 };
 void OilNIT_Elliptic::setRateDeviation(int num, double ratio)
