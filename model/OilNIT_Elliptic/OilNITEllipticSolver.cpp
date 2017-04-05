@@ -3,6 +3,9 @@
 #include "method/ParalutionInterface.h"
 #include "method/HypreInterface.hpp"
 
+#include <array>
+#include <algorithm>
+
 using namespace std;
 using namespace oilnit_elliptic;
 
@@ -81,6 +84,9 @@ void OilNITEllipticSolver<solType>::writeData()
 	}
 
 	//  Temperature averaging
+	double rate = 0.0, aver_temp = 0.0;
+	vector<double> ratesInInterval;
+	ratesInInterval.resize(model->perfIntervals.size(), 0.0);
 	for (int j = 0; j < model->perfIntervals.size(); j++)
 	{
 		const auto& perfInt = model->perfIntervals[j];
@@ -90,30 +96,33 @@ void OilNITEllipticSolver<solType>::writeData()
 		{
 			const auto indices = model->getPerforationIndices(cell.num);
 			vector<double> rates;
-			double rate = 0.0;
 			for (const auto ind : indices)
 			{
 				rates.push_back(model->getRate(ind));
-				rate += rates[rates.size() - 1];
+				ratesInInterval[j] += rates[rates.size() - 1];
 			}
 
 			double temp = 0.0;
 			for (int i = 0; i < indices.size(); i++)
 			{
-				if (fabs(rate) > EQUALITY_TOLERANCE / 10.0)
+				if (fabs(ratesInInterval[j]) > EQUALITY_TOLERANCE / 10.0)
 				{
-					rates[i] /= rate;
+					rates[i] /= ratesInInterval[j];
 					temp += rates[i] * model->wellCells[indices[i]].u_next.t;
 				}
 				else 
 					temp += rateRatio[i] * model->wellCells[indices[i]].u_next.t;
 			}
-			if (fabs(rate) > EQUALITY_TOLERANCE / 10.0)
+			if (fabs(ratesInInterval[j]) > EQUALITY_TOLERANCE / 10.0)
 				rateRatio = rates;
 
 			plot_Tdyn << "\t" << temp * model->T_dim;
+			plot_qcells << "\t" << ratesInInterval[j] * model->Q_dim * 86400.0;
+			aver_temp += temp * ratesInInterval[j];
+			rate += ratesInInterval[j];
 		}
 	}
+	plot_Tdyn << "\t" << aver_temp / rate * model->T_dim;
 
 	plot_Pdyn << "\t" << p / (double)(model->Qcell.size()) / BAR_TO_PA << endl;
 
