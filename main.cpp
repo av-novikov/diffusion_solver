@@ -300,23 +300,23 @@ oilnit_elliptic::Properties* getProps()
 {
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
-	props->cellsNum_mu = 10;
-	props->cellsNum_nu = 28;
-	props->cellsNum_z = 9;
+	props->cellsNum_mu = 15;
+	props->cellsNum_nu = 12;
+	props->cellsNum_z = 13;
 
-	props->timePeriods.push_back(500.0 * 86400.0);
-	//props->timePeriods.push_back(2 * 86400.0);
+	props->timePeriods.push_back(10.0 * 86400.0);
+	props->timePeriods.push_back(20.0 * 86400.0);
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(100.0);
-	//props->rates.push_back(0.0);
+	props->rates.push_back(10.0);
+	props->rates.push_back(0.0);
 	//props->pwf.push_back(150.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
 
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
-	props->ht_max = 100000.0;
+	props->ht_max = 1000000.0;
 
 	props->alpha = 7200.0;
 
@@ -326,13 +326,14 @@ oilnit_elliptic::Properties* getProps()
 
 	props->depth_point = 0.0;
 
+	props->perfIntervals.push_back(make_pair(3, 3));
 	//props->perfIntervals.push_back(make_pair(4, 4));
-	props->perfIntervals.push_back(make_pair(7, 7));
+	//props->perfIntervals.push_back(make_pair(7, 7));
 	//props->perfIntervals.push_back(make_pair(10, 10));
 
 	oilnit_elliptic::Skeleton_Props tmp;
 	tmp.isWellHere = true;
-	tmp.cellsNum_z = 9;
+	tmp.cellsNum_z = 13;
 	tmp.m = 0.15;
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
 	tmp.t_init = 0.0;
@@ -344,17 +345,18 @@ oilnit_elliptic::Properties* getProps()
 	tmp.perm_z = 2.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
-	tmp.lambda_r = tmp.lambda_z = 5.0;
+	tmp.lambda_r = 5.0;
+	tmp.lambda_z = 5.0;
 	tmp.c = 1800.0;
 
-	tmp.skins.push_back(0.0);
-	//tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(0.0);
-	//tmp.radiuses_eff.push_back(0.0);
+	tmp.skins.push_back(5.0);
+	tmp.skins.push_back(5.0);
+	tmp.radiuses_eff.push_back(0.5);
+	tmp.radiuses_eff.push_back(0.5);
 
 	props->props_sk.push_back(tmp);
 
-	tmp.m = 0.10;
+	/*tmp.m = 0.10;
 	tmp.perm_mu = 10.0;
 	tmp.perm_z = 1.0;
 	props->props_sk.push_back(tmp);
@@ -364,7 +366,7 @@ oilnit_elliptic::Properties* getProps()
 	tmp.perm_z = 2.0;
 	props->props_sk.push_back(tmp);
 
-	tmp.m = 0.2;
+	tmp.m = 0.20;
 	tmp.perm_mu = 30.0;
 	tmp.perm_z = 3.0;
 	props->props_sk.push_back(tmp);
@@ -372,7 +374,7 @@ oilnit_elliptic::Properties* getProps()
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
-	props->props_sk.push_back(tmp);
+	props->props_sk.push_back(tmp);*/
 
 	props->depth_point = 0.0;
 
@@ -380,7 +382,7 @@ oilnit_elliptic::Properties* getProps()
 	props->props_oil.oil.rho_stc = 887.261;
 	props->props_oil.beta = 1.0 * 1.e-9;
 	props->props_oil.p_sat = 70.625 * 1.0e+5;
-	props->props_oil.jt = 0.0;// 4.0 * 1.e-7;
+	props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
 	props->props_oil.lambda = 0.16;

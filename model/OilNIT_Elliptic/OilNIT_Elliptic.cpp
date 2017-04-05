@@ -68,7 +68,8 @@ void OilNIT_Elliptic::setProps(Properties& props)
 		for (int j = 0; j < skeletonsNum; j++)
 		{
 			if (props_sk[j].radiuses_eff[i] > props.r_w)
-				props_sk[j].perms_eff.push_back(getDamagedPerm(props_sk[j], i));
+				props_sk[j].perms_eff.push_back(getDamagedWellPerm(props_sk[j], i));
+				//props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[0].perm_mu * log(props.props_sk[j].radiuses_eff[i] / props.r_w) / (log(props.props_sk[j].radiuses_eff[i] / props.r_w) + props.props_sk[j].skins[i])));
 			else
 				props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[j].perm_mu));
 		}
