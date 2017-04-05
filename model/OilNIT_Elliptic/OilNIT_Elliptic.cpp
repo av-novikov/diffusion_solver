@@ -504,8 +504,12 @@ void OilNIT_Elliptic::setPeriod(int period)
 				it_ell = Qcell_ellipse.find(it->first);
 				if (it_ell != Qcell_ellipse.end())
 				{
-					it_ell->second = it->second;
-					Q_sum_quater += it->second;
+					if(wellCells[it_ell->first].type == Type::WELL_LAT)
+						it_ell->second = it->second;
+					else
+						it_ell->second = 2.0 * it->second;
+					
+					Q_sum_quater += it_ell->second;
 				}
 			}
 		}
@@ -519,8 +523,12 @@ void OilNIT_Elliptic::setPeriod(int period)
 				it_ell = Qcell_ellipse.find(it->first);
 				if (it_ell != Qcell_ellipse.end())
 				{
-					it_ell->second = it->second;
-					Q_sum_quater += it->second;
+					if (wellCells[it_ell->first].type == Type::WELL_LAT)
+						it_ell->second = it->second;
+					else
+						it_ell->second = 2.0 * it->second;
+
+					Q_sum_quater += it_ell->second;
 				}
 			}
 		}
@@ -551,7 +559,7 @@ void OilNIT_Elliptic::setRateDeviation(int num, double ratio)
 
 	Qcell_ellipse[num] += Q_sum_quater * ratio;
 	for (const auto& idx : indices)
-		Qcell[idx] += Q_sum_quater * ratio;
+		Qcell[idx] += Q_sum_quater * ratio / indices.size();
 }
 double OilNIT_Elliptic::solveH()
 {
@@ -573,7 +581,7 @@ double OilNIT_Elliptic::getRate(int cur) const
 {
 	const Cell& cell = wellCells[cur];
 	const Cell& beta = cells[nebrMap.at(cur).first];
-	const Variable& next = wellCells[cur].u_next;
+	const Variable& next = cell.u_next;
 	return getTrans(cell, beta) * props_oil.getDensity(next.p).value() / props_oil.oil.rho_stc / props_oil.getViscosity(next.p).value() * (beta.u_next.p - next.p);
 }
 

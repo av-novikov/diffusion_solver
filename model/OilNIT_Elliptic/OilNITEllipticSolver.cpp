@@ -122,7 +122,10 @@ void OilNITEllipticSolver<solType>::writeData()
 			rate += ratesInInterval[j];
 		}
 	}
-	plot_Tdyn << "\t" << aver_temp / rate * model->T_dim;
+	if(fabs(rate) > EQUALITY_TOLERANCE / 10.0)
+		plot_Tdyn << "\t" << aver_temp / rate * model->T_dim;
+	else
+		plot_Tdyn << "\t" << 0.0;
 
 	plot_Pdyn << "\t" << p / (double)(model->Qcell.size()) / BAR_TO_PA << endl;
 
@@ -288,7 +291,7 @@ void OilNITEllipticSolver<solType>::doNextStep()
 	if (n > 1 && model->Q_sum != -model->Q_sum)
 	{
 		double H0 = model->P_dim * model->P_dim * fabs(model->solveH()) / BAR_TO_PA / BAR_TO_PA;
-		if (H0 > 0.1)
+		if (H0 > 2.0)
 		{
 			printWellRates();
 			fillq();
@@ -296,7 +299,7 @@ void OilNITEllipticSolver<solType>::doNextStep()
 			double mult = 0.9;
 			double H = H0;
 
-			while (H > H0 / 1000.0 || H > 0.05)
+			while (H > H0 / 10.0 || H > 2.0)
 			{
 				solveDq(mult);
 
@@ -309,7 +312,12 @@ void OilNITEllipticSolver<solType>::doNextStep()
 					it->second = q[i];
 					auto indices = model->getPerforationIndicesSameType(it->first);
 					for (auto& idx : indices)
-						model->Qcell[idx] = it->second;
+					{
+						if (model->wellCells[it->first].type == Type::WELL_LAT)
+							model->Qcell[idx] = it->second;
+						else
+							model->Qcell[idx] = it->second / 2.0;
+					}		
 
 					i++;	++it;
 				}
@@ -317,7 +325,7 @@ void OilNITEllipticSolver<solType>::doNextStep()
 				solveStep();
 				printWellRates();
 
-				H = fabs(model->solveH());
+				H = model->P_dim * model->P_dim * fabs(model->solveH()) / BAR_TO_PA / BAR_TO_PA;
 			}
 		}
 	}
@@ -507,7 +515,7 @@ template <typename solType>
 void OilNITEllipticSolver<solType>::filldPdQ(double mult)
 {
 	double p1, p2, ratio;
-	ratio = mult * 0.001 / (double)(n);
+	ratio = mult * 0.01 / (double)(n);
 
 	int i = 0, j = 0;
 	map<int, double>::iterator it0 = model->Qcell_ellipse.begin();

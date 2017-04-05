@@ -43,14 +43,14 @@ namespace oilnit_elliptic
 
 		inline void printWellRates()
 		{
-			double DQ = model->Q_sum * model->Q_dim * 86400.0;
+			double DQ = model->Q_sum_quater * model->Q_dim * 86400.0;
 			std::map<int, double>::iterator it;
 			int k = 0;
 			for (it = model->Qcell_ellipse.begin(); it != model->Qcell_ellipse.end(); ++it)
 			{
 				std::cout << "Rate in " << it->first << " = " << it->second * model->Q_dim * 86400.0 << "\t";
 				std::cout << "Press in " << it->first << " = " << model->wellCells[it->first].u_next.p * model->P_dim / BAR_TO_PA << std::endl;
-				DQ -= it->second;
+				DQ -= it->second * model->Q_dim * 86400.0;
 				k++;
 			}
 			std::cout << "Summary rate deviation = " << DQ * model->Q_dim * 86400.0 << std::endl;
