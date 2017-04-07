@@ -316,7 +316,7 @@ oilnit_elliptic::Properties* getProps()
 
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
-	props->ht_max = 1000000.0;
+	props->ht_max = 100000.0;
 
 	props->alpha = 7200.0;
 
@@ -349,8 +349,8 @@ oilnit_elliptic::Properties* getProps()
 	tmp.lambda_z = 5.0;
 	tmp.c = 1800.0;
 
-	tmp.skins.push_back(5.0);
-	tmp.skins.push_back(5.0);
+	tmp.skins.push_back(10.0);
+	tmp.skins.push_back(10.0);
 	tmp.radiuses_eff.push_back(0.5);
 	tmp.radiuses_eff.push_back(0.5);
 

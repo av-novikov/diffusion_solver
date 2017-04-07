@@ -68,7 +68,7 @@ void OilNIT_Elliptic::setProps(Properties& props)
 		for (int j = 0; j < skeletonsNum; j++)
 		{
 			if (props_sk[j].radiuses_eff[i] > props.r_w)
-				props_sk[j].perms_eff.push_back(getDamagedWellPerm(props_sk[j], i));
+				props_sk[j].perms_eff.push_back(getDamagedPerm(props_sk[j], i));
 				//props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[0].perm_mu * log(props.props_sk[j].radiuses_eff[i] / props.r_w) / (log(props.props_sk[j].radiuses_eff[i] / props.r_w) + props.props_sk[j].skins[i])));
 			else
 				props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[j].perm_mu));
@@ -617,6 +617,10 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 			h[0] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (cell.u_next.p - beta.u_next.p)) / fabs(getDistance(beta, cell));
 		}
 
+		adouble buf = h[0];
+		adouble isMiddleSide = ((cell.nu == 0.0 || cell.nu == M_PI) && cell.mu < 10.0 * mu_init) ? true : false;
+		condassign(h[0], isMiddleSide, buf / sqrt(cell.V));
+		h[0] *= cell.V;
 		h[0] >>= y[0];
 
 		trace_off();
@@ -646,6 +650,10 @@ void OilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 
 			h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) * getDensity(next.p, cell, nebr.p, beta) / props_oil.getViscosity(next.p);
 		}
+
+		adouble buf = h[0];
+		adouble isMiddleSide = ((cell.nu == 0.0 || cell.nu == M_PI) && cell.mu < 10.0 * mu_init) ? true : false;
+		condassign(h[0], isMiddleSide, buf * sqrt(cell.V));
 
 		h[0] >>= y[0];
 
@@ -688,7 +696,7 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		else
 			isPerforated = false;
 
-		condassign(h[0], isPerforated, (next.t - nebr1.t) / (adouble)(dist1) - (nebr1.t - nebr2.t) / (adouble)(dist2), next.t - nebr1.t);
+		condassign(h[0], isPerforated, ((next.t - nebr1.t) / (adouble)(dist1) - (nebr1.t - nebr2.t) / (adouble)(dist2)) / P_dim, (next.t - nebr1.t) / P_dim);
 		h[0] >>= y[0];
 
 		trace_off();
@@ -726,9 +734,9 @@ void OilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		condassign(h[0], leftIsRate,
 			(adouble)(getTrans(cell, beta)) * props_oil.getDensity(next.p) / props_oil.oil.rho_stc /
 			props_oil.getViscosity(next.p) * (nebr.p - next.p) - rate,
-			next.p - Pwf);
-		condassign(h[0], leftPresPerforated, next.p - Pwf);
-		condassign(h[0], leftPresNonPerforated, next.p - nebr.p);
+			(next.p - Pwf) / P_dim);
+		condassign(h[0], leftPresPerforated, (next.p - Pwf) / P_dim);
+		condassign(h[0], leftPresNonPerforated, (next.p - nebr.p) / P_dim);
 
 		h[0] >>= y[0];
 
@@ -748,7 +756,7 @@ void OilNIT_Elliptic::solve_eqRight(const Cell& cell, const int val)
 		const TapeVariableNIT& next = var[0];
 		const TapeVariableNIT& nebr = var[1];
 
-		h[0] = next.t - (adouble)(cell.props->t_init);
+		h[0] = (next.t - (adouble)(cell.props->t_init)) / P_dim;
 		h[0] >>= y[0];
 
 		trace_off();
@@ -765,7 +773,7 @@ void OilNIT_Elliptic::solve_eqRight(const Cell& cell, const int val)
 		const TapeVariable& next = var[0];
 		const TapeVariable& nebr = var[1];
 
-		condassign(h[0], rightIsPres, next.p - (adouble)(cell.props->p_out), next.p - (adouble)(nebr.p));
+		condassign(h[0], rightIsPres, (next.p - (adouble)(cell.props->p_out)) / P_dim, (next.p - (adouble)(nebr.p)) / P_dim);
 
 		h[0] >>= y[0];
 
@@ -786,7 +794,7 @@ void OilNIT_Elliptic::solve_eqVertical(const Cell& cell, const int val)
 		const TapeVariableNIT& next = var[0];
 		const TapeVariableNIT& nebr = var[1];
 
-		h[0] = next.t - nebr.t;
+		h[0] = (next.t - nebr.t) / P_dim;
 		h[0] >>= y[0];
 
 		trace_off();
@@ -803,7 +811,7 @@ void OilNIT_Elliptic::solve_eqVertical(const Cell& cell, const int val)
 		const TapeVariable& next = var[0];
 		const TapeVariable& nebr = var[1];
 
-		h[0] = next.p - nebr.p;
+		h[0] = (next.p - nebr.p) / P_dim;
 		h[0] >>= y[0];
 
 		trace_off();

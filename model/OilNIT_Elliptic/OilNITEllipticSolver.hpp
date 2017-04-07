@@ -167,6 +167,7 @@ namespace oilnit_elliptic
 		int elemNum, telemNum;
 
 		std::vector<std::vector<double>> rateRatios;
+		std::vector<double> rateRatiosAmongIntervals;
 
 	public:
 		OilNITEllipticSolver(OilNIT_Elliptic* _model);

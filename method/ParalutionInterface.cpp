@@ -12,8 +12,8 @@ ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 {
 	isAssembled = false;
 	isPrecondBuilt = false;
-	gmres.Init(1.E-22, 1.E-15, 1E+12, 500);
-	bicgstab.Init(1.E-22, 1.E-15, 1E+12, 500);
+	gmres.Init(1.E-17, 1.E-12, 1E+12, 500);
+	bicgstab.Init(1.E-17, 1.E-12, 1E+12, 500);
 }
 ParSolver::~ParSolver()
 {
@@ -52,12 +52,12 @@ void ParSolver::Solve()
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
-	p.Set(1.E-26, 1000);
+	p.Set(1.E-15, 100);
 	bicgstab.SetPreconditioner(p);
 	bicgstab.Build();
 	isAssembled = true;
 
-	bicgstab.Init(1.E-22, 1.E-15, 1E+12, 500);
+	bicgstab.Init(1.E-17, 1.E-12, 1E+12, 500);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();

@@ -42,6 +42,7 @@ OilNITEllipticSolver<solType>::OilNITEllipticSolver(OilNIT_Elliptic* _model) : A
 	rhs = new double[model->cellsNum + model->wellCells.size()];
 
 	rateRatios.resize( model->perfIntervals.size() );
+	rateRatiosAmongIntervals.resize( model->perfIntervals.size(), 0.0);
 }
 template <typename solType>
 OilNITEllipticSolver<solType>::~OilNITEllipticSolver()
@@ -170,7 +171,7 @@ void OilNITEllipticSolver<solType>::start()
 
 	model->setPeriod(curTimePeriod);
 
-	double sum;
+	double sum, sumAll = 0.0;
 	for (int i = 0; i < model->perfIntervals.size(); i++)
 	{
 		const auto& perfInt = model->perfIntervals[i];
@@ -190,8 +191,13 @@ void OilNITEllipticSolver<solType>::start()
 			if (sum != 0.0)
 				for (int i = 0; i < indices.size(); i++)
 					rateRatio[i] /= sum;
+
+			sumAll += sum;
+			rateRatiosAmongIntervals[i] = sum;
 		}
 	}
+	for (auto& rate : rateRatiosAmongIntervals)
+		rate /= sumAll;
 
 	while (cur_t < Tt)
 	{
@@ -358,7 +364,7 @@ void OilNITEllipticSolver<solType>::fill(const int val)
 		}
 		else
 		{
-			a[counter++] = 1.0;		rhs[cell.num] = 0.0;
+			a[counter++] = 1.0 / model->P_dim;		rhs[cell.num] = 0.0;
 		}
 	}
 
