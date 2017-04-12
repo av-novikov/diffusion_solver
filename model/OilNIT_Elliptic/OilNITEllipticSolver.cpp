@@ -59,7 +59,7 @@ OilNITEllipticSolver<solType>::~OilNITEllipticSolver()
 template <typename solType>
 void OilNITEllipticSolver<solType>::writeData()
 {
-	double p = 0.0, t = 0.0, q = 0.0;
+	double p = 0.0, q = 0.0;
 
 	plot_qcells << cur_t * t_dim / 3600.0;
 	plot_Tdyn << cur_t * t_dim / 3600.0;
@@ -71,7 +71,6 @@ void OilNITEllipticSolver<solType>::writeData()
 		const Cell& cell = model->wellCells[it->first];
 
 		p += cell.u_next.p * model->P_dim;
-		//t += model->wellCells[it->first].u_next.t * model->T_dim;
 		if (model->leftBoundIsRate) {
 			plot_Pdyn << "\t" << cell.u_next.p * model->P_dim / BAR_TO_PA;
 			plot_qcells << "\t" << it->second * model->Q_dim * 86400.0;
@@ -88,6 +87,8 @@ void OilNITEllipticSolver<solType>::writeData()
 	double rate = 0.0, aver_temp = 0.0;
 	vector<double> ratesInInterval;
 	ratesInInterval.resize(model->perfIntervals.size(), 0.0);
+	vector<double> tempInInterval;
+	tempInInterval.resize(model->perfIntervals.size(), 0.0);
 	for (int j = 0; j < model->perfIntervals.size(); j++)
 	{
 		const auto& perfInt = model->perfIntervals[j];
@@ -103,39 +104,39 @@ void OilNITEllipticSolver<solType>::writeData()
 				ratesInInterval[j] += rates[rates.size() - 1];
 			}
 
-			double temp = 0.0;
 			for (int i = 0; i < indices.size(); i++)
 			{
 				if (fabs(ratesInInterval[j]) > EQUALITY_TOLERANCE / 10.0)
 				{
 					rates[i] /= ratesInInterval[j];
-					temp += rates[i] * model->wellCells[indices[i]].u_next.t;
+					tempInInterval[j] += rates[i] * model->wellCells[indices[i]].u_next.t;
 				}
 				else 
-					temp += rateRatio[i] * model->wellCells[indices[i]].u_next.t;
+					tempInInterval[j] += rateRatio[i] * model->wellCells[indices[i]].u_next.t;
 			}
 			if (fabs(ratesInInterval[j]) > EQUALITY_TOLERANCE / 10.0)
 				rateRatio = rates;
 
-			plot_Tdyn << "\t" << temp * model->T_dim;
+			plot_Tdyn << "\t" << tempInInterval[j] * model->T_dim;
 			plot_qcells << "\t" << ratesInInterval[j] * model->Q_dim * 86400.0;
-			aver_temp += temp * ratesInInterval[j];
 			rate += ratesInInterval[j];
 		}
 	}
-	if(fabs(rate) > EQUALITY_TOLERANCE / 10.0)
-		plot_Tdyn << "\t" << aver_temp / rate * model->T_dim;
-	else
-		plot_Tdyn << "\t" << 0.0;
 
+	for (int j = 0; j < ratesInInterval.size(); j++)
+	{
+		if (fabs(rate) > EQUALITY_TOLERANCE / 10.0)
+			rateRatiosAmongIntervals[j] = ratesInInterval[j] / rate;
+		aver_temp += tempInInterval[j] * rateRatiosAmongIntervals[j];
+	}
+
+	plot_Tdyn << "\t" << aver_temp * model->T_dim << endl;
 	plot_Pdyn << "\t" << p / (double)(model->Qcell.size()) / BAR_TO_PA << endl;
 
 	if (model->leftBoundIsRate)
 		plot_qcells << "\t" << model->Q_sum * model->Q_dim * 86400.0 << endl;
 	else
 		plot_qcells << "\t" << q * model->Q_dim * 86400.0 << endl;
-
-	plot_Tdyn << /*"\t" << t / (double)(model->Qcell.size()) <<*/ endl;
 }
 template <typename solType>
 void OilNITEllipticSolver<solType>::control()
@@ -248,7 +249,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 		iterations++;
 	}
 }
-void OilNITEllipticSolver<HypreSolver>::solveStep()
+/*void OilNITEllipticSolver<HypreSolver>::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
@@ -257,7 +258,7 @@ void OilNITEllipticSolver<HypreSolver>::solveStep()
 	double dAverPres = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 /*&& (dAverSat > 1.e-9 || dAverPres > 1.e-7)*/ && iterations < 10)
+	while (err_newton > 1.e-4 /*&& (dAverSat > 1.e-9 || dAverPres > 1.e-7) && iterations < 10)
 	{
 		copyIterLayer();
 
@@ -274,7 +275,7 @@ void OilNITEllipticSolver<HypreSolver>::solveStep()
 
 		iterations++;
 	}
-}
+}*/
 void OilNITEllipticSolver<ParSolver>::solveTempStep()
 {
 	fill(TEMP);
@@ -282,13 +283,13 @@ void OilNITEllipticSolver<ParSolver>::solveTempStep()
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
 }
-void OilNITEllipticSolver<HypreSolver>::solveTempStep()
+/*void OilNITEllipticSolver<HypreSolver>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(t_cols, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
-}
+}*/
 template <typename solType>
 void OilNITEllipticSolver<solType>::doNextStep()
 {
@@ -556,4 +557,4 @@ void OilNITEllipticSolver<solType>::filldPdQ(double mult)
 }
 
 template class OilNITEllipticSolver<ParSolver>;
-template class OilNITEllipticSolver<HypreSolver>;
+//template class OilNITEllipticSolver<HypreSolver>;
