@@ -16,32 +16,15 @@ namespace basic2d
 	struct Skeleton_Props
 	{
 		double beta;
-		double d_pore_r, d_pore_z;
 		double dens_stc;
 		double perm_r;
 		double perm_z;
 
-		double m0;
+		double m_init;
 		double p_ref;
 		inline adouble getPoro(adouble p) const
 		{
-			return (adouble)(m0)* ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
-		};
-		inline adouble getPoro(adouble m, adouble p) const
-		{
-			return m * ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
-		};
-		inline adouble getPermCoseni_r(adouble m) const
-		{
-			return d_pore_r * d_pore_r * m * m * m / (1 - m) / (1 - m) / 150.0;
-		};
-		inline adouble getPermCoseni_z(adouble m) const
-		{
-			return d_pore_z * d_pore_z * m * m * m / (1 - m) / (1 - m) / 150.0;
-		};
-		inline double getInitDiam(double m_init, double k0)
-		{
-			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
+			return (adouble)(m_init)* ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
 		};
 		inline double getPerm_r(const double r) const
 		{
@@ -77,10 +60,6 @@ namespace basic2d
 		// Viscosity [cP]
 		double visc;
 		Interpolate* visc_table;
-		inline adouble getViscosity(adouble p) const
-		{
-			return (adouble)(visc);
-		};
 		// Density of fluid in STC [kg/m3]
 		double dens_stc;
 		// Volume factor for well bore
@@ -102,15 +81,10 @@ namespace basic2d
 		// Viscosity [cP]
 		double visc;
 		Interpolate* visc_table;
-		inline adouble getViscosity(const adouble p) const
-		{
-			return (adouble)(visc);
-		};
 		// Density of fluid in STC [kg/m3]
 		double dens_stc;
 		// Volume factor for well bore
 		double b_bore;
-
 		// Fluid volume factor
 		Interpolate* b;
 		inline adouble getB(adouble p) const

@@ -112,8 +112,6 @@ namespace basic2d
 			{
 				props_sk[i].perm_r /= (R_dim * R_dim);
 				props_sk[i].perm_z /= (R_dim * R_dim);
-				props_sk[i].d_pore_r /= R_dim;
-				props_sk[i].d_pore_z /= R_dim;
 
 				props_sk[i].beta /= (1.0 / P_dim);
 				props_sk[i].dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);

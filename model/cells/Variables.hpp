@@ -112,33 +112,6 @@ struct TapeVarBlackOil
 	bool SATUR;
 };
 
-struct VarSimpleAcid
-{
-	static const int size = 5;
-
-	union {
-		double values[5];
-		struct
-		{
-			double m;
-			double p;
-			double s;
-			double Ya;
-			double Ys;
-		};
-	};
-};
-struct TapeVarSimpleAcid
-{
-	static const int size = 5;
-
-	adouble m;
-	adouble p;
-	adouble s;
-	adouble Ya;
-	adouble Ys;
-};
-
 template <typename DataType>
 struct VarSimpleVPP
 {

@@ -29,6 +29,10 @@ namespace blackoil_rz
 			//condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
 			return exp((adouble)beta * (p - p_ref));
 		};
+		inline adouble getViscosity(adouble p) const
+		{
+			return (adouble)(visc);
+		};
 		// Relative fluid permeability
 		Interpolate* kr;
 		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
@@ -52,6 +56,10 @@ namespace blackoil_rz
 			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub) * exp((adouble)beta * (p_bub - p)));
 			return tmp;
 		};
+		inline adouble getViscosity(const adouble p) const
+		{
+			return (adouble)(visc);
+		};
 		// Relative fluid permeability
 		Interpolate* kr;
 		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
@@ -67,6 +75,10 @@ namespace blackoil_rz
 	};
 	struct Gas_Props : public basic2d::Gas_Props
 	{
+		inline adouble getViscosity(const adouble p) const
+		{
+			return (adouble)(visc);
+		};
 		// Relative fluid permeability
 		Interpolate* kr;
 		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const

@@ -1,4 +1,4 @@
-#ifndef ACID2D_REACTIONS_HPP_
+﻿#ifndef ACID2D_REACTIONS_HPP_
 #define ACID2D_REACTIONS_HPP_
 
 #include <array>
@@ -10,11 +10,16 @@ namespace acid2d
 {
 	struct Component
 	{
-		static double R;
+		static const double R;
 		static double T;
 
 		double mol_weight;
 		double rho_stc;
+
+		inline adouble getMolarDensity() const
+		{
+			return rho_stc / mol_weight;
+		};
 	};
 
 	// Laboratory
@@ -56,35 +61,29 @@ namespace acid2d
 		std::array<Component, N> comps;
 		std::array<double, N> indices;
 
+		double alpha;
 		double surf_init;
-		double m_init;
 		double activation_energy;
 		double reaction_const;
-
-		double reaction_rate;
-		std::array<double, N> defaultSourceRate;
-		inline double getSourceRate(int comp_idx) const
+		inline adouble getReactionRate(double m0, adouble m) const
 		{
-			return defaultSourceRate[comp_idx];
-		};
+			return reaction_const * surf_init * (1.0 - m) / (1 - m0) *
+				exp(-activation_energy / Component::R / Component::T);
+		}
 	};
 
 	static const int calcite_components_num = 5;
 	struct CalciteReaction : Reaction<calcite_components_num>
 	{
-		static const int calcite = 0;
-		static const int acid = 1;
-		static const int salt = 2;
-		static const int water = 3;
-		static const int co2 = 4;
+		enum REACTS {CALCITE, ACID, SALT, WATER, CO2};
 
 		CalciteReaction()
 		{
-			comps[calcite	] = getCaCO3();		indices[calcite	] = -1.0;
-			comps[acid		] = getHCl();		indices[acid	] = -2.0;
-			comps[salt		] = getCaCl2();		indices[salt	] = 1.0;
-			comps[water		] = getH2O();		indices[water	] = 1.0;
-			comps[co2		] = getCO2();		indices[co2		] = 1.0;
+			comps[REACTS::CALCITE	] = getCaCO3();		indices[REACTS::CALCITE	] = -1.0;
+			comps[REACTS::ACID		] = getHCl();		indices[REACTS::ACID	] = -2.0;
+			comps[REACTS::SALT		] = getCaCl2();		indices[REACTS::SALT	] = 1.0;
+			comps[REACTS::WATER		] = getH2O();		indices[REACTS::WATER	] = 1.0;
+			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
 		};
 	};
 

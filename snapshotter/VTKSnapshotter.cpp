@@ -80,7 +80,6 @@ void VTKSnapshotter<modelType>::dump_all(int i)
 {
 }
 
-
 void VTKSnapshotter<gasOil_rz::GasOil_RZ>::dump_all(int i)
 {
 	using namespace gasOil_rz;
@@ -212,12 +211,10 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	using namespace acid2d;
 
 	// Grid
-	vtkSmartPointer<vtkPolyData> grid =
-		vtkSmartPointer<vtkPolyData>::New();
+	auto grid = vtkSmartPointer<vtkPolyData>::New();
 
 	// Points
-	vtkSmartPointer<vtkPoints> points =
-		vtkSmartPointer<vtkPoints>::New();
+	auto points = vtkSmartPointer<vtkPoints>::New();
 	for (int j = 1; j < ny; j++)
 	{
 		Cell& cell = model->cells[j];
@@ -234,46 +231,31 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	grid->SetPoints(points);
 
 	// Data
-	vtkSmartPointer<vtkCellArray> polygons =
-		vtkSmartPointer<vtkCellArray>::New();
-
-	vtkSmartPointer<vtkPolygon> polygon =
-		vtkSmartPointer<vtkPolygon>::New();
+	auto polygons =	vtkSmartPointer<vtkCellArray>::New();
+	auto polygon = vtkSmartPointer<vtkPolygon>::New();
 	polygon->GetPointIds()->SetNumberOfIds(4);
-
-	vtkSmartPointer<vtkDoubleArray> poro =
-		vtkSmartPointer<vtkDoubleArray>::New();
+	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro->SetName("porosity");
-
-	vtkSmartPointer<vtkDoubleArray> pres =
-		vtkSmartPointer<vtkDoubleArray>::New();
+	auto pres =	vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
-
-	vtkSmartPointer<vtkDoubleArray> sat_l =
-		vtkSmartPointer<vtkDoubleArray>::New();
-	sat_l->SetName("LiquidSaturation");
-
-	vtkSmartPointer<vtkDoubleArray> sat_g =
-		vtkSmartPointer<vtkDoubleArray>::New();
+	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_w->SetName("WaterSaturation");
+	auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_o->SetName("OilSaturation");
+	auto sat_g = vtkSmartPointer<vtkDoubleArray>::New();
 	sat_g->SetName("GasSaturation");
-
-	vtkSmartPointer<vtkDoubleArray> conc_a =
-		vtkSmartPointer<vtkDoubleArray>::New();
+	auto conc_a = vtkSmartPointer<vtkDoubleArray>::New();
 	conc_a->SetName("AcidConcentration");
-
-	vtkSmartPointer<vtkDoubleArray> conc_s =
-		vtkSmartPointer<vtkDoubleArray>::New();
+	auto conc_w = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_w->SetName("WaterConcentration");
+	auto conc_s = vtkSmartPointer<vtkDoubleArray>::New();
 	conc_s->SetName("SaltConcentration");
-
-	vtkSmartPointer<vtkDoubleArray> vel_l =
-		vtkSmartPointer<vtkDoubleArray>::New();
-	vel_l->SetName("LiquidVelocity");
-	vel_l->SetNumberOfComponents(3);
-
-	vtkSmartPointer<vtkDoubleArray> vel_g =
-		vtkSmartPointer<vtkDoubleArray>::New();
-	vel_g->SetName("gasVelocity");
-	vel_g->SetNumberOfComponents(3);
+	auto vel_w = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_w->SetName("WaterVelocity");		vel_w->SetNumberOfComponents(3);
+	auto vel_o = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_o->SetName("OilVelocity");			vel_o->SetNumberOfComponents(3);
+	auto vel_g = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_g->SetName("GasVelocity");			vel_g->SetNumberOfComponents(3);
 
 	int k, j, idx, idx1;
 
@@ -284,6 +266,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 		idx = j;
 		idx1 = j + 1;
 		Cell& cell = model->cells[idx1];
+		Variable& next = cell.u_next;
 
 		polygon->GetPointIds()->SetId(0, idx);
 		polygon->GetPointIds()->SetId(1, idx + ny - 1);
@@ -291,19 +274,19 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 		polygon->GetPointIds()->SetId(3, idx + 1);
 		polygons->InsertNextCell(polygon);
 
-		poro->InsertNextValue(cell.u_next.m);
-		pres->InsertNextValue(cell.u_next.p);
-		sat_l->InsertNextValue(cell.u_next.s);
-		sat_g->InsertNextValue(1.0 - cell.u_next.s);
-		conc_a->InsertNextValue(1.0 - cell.u_next.Ya);
-		conc_s->InsertNextValue(1.0 - cell.u_next.Ys);
+		poro->InsertNextValue(next.m);
+		pres->InsertNextValue(next.p);
+		sat_w->InsertNextValue(next.sw);
+		sat_o->InsertNextValue(next.so);
+		sat_g->InsertNextValue(1.0 - next.sw - next.so);
+		conc_a->InsertNextValue(1.0 - next.xa);
+		conc_w->InsertNextValue(1.0 - next.xw);
+		conc_s->InsertNextValue(1.0 - next.xw - next.xa);
 		vel[0] = 0.0;
 		vel[1] = 0.0;
 		vel[2] = 0.0;
-		vel_l->InsertNextTuple(vel);
-		vel[0] = 0.0;
-		vel[1] = 0.0;
-		vel[2] = 0.0;
+		vel_w->InsertNextTuple(vel);
+		vel_o->InsertNextTuple(vel);
 		vel_g->InsertNextTuple(vel);
 	}
 
@@ -315,6 +298,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			idx = k * (ny - 1) + j;
 			idx1 = k * ny + j + 1;
 			Cell& cell = model->cells[idx1];
+			Variable& next = cell.u_next;
 
 			polygon->GetPointIds()->SetId(0, idx);
 			polygon->GetPointIds()->SetId(1, idx + ny - 1);
@@ -322,16 +306,22 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			polygon->GetPointIds()->SetId(3, idx + 1);
 			polygons->InsertNextCell(polygon);
 
-			poro->InsertNextValue(cell.u_next.m);
-			pres->InsertNextValue(cell.u_next.p);
-			sat_l->InsertNextValue(cell.u_next.s);
-			sat_g->InsertNextValue(1.0 - cell.u_next.s);
-			conc_a->InsertNextValue(1.0 - cell.u_next.Ya);
-			conc_s->InsertNextValue(1.0 - cell.u_next.Ys);
-			vel[0] = r_dim / t_dim * model->getLiquidVelocity(cell, NEXT, R_AXIS);
-			vel[1] = r_dim / t_dim * model->getLiquidVelocity(cell, NEXT, Z_AXIS);
+			poro->InsertNextValue(next.m);
+			pres->InsertNextValue(next.p);
+			sat_w->InsertNextValue(next.sw);
+			sat_o->InsertNextValue(next.so);
+			sat_g->InsertNextValue(1.0 - next.sw - next.so);
+			conc_a->InsertNextValue(1.0 - next.xa);
+			conc_w->InsertNextValue(1.0 - next.xw);
+			conc_s->InsertNextValue(1.0 - next.xw - next.xa);
+			vel[0] = r_dim / t_dim * model->getWaterVelocity(cell, NEXT, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getWaterVelocity(cell, NEXT, Z_AXIS);
 			vel[2] = 0.0;
-			vel_l->InsertNextTuple(vel);
+			vel_w->InsertNextTuple(vel);
+			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);
+			vel[2] = 0.0;
+			vel_o->InsertNextTuple(vel);
 			vel[0] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, R_AXIS);
 			vel[1] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, Z_AXIS);
 			vel[2] = 0.0;
@@ -344,16 +334,18 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
 	fd->AddArray(pres);
-	fd->AddArray(sat_l);
+	fd->AddArray(sat_w);
+	fd->AddArray(sat_o);
 	fd->AddArray(sat_g);
 	fd->AddArray(conc_a);
+	fd->AddArray(conc_w);
 	fd->AddArray(conc_s);
-	fd->AddArray(vel_l);
+	fd->AddArray(vel_w);
+	fd->AddArray(vel_o);
 	fd->AddArray(vel_g);
 
 	// Writing
-	vtkSmartPointer<vtkXMLPolyDataWriter> writer =
-		vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+	auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
 
 	writer->SetFileName(getFileName(i).c_str());
 	writer->SetInputData(grid);

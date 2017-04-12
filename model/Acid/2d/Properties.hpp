@@ -45,56 +45,135 @@ namespace acid2d
 		SolidComponent cur_mineral;
 
 		// Initial values
-		double m_init;
 		double p_init;
-		double s_init;
-		double Ya_init;
-		double Ys_init;
+		double sw_init;
+		double so_init;
+		double xa_init;
+		double xw_init;
+		double xa_eqbm;
+
+		double d_pore_r, d_pore_z;
+		inline adouble getPermCoseni_r(adouble m) const
+		{
+			//return d_pore_r * d_pore_r * m * m * m / (1 - m) / (1 - m) / 150.0;
+			return perm_r * (m * m * m / (1 - m) / (1 - m)) / 
+							(m_init * m_init * m_init / (1 - m_init) / (1 - m_init));
+		};
+		inline adouble getPermCoseni_z(adouble m) const
+		{
+			//return d_pore_z * d_pore_z * m * m * m / (1 - m) / (1 - m) / 150.0;
+			return perm_z * (m * m * m / (1 - m) / (1 - m)) /
+				(m_init * m_init * m_init / (1 - m_init) / (1 - m_init));
+		};
+		inline double getInitDiam(double m_init, double k0)
+		{
+			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
+		};
+
+
+		inline adouble getMolarWeight() const
+		{
+			return cur_mineral.mol_weight;
+		};
+		inline adouble getMolarDensity() const
+		{
+			return cur_mineral.getMolarDensity();
+		};
 	};
-	struct Liquid_Props : public basic2d::Liquid_Props
+	struct Water_Props : public basic2d::Liquid_Props
 	{
 		LiquidComponent acid;
 		LiquidComponent salt;
 		LiquidComponent water;
 
 		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
 		{
-			return kr->Solve(s_w);
+			adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
+			adouble isAboveCritical = (sw > 1.0 - props->s_oc - props->s_gc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, pow((sw - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)1.0);
+			return tmp;
 		};
-		inline adouble getDensity(adouble p, adouble Ya, adouble Ys) const
+		inline adouble getMolarWeight(adouble xa, adouble xw) const
 		{
-			return	acid.getDensity(p) * Ya + 
-					salt.getDensity(p) * Ys + 
-					water.getDensity(p) * ((adouble)(1.0) - Ya - Ys);
+			return xa * acid.mol_weight + xw * water.mol_weight + (1.0 - xa - xw) * salt.mol_weight;
+		};
+		inline adouble getMolarDensity(adouble p, adouble xa, adouble xw) const
+		{
+			return 1.0 / (xa / acid.getMolarDensity() + xw / water.getMolarDensity() + (1.0 - xa - xw) / salt.getMolarDensity());
+		};
+		inline adouble getViscosity(adouble p, adouble xa, adouble xw) const
+		{
+			return visc;
+		};
+	};
+	struct Oil_Props : public basic2d::Liquid_Props
+	{
+		LiquidComponent oil;
+
+		Interpolate* kr;
+		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
+		{
+			adouble isAboveZero = (so - props->s_oc > 0.0) ? true : false;
+			adouble isAboveCritical = (so > 1.0 - props->s_wc - props->s_gc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, pow((so - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)1.0);
+			return tmp;
+		};
+		inline adouble getMolarWeight() const
+		{
+			return oil.mol_weight;
+		};
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return oil.getMolarDensity();
+		};
+		inline adouble getViscosity(adouble p) const
+		{
+			return visc;
 		};
 	};
 	struct Gas_Props : public basic2d::Gas_Props
 	{
 		GasComponent co2;
 
-		// Relative fluid permeability
 		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
 		{
-			return kr->Solve(s_w);
+			adouble isAboveZero = (1.0 - so - sw - props->s_gc > 0.0) ? true : false;
+			adouble isAboveCritical = (1.0 - so - sw > 1.0 - props->s_wc - props->s_oc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, 0.5 * pow(((adouble)(1.0 - props->s_gc) - sw - so) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)0.5);
+			return tmp;
 		};
-
-		inline adouble getDensity(adouble p) const
+		inline adouble getMolarWeight() const
 		{
-			return co2.getDensity(p);
+			return co2.mol_weight;
+		}
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return co2.getMolarDensity();
+		};
+		inline adouble getViscosity(adouble p) const
+		{
+			return visc;
 		};
 	};
 	struct Properties : public basic2d::Properties
 	{
 		std::vector<Skeleton_Props> props_sk;
-		Liquid_Props props_l;
+		Water_Props props_w;
+		Oil_Props props_o;
 		Gas_Props props_g;
 
-		// Data set (saturation, relative oil permeability)
+		/*// Data set (saturation, relative oil permeability)
 		std::vector< std::pair<double, double> > kr_l;
 		// Data set (saturation, relative gas permeability)
-		std::vector< std::pair<double, double> > kr_g;
+		std::vector< std::pair<double, double> > kr_g;*/
 	};
 };
 

@@ -1,4 +1,4 @@
-#include <new>
+﻿#include <new>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -28,6 +28,8 @@
 
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/BlackOil_RZ/BlackOil2DSolver.hpp"
+
+#include "model/Acid/2d/Acid2d.hpp"
 
 using namespace std;
 
@@ -301,7 +303,7 @@ oilnit_elliptic::Properties* getProps()
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
 	props->cellsNum_mu = 15;
-	props->cellsNum_nu = 12;
+	props->cellsNum_nu = 28;
 	props->cellsNum_z = 13;
 
 	props->timePeriods.push_back(10.0 * 86400.0);
@@ -309,7 +311,7 @@ oilnit_elliptic::Properties* getProps()
 
 	props->leftBoundIsRate = true;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(10.0);
+	props->rates.push_back(50.0);
 	props->rates.push_back(0.0);
 	//props->pwf.push_back(150.0 * 1.E+5);
 	//props->pwf.push_back(200.0 * 1.E+5);
@@ -326,10 +328,10 @@ oilnit_elliptic::Properties* getProps()
 
 	props->depth_point = 0.0;
 
-	props->perfIntervals.push_back(make_pair(3, 3));
-	//props->perfIntervals.push_back(make_pair(4, 4));
-	//props->perfIntervals.push_back(make_pair(7, 7));
-	//props->perfIntervals.push_back(make_pair(10, 10));
+	//props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(4, 4));
+	props->perfIntervals.push_back(make_pair(7, 7));
+	props->perfIntervals.push_back(make_pair(10, 10));
 
 	oilnit_elliptic::Skeleton_Props tmp;
 	tmp.isWellHere = true;
@@ -349,32 +351,50 @@ oilnit_elliptic::Properties* getProps()
 	tmp.lambda_z = 5.0;
 	tmp.c = 1800.0;
 
-	tmp.skins.push_back(10.0);
-	tmp.skins.push_back(10.0);
-	tmp.radiuses_eff.push_back(0.5);
-	tmp.radiuses_eff.push_back(0.5);
+	//tmp.skins.push_back(2.68);
+	//tmp.skins.push_back(2.68);
+	tmp.skins.push_back(30.0);
+	tmp.skins.push_back(30.0);
+	tmp.radiuses_eff.push_back(1.0);
+	tmp.radiuses_eff.push_back(1.0);
 
 	props->props_sk.push_back(tmp);
-
-	/*tmp.m = 0.10;
+	
+	tmp.m = 0.10;
 	tmp.perm_mu = 10.0;
 	tmp.perm_z = 1.0;
+	tmp.skins[0] = 40.0;
+	tmp.skins[1] = 40.0;
+	tmp.radiuses_eff[0] = 0.1;
+	tmp.radiuses_eff[1] = 0.1;
 	props->props_sk.push_back(tmp);
 
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
+	tmp.skins[0] = 30.0;
+	tmp.skins[1] = 30.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
 
 	tmp.m = 0.20;
 	tmp.perm_mu = 30.0;
 	tmp.perm_z = 3.0;
+	tmp.skins[0] = 20.0;
+	tmp.skins[1] = 20.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
 
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
-	props->props_sk.push_back(tmp);*/
+	tmp.skins[0] = 30.0;
+	tmp.skins[1] = 30.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
+	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;
 
@@ -466,6 +486,8 @@ oilnit_elliptic::Properties* getProps()
 
 	return props;
 }*/
+
+double acid2d::Component::T = 350.0;
 
 int main(int argc, char* argv[])
 {
