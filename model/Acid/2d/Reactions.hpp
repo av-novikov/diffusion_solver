@@ -10,16 +10,12 @@ namespace acid2d
 {
 	struct Component
 	{
-		static const double R;
+		static double p_std;
+		static double R;
 		static double T;
 
 		double mol_weight;
 		double rho_stc;
-
-		inline adouble getMolarDensity() const
-		{
-			return rho_stc / mol_weight;
-		};
 	};
 
 	// Laboratory

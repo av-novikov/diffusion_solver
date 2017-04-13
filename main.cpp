@@ -298,7 +298,7 @@ using namespace std;
 
 	return props;
 }*/
-oilnit_elliptic::Properties* getProps()
+/*oilnit_elliptic::Properties* getProps()
 {
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
@@ -408,7 +408,7 @@ oilnit_elliptic::Properties* getProps()
 	props->props_oil.lambda = 0.16;
 	
 	return props;
-}
+}*/
 /*blackoil_rz::Properties* getProps()
 {
 	blackoil_rz::Properties* props = new blackoil_rz::Properties();
@@ -487,6 +487,13 @@ oilnit_elliptic::Properties* getProps()
 	return props;
 }*/
 
+acid2d::Properties* getProps()
+{
+	acid2d::Properties* props = new acid2d::Properties;
+
+	return props;
+}
+
 double acid2d::Component::T = 350.0;
 
 int main(int argc, char* argv[])
@@ -503,11 +510,11 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	oilnit_elliptic::Properties* props = getProps();
+	/*oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
-	scene.load(*props/*, argc, argv*/);
+	scene.load(*props/*, argc, argv);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	/*gasOil_elliptic::Properties* props = getProps();
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
@@ -520,6 +527,12 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
+
+	acid2d::Properties* props = getProps();
+	Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	//scene.start();
 
 	return 0;
 }

@@ -25,7 +25,6 @@ namespace basic2d
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
 		template<typename> friend class Basic2dSolver;
 	public:
 		typedef cellType<varType> Cell;

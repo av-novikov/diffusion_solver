@@ -26,6 +26,9 @@
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/BlackOil_RZ/BlackOil2DSolver.hpp"
 
+#include "model/Acid/2d/Acid2d.hpp"
+#include "model/Acid/2d/Acid2dSolver.hpp"
+
 template <class modelType, class methodType, typename propsType>
 Scene<modelType, methodType, propsType>::Scene()
 {
@@ -121,3 +124,4 @@ template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEl
 template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>;
 template class Scene<gasOilnit_elliptic::GasOilNIT_Elliptic, gasOilnit_elliptic::GasOilNITEllipticSolver, gasOilnit_elliptic::Properties>;
 template class Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties>;
+template class Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>;

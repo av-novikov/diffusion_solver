@@ -24,7 +24,6 @@ namespace vpp2d
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
 		friend class VPPSolver;
 
 	protected:

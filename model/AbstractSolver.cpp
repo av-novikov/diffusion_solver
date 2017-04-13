@@ -8,6 +8,7 @@
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
+#include "model/Acid/2d/Acid2d.hpp"
 
 #include <iomanip>
 
@@ -585,3 +586,4 @@ template class AbstractSolver<gasOil_elliptic::GasOil_Elliptic>;
 template class AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>;
 template class AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>;
 template class AbstractSolver<blackoil_rz::BlackOil_RZ>;
+template class AbstractSolver<acid2d::Acid2d>;

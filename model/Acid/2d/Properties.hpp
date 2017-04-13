@@ -16,22 +16,34 @@ namespace acid2d
 
 	struct SolidComponent : Component
 	{
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return rho_stc / mol_weight;
+		};
 		double beta;
 		inline adouble getDensity(adouble p) const
 		{
-			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* p);
+			return rho_stc;
 		};
 	};
 	struct LiquidComponent : Component
 	{
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return getDensity(p) / mol_weight;
+		};
 		double beta;
 		inline adouble getDensity(adouble p) const
 		{
-			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* p);
+			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* (p - p_std));
 		};
 	};
 	struct GasComponent : Component
 	{
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return getDensity(p) / mol_weight;
+		};
 		double z;
 		Interpolate* z_table;
 		inline adouble getDensity(adouble p) const
@@ -75,15 +87,15 @@ namespace acid2d
 		{
 			return cur_mineral.mol_weight;
 		};
-		inline adouble getMolarDensity() const
+		inline adouble getMolarDensity(adouble p) const
 		{
-			return cur_mineral.getMolarDensity();
+			return cur_mineral.getMolarDensity(p);
 		};
 	};
 	struct Water_Props : public basic2d::Liquid_Props
 	{
 		LiquidComponent acid;
-		LiquidComponent salt;
+		SolidComponent salt;
 		LiquidComponent water;
 
 		Interpolate* kr;
@@ -102,11 +114,15 @@ namespace acid2d
 		};
 		inline adouble getMolarDensity(adouble p, adouble xa, adouble xw) const
 		{
-			return 1.0 / (xa / acid.getMolarDensity() + xw / water.getMolarDensity() + (1.0 - xa - xw) / salt.getMolarDensity());
+			return 1.0 / (xa / acid.getMolarDensity(p) + xw / water.getMolarDensity(p) + (1.0 - xa - xw) / salt.getMolarDensity(p));
 		};
 		inline adouble getViscosity(adouble p, adouble xa, adouble xw) const
 		{
 			return visc;
+		};
+		inline adouble getDensity(adouble p, adouble xa, adouble xw)
+		{
+			return getMolarDensity(p, xa, xw) * getMolarWeight(xa, xw);
 		};
 	};
 	struct Oil_Props : public basic2d::Liquid_Props
@@ -129,7 +145,7 @@ namespace acid2d
 		};
 		inline adouble getMolarDensity(adouble p) const
 		{
-			return oil.getMolarDensity();
+			return oil.getMolarDensity(p);
 		};
 		inline adouble getViscosity(adouble p) const
 		{
@@ -156,7 +172,7 @@ namespace acid2d
 		}
 		inline adouble getMolarDensity(adouble p) const
 		{
-			return co2.getMolarDensity();
+			return co2.getMolarDensity(p);
 		};
 		inline adouble getViscosity(adouble p) const
 		{

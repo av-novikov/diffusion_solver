@@ -31,7 +31,6 @@ namespace acid2d
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
 		friend class Acid2dSolver;
 
 	protected:
@@ -40,6 +39,9 @@ namespace acid2d
 		Water_Props props_w;
 		Oil_Props props_o;
 		Gas_Props props_g;
+
+		double xa;
+		std::vector<double> xas;
 
 		void setProps(Properties& props);
 		void makeDimLess();

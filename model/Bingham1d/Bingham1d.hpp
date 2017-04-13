@@ -137,7 +137,6 @@ namespace bing1d
 		template<typename> friend class Snapshotter;
 		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractMethod;
 		friend class Bing1dSolver;
 
 		Skeleton_Props props_sk;

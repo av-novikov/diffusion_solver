@@ -9,7 +9,8 @@ using namespace acid2d;
 
 template <>
 const int basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, Acid2d>::var_size = Variable::size;
-const double acid2d::Component::R = 8.3144598;
+double acid2d::Component::R = 8.3144598;
+double acid2d::Component::p_std = 101325.0;
 
 Acid2d::Acid2d()
 {
@@ -110,8 +111,8 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 	h[4] = next.m * (1.0 - next.sw - next.so) * props_g.getMolarDensity(next.p) - 
 			prev.m * (1.0 - prev.sw - prev.so) * props_g.getMolarDensity(prev.p) - 
 			ht * reac.indices[REACTS::CO2] * rate;
-	h[5] = (1.0 - next.m) * props.getMolarDensity() -
-			(1.0 - prev.m) * props.getMolarDensity() - 
+	h[5] = (1.0 - next.m) * props.getMolarDensity(next.p) -
+			(1.0 - prev.m) * props.getMolarDensity(prev.p) - 
 			ht * reac.indices[REACTS::CALCITE] * rate;
 
 	int neighbor[4];
@@ -158,6 +159,23 @@ void Acid2d::solve_eqLeft(const Cell& cell)
 		var[i].xw <<= x[i * Variable::size + 5];
 	}
 
+	const adouble leftIsRate = leftBoundIsRate;
+	TapeVariable& next = var[0];
+	TapeVariable& nebr = var[1];
+	const Variable& prev = cell.u_prev;
+	const Skeleton_Props& props = *cell.props;
+
+	h[0] = next.sw - (1.0 - props.s_oc);
+	h[1] = next.xa - xa;
+	h[2] = next.xw - (1.0 - xa);
+	h[3] = next.so - props.s_oc;
+	condassign(h[4], leftIsRate, props_w.getMolarDensity(next.p, next.xa, next.xw) * getTrans(cell, next.m, beta, nebr.m) /** props_w.getKr(upwd.s_w, upwd.s_o, props)*/ /
+								props_w.getViscosity(next.p, next.xa, next.xw) * (nebr.p - next.p) - 
+								props_w.getMolarDensity(Component::p_std, next.xa, next.xw) * Qcell[cell.num],
+								next.p - Pwf);
+	h[5] = (1.0 - next.m) * props.getMolarDensity(next.p) - (1.0 - prev.m) * props.getMolarDensity(prev.p) -
+		ht * reac.indices[REACTS::CALCITE] * getReactionRate(next, props);
+
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
@@ -168,6 +186,7 @@ void Acid2d::solve_eqRight(const Cell& cell)
 	trace_on(right);
 	adouble h[var_size];
 	TapeVariable var[Rstencil];
+	adouble rightIsPres = rightBoundIsPres;
 	for (int i = 0; i < Rstencil; i++)
 	{
 		var[i].m <<= x[i * Variable::size];
@@ -178,8 +197,17 @@ void Acid2d::solve_eqRight(const Cell& cell)
 		var[i].xw <<= x[i * Variable::size + 5];
 	}
 
-	const TapeVariable& next = var[0];
-	const TapeVariable& nebr = var[1];
+	TapeVariable& next = var[0];
+	TapeVariable& nebr = var[1];
+	const Variable& prev = cell.u_prev;
+	const Skeleton_Props& props = *cell.props;
+
+	h[0] = next.sw - nebr.sw;
+	h[1] = next.xa - nebr.xa;
+	h[2] = next.xw - nebr.xw;
+	h[3] = next.so - nebr.so;
+	condassign(h[4], rightIsPres, next.p - (adouble)(cell.props->p_out), next.p - (adouble)(nebr.p));
+	h[5] = next.m - nebr.m;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -205,12 +233,12 @@ void Acid2d::solve_eqVertical(const Cell& cell)
 	const TapeVariable& next = var[0];
 	const TapeVariable& nebr = var[1];
 
-	h[0] = next.m - nebr.m;
-	h[1] = next.p - nebr.p;
-	h[2] = next.so - nebr.so;
-	h[3] = next.sw - nebr.sw;
-	h[4] = nebr.xa - nebr.xa;
-	h[5] = nebr.xw - nebr.xw;
+	h[0] = next.sw - nebr.sw;
+	h[1] = nebr.xa - nebr.xa;
+	h[2] = nebr.xw - nebr.xw;
+	h[3] = next.so - nebr.so;
+	h[4] = next.p - nebr.p;
+	h[5] = next.m - nebr.m;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
