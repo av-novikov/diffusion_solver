@@ -355,6 +355,8 @@ namespace gasOil_elliptic
 
 		void setPeriod(int period);
 		double getRate(int cur) const;
+
+		static const int var_size = Variable::size - 1;
 	};
 };
 

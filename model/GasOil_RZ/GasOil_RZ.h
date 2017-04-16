@@ -33,7 +33,6 @@ namespace gasOil_rz
 		friend class GasOil2DSolver;	
 
 	protected:
-
 		// Continuum properties
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
@@ -265,6 +264,8 @@ namespace gasOil_rz
 
 		void setPeriod(int period);
 		double getRate(int cur);
+
+		static const int var_size = Variable::size - 1;
 	};
 };
 

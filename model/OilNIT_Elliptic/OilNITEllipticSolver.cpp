@@ -249,7 +249,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 		iterations++;
 	}
 }
-/*void OilNITEllipticSolver<HypreSolver>::solveStep()
+void OilNITEllipticSolver<HypreSolver>::solveStep()
 {
 	int cellIdx, varIdx;
 	double err_newton = 1.0;
@@ -258,7 +258,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 	double dAverPres = 1.0;
 
 	iterations = 0;
-	while (err_newton > 1.e-4 /*&& (dAverSat > 1.e-9 || dAverPres > 1.e-7) && iterations < 10)
+	while (err_newton > 1.e-4 /*&& (dAverSat > 1.e-9 || dAverPres > 1.e-7)*/ && iterations < 10)
 	{
 		copyIterLayer();
 
@@ -275,7 +275,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 
 		iterations++;
 	}
-}*/
+}
 void OilNITEllipticSolver<ParSolver>::solveTempStep()
 {
 	fill(TEMP);
@@ -283,13 +283,13 @@ void OilNITEllipticSolver<ParSolver>::solveTempStep()
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
 }
-/*void OilNITEllipticSolver<HypreSolver>::solveTempStep()
+void OilNITEllipticSolver<HypreSolver>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(t_cols, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
-}*/
+}
 template <typename solType>
 void OilNITEllipticSolver<solType>::doNextStep()
 {
@@ -557,4 +557,4 @@ void OilNITEllipticSolver<solType>::filldPdQ(double mult)
 }
 
 template class OilNITEllipticSolver<ParSolver>;
-//template class OilNITEllipticSolver<HypreSolver>;
+template class OilNITEllipticSolver<HypreSolver>;

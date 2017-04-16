@@ -76,6 +76,8 @@ namespace blackoil_rz
 		double* x;
 		double* y;
 		double** jac;
+
+		static const int var_size = Variable::size - 1;
 	};
 };
 

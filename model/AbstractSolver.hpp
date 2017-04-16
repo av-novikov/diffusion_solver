@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <array>
 
 template <class modelType>
 class AbstractSolver {
@@ -28,6 +29,7 @@ class AbstractSolver {
 		
 		double convergance(int& ind, int& varInd);
 		double averValue(int varInd);
+		void averValue(std::array<double, modelType::var_size>& aver);
 		
 		virtual void writeData() = 0;
 		virtual void control() = 0;

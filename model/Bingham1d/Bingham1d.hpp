@@ -220,7 +220,6 @@ namespace bing1d
 		void solve_eqLeft();
 		void solve_eqRight();
 		void setVariables(int cur);
-
 	public:
 		Bingham1d();
 		~Bingham1d();
@@ -229,6 +228,8 @@ namespace bing1d
 
 		void setPeriod(int period);
 		double getRate(int cur);
+
+		static const int var_size = Variable::size;
 	};
 };
 

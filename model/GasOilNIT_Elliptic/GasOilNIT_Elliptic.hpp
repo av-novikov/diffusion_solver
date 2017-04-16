@@ -47,7 +47,7 @@ namespace gasOilnit_elliptic
 		std::vector<Skeleton_Props>::iterator sk_well;
 		Oil_Props props_oil;
 		Gas_Props props_gas;
-		
+
 		// Heat of phase transition [J/kg]
 		double L;
 
@@ -530,6 +530,8 @@ namespace gasOilnit_elliptic
 
 		void setPeriod(int period);
 		double getRate(int cur) const;
+
+		static const int var_size = Variable::size - 1;
 	};
 };
 

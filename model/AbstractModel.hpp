@@ -75,6 +75,7 @@ class AbstractModel
 		Snapshotter<modelType>* snapshotter;
 		bool isWriteSnaps;
 
+		static const int var_size;
 	public:
 		AbstractModel() { isWriteSnaps = true; };
 		virtual ~AbstractModel() {};

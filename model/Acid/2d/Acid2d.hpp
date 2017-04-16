@@ -35,7 +35,6 @@ namespace acid2d
 
 	protected:
 		CurrentReaction reac;
-		std::vector<Skeleton_Props> props_sk;
 		Water_Props props_w;
 		Oil_Props props_o;
 		Gas_Props props_g;
@@ -45,6 +44,7 @@ namespace acid2d
 
 		void setProps(Properties& props);
 		void makeDimLess();
+		void setInitialState();
 
 		// Service functions
 		inline adouble getAvarage(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
@@ -63,9 +63,9 @@ namespace acid2d
 		};
 		inline adouble getReactionRate(TapeVariable& var, const Skeleton_Props& props) const
 		{
-			return var.sw * props_w.getMolarDensity(var.p, var.xa, var.xw) * 
-					pow((var.xa - (adouble)props.xa_eqbm), (adouble)reac.alpha) * 
-					reac.getReactionRate(props.m_init, var.m);
+			return var.sw * props_w.getDensity(var.p, var.xa, var.xw) *
+					/*pow(*/(var.xa - props.xa_eqbm)/*, (adouble)reac.alpha)*/ * 
+					reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
 		{
@@ -175,7 +175,9 @@ namespace acid2d
 		double* y;
 		double** jac;
 
-		//double getRate(int cur);
+		void setPeriod(int period);
+		double getRate(int cur);
+		static const int var_size = Variable::size;
 	};
 };
 

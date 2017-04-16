@@ -155,7 +155,7 @@ double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 
 	double var_next, var_iter;
 		
-	for(int i = 0; i < model->cells[0].varNum; i++)
+	for(int i = 0; i < modelType::var_size; i++)
 	{
 		for(int j = 0; j < model->cells.size(); j++)
 		{
@@ -457,6 +457,18 @@ double AbstractSolver<modelType>::averValue(const int varInd)
 	}
 	
 	return tmp / model->Volume;
+}
+template <class modelType>
+void AbstractSolver<modelType>::averValue(std::array<double, modelType::var_size>& aver)
+{
+	std::fill(aver.begin(), aver.end(), 0.0);
+
+	for (const auto& cell : model->cells)
+		for(int i = 0; i < modelType::var_size; i++)
+			aver[i] += cell.u_next.values[i] * cell.V;
+
+	for(auto& val : aver)
+		val /= model->Volume;
 }
 double AbstractSolver<gasOil_rz::GasOil_RZ>::averValue(const int varInd)
 {

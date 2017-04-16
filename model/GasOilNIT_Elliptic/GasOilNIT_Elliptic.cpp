@@ -156,6 +156,8 @@ void GasOilNIT_Elliptic::makeDimLess()
 	// Gas properties
 	props_gas.visc /= (P_dim * t_dim);
 	props_gas.gas.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+
+	L /= (R_dim * R_dim / t_dim / t_dim);
 };
 void GasOilNIT_Elliptic::setInitialState()
 {

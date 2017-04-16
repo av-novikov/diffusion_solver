@@ -1,10 +1,14 @@
 ﻿#ifndef ACID2D_REACTIONS_HPP_
 #define ACID2D_REACTIONS_HPP_
 
+#define KKAL_2_J 4186.8
+
 #include <array>
 
 #include "adolc/adouble.h"
 #include "adolc/taping.h"
+
+#include "model/Basic2d/Properties.hpp"
 
 namespace acid2d
 {
@@ -17,36 +21,76 @@ namespace acid2d
 		double mol_weight;
 		double rho_stc;
 	};
+	struct SolidComponent : Component
+	{
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return rho_stc / mol_weight;
+		};
+		double beta;
+		inline adouble getDensity(adouble p) const
+		{
+			return rho_stc;
+		};
+	};
+	struct LiquidComponent : Component
+	{
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return getDensity(p) / mol_weight;
+		};
+		double beta;
+		inline adouble getDensity(adouble p) const
+		{
+			return (adouble)(rho_stc)* ((adouble)(1.0) + (adouble)(beta)* (p - p_std));
+		};
+	};
+	struct GasComponent : Component
+	{
+		inline adouble getMolarDensity(adouble p) const
+		{
+			return getDensity(p) / mol_weight;
+		};
+		double z;
+		Interpolate* z_table;
+		inline adouble getDensity(adouble p) const
+		{
+			return p * (adouble)(mol_weight / (z * R * T));
+		};
+	};
 
 	// Laboratory
-	inline Component getCaCO3()
+	inline SolidComponent getCaCO3()
 	{
-		Component comp;
+		SolidComponent comp;
 		comp.mol_weight = 100.0;
+		comp.rho_stc = 2710.0;
 		return comp;
 	};
-	inline Component getHCl()
+	inline LiquidComponent getHCl()
 	{
-		Component comp;
+		LiquidComponent comp;
 		comp.mol_weight = 36.0;
 		return comp;
 	};
-	inline Component getCaCl2()
+	inline SolidComponent getCaCl2()
 	{
-		Component comp;
+		SolidComponent comp;
 		comp.mol_weight = 110;
 		return comp;
 	};
-	inline Component getH2O()
+	inline LiquidComponent getH2O()
 	{
-		Component comp;
+		LiquidComponent comp;
 		comp.mol_weight = 18.0;
 		return comp;
 	};
-	inline Component getCO2()
+	inline GasComponent getCO2()
 	{
-		Component comp;
+		GasComponent comp;
 		comp.mol_weight = 44.0;
+		comp.z = 1.0;
+		comp.rho_stc = 1.98;
 		return comp;
 	};
 
@@ -80,6 +124,11 @@ namespace acid2d
 			comps[REACTS::SALT		] = getCaCl2();		indices[REACTS::SALT	] = 1.0;
 			comps[REACTS::WATER		] = getH2O();		indices[REACTS::WATER	] = 1.0;
 			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
+
+			activation_energy = 13.0 * KKAL_2_J;
+			reaction_const = 1.51 * 1.e+5;
+			surf_init = 0.175;
+			alpha = 1.0;
 		};
 	};
 

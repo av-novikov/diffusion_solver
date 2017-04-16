@@ -52,7 +52,8 @@ void ParSolver::Solve()
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
-	p.Set(1.E-15, 100);
+	//p.Set(1.E-15, 100);
+	p.Set(2);
 	bicgstab.SetPreconditioner(p);
 	bicgstab.Build();
 	isAssembled = true;
@@ -77,7 +78,7 @@ void ParSolver::SolveBiCGStab()
 void ParSolver::SolveGMRES()
 {
 	gmres.SetOperator(Mat);
-	p.Set(1.E-20, 100);
+	//p.Set(1.E-20, 100);
 	gmres.SetPreconditioner(p);
 	gmres.Build();
 	isAssembled = true;

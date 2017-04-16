@@ -218,6 +218,8 @@ namespace vpp2d
 
 		void setPeriod(int period);
 		double getRate(int cur);
+
+		static const int var_size = Variable::size;
 	};
 
 };

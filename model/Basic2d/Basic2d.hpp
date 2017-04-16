@@ -29,8 +29,6 @@ namespace basic2d
 	public:
 		typedef cellType<varType> Cell;
 		typename typedef Cell::Type Type;
-
-		static const int var_size;
 	protected:
 
 		std::vector<sk_propsType> props_sk;
@@ -386,7 +384,7 @@ namespace basic2d
 		Basic2d() {};
 		~Basic2d() {};
 
-		void setPeriod(int period)
+		virtual void setPeriod(int period)
 		{
 			if (leftBoundIsRate)
 			{

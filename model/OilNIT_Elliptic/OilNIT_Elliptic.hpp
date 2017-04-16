@@ -170,7 +170,7 @@ namespace oilnit_elliptic
 				idx++;
 			}*/
 			const double nu = (cell.nu >= M_PI) ? 2.0 * M_PI - cell.nu : cell.nu;
-			return 0;//int(5.0 * (nu - EQUALITY_TOLERANCE) / M_PI);
+			return int(5.0 * (nu - EQUALITY_TOLERANCE) / M_PI);
 		};
 		inline Cell& getCell(const int num)
 		{
@@ -579,6 +579,8 @@ namespace oilnit_elliptic
 
 		void setPeriod(int period);
 		double getRate(int cur) const;
+
+		static const int var_size = Variable::size;
 	};
 };
 

@@ -5,9 +5,6 @@
 
 using namespace blackoil_rz;
 
-template <>
-const int basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, BlackOil_RZ>::var_size = Variable::size - 1;
-
 BlackOil_RZ::BlackOil_RZ()
 {
 	x = new double[stencil * Variable::size];

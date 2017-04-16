@@ -88,6 +88,11 @@ inline double cPToPaSec(double visc)
 	return visc / 1000.0;
 };
 
+inline double gramToKg(double grams)
+{
+	return grams / 1000;
+};
+
 inline double PaSec2cP(double visc)
 {
 	return visc * 1000.0;

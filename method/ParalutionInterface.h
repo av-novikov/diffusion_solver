@@ -18,7 +18,7 @@ protected:
 	void SolveBiCGStab();
 	paralution::GMRES<Matrix,Vector,double> gmres;
 	void SolveGMRES();
-	paralution::ILUT<Matrix,Vector,double> p;
+	paralution::ILU<Matrix,Vector,double> p;
 
 	bool isAssembled;
 	bool isPrecondBuilt;
