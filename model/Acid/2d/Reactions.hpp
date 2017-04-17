@@ -55,7 +55,8 @@ namespace acid2d
 		Interpolate* z_table;
 		inline adouble getDensity(adouble p) const
 		{
-			return p * (adouble)(mol_weight / (z * R * T));
+			//return p * (adouble)(mol_weight / (z * R * T));
+			return rho_stc * p / p_std;
 		};
 	};
 

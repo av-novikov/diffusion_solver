@@ -165,6 +165,7 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 
 	TapeVariable& next = var[0];
 	adouble rate = getReactionRate(next, props);
+	double rate0 = getReactionRate(next, props).value();
 	
 	h[0] = (1.0 - next.m) * props.getDensity(next.p) -
 			(1.0 - prev.m) * props.getDensity(prev.p) - 
@@ -194,9 +195,9 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 		const TapeVariable& nebr = var[i + 1];
 		TapeVariable& upwd = var[upwd_idx];
 		
-		adouble dens_w = getAvarage(props_w.getDensity(next.p, next.xa, next.xw), cell, props_w.getDensity(nebr.p, nebr.xa, nebr.xw), beta);
-		adouble dens_o = getAvarage(props_o.getDensity(next.p), cell, props_o.getDensity(nebr.p), beta);
-		adouble dens_g = getAvarage(props_g.getDensity(next.p), cell, props_g.getDensity(nebr.p), beta);
+		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw), cell, props_w.getDensity(nebr.p, nebr.xa, nebr.xw), beta);
+		adouble dens_o = getAverage(props_o.getDensity(next.p), cell, props_o.getDensity(nebr.p), beta);
+		adouble dens_g = getAverage(props_g.getDensity(next.p), cell, props_g.getDensity(nebr.p), beta);
 		adouble buf = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p);
 		adouble buf_w = buf * dens_w * props_w.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw);
 
@@ -307,8 +308,8 @@ void Acid2d::solve_eqVertical(const Cell& cell)
 	h[1] = next.p - nebr.p;
 	h[2] = next.sw - nebr.sw;
 	h[3] = next.so - nebr.so;
-	h[4] = nebr.xa - nebr.xa;
-	h[5] = nebr.xw - nebr.xw;
+	h[4] = next.xa - nebr.xa;
+	h[5] = next.xw - nebr.xw;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];

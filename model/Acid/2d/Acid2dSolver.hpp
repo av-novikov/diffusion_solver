@@ -26,6 +26,9 @@ namespace acid2d
 		std::array<double, var_size> averVal, averValPrev, dAverVal;
 		double err_newton;
 
+		std::ofstream a, b, c;
+		void writeMatrixes();
+
 		std::ofstream S;
 		std::ofstream P;
 		std::ofstream qcells;

@@ -47,7 +47,7 @@ namespace acid2d
 		void setInitialState();
 
 		// Service functions
-		inline adouble getAvarage(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
+		inline adouble getAverage(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
 		{
 			double r1, r2;
 			if (abs(cell1.num - cell2.num) == 1) 
@@ -64,7 +64,7 @@ namespace acid2d
 		inline adouble getReactionRate(TapeVariable& var, const Skeleton_Props& props) const
 		{
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw) *
-					/*pow(*/(var.xa - props.xa_eqbm)/*, (adouble)reac.alpha)*/ * 
+					(var.xa - props.xa_eqbm) * 
 					reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const

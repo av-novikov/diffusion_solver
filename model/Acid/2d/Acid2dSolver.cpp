@@ -162,7 +162,7 @@ void Acid2dSolver::MiddleAppr(int current, int MZ, int key)
 		// Bottom cell
 		model->setVariables(model->cells[cell_idx]);
 
-		for (int i = 0; i < Variable::size - 1; i++)
+		for (int i = 0; i < Variable::size; i++)
 		{
 			RightSide[idx + i][0] = -model->y[i];
 
@@ -256,4 +256,64 @@ void Acid2dSolver::RightBoundAppr(int MZ, int key)
 	}
 
 	construction_bz(MZ, 1);
+}
+void Acid2dSolver::writeMatrixes()
+{
+	const int MZ = (model->cellsNum_z + 2) * var_size;
+	
+	// Left
+	a.open("snaps/a_left.dat", ofstream::out);
+	b.open("snaps/b_left.dat", ofstream::out);
+	c.open("snaps/c_left.dat", ofstream::out);
+	LeftBoundAppr(MZ, PRES);
+	for (int i = 0; i < MZ; i++)
+	{
+		for (int j = 0; j < MZ; j++)
+		{
+			a << i << "\t" << j << "\t" << A[i][j] << endl;
+			b << i << "\t" << j << "\t" << B[i][j] << endl;
+			c << i << "\t" << j << "\t" << C[i][j] << endl;
+		}
+	}
+	a.close();		b.close();		c.close();
+
+	// Middle
+	for (int k = 0; k < model->cellsNum_r; k++)
+	{
+		const string afilename = "snaps/a_" + to_string(k+1) + ".dat";
+		const string bfilename = "snaps/b_" + to_string(k+1) + ".dat";
+		const string cfilename = "snaps/c_" + to_string(k+1) + ".dat";
+		a.open(afilename.c_str(), ofstream::out);
+		b.open(bfilename.c_str(), ofstream::out);
+		c.open(cfilename.c_str(), ofstream::out);
+
+		MiddleAppr(k+1, MZ, PRES);
+		for (int i = 0; i < MZ; i++)
+		{
+			for (int j = 0; j < MZ; j++)
+			{
+				a << i << "\t" << j << "\t" << A[i][j] << endl;
+				b << i << "\t" << j << "\t" << B[i][j] << endl;
+				c << i << "\t" << j << "\t" << C[i][j] << endl;
+			}
+		}
+
+		a.close();		b.close();		c.close();
+	}
+
+	// Right
+	a.open("snaps/a_right.dat", ofstream::out);
+	b.open("snaps/b_right.dat", ofstream::out);
+	c.open("snaps/c_right.dat", ofstream::out);
+	RightBoundAppr(MZ, PRES);
+	for (int i = 0; i < MZ; i++)
+	{
+		for (int j = 0; j < MZ; j++)
+		{
+			a << i << "\t" << j << "\t" << A[i][j] << endl;
+			b << i << "\t" << j << "\t" << B[i][j] << endl;
+			c << i << "\t" << j << "\t" << C[i][j] << endl;
+		}
+	}
+	a.close();		b.close();		c.close();
 }
