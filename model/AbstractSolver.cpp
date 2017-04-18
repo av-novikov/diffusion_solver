@@ -146,8 +146,8 @@ void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyTimeLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
-template <class modelType>
 
+template <class modelType>
 double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;

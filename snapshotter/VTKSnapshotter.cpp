@@ -275,12 +275,12 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(next.m);
-		pres->InsertNextValue(next.p);
+		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 		sat_w->InsertNextValue(next.sw);
 		sat_o->InsertNextValue(next.so);
 		sat_g->InsertNextValue(1.0 - next.sw - next.so);
-		conc_a->InsertNextValue(1.0 - next.xa);
-		conc_w->InsertNextValue(1.0 - next.xw);
+		conc_a->InsertNextValue(next.xa);
+		conc_w->InsertNextValue(next.xw);
 		conc_s->InsertNextValue(1.0 - next.xw - next.xa);
 		vel[0] = 0.0;
 		vel[1] = 0.0;
@@ -307,12 +307,12 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(next.m);
-			pres->InsertNextValue(next.p);
+			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w->InsertNextValue(next.sw);
 			sat_o->InsertNextValue(next.so);
 			sat_g->InsertNextValue(1.0 - next.sw - next.so);
-			conc_a->InsertNextValue(1.0 - next.xa);
-			conc_w->InsertNextValue(1.0 - next.xw);
+			conc_a->InsertNextValue(next.xa);
+			conc_w->InsertNextValue(next.xw);
 			conc_s->InsertNextValue(1.0 - next.xw - next.xa);
 			vel[0] = r_dim / t_dim * model->getWaterVelocity(cell, NEXT, R_AXIS);
 			vel[1] = r_dim / t_dim * model->getWaterVelocity(cell, NEXT, Z_AXIS);

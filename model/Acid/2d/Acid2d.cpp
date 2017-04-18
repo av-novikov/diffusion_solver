@@ -237,9 +237,9 @@ void Acid2d::solve_eqLeft(const Cell& cell)
 	const Skeleton_Props& props = *cell.props;
 
 	h[0] = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
-		ht * reac.indices[REACTS::CALCITE] * getReactionRate(next, props);
+		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
 	condassign(h[1], leftIsRate, props_w.getDensity(next.p, next.xa, next.xw) * getTrans(cell, next.m, beta, nebr.m) /
-		props_w.getViscosity(next.p, next.xa, next.xw) * (nebr.p - next.p) -
+		props_w.getViscosity(next.p, next.xa, next.xw) * (nebr.p - next.p) +
 		props_w.getDensity(Component::p_std, next.xa, next.xw) * Qcell[cell.num],
 		next.p - Pwf);
 	h[2] = next.sw - (1.0 - props.s_oc);
