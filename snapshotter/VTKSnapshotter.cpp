@@ -20,7 +20,7 @@
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
-#include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
+#include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 
@@ -59,9 +59,9 @@ VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::VTKSnapshotter()
 {
 	pattern = prefix + "OilNIT_El_%{STEP}.vtu";
 }
-VTKSnapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>::VTKSnapshotter()
+VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::VTKSnapshotter()
 {
-	pattern = prefix + "GasOilNIT_El_%{STEP}.vtu";
+	pattern = prefix + "BlackOilNIT_El_%{STEP}.vtu";
 }
 VTKSnapshotter<blackoil_rz::BlackOil_RZ> ::VTKSnapshotter()
 {
@@ -1001,6 +1001,219 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 	writer->SetInputData(grid);
 	writer->Write();
 }
+void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int snap_idx)
+{
+	using namespace blackoilnit_elliptic;
+
+	// Grid
+	auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+
+	// Points
+	auto points = vtkSmartPointer<vtkPoints>::New();
+
+	for (int m = 0; m < ny; m++)
+	{
+		for (int j = 1; j < nz; j++)
+		{
+			Cell& cell = model->cells[j + m * nx * nz];
+			Point point = getCartesian<Cell>(0, cell.nu - cell.hnu / 2.0, cell.z - cell.hz / 2.0);
+			points->InsertNextPoint(r_dim * point[0] * VIEW_MULTIPLIER,
+				r_dim * point[1] * VIEW_MULTIPLIER,
+				-r_dim * point[2]);
+		}
+
+		for (int k = 1; k < nx; k++)
+		{
+			for (int j = 1; j < nz; j++)
+			{
+				Cell& cell = model->cells[j + k * nz + m * nx * nz];
+				Point point = getCartesian<Cell>(cell.mu - cell.hmu / 2.0, cell.nu - cell.hnu / 2.0, cell.z - cell.hz / 2.0);
+				points->InsertNextPoint(r_dim * point[0] * VIEW_MULTIPLIER,
+					r_dim * point[1] * VIEW_MULTIPLIER,
+					-r_dim * point[2]);
+			}
+		}
+	}
+	grid->SetPoints(points);
+
+	// Data
+	auto hexs = vtkSmartPointer<vtkCellArray>::New();
+	auto polygon = vtkSmartPointer<vtkPolygon>::New();
+	polygon->GetPointIds()->SetNumberOfIds(4);
+	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
+	temp->SetName("temperature");
+	auto perm_xy = vtkSmartPointer<vtkDoubleArray>::New();
+	perm_xy->SetName("perm_xy");
+	auto vel_oil = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_oil->SetName("oilVelocity");
+	vel_oil->SetNumberOfComponents(3);
+
+	double vel[3];
+	int l, j, k;
+	Cell* neighbor[6];
+
+	for (l = 0; l < ny - 1; l++)
+	{
+		// Left
+		for (j = 0; j < nz - 2; j++)
+		{
+			Cell& cell = model->cells[l*nx*nz + j + 1];
+
+			if (cell.isUsed)
+			{
+				vtkSmartPointer<vtkHexahedron> hex =
+					vtkSmartPointer<vtkHexahedron>::New();
+				hex->GetPointIds()->SetId(0, j + l * nx * (nz - 1));
+				hex->GetPointIds()->SetId(1, j + (l + 1) * nx * (nz - 1));
+				hex->GetPointIds()->SetId(2, j + (l + 1) * nx * (nz - 1) + 1);
+				hex->GetPointIds()->SetId(3, j + l * nx * (nz - 1) + 1);
+
+				hex->GetPointIds()->SetId(4, j + l * nx * (nz - 1) + (nz - 1));
+				hex->GetPointIds()->SetId(5, j + (l + 1) * nx * (nz - 1) + (nz - 1));
+				hex->GetPointIds()->SetId(6, j + (l + 1) * nx * (nz - 1) + 1 + (nz - 1));
+				hex->GetPointIds()->SetId(7, j + l * nx * (nz - 1) + 1 + (nz - 1));
+
+				hexs->InsertNextCell(hex);
+
+				temp->InsertNextValue(cell.u_next.t * T_dim);
+				pres->InsertNextValue(cell.u_next.p * P_dim);
+				perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
+
+				model->getNeighbors(cell, neighbor);
+				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+					model->getVelocity(cell, neighbor, NU_AXIS),
+					model->getVelocity(cell, neighbor, Z_AXIS));
+				vel[0] = vel_cart[0] * r_dim / t_dim;
+				vel[1] = vel_cart[1] * r_dim / t_dim;
+				vel[2] = -vel_cart[2] * r_dim / t_dim;
+				vel_oil->InsertNextTuple(vel);
+			}
+		}
+
+		// Middle cells
+		for (k = 1; k < nx - 1; k++)
+		{
+			for (j = 0; j < nz - 2; j++)
+			{
+				Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
+
+				vtkSmartPointer<vtkHexahedron> hex =
+					vtkSmartPointer<vtkHexahedron>::New();
+				hex->GetPointIds()->SetId(0, j + k*(nz - 1) + l * nx * (nz - 1));
+				hex->GetPointIds()->SetId(1, j + k*(nz - 1) + (l + 1) * nx * (nz - 1));
+				hex->GetPointIds()->SetId(2, j + k*(nz - 1) + (l + 1) * nx * (nz - 1) + 1);
+				hex->GetPointIds()->SetId(3, j + k*(nz - 1) + l * nx * (nz - 1) + 1);
+
+				hex->GetPointIds()->SetId(4, j + (k + 1)*(nz - 1) + l * nx * (nz - 1));
+				hex->GetPointIds()->SetId(5, j + (k + 1)*(nz - 1) + (l + 1) * nx * (nz - 1));
+				hex->GetPointIds()->SetId(6, j + (k + 1)*(nz - 1) + (l + 1) * nx * (nz - 1) + 1);
+				hex->GetPointIds()->SetId(7, j + (k + 1)*(nz - 1) + l * nx * (nz - 1) + 1);
+
+				hexs->InsertNextCell(hex);
+
+				temp->InsertNextValue(cell.u_next.t * T_dim);
+				pres->InsertNextValue(cell.u_next.p * P_dim);
+				perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
+
+				model->getNeighbors(cell, neighbor);
+				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+					model->getVelocity(cell, neighbor, NU_AXIS),
+					model->getVelocity(cell, neighbor, Z_AXIS));
+				vel[0] = vel_cart[0] * r_dim / t_dim;
+				vel[1] = vel_cart[1] * r_dim / t_dim;
+				vel[2] = -vel_cart[2] * r_dim / t_dim;
+				vel_oil->InsertNextTuple(vel);
+			}
+		}
+	}
+
+	// Last segment - left
+	for (j = 0; j < nz - 2; j++)
+	{
+		Cell& cell = model->cells[l*nx*nz + j + 1];
+
+		if (cell.isUsed)
+		{
+			vtkSmartPointer<vtkHexahedron> hex =
+				vtkSmartPointer<vtkHexahedron>::New();
+			hex->GetPointIds()->SetId(0, j + l * nx * (nz - 1));
+			hex->GetPointIds()->SetId(1, j);
+			hex->GetPointIds()->SetId(2, j + 1);
+			hex->GetPointIds()->SetId(3, j + l * nx * (nz - 1) + 1);
+
+			hex->GetPointIds()->SetId(4, j + l * nx * (nz - 1) + (nz - 1));
+			hex->GetPointIds()->SetId(5, j + (nz - 1));
+			hex->GetPointIds()->SetId(6, j + 1 + (nz - 1));
+			hex->GetPointIds()->SetId(7, j + l * nx * (nz - 1) + 1 + (nz - 1));
+
+			hexs->InsertNextCell(hex);
+
+			temp->InsertNextValue(cell.u_next.t * T_dim);
+			pres->InsertNextValue(cell.u_next.p * P_dim);
+			perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
+
+			model->getNeighbors(cell, neighbor);
+			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+				model->getVelocity(cell, neighbor, NU_AXIS),
+				model->getVelocity(cell, neighbor, Z_AXIS));
+			vel[0] = vel_cart[0] * r_dim / t_dim;
+			vel[1] = vel_cart[1] * r_dim / t_dim;
+			vel[2] = -vel_cart[2] * r_dim / t_dim;
+			vel_oil->InsertNextTuple(vel);
+		}
+	}
+
+	// Last segment - middle
+	for (k = 1; k < nx - 1; k++)
+	{
+		for (j = 0; j < nz - 2; j++)
+		{
+			Cell& cell = model->cells[l*nx*nz + k*nz + j + 1];
+
+			vtkSmartPointer<vtkHexahedron> hex =
+				vtkSmartPointer<vtkHexahedron>::New();
+			hex->GetPointIds()->SetId(0, j + k*(nz - 1) + l * nx * (nz - 1));
+			hex->GetPointIds()->SetId(1, j + k*(nz - 1));
+			hex->GetPointIds()->SetId(2, j + k*(nz - 1) + 1);
+			hex->GetPointIds()->SetId(3, j + k*(nz - 1) + l * nx * (nz - 1) + 1);
+
+			hex->GetPointIds()->SetId(4, j + (k + 1)*(nz - 1) + l * nx * (nz - 1));
+			hex->GetPointIds()->SetId(5, j + (k + 1)*(nz - 1));
+			hex->GetPointIds()->SetId(6, j + (k + 1)*(nz - 1) + 1);
+			hex->GetPointIds()->SetId(7, j + (k + 1)*(nz - 1) + l * nx * (nz - 1) + 1);
+
+			hexs->InsertNextCell(hex);
+
+			pres->InsertNextValue(cell.u_next.p * P_dim);
+			temp->InsertNextValue(cell.u_next.t * T_dim);
+			perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
+
+			model->getNeighbors(cell, neighbor);
+			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
+				model->getVelocity(cell, neighbor, NU_AXIS),
+				model->getVelocity(cell, neighbor, Z_AXIS));
+			vel[0] = vel_cart[0] * r_dim / t_dim;
+			vel[1] = vel_cart[1] * r_dim / t_dim;
+			vel[2] = -vel_cart[2] * r_dim / t_dim;
+			vel_oil->InsertNextTuple(vel);
+		}
+	}
+
+	grid->SetCells(VTK_HEXAHEDRON, hexs);
+	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(pres);
+	fd->AddArray(temp);
+	fd->AddArray(perm_xy);
+	fd->AddArray(vel_oil);
+
+	// Writing
+	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+	writer->SetFileName(getFileName(snap_idx).c_str());
+	writer->SetInputData(grid);
+	writer->Write();
+}
 void VTKSnapshotter<blackoil_rz::BlackOil_RZ>::dump_all(int snap_idx)
 {
 	using namespace blackoil_rz;
@@ -1139,5 +1352,5 @@ template class VTKSnapshotter<vpp2d::VPP2d>;
 template class VTKSnapshotter<bing1d::Bingham1d>;
 template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;
 template class Snapshotter<oilnit_elliptic::OilNIT_Elliptic>;
-template class Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>;
+template class Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class Snapshotter<blackoil_rz::BlackOil_RZ>;

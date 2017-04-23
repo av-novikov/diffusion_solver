@@ -8,7 +8,7 @@
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
-#include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
+#include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 
 using namespace std;
@@ -62,7 +62,7 @@ void Snapshotter<gasOil_elliptic::GasOil_Elliptic>::setModel(gasOil_elliptic::Ga
 	nz = model->cellsNum_z + 2;
 }
 template <>
-void Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>::setModel(gasOilnit_elliptic::GasOilNIT_Elliptic* _model)
+void Snapshotter<oilnit_elliptic::OilNIT_Elliptic>::setModel(oilnit_elliptic::OilNIT_Elliptic* _model)
 {
 	model = _model;
 
@@ -77,7 +77,7 @@ void Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>::setModel(gasOilnit_ell
 	nz = model->cellsNum_z + 2;
 }
 template <>
-void Snapshotter<oilnit_elliptic::OilNIT_Elliptic>::setModel(oilnit_elliptic::OilNIT_Elliptic* _model)
+void Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::setModel(blackoilnit_elliptic::BlackOilNIT_Elliptic* _model)
 {
 	model = _model;
 
@@ -166,5 +166,5 @@ template class Snapshotter<vpp2d::VPP2d>;
 template class Snapshotter<bing1d::Bingham1d>;
 template class Snapshotter<gasOil_elliptic::GasOil_Elliptic>;
 template class Snapshotter<oilnit_elliptic::OilNIT_Elliptic>;
-template class Snapshotter<gasOilnit_elliptic::GasOilNIT_Elliptic>;
+template class Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class Snapshotter<blackoil_rz::BlackOil_RZ>;

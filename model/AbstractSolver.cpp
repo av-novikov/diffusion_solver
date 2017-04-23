@@ -6,7 +6,7 @@
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
-#include "model/GasOilNIT_Elliptic/GasOilNIT_Elliptic.hpp"
+#include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
 
@@ -42,7 +42,7 @@ AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::AbstractSolver(oilnit_elliptic
 
 	t_dim = model->t_dim;
 }
-AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::AbstractSolver(gasOilnit_elliptic::GasOilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
+AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::AbstractSolver(blackoilnit_elliptic::BlackOilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
 	newton_step = 1.0;
 	cur_t = cur_t_log = 0.0;
@@ -50,6 +50,7 @@ AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::AbstractSolver(gasOilnit
 
 	t_dim = model->t_dim;
 }
+
 template <class modelType>
 AbstractSolver<modelType>::~AbstractSolver()
 {
@@ -102,7 +103,7 @@ void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyIterLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_iter = cell.u_next;
 }
-void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyIterLayer()
+void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::copyIterLayer()
 {
 	for (auto& cell : model->cells)
 		cell.u_iter = cell.u_next;
@@ -110,6 +111,7 @@ void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyIterLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_iter = cell.u_next;
 }
+
 template <class modelType>
 void AbstractSolver<modelType>::revertIterLayer()
 {
@@ -138,7 +140,7 @@ void AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::copyTimeLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
-void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyTimeLayer()
+void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::copyTimeLayer()
 {
 	for (auto& cell : model->cells)
 		cell.u_prev = cell.u_iter = cell.u_next;
@@ -146,6 +148,7 @@ void AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::copyTimeLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
+
 
 template <class modelType>
 double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
@@ -368,7 +371,7 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::convergance(int& ind, i
 
 	return relErr;
 }
-double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::convergance(int& ind, int& varInd)
+double AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
 	double cur_relErr = 0.0;
@@ -386,25 +389,7 @@ double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::convergance(int& 
 			{
 				relErr = cur_relErr;
 				ind = j;
-				varInd = 0;
-			}
-		}
-
-		if (cell.u_next.SATUR)
-		{
-			var_next = cell.u_next.s;	var_iter = cell.u_iter.s;
-		}
-		else {
-			var_next = cell.u_next.p_bub;	var_iter = cell.u_iter.p_bub;
-		}
-		if (fabs(var_next) > EQUALITY_TOLERANCE)
-		{
-			cur_relErr = fabs((var_next - var_iter) / var_next);
-			if (cur_relErr > relErr)
-			{
-				relErr = cur_relErr;
-				ind = j;
-				varInd = 1;
+				varInd = PRES;
 			}
 		}
 	}
@@ -420,25 +405,7 @@ double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::convergance(int& 
 			{
 				relErr = cur_relErr;
 				ind = j;
-				varInd = 0;
-			}
-		}
-
-		if (cell.u_next.SATUR)
-		{
-			var_next = cell.u_next.s;	var_iter = cell.u_iter.s;
-		}
-		else {
-			var_next = cell.u_next.p_bub;	var_iter = cell.u_iter.p_bub;
-		}
-		if (fabs(var_next) > EQUALITY_TOLERANCE)
-		{
-			cur_relErr = fabs((var_next - var_iter) / var_next);
-			if (cur_relErr > relErr)
-			{
-				relErr = cur_relErr;
-				ind = j;
-				varInd = 1;
+				varInd = PRES;
 			}
 		}
 	}
@@ -553,39 +520,19 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::averValue(const int var
 
 	return tmp / model->Volume;
 }
-double AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>::averValue(const int varInd)
+double AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::averValue(const int varInd)
 {
 	double tmp = 0.0;
 
-	if (varInd == 0)
-	{
-		for (const auto& cell : model->cells)
-			tmp += cell.u_next.values[varInd] * cell.V;
+	for (const auto& cell : model->cells)
+		tmp += cell.u_next.values[varInd] * cell.V;
 
-		for (const auto& cell : model->wellCells)
-			tmp += cell.u_next.values[varInd] * cell.V;
-	}
-	else
-	{
-		for (const auto& cell : model->cells)
-		{
-			if (cell.u_next.SATUR)
-				tmp += cell.u_next.values[varInd] * cell.V;
-			else
-				tmp += cell.u_next.values[varInd + 1] * cell.V;
-		}
-
-		for (const auto& cell : model->wellCells)
-		{
-			if (cell.u_next.SATUR)
-				tmp += cell.u_next.values[varInd] * cell.V;
-			else
-				tmp += cell.u_next.values[varInd + 1] * cell.V;
-		}
-	}
+	for (const auto& cell : model->wellCells)
+		tmp += cell.u_next.values[varInd] * cell.V;
 
 	return tmp / model->Volume;
 }
+
 template <class modelType>
 void AbstractSolver<modelType>::checkStability()
 {
@@ -596,6 +543,6 @@ template class AbstractSolver<vpp2d::VPP2d>;
 template class AbstractSolver<bing1d::Bingham1d>;
 template class AbstractSolver<gasOil_elliptic::GasOil_Elliptic>;
 template class AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>;
-template class AbstractSolver<gasOilnit_elliptic::GasOilNIT_Elliptic>;
+template class AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class AbstractSolver<blackoil_rz::BlackOil_RZ>;
 template class AbstractSolver<acid2d::Acid2d>;

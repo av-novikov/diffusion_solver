@@ -26,6 +26,9 @@
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNITEllipticSolver.hpp"
 
+#include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
+#include "model/BlackOilNIT_Elliptic/BlackOilNITEllipticSolver.hpp"
+
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/BlackOil_RZ/BlackOil2DSolver.hpp"
 
@@ -299,7 +302,7 @@ using namespace std;
 
 	return props;
 }*/
-oilnit_elliptic::Properties* getProps()
+/*oilnit_elliptic::Properties* getProps()
 {
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
@@ -409,7 +412,7 @@ oilnit_elliptic::Properties* getProps()
 	props->props_oil.lambda = 0.16;
 	
 	return props;
-}
+}*/
 /*blackoil_rz::Properties* getProps()
 {
 	blackoil_rz::Properties* props = new blackoil_rz::Properties();
@@ -554,6 +557,118 @@ oilnit_elliptic::Properties* getProps()
 	return props;
 }*/
 
+blackoilnit_elliptic::Properties* getProps()
+{
+	blackoilnit_elliptic::Properties* props = new blackoilnit_elliptic::Properties();
+
+	props->cellsNum_mu = 15;
+	props->cellsNum_nu = 28;
+	props->cellsNum_z = 13;
+
+	props->timePeriods.push_back(10.0 * 86400.0);
+	props->timePeriods.push_back(20.0 * 86400.0);
+
+	props->leftBoundIsRate = true;
+	props->rightBoundIsPres = true;
+	props->rates.push_back(50.0);
+	props->rates.push_back(0.0);
+	//props->pwf.push_back(150.0 * 1.E+5);
+	//props->pwf.push_back(200.0 * 1.E+5);
+
+	props->ht = 1000.0;
+	props->ht_min = 100.0;
+	props->ht_max = 100000.0;
+
+	props->alpha = 7200.0;
+
+	props->r_w = 0.1;
+	props->r_e = 1000.0;
+	props->l = 100.0;
+
+	props->depth_point = 0.0;
+
+	//props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(4, 4));
+	props->perfIntervals.push_back(make_pair(7, 7));
+	props->perfIntervals.push_back(make_pair(10, 10));
+
+	blackoilnit_elliptic::Skeleton_Props tmp;
+	tmp.isWellHere = true;
+	tmp.cellsNum_z = 13;
+	tmp.m = 0.15;
+	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
+	tmp.t_init = 0.0;
+	tmp.h1 = 0.0;
+	tmp.h2 = 10.0;
+	tmp.h_well = 5.0;
+	tmp.height = 10.0;
+	tmp.perm_mu = 20.0;
+	tmp.perm_z = 2.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.lambda_r = 5.0;
+	tmp.lambda_z = 5.0;
+	tmp.c = 1800.0;
+
+	//tmp.skins.push_back(2.68);
+	//tmp.skins.push_back(2.68);
+	tmp.skins.push_back(30.0);
+	tmp.skins.push_back(30.0);
+	tmp.radiuses_eff.push_back(1.0);
+	tmp.radiuses_eff.push_back(1.0);
+
+	props->props_sk.push_back(tmp);
+
+	tmp.m = 0.10;
+	tmp.perm_mu = 10.0;
+	tmp.perm_z = 1.0;
+	tmp.skins[0] = 20.0;
+	tmp.skins[1] = 20.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
+	props->props_sk.push_back(tmp);
+
+	tmp.m = 0.15;
+	tmp.perm_mu = 20.0;
+	tmp.perm_z = 2.0;
+	tmp.skins[0] = 40.0;
+	tmp.skins[1] = 40.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
+	props->props_sk.push_back(tmp);
+
+	tmp.m = 0.20;
+	tmp.perm_mu = 30.0;
+	tmp.perm_z = 3.0;
+	tmp.skins[0] = 0.0;
+	tmp.skins[1] = 0.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
+	props->props_sk.push_back(tmp);
+
+	tmp.m = 0.15;
+	tmp.perm_mu = 20.0;
+	tmp.perm_z = 2.0;
+	tmp.skins[0] = 30.0;
+	tmp.skins[1] = 30.0;
+	tmp.radiuses_eff[0] = 1.0;
+	tmp.radiuses_eff[1] = 1.0;
+	props->props_sk.push_back(tmp);
+
+	props->depth_point = 0.0;
+
+	props->props_oil.visc = 1.0;
+	props->props_oil.oil.rho_stc = 887.261;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.p_sat = 70.625 * 1.0e+5;
+	props->props_oil.jt = 4.0 * 1.e-7;
+	props->props_oil.ad = 2.0 * 1.e-7;
+	props->props_oil.c = 1880.0;
+	props->props_oil.lambda = 0.16;
+
+	return props;
+}
+
 double acid2d::Component::T = 300.0;
 
 int main(int argc, char* argv[])
@@ -570,8 +685,14 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	oilnit_elliptic::Properties* props = getProps();
+	/*oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
+	scene.load(*props/*, argc, argv);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
+
+	blackoilnit_elliptic::Properties* props = getProps();
+	Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties> scene;
 	scene.load(*props/*, argc, argv*/);
 	scene.setSnapshotterType("VTK");
 	scene.start();
