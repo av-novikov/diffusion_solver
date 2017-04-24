@@ -111,6 +111,23 @@ struct TapeVarBlackOil
 
 	bool SATUR;
 };
+struct VarBlackOilNIT
+{
+	static const int size = 5;
+
+	union {
+		double values[5];
+		struct
+		{
+			double t;
+			double p;
+			double s_w;
+			double s_o;
+			double p_bub;
+		};
+	};
+	bool SATUR;
+};
 
 template <typename DataType>
 struct VarSimpleVPP

@@ -2,7 +2,6 @@
 #define BLACKOILNITELLIPTIC_PROPERTIES_HPP_
 
 #include "util/utils.h"
-#include "model/Acid/2d/Reactions.hpp"
 
 #include "adolc/adouble.h"
 #include "adolc/taping.h"
@@ -71,7 +70,12 @@ namespace blackoilnit_elliptic
 
 			double p_out;
 			double p_init;
+			double p_sat;
+			double so_init;
+			double sw_init;
 			double t_init;
+			// Connate saturations
+			double s_wc, s_oc, s_gc;
 
 			// Mass heat capacity [J/kg/K]
 			double c;
@@ -80,13 +84,56 @@ namespace blackoilnit_elliptic
 			// Thermal conductivity coefficient [W/m/K]
 			double lambda_z;
 		};
-		struct Oil_Props
+		struct Gas_Props
 		{
-			acid2d::Component oil;
-			acid2d::Component gas;
+			// Viscosity [cP]
+			double visc;
+			Interpolate* visc_table;
+			inline adouble getViscosity(const adouble p) const
+			{
+				return (adouble)(visc);
+			};
+			// Density of fluid in STC [kg/m3]
+			static double dens_stc;
+			// Volume factor for well bore
+			double b_bore;
+			// Fluid volume factor
+			Interpolate* b;
+			inline adouble getB(adouble p) const
+			{
+				return b->Solve(p);
+			};
+			inline adouble getDensity(adouble p) const
+			{
+				return dens_stc / getB(p);
+			};
+			// Relative fluid permeability
+			Interpolate* kr;
+			inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+			{
+				adouble isAboveZero = (1.0 - s_o - s_w - props->s_gc > 0.0) ? true : false;
+				adouble isAboveCritical = (1.0 - s_o - s_w > 1.0 - props->s_wc - props->s_oc) ? true : false;
+				adouble tmp;
+				condassign(tmp, isAboveZero, 0.5 * pow(((adouble)(1.0 - props->s_gc) - s_w - s_o) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+				condassign(tmp, isAboveCritical, (adouble)0.5);
+				return tmp;
+				//return kr->Solve(s_w);
+			};
 
-			double p_sat;
-
+			// Mass heat capacity [J/kg/K]
+			double c;
+			// Thermal conductivity coefficient [W/m/K]
+			double lambda;
+			// Joule-thompson coefficient [K/Pa]
+			double jt;
+			// Adiabatic coefficient [K/Pa]
+			double ad;
+		};
+		struct Water_Props
+		{
+			double p_ref;
+			// Density of fluid in STC [kg/m3]
+			static double dens_stc;
 			// Viscosity [cP]
 			double visc;
 			Interpolate* visc_table;
@@ -97,7 +144,27 @@ namespace blackoilnit_elliptic
 			// Density of fluid in STC [kg/m3]
 			inline adouble getDensity(adouble p) const
 			{
-				return (adouble)(oil.rho_stc)* ((adouble)(1.0) + (adouble)(beta)* p);
+				return dens_stc / getB(p);
+			};
+			// Fluid volume factor
+			Interpolate* b;
+			inline adouble getB(adouble p) const
+			{
+				//adouble tmp;
+				//condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
+				return exp((adouble)beta * (p - p_ref));
+			};
+			// Relative fluid permeability
+			Interpolate* kr;
+			inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+			{
+				adouble isAboveZero = (s_w - props->s_wc > 0.0) ? true : false;
+				adouble isAboveCritical = (s_w > 1.0 - props->s_oc - props->s_gc) ? true : false;
+				adouble tmp;
+				condassign(tmp, isAboveZero, pow((s_w - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+				condassign(tmp, isAboveCritical, (adouble)1.0);
+				return tmp;
+				//return kr->Solve(s_w);
 			};
 			// Compessibility [1/Pa]
 			double beta;
@@ -111,6 +178,62 @@ namespace blackoilnit_elliptic
 			// Adiabatic coefficient [K/Pa]
 			double ad;
 		};
+		struct Oil_Props
+		{
+			double beta;
+			double p_ref;
+			// Density of fluid in STC [kg/m3]
+			static double dens_stc;
+			// Viscosity [cP]
+			double visc;
+			// Fluid volume factor
+			Interpolate* b;
+			inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
+			{
+				adouble tmp;
+				condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub) * exp((adouble)beta * (p_bub - p)));
+				return tmp;
+			};
+			// Gas-oil ratio
+			Interpolate* Rs;
+			inline adouble getRs(adouble p, adouble p_bub, adouble SATUR) const
+			{
+				adouble tmp;
+				condassign(tmp, SATUR, Rs->Solve(p), Rs->Solve(p_bub));
+				return tmp;
+			};
+			// Density of fluid in STC [kg/m3]
+			inline adouble getDensity(adouble p, adouble p_bub, adouble SATUR) const
+			{
+				return (dens_stc + getRs(p, p_bub, SATUR) * Gas_Props::dens_stc) / getB(p, p_bub, SATUR);
+			};
+			inline adouble getViscosity(const adouble p) const
+			{
+				return (adouble)(visc);
+			};
+			// Relative fluid permeability
+			Interpolate* kr;
+			inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+			{
+				adouble isAboveZero = (s_o - props->s_oc > 0.0) ? true : false;
+				adouble isAboveCritical = (s_o > 1.0 - props->s_wc - props->s_gc) ? true : false;
+				adouble tmp;
+				condassign(tmp, isAboveZero, pow((s_o - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+				condassign(tmp, isAboveCritical, (adouble)1.0);
+				return tmp;
+				//return kr->Solve(s_w);
+			};
+
+			// Mass heat capacity [J/kg/K]
+			double c;
+			// Thermal conductivity coefficient [W/m/K]
+			double lambda;
+			// Joule-thompson coefficient [K/Pa]
+			double jt;
+			// Adiabatic coefficient [K/Pa]
+			double ad;
+		};
+
 		struct Properties
 		{
 			// Vector of start times of periods [sec]
@@ -150,6 +273,9 @@ namespace blackoilnit_elliptic
 
 			std::vector<Skeleton_Props> props_sk;
 			Oil_Props props_oil;
+			Water_Props props_wat;
+			Gas_Props props_gas;
+			double L;
 
 			double depth_point;
 

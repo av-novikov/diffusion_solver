@@ -9,19 +9,19 @@ using namespace blackoilnit_elliptic;
 
 BlackOilNIT_Elliptic::BlackOilNIT_Elliptic()
 {
-	x = new double[stencil * (Variable::size - 1)];
-	y = new double[Variable::size - 1];
+	x = new double[stencil * var_size];
+	y = new double[var_size - 1];
 
-	jac = new double*[Variable::size - 1];
-	for (int i = 0; i < Variable::size - 1; i++)
-		jac[i] = new double[stencil * Variable::size];
+	jac = new double*[var_size - 1];
+	for (int i = 0; i < var_size - 1; i++)
+		jac[i] = new double[stencil * var_size];
 };
 BlackOilNIT_Elliptic::~BlackOilNIT_Elliptic()
 {
 	delete x;
 	delete y;
 
-	for (int i = 0; i < Variable::size - 1; i++)
+	for (int i = 0; i < var_size - 1; i++)
 		delete[] jac[i];
 	delete[] jac;
 };
@@ -80,9 +80,17 @@ void BlackOilNIT_Elliptic::setProps(Properties& props)
 	ht_min = props.ht_min;
 	ht_max = props.ht_max;
 
+	// Water properties
+	props_wat = props.props_wat;
+	props_wat.visc = cPToPaSec(props_wat.visc);
 	// Oil properties
 	props_oil = props.props_oil;
 	props_oil.visc = cPToPaSec(props_oil.visc);
+	// Gas properties
+	props_gas = props.props_gas;
+	props_gas.visc = cPToPaSec(props_gas.visc);
+
+	L = props.L;
 
 	makeDimLess();
 
@@ -123,6 +131,7 @@ void BlackOilNIT_Elliptic::makeDimLess()
 		props_sk[i].height /= R_dim;
 		props_sk[i].p_init /= P_dim;
 		props_sk[i].p_out /= P_dim;
+		props_sk[i].p_sat /= P_dim;
 		props_sk[i].t_init /= T_dim;
 
 		props_sk[i].c = props_sk[i].c / R_dim / R_dim * T_dim * t_dim * t_dim;
@@ -148,14 +157,33 @@ void BlackOilNIT_Elliptic::makeDimLess()
 
 	// Oil properties
 	props_oil.visc /= (P_dim * t_dim);
-	props_oil.oil.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
-	props_oil.gas.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
-	props_oil.p_sat /= P_dim;
+	props_oil.p_ref /= P_dim;
 	props_oil.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
 	props_oil.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
 	props_oil.jt = props_oil.jt * P_dim / T_dim;
 	props_oil.ad = props_oil.ad * P_dim / T_dim;
+	// Water
+	props_wat.visc /= (P_dim * t_dim);
+	props_wat.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	props_wat.beta /= (1.0 / P_dim);
+	props_wat.p_ref /= P_dim;
+	props_wat.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_wat.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_wat.jt = props_oil.jt * P_dim / T_dim;
+	props_wat.ad = props_oil.ad * P_dim / T_dim;
+	// Gas
+	props_gas.visc /= (P_dim * t_dim);
+	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+	//props_gas.beta /= (1.0 / P_dim);
+	//props_gas.p_ref /= P_dim;
+	props_gas.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_gas.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_gas.jt = props_oil.jt * P_dim / T_dim;
+	props_gas.ad = props_oil.ad * P_dim / T_dim;
+
+	L = L / R_dim / R_dim * t_dim * t_dim;
 };
 void BlackOilNIT_Elliptic::setInitialState()
 {
@@ -165,7 +193,15 @@ void BlackOilNIT_Elliptic::setInitialState()
 		const Skeleton_Props& props = props_sk[getSkeletonIdx(*it)];
 		it->props = const_cast<Skeleton_Props*>(&props);
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
+		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_sat;
+		it->u_prev.s_w = it->u_iter.s_w = it->u_next.s_w = props.sw_init;
+		it->u_prev.s_o = it->u_iter.s_o = it->u_next.s_o = props.so_init;
 		it->u_prev.t = it->u_iter.t = it->u_next.t = props.t_init;
+
+		if (props.p_init > props.p_sat)
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
 	}
 
 	for (it = wellCells.begin(); it != wellCells.end(); ++it)
@@ -173,7 +209,15 @@ void BlackOilNIT_Elliptic::setInitialState()
 		const Skeleton_Props& props = props_sk[getSkeletonIdx(*it)];
 		it->props = const_cast<Skeleton_Props*>(&props);
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props.p_init;
+		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props.p_sat;
+		it->u_prev.s_w = it->u_iter.s_w = it->u_next.s_w = props.sw_init;
+		it->u_prev.s_o = it->u_iter.s_o = it->u_next.s_o = props.so_init;
 		it->u_prev.t = it->u_iter.t = it->u_next.t = props.t_init;
+
+		if (props.p_init > props.p_sat)
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
 	}
 };
 void BlackOilNIT_Elliptic::buildGridLog()
@@ -582,7 +626,9 @@ double BlackOilNIT_Elliptic::getRate(int cur) const
 	const Cell& cell = wellCells[cur];
 	const Cell& beta = cells[nebrMap.at(cur).first];
 	const Variable& next = cell.u_next;
-	return getTrans(cell, beta) * props_oil.getDensity(next.p).value() / props_oil.oil.rho_stc / props_oil.getViscosity(next.p).value() * (beta.u_next.p - next.p);
+	return getTrans(cell, beta) * props_oil.getKr(next.s_w, next.s_o, cell.props).value() / 
+			props_oil.getB(next.p, next.p_bub, next.SATUR).value() / props_oil.getViscosity(next.p).value() * 
+			(beta.u_next.p - next.p);
 }
 
 void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
@@ -638,7 +684,7 @@ void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 
 		const TapeVariable& next = var[0];
 
-		h[0] = props.getPoro(next.p) * props_oil.getDensity(next.p) - props.getPoro(prev.p) * props_oil.getDensity(prev.p);
+//		h[0] = props.getPoro(next.p) * props_oil.getDensity(next.p) - props.getPoro(prev.p) * props_oil.getDensity(prev.p);
 
 		Cell* neighbor[6];
 		getNeighbors(cell, neighbor);
@@ -648,7 +694,7 @@ void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 			const Cell& beta = *neighbor[i];
 			const TapeVariable& nebr = var[i + 1];
 
-			h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) * getDensity(next.p, cell, nebr.p, beta) / props_oil.getViscosity(next.p);
+//			h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) * getDensity(next.p, cell, nebr.p, beta) / props_oil.getViscosity(next.p);
 		}
 
 		adouble buf = h[0];
@@ -732,8 +778,8 @@ void BlackOilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		}
 
 		condassign(h[0], leftIsRate,
-			(adouble)(getTrans(cell, beta)) * props_oil.getDensity(next.p) / props_oil.oil.rho_stc /
-			props_oil.getViscosity(next.p) * (nebr.p - next.p) - rate,
+			(adouble)(getTrans(cell, beta)) * props_oil.getKr(next.s_w, next.s_o, cell.props) /
+			props_oil.getViscosity(next.p) / props_oil.getB(next.p, next.p_bub, next.SATUR) * (nebr.p - next.p) - rate,
 			(next.p - Pwf) / P_dim);
 		condassign(h[0], leftPresPerforated, (next.p - Pwf) / P_dim);
 		condassign(h[0], leftPresNonPerforated, (next.p - nebr.p) / P_dim);
@@ -834,61 +880,95 @@ void BlackOilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			x[2] = nebr2.values[val];
 
 			solve_eqWell(cell, val);
-			jacobian(tleft, Variable::size - 1, (Variable::size - 1) * TLstencil, x, jac);
+			jacobian(tleft, 1, 1 * TLstencil, x, jac);
 		}
 		else if (val == PRES)
 		{
 			const Variable& next = cell.u_next;
-			const Variable& nebr = cells[nebrMap[cell.num].first].u_next;
+			const Variable& nebr1 = cells[nebrMap[cell.num].first].u_next;
+			const Variable& nebr2 = cells[nebrMap[cell.num].second].u_next;
 
-			x[0] = next.values[val];
-			x[1] = nebr.values[val];
+			for (int i = 0; i < var_size; i++)
+			{
+				x[i] = next.values[i + 1];
+				x[Variable::size + i] = nebr1.values[i + 1];
+				x[2 * Variable::size + i] = nebr2.values[i + 1];
+			}
 
 			solve_eqWell(cell, val);
-			jacobian(left, Variable::size - 1, (Variable::size - 1) * Lstencil, x, jac);
+			jacobian(left, var_size - 1, var_size * Lstencil, x, jac);
 		}
 	}
 	else if (cell.type == Type::RIGHT) // Right
 	{
 		const Variable& next = cell.u_next;
-		const Variable& nebr = cells[cell.num - cellsNum_z - 2].u_next;
+		const Variable& nebr1 = cells[cell.num - cellsNum_z - 2].u_next;
+		const Variable& nebr2 = cells[cell.num - 2 * cellsNum_z - 4].u_next;
 
-		x[0] = next.values[ val ];
-		x[1] = nebr.values[ val ];
-
-		solve_eqRight(cell, val);
-		if (val == TEMP)
-			jacobian(tright, Variable::size - 1, (Variable::size - 1) * Rstencil, x, jac);
+		if (val == TEMP) 
+		{
+			x[0] = next.values[val];
+			x[1] = nebr1.values[val];
+			solve_eqRight(cell, val);
+			jacobian(tright, 1, 1 * Rstencil, x, jac);
+		}
 		else if (val == PRES)
-			jacobian(right, Variable::size - 1, (Variable::size - 1) * Rstencil, x, jac);
+		{
+			for (int i = 0; i < var_size; i++)
+			{
+				x[i] = next.values[i+1];
+				x[Variable::size + i] = nebr1.values[i+1];
+				x[2 * Variable::size + i] = nebr2.values[i+1];
+			}
+			solve_eqRight(cell, val);
+			jacobian(right, var_size - 1, var_size * Rstencil, x, jac);
+		}
 	}
 	else if (cell.type == Type::TOP) // Top
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num + 1].u_next;
 
-		x[0] = next.values[ val ];
-		x[1] = nebr.values[ val ];
-
-		solve_eqVertical(cell, val);
 		if (val == TEMP)
-			jacobian(tvertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		{
+			x[0] = next.values[val];
+			x[1] = nebr.values[val];
+			solve_eqVertical(cell, val);
+			jacobian(tvertical, 1, 1 * Vstencil, x, jac);
+		}
 		else if (val == PRES)
-			jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		{
+			for (int i = 0; i < var_size; i++)
+			{
+				x[i] = next.values[i + 1];
+				x[Variable::size + i] = nebr.values[i + 1];
+			}
+			solve_eqVertical(cell, val);
+			jacobian(vertical, var_size - 1, var_size * Vstencil, x, jac);
+		}
 	}
 	else if (cell.type == Type::BOTTOM) // Bottom
 	{
 		const Variable& next = cell.u_next;
 		const Variable& nebr = cells[cell.num - 1].u_next;
 
-		x[0] = next.values[ val ];
-		x[1] = nebr.values[ val ];
-
-		solve_eqVertical(cell, val);
 		if (val == TEMP)
-			jacobian(tvertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		{
+			x[0] = next.values[val];
+			x[1] = nebr.values[val];
+			solve_eqVertical(cell, val);
+			jacobian(tvertical, 1, 1 * Vstencil, x, jac);
+		}
 		else if (val == PRES)
-			jacobian(vertical, Variable::size - 1, (Variable::size - 1) * Vstencil, x, jac);
+		{
+			for (int i = 0; i < var_size; i++)
+			{
+				x[i] = next.values[i + 1];
+				x[Variable::size + i] = nebr.values[i + 1];
+			}
+			solve_eqVertical(cell, val);
+			jacobian(vertical, var_size - 1, var_size * Vstencil, x, jac);
+		}
 	}
 	else // Middle
 	{
@@ -897,14 +977,27 @@ void BlackOilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 		Cell* neighbor[6];
 		getNeighbors(cell, neighbor);
 
-		x[0] = next.values[ val ];
-		for (int j = 0; j < nebrNum; j++)
-				x[(j + 1)] = neighbor[j]->u_next.values[ val ];
-
-		solve_eqMiddle(cell, val);
 		if (val == TEMP)
-			jacobian(tmid, Variable::size - 1, (Variable::size - 1) * (nebrNum + 1), x, jac);
+		{
+			x[0] = next.values[val];
+			for (int j = 0; j < nebrNum; j++)
+				x[(j + 1)] = neighbor[j]->u_next.values[val];
+
+			solve_eqMiddle(cell, val);
+			jacobian(tmid, 1, 1 * (nebrNum + 1), x, jac);
+		}
 		else if (val == PRES)
-			jacobian(mid, Variable::size - 1, (Variable::size - 1) * (nebrNum + 1), x, jac);
+		{
+			for (int i = 0; i < var_size; i++)
+			{
+				x[i] = next.values[i + 1];
+
+				for (int j = 0; j < nebrNum; j++)
+					x[(j + 1) * var_size + i] = neighbor[j]->u_next.values[i + 1];
+			}
+
+			solve_eqMiddle(cell, val);
+			jacobian(mid, var_size - 1, var_size * (nebrNum + 1), x, jac);
+		}
 	}
 }

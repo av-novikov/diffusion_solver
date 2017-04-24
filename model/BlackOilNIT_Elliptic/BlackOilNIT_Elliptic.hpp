@@ -23,11 +23,11 @@ namespace blackoilnit_elliptic
 	static const int stencil = 7;
 	static const int Lstencil = 2;
 	static const int TLstencil = 3;
-	static const int Rstencil = 2;
+	static const int Rstencil = 3;
 	static const int Vstencil = 2;
 
-	typedef Var1phaseNIT Variable;
-	typedef TapeVar1Phase TapeVariable;
+	typedef VarBlackOilNIT Variable;
+	typedef TapeVarBlackOil TapeVariable;
 	typedef TapeVar1PhaseNIT TapeVariableNIT;
 	typedef EllipticCell<Variable, Skeleton_Props> Cell;
 	typedef Cell::Point Point;
@@ -46,7 +46,10 @@ namespace blackoilnit_elliptic
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
 		std::vector<Skeleton_Props>::iterator sk_well;
+		Water_Props props_wat;
 		Oil_Props props_oil;
+		Gas_Props props_gas;
+		double L;
 
 		double l;
 		double mu_init;
@@ -382,7 +385,7 @@ namespace blackoilnit_elliptic
 						+ k2 * cell.hnu * Cell::getH(cell.mu, cell.nu));
 			}
 		};
-		inline adouble getDensity(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
+		/*inline adouble getDensity(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
 		{
 			double r1, r2;
 			if (fabs(cell1.z - cell2.z) > EQUALITY_TOLERANCE) {
@@ -397,7 +400,7 @@ namespace blackoilnit_elliptic
 			}
 
 			return (props_oil.getDensity(p1) * (adouble)r2 + props_oil.getDensity(p2) * (adouble)r1) / (adouble)(r1 + r2);
-		};
+		};*/
 
 		inline double getPerm(const Cell& cell, const int axis) const
 		{
@@ -490,31 +493,36 @@ namespace blackoilnit_elliptic
 		};
 		inline double getCn(const Cell& cell) const
 		{
-			return cell.props->getPoro(cell.u_next.p).value() * props_oil.getDensity(cell.u_next.p).value() * props_oil.c +
-					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->getDensity(cell.u_next.p).value() * 
+			const Variable& next = cell.u_next;
+			return cell.props->getPoro(next.p).value() * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * props_oil.c +
+					(1.0 - cell.props->getPoro(next.p).value()) * cell.props->getDensity(next.p).value() * 
 								cell.props->c;
 		};
 		inline double getAd(const Cell& cell) const
 		{
-			return cell.props->getPoro(cell.u_next.p).value() * (props_oil.getDensity(cell.u_next.p).value() * props_oil.ad * props_oil.c);
+			const Variable& next = cell.u_next;
+			return cell.props->getPoro(next.p).value() * (props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * props_oil.ad * props_oil.c);
 		};
 		inline double getLambda(const Cell& cell, const int axis) const
 		{
+			const Variable& next = cell.u_next;
 			if (axis == Z_AXIS)
-				return cell.props->getPoro(cell.u_next.p).value() * props_oil.lambda +
-						(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_z;
+				return cell.props->getPoro(next.p).value() * props_oil.lambda +
+						(1.0 - cell.props->getPoro(next.p).value()) * cell.props->lambda_z;
 			else
-				return cell.props->getPoro(cell.u_next.p).value() * props_oil.lambda +
-					(1.0 - cell.props->getPoro(cell.u_next.p).value()) * cell.props->lambda_r;
+				return cell.props->getPoro(next.p).value() * props_oil.lambda +
+					(1.0 - cell.props->getPoro(next.p).value()) * cell.props->lambda_r;
 		};
 		inline double getJT(Cell& cell, Cell** neighbor, const int axis)
 		{
-			return props_oil.getDensity(cell.u_next.p).value() *
+			const Variable& next = cell.u_next;
+			return props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() *
 				props_oil.c * props_oil.jt * getVelocity(cell, neighbor, axis);
 		};
 		inline double getA(Cell& cell, Cell** neighbor, const int axis)
 		{
-			return props_oil.getDensity(cell.u_next.p).value() * 
+			const Variable& next = cell.u_next;
+			return props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * 
 						props_oil.c * getVelocity(cell, neighbor, axis);
 		};
 		struct DivIndices 
@@ -579,7 +587,7 @@ namespace blackoilnit_elliptic
 		void setPeriod(int period);
 		double getRate(int cur) const;
 
-		static const int var_size = Variable::size;
+		static const int var_size = Variable::size - 1;
 	};
 };
 
