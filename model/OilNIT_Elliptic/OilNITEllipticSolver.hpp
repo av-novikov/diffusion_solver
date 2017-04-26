@@ -169,6 +169,8 @@ namespace oilnit_elliptic
 		std::vector<std::vector<double>> rateRatios;
 		std::vector<double> rateRatiosAmongIntervals;
 
+		bool isWellboreAffect;
+
 	public:
 		OilNITEllipticSolver(OilNIT_Elliptic* _model);
 		~OilNITEllipticSolver();

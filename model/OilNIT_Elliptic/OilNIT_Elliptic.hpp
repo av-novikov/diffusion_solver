@@ -577,6 +577,7 @@ namespace oilnit_elliptic
 		double* y;
 		double** jac;
 
+		void setWellborePeriod(int cur_period, double cur_t, bool isWellboreAffect);
 		void setPeriod(int period);
 		double getRate(int cur) const;
 

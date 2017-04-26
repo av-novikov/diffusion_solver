@@ -43,6 +43,8 @@ OilNITEllipticSolver<solType>::OilNITEllipticSolver(OilNIT_Elliptic* _model) : A
 
 	rateRatios.resize( model->perfIntervals.size() );
 	rateRatiosAmongIntervals.resize( model->perfIntervals.size(), 0.0);
+
+	isWellboreAffect = false;
 }
 template <typename solType>
 OilNITEllipticSolver<solType>::~OilNITEllipticSolver()
@@ -148,6 +150,13 @@ void OilNITEllipticSolver<solType>::control()
 		curTimePeriod++;
 		model->ht = model->ht_min;
 		model->setPeriod(curTimePeriod);
+		if (model->leftBoundIsRate && (fabs(model->Q_sum) < EQUALITY_TOLERANCE))
+			isWellboreAffect = true;
+	}
+	if (isWellboreAffect)
+	{
+		isWellboreAffect = (cur_t - model->period[curTimePeriod - 1] < model->wellboreDuration) ? true : false;
+		model->setWellborePeriod(curTimePeriod, cur_t, isWellboreAffect);
 	}
 
 	if (model->ht <= model->ht_max && iterations < 6)

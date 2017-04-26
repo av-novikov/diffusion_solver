@@ -60,6 +60,7 @@ class AbstractModel
 		double depth_point;
 		// During the time flow rate decreases 'e' times in well test [sec] 
 		double alpha;
+		double wellboreDuration;
 
 		virtual void buildGridLog() = 0;
 		virtual void setProps(propsType& props) = 0;
@@ -114,7 +115,7 @@ class AbstractModel
 			setInitialState();
 		};
 		virtual void setPeriod(int period) = 0;
-		virtual void setWellborePeriod(int period, double cut_t) {};
+		virtual void setWellborePeriod(int period, double cur_t) {};
 		int getCellsNum() {	return cellsNum; };
 
 		void snapshot(int i) { snapshotter->dump(i); };

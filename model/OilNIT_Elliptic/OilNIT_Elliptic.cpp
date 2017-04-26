@@ -80,6 +80,9 @@ void OilNIT_Elliptic::setProps(Properties& props)
 	ht_min = props.ht_min;
 	ht_max = props.ht_max;
 
+	alpha = props.alpha;
+	wellboreDuration = props.wellboreDuration;
+
 	// Oil properties
 	props_oil = props.props_oil;
 	props_oil.visc = cPToPaSec(props_oil.visc);
@@ -103,6 +106,8 @@ void OilNIT_Elliptic::makeDimLess()
 	ht /= t_dim;
 	ht_min /= t_dim;
 	ht_max /= t_dim;
+	alpha /= t_dim;
+	wellboreDuration /= t_dim;
 
 	// Grid properties
 	r_w /= R_dim;
@@ -551,6 +556,40 @@ void OilNIT_Elliptic::setPeriod(int period)
 		props.perm_eff_z = props.perm_z / props.perm_mu * props.perms_eff[period];
 
 		props.skin = props.skins[period];
+	}
+};
+void OilNIT_Elliptic::setWellborePeriod(int cur_period, double cur_t, bool isWellboreAffect)
+{
+	if (leftBoundIsRate)
+	{
+		if (isWellboreAffect)
+			Q_sum = rate[cur_period] + (rate[cur_period - 1] - rate[cur_period]) * exp(-(cur_t - period[cur_period - 1]) / alpha);
+		else
+			Q_sum = 0.0;
+
+		Q_sum_quater = 0.0;
+		map<int, double>::iterator it, it_ell;
+		double S;
+		for (it = Qcell.begin(); it != Qcell.end(); ++it)
+		{
+			const Cell& cell = wellCells[it->first];
+			if (cell.type == Type::WELL_LAT)
+				S = Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hz;
+			else
+				S = Cell::getH(cell.mu, cell.nu) * Cell::getH(cell.mu, cell.nu) * cell.hnu * cell.hmu;
+
+			it->second = Q_sum * S / height_perf;
+			it_ell = Qcell_ellipse.find(it->first);
+			if (it_ell != Qcell_ellipse.end())
+			{
+				if (wellCells[it_ell->first].type == Type::WELL_LAT)
+					it_ell->second = it->second;
+				else
+					it_ell->second = 2.0 * it->second;
+
+				Q_sum_quater += it_ell->second;
+			}
+		}
 	}
 };
 void OilNIT_Elliptic::setRateDeviation(int num, double ratio)
