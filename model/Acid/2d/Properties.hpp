@@ -55,13 +55,19 @@ namespace acid2d
 		//LiquidComponent water;
 
 		Interpolate* kr;
-		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
+		inline adouble getKr(adouble sw, /*adouble so,*/ const Skeleton_Props* props) const
 		{
-			adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
+			/*adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
 			adouble isAboveCritical = (sw > 1.0 - props->s_oc - props->s_gc) ? true : false;
 			adouble tmp;
 			condassign(tmp, isAboveZero, pow((sw - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
+			return tmp;*/
+			adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
+			//adouble isAboveCritical = (sw > 1.0 - props->s_oc - props->s_gc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, pow((sw - props->s_wc) / (adouble)(1.0 - props->s_wc), 3.5), (adouble)0.0);
+			//condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
 		inline adouble getViscosity(adouble p, adouble xa, adouble xw) const
@@ -80,11 +86,17 @@ namespace acid2d
 		Interpolate* kr;
 		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
 		{
-			adouble isAboveZero = (so - props->s_oc > 0.0) ? true : false;
+			/*adouble isAboveZero = (so - props->s_oc > 0.0) ? true : false;
 			adouble isAboveCritical = (so > 1.0 - props->s_wc - props->s_gc) ? true : false;
 			adouble tmp;
 			condassign(tmp, isAboveZero, pow((so - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
+			return tmp;*/
+			adouble isAboveZero = (sw - 0.2 > 0.0) ? true : false;
+			//adouble isAboveCritical = (sw > 1.0 - props->s_oc - props->s_gc) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, pow((sw - 0.2) / (adouble)(0.8), 3.5), (adouble)0.0);
+			//condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
 		inline adouble getViscosity(adouble p) const
@@ -101,13 +113,19 @@ namespace acid2d
 		GasComponent co2;
 
 		Interpolate* kr;
-		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
+		inline adouble getKr(adouble sw, /*adouble so,*/ const Skeleton_Props* props) const
 		{
-			adouble isAboveZero = (1.0 - so - sw - props->s_gc > 0.0) ? true : false;
+			/*adouble isAboveZero = (1.0 - so - sw - props->s_gc > 0.0) ? true : false;
 			adouble isAboveCritical = (1.0 - so - sw > 1.0 - props->s_wc - props->s_oc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, 0.5 * pow(((adouble)(1.0 - props->s_gc) - sw - so) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
+			condassign(tmp, isAboveZero, pow(((adouble)(1.0 - props->s_gc) - sw - so) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)0.5);
+			return tmp;*/
+			//adouble isAboveCritical = (1.0 - sw > 1.0 - props->s_wc - props->s_oc) ? true : false;
+			adouble isAboveZero = (1.0 - props->s_gc - sw > 0.0) ? true : false;
+			adouble tmp;
+			condassign(tmp, isAboveZero, tmp = pow((adouble)(1.0 - props->s_gc - sw) / (adouble)(1.0 - props->s_gc), 3.5) * (1.0 + 3.0 * sw), (adouble)0.0);
+			//condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
 		inline adouble getViscosity(adouble p) const

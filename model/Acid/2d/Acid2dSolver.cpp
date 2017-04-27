@@ -7,22 +7,23 @@ using namespace acid2d;
 
 Acid2dSolver::Acid2dSolver(Acid2d* _model) : basic2d::Basic2dSolver<Acid2d>(_model)
 {
-	//P.open("snaps/P.dat", ofstream::out);
-	//S.open("snaps/S.dat", ofstream::out);
-	//qcells.open("snaps/q_cells.dat", ofstream::out);
+	P.open("snaps/P.dat", ofstream::out);
+	//Sw.open("snaps/S.dat", ofstream::out);
+	qcells.open("snaps/q_cells.dat", ofstream::out);
 
 	chop_mult = 0.1;
 	max_sat_change = 0.1;
+	Qsum = 0.0;
 }
 Acid2dSolver::~Acid2dSolver()
 {
-	//P.close();
-	//S.close();
-	//qcells.close();
+	P.close();
+	//Sw.close();
+	qcells.close();
 }
 void Acid2dSolver::writeData()
 {
-/*	double p = 0.0, s_w = 0.0, s_o = 0.0;
+	double p = 0.0, sw = 0.0, q;
 
 	qcells << cur_t * t_dim / 3600.0;
 
@@ -30,23 +31,73 @@ void Acid2dSolver::writeData()
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
 		p += model->cells[it->first].u_next.p * model->P_dim;
-		s_w += model->cells[it->first].u_next.s_w;
-		s_o += model->cells[it->first].u_next.s_o;
+		//sw += model->cells[it->first].u_next.sw;
 		if (model->leftBoundIsRate)
-			qcells << "\t" << it->second * model->Q_dim * 86400.0;
+			q = it->second * model->Q_dim * 86400.0;
 		else
-			qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			q = model->getRate(it->first) * model->Q_dim * 86400.0;
+
+		qcells << "\t" << q;
+		Qsum += q * model->ht * t_dim / 86400.0;
 	}
 
 	P << cur_t * t_dim / 3600.0 <<
 		"\t" << p / (double)(model->Qcell.size()) << endl;
-	S << cur_t * t_dim / 3600.0 <<
+	/*S << cur_t * t_dim / 3600.0 <<
 		"\t" << s_w / (double)(model->Qcell.size()) <<
 		"\t" << s_o / (double)(model->Qcell.size()) <<
-		"\t" << 1.0 - (s_w + s_o) / (double)(model->Qcell.size()) << endl;
+		"\t" << 1.0 - (s_w + s_o) / (double)(model->Qcell.size()) << endl;*/
 
 	qcells << endl;
-	*/
+
+	if (cur_t == model->period[model->period.size() - 1])
+		qcells << Qsum << endl;
+}
+void Acid2dSolver::checkStability()
+{
+	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit + fabs(s_cur - s_crit) * chop_mult;
+	};
+	auto barelyMobilRight = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit - fabs(s_crit - s_cur) * chop_mult;
+	};
+	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
+	{
+		/*if ((next.s_o - props.s_oc) * (iter.s_o - props.s_oc) < 0.0)
+			next.s_o = barelyMobilLeft(next.s_o, props.s_oc);
+		if ((next.s_o - (1.0 - props.s_wc - props.s_gc)) * (iter.s_o - (1.0 - props.s_wc - props.s_gc)) < 0.0)
+			next.s_o = barelyMobilRight(next.s_o, 1.0 - props.s_wc - props.s_gc);*/
+		// Water
+		if ((next.sw - props.s_wc) * (iter.sw - props.s_wc) < 0.0)
+			next.sw = barelyMobilLeft(next.sw, props.s_wc);
+		/*if ((next.s_w - (1.0 - props.s_oc - props.s_gc)) * (iter.s_w - (1.0 - props.s_oc - props.s_gc)) < 0.0)
+			next.s_w = barelyMobilRight(next.s_w, 1.0 - props.s_oc - props.s_gc);*/
+		// Gas
+		if ((1.0 - next.sw - props.s_gc) * (1.0 - iter.sw - props.s_gc) < 0.0)
+			next.sw = barelyMobilLeft(1.0 - next.sw, props.s_gc);
+		/*if ((props.s_wc - next.s_w + props.s_oc - next.s_o) * (props.s_wc - iter.s_w + props.s_oc - iter.s_o) < 0.0)
+			if (fabs(next.s_o - iter.s_o) > fabs(next.s_w - iter.s_w))
+				next.s_o = 1.0 - next.s_w - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);
+			else
+				next.s_w = 1.0 - next.s_o - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);*/
+	};
+	auto checkMaxResidual = [=, this](auto next, auto iter)
+	{
+		if (fabs(next.sw - iter.sw) > max_sat_change)
+			next.sw = iter.sw + sign(next.sw - iter.sw) * max_sat_change;
+	};
+
+	for (auto cell : model->cells)
+	{
+		const Skeleton_Props& props = *cell.props;
+		Variable& next = cell.u_next;
+		const Variable& iter = cell.u_iter;
+
+		checkCritPoints(next, iter, props);
+		checkMaxResidual(next, iter);
+	}
 }
 void Acid2dSolver::solveStep()
 {
@@ -70,9 +121,10 @@ void Acid2dSolver::solveStep()
 	{
 		copyIterLayer();
 
+		//writeMatrixes();
 		Solve(model->cellsNum_r + 1, var_size * (model->cellsNum_z + 2), PRES);
 		construction_from_fz(model->cellsNum_r + 2, var_size * (model->cellsNum_z + 2), PRES);
-		//checkStability();
+		checkStability();
 
 		err_newton = convergance(cellIdx, varIdx);
 

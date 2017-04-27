@@ -125,7 +125,7 @@ void Acid2d::setInitialState()
 		it->u_prev.m = it->u_iter.m = it->u_next.m = props->m_init;
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props->p_init;
 		it->u_prev.sw = it->u_iter.sw = it->u_next.sw = props->sw_init;
-		it->u_prev.so = it->u_iter.so = it->u_next.so = props->so_init;
+//		it->u_prev.so = it->u_iter.so = it->u_next.so = props->so_init;
 		it->u_prev.xa = it->u_iter.xa = it->u_next.xa = props->xa_init;
 		it->u_prev.xw = it->u_iter.xw = it->u_next.xw = props->xw_init;
 
@@ -158,31 +158,30 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].so <<= x[i * Variable::size + 3];
-		var[i].xa <<= x[i * Variable::size + 4];
-		var[i].xw <<= x[i * Variable::size + 5];
+		//var[i].so <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 3];
+		var[i].xw <<= x[i * Variable::size + 4];
 	}
 
 	TapeVariable& next = var[0];
 	adouble rate = getReactionRate(next, props);
-	double rate0 = getReactionRate(next, props).value();
-	
+
 	h[0] = (1.0 - next.m) * props.getDensity(next.p) -
 			(1.0 - prev.m) * props.getDensity(prev.p) - 
 			ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * rate;
-	h[1] = next.m * (1.0 - next.sw - next.so) * props_g.getDensity(next.p) -
-		prev.m * (1.0 - prev.sw - prev.so) * props_g.getDensity(prev.p) -
+	h[1] = next.m * (1.0 - next.sw) * props_g.getDensity(next.p) -
+		prev.m * (1.0 - prev.sw) * props_g.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CO2] * reac.comps[REACTS::CO2].mol_weight * rate;
 	h[2] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw) -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw) -
 		ht * (reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight +
 			reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight +
 			reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight) * rate;
-	h[3] = next.m * next.so * props_o.getDensity(next.p) - prev.m * prev.so * props_o.getDensity(prev.p);
-	h[4] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw) * next.xa -
+	//h[3] = next.m * next.so * props_o.getDensity(next.p) - prev.m * prev.so * props_o.getDensity(prev.p);
+	h[3] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw) * next.xa -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw) * prev.xa -
 		ht * reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight * rate;
-	h[5] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw) * next.xw -
+	h[4] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw) * next.xw -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw) * prev.xw -
 		ht * reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight * rate;
 
@@ -199,13 +198,13 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 		adouble dens_o = getAverage(props_o.getDensity(next.p), cell, props_o.getDensity(nebr.p), beta);
 		adouble dens_g = getAverage(props_g.getDensity(next.p), cell, props_g.getDensity(nebr.p), beta);
 		adouble buf = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p);
-		adouble buf_w = buf * dens_w * props_w.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw);
+		adouble buf_w = buf * dens_w * props_w.getKr(upwd.sw, /*upwd.sw,*/ cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw);
 
-		h[1] += buf * dens_g * props_g.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_g.getViscosity(upwd.p);
+		h[1] += buf * dens_g * props_g.getKr(upwd.sw, /*upwd.sw,*/ cells[upwd_idx].props) / props_g.getViscosity(upwd.p);
 		h[2] += buf_w;
-		h[3] += buf * dens_o * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
-		h[4] += buf_w * upwd.xa;
-		h[5] += buf_w * upwd.xw;
+		//h[3] += buf * dens_o * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
+		h[3] += buf_w * upwd.xa;
+		h[4] += buf_w * upwd.xw;
 	}
 
 	for (int i = 0; i < var_size; i++)
@@ -225,9 +224,9 @@ void Acid2d::solve_eqLeft(const Cell& cell)
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].so <<= x[i * Variable::size + 3];
-		var[i].xa <<= x[i * Variable::size + 4];
-		var[i].xw <<= x[i * Variable::size + 5];
+		//var[i].so <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 3];
+		var[i].xw <<= x[i * Variable::size + 4];
 	}
 
 	const adouble leftIsRate = leftBoundIsRate;
@@ -243,9 +242,9 @@ void Acid2d::solve_eqLeft(const Cell& cell)
 		props_w.getDensity(Component::p_std, next.xa, next.xw) * Qcell[cell.num],
 		next.p - Pwf);
 	h[2] = next.sw - (1.0 - props.s_oc);
-	h[3] = next.so - props.s_oc;
-	h[4] = next.xa - xa;
-	h[5] = next.xw - (1.0 - xa);
+	//h[3] = next.so - props.s_oc;
+	h[3] = next.xa - xa;
+	h[4] = next.xw - (1.0 - xa);
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -263,9 +262,9 @@ void Acid2d::solve_eqRight(const Cell& cell)
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].so <<= x[i * Variable::size + 3];
-		var[i].xa <<= x[i * Variable::size + 4];
-		var[i].xw <<= x[i * Variable::size + 5];
+		//var[i].so <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 3];
+		var[i].xw <<= x[i * Variable::size + 4];
 	}
 
 	TapeVariable& next = var[0];
@@ -276,9 +275,9 @@ void Acid2d::solve_eqRight(const Cell& cell)
 	h[0] = next.m - nebr.m;
 	condassign(h[1], rightIsPres, next.p - (adouble)(cell.props->p_out), next.p - (adouble)(nebr.p));
 	h[2] = next.sw - nebr.sw;
-	h[3] = next.so - nebr.so;
-	h[4] = next.xa - nebr.xa;
-	h[5] = next.xw - nebr.xw;
+	//h[3] = next.so - nebr.so;
+	h[3] = next.xa - nebr.xa;
+	h[4] = next.xw - nebr.xw;
 	
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -296,9 +295,9 @@ void Acid2d::solve_eqVertical(const Cell& cell)
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].so <<= x[i * Variable::size + 3];
-		var[i].xa <<= x[i * Variable::size + 4];
-		var[i].xw <<= x[i * Variable::size + 5];
+		//var[i].so <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 3];
+		var[i].xw <<= x[i * Variable::size + 4];
 	}
 
 	const TapeVariable& next = var[0];
@@ -307,9 +306,9 @@ void Acid2d::solve_eqVertical(const Cell& cell)
 	h[0] = next.m - nebr.m;
 	h[1] = next.p - nebr.p;
 	h[2] = next.sw - nebr.sw;
-	h[3] = next.so - nebr.so;
-	h[4] = next.xa - nebr.xa;
-	h[5] = next.xw - nebr.xw;
+	//h[3] = next.so - nebr.so;
+	h[3] = next.xa - nebr.xa;
+	h[4] = next.xw - nebr.xw;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];

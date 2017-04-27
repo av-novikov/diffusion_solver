@@ -17,7 +17,7 @@ namespace acid2d
 	protected:
 		void solveStep();
 		void writeData();
-		void checkStability() {};
+		void checkStability();
 
 		void construction_from_fz(int N, int n, int key);
 		static const int var_size = Variable::size;
@@ -29,9 +29,10 @@ namespace acid2d
 		std::ofstream mat_a, mat_b, mat_c, rhs;
 		void writeMatrixes();
 
-		std::ofstream S;
+		std::ofstream Sw;
 		std::ofstream P;
 		std::ofstream qcells;
+		double Qsum;
 	public:
 		Acid2dSolver(acid2d::Acid2d* _model);
 		~Acid2dSolver();

@@ -299,7 +299,7 @@ using namespace std;
 
 	return props;
 }*/
-oilnit_elliptic::Properties* getProps()
+/*oilnit_elliptic::Properties* getProps()
 {
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
@@ -409,7 +409,7 @@ oilnit_elliptic::Properties* getProps()
 	props->props_oil.lambda = 0.16;
 	
 	return props;
-}
+}*/
 /*blackoil_rz::Properties* getProps()
 {
 	blackoil_rz::Properties* props = new blackoil_rz::Properties();
@@ -487,21 +487,18 @@ oilnit_elliptic::Properties* getProps()
 
 	return props;
 }*/
-/*acid2d::Properties* getProps()
+acid2d::Properties* getProps()
 {
 	acid2d::Properties* props = new acid2d::Properties;
 
-	props->cellsNum_r = 20;
+	props->cellsNum_r = 100;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(20.0 * 86400.0);
-	props->timePeriods.push_back(40.0 * 86400.0);
-	props->leftBoundIsRate = true;
+	props->timePeriods.push_back(4.436 * 3600.0);
+	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(0.0);
-	props->rates.push_back(0.0);
-	props->xa.push_back(0.00);
-	props->xa.push_back(0.00);
+	props->pwf.push_back(171.38 * 1.0e+5);
+	props->xa.push_back(0.13);
 
 	props->ht = 100.0;
 	props->ht_min = 100.0;
@@ -509,52 +506,54 @@ oilnit_elliptic::Properties* getProps()
 
 	props->alpha = 7200.0;
 
-	props->r_w = 0.1;
-	props->r_e = 1000.0;
+	props->r_w = 0.1524;
+	props->r_e = 141.4;
 
 	props->perfIntervals.push_back(make_pair(1, 1));
 
 	acid2d::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_ref = 200.0 * 1.0e+5;
-	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.p_init = tmp.p_out = tmp.p_ref = 151.37 * 1.0e+5;
+	tmp.sw_init = 1.0;	tmp.so_init = 0.0;
 	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
-	tmp.s_wc = 0.1;		tmp.s_oc = 0.1;		tmp.s_gc = 0.05;
+	tmp.s_wc = 0.2;		tmp.s_oc = 0.0;		tmp.s_gc = 0.1;
 	tmp.xa_eqbm = 0.0;
 	tmp.h1 = 0.0;
-	tmp.h2 = 10.0;
-	tmp.height = 10.0;
-	tmp.perm_r = 20.0;
-	tmp.perm_z = 20.0;
+	tmp.h2 = 30.0;
+	tmp.height = 30.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 10.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
 	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;
 
-	props->props_o.visc = 1.0;
+	/*props->props_o.visc = 1.0;
 	props->props_o.dens_stc = 887.261;
+	props->props_o.beta = 1.0 * 1.e-9;
+	props->props_o.p_ref = tmp.p_ref;*/
+	props->props_o.visc = 0.6;
+	props->props_o.dens_stc = 1000.0;
 	props->props_o.beta = 1.0 * 1.e-9;
 	props->props_o.p_ref = tmp.p_ref;
 
-	props->props_w.visc = 1.0;
+	props->props_w.visc = 0.6;
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = tmp.p_ref;
 
-	props->props_g.visc = 0.03;
-	props->props_g.dens_stc = 0.8;
+	props->props_g.visc = 0.05;
+	props->props_g.dens_stc = 1.223;
 	props->props_g.co2 = acid2d::getCO2();
 	
 	return props;
-}*/
+}
 
-double acid2d::Component::T = 300.0;
+double acid2d::Component::T = 288.15;
 
 int main(int argc, char* argv[])
 {
@@ -570,11 +569,11 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	oilnit_elliptic::Properties* props = getProps();
+	/*oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
-	scene.load(*props/*, argc, argv*/);
+	scene.load(*props/*, argc, argv);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	/*gasOil_elliptic::Properties* props = getProps();
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
@@ -588,11 +587,11 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	/*(acid2d::Properties* props = getProps();
+	acid2d::Properties* props = getProps();
 	Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 
 	return 0;
 }

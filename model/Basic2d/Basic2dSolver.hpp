@@ -35,6 +35,7 @@ namespace basic2d
 				model->ht = model->period[curTimePeriod] - cur_t;
 
 			cur_t += model->ht;
+			model->time = cur_t;
 		}
 		void doNextStep()
 		{

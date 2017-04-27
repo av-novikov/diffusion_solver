@@ -236,12 +236,14 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	polygon->GetPointIds()->SetNumberOfIds(4);
 	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro->SetName("porosity");
+	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
+	perm->SetName("permeability");
 	auto pres =	vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
 	sat_w->SetName("WaterSaturation");
-	auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
-	sat_o->SetName("OilSaturation");
+	//auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
+	//sat_o->SetName("OilSaturation");
 	auto sat_g = vtkSmartPointer<vtkDoubleArray>::New();
 	sat_g->SetName("GasSaturation");
 	auto conc_a = vtkSmartPointer<vtkDoubleArray>::New();
@@ -275,10 +277,11 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(next.m);
+		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
 		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 		sat_w->InsertNextValue(next.sw);
-		sat_o->InsertNextValue(next.so);
-		sat_g->InsertNextValue(1.0 - next.sw - next.so);
+		//sat_o->InsertNextValue(next.so);
+		sat_g->InsertNextValue(1.0 - next.sw);
 		conc_a->InsertNextValue(next.xa);
 		conc_w->InsertNextValue(next.xw);
 		conc_s->InsertNextValue(1.0 - next.xw - next.xa);
@@ -307,10 +310,11 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(next.m);
+			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
 			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w->InsertNextValue(next.sw);
-			sat_o->InsertNextValue(next.so);
-			sat_g->InsertNextValue(1.0 - next.sw - next.so);
+			//sat_o->InsertNextValue(next.so);
+			sat_g->InsertNextValue(1.0 - next.sw);
 			conc_a->InsertNextValue(next.xa);
 			conc_w->InsertNextValue(next.xw);
 			conc_s->InsertNextValue(1.0 - next.xw - next.xa);
@@ -333,9 +337,10 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
+	fd->AddArray(perm);
 	fd->AddArray(pres);
 	fd->AddArray(sat_w);
-	fd->AddArray(sat_o);
+	//fd->AddArray(sat_o);
 	fd->AddArray(sat_g);
 	fd->AddArray(conc_a);
 	fd->AddArray(conc_w);

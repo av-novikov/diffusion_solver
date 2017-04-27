@@ -77,7 +77,7 @@ namespace acid2d
 	inline SolidComponent getCaCl2()
 	{
 		SolidComponent comp;
-		comp.mol_weight = 110;
+		comp.mol_weight = 110.0;
 		return comp;
 	};
 	inline LiquidComponent getH2O()
@@ -91,7 +91,7 @@ namespace acid2d
 		GasComponent comp;
 		comp.mol_weight = 44.0;
 		comp.z = 1.0;
-		comp.rho_stc = 1.98;
+		comp.rho_stc = 1.223;
 		return comp;
 	};
 
@@ -108,8 +108,8 @@ namespace acid2d
 		double reaction_const;
 		inline adouble getReactionRate(double m0, adouble m) const
 		{
-			return reaction_const * surf_init * (1.0 - m) / (1 - m0) *
-				exp(-activation_energy / Component::R / Component::T);
+			return 1.e-5 * /*reaction_const * surf_init **/ (1.0 - m); /*/ (1 - m0) *
+				exp(-activation_energy / Component::R / Component::T)*/;
 		}
 	};
 

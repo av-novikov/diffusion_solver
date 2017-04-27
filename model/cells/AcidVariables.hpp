@@ -5,7 +5,7 @@
 
 struct FirstAcid
 {
-	static const int size = 6;
+	static const int size = 5;
 
 	union {
 		double values[size];
@@ -14,7 +14,6 @@ struct FirstAcid
 			double m;
 			double p;
 			double sw;
-			double so;
 			double xa;
 			double xw;
 		};
@@ -22,12 +21,11 @@ struct FirstAcid
 };
 struct TapeFirstAcid
 {
-	static const int size = 6;
+	static const int size = 5;
 
 	adouble m;
 	adouble p;
 	adouble sw;
-	adouble so;
 	adouble xa;
 	adouble xw;
 };

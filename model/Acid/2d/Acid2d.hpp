@@ -65,7 +65,7 @@ namespace acid2d
 		{
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw) *
 					(var.xa - props.xa_eqbm) * 
-					reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
+					reac.getReactionRate(props.m_init, var.m) * t_dim / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
 		{
@@ -107,9 +107,9 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_w.getKr(var->sw, var->so, cell.props).value() / props_w.getViscosity(var->p, var->xa, var->xw).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_w.getKr(var->sw,/* var->sw,*/ cell.props).value() / props_w.getViscosity(var->p, var->xa, var->xw).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_w.getKr(var->sw, var->so, cell.props).value() / props_w.getViscosity(var->p, var->xa, var->xw).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_w.getKr(var->sw,/* var->sw,*/ cell.props).value() / props_w.getViscosity(var->p, var->xa, var->xw).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getGasVelocity(Cell& cell, int varNum, int axis)
@@ -131,9 +131,9 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_g.getKr(var->sw, var->so, cell.props).value() / props_g.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_g.getKr(var->sw,/* var->sw,*/ cell.props).value() / props_g.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->sw, var->so, cell.props).value() / props_g.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->sw,/* var->sw,*/ cell.props).value() / props_g.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 		inline double getOilVelocity(Cell& cell, int varNum, int axis)
@@ -155,9 +155,9 @@ namespace acid2d
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_o.getKr(var->sw, var->so, cell.props).value() / props_o.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_o.getKr(var->sw, var->sw, cell.props).value() / props_o.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_o.getKr(var->sw, var->so, cell.props).value() / props_o.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_o.getKr(var->sw, var->sw, cell.props).value() / props_o.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
 			}
 		};
 

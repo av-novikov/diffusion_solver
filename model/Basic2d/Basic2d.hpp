@@ -384,6 +384,7 @@ namespace basic2d
 		Basic2d() {};
 		~Basic2d() {};
 
+		double time;
 		virtual void setPeriod(int period)
 		{
 			if (leftBoundIsRate)
