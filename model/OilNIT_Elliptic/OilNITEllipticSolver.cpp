@@ -312,7 +312,7 @@ void OilNITEllipticSolver<solType>::doNextStep()
 			printWellRates();
 			fillq();
 
-			double mult = 0.9;
+			double mult = 0.5;
 			double H = H0;
 
 			while (H > H0 / 10.0 || H > 2.0)

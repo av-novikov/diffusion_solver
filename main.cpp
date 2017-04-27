@@ -302,7 +302,7 @@ using namespace std;
 
 	return props;
 }*/
-/*oilnit_elliptic::Properties* getProps()
+oilnit_elliptic::Properties* getProps()
 {
 	oilnit_elliptic::Properties* props = new oilnit_elliptic::Properties();
 
@@ -323,8 +323,6 @@ using namespace std;
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
 	props->ht_max = 100000.0;
-
-	props->alpha = 7200.0;
 
 	props->r_w = 0.1;
 	props->r_e = 1000.0;
@@ -357,8 +355,8 @@ using namespace std;
 
 	//tmp.skins.push_back(2.68);
 	//tmp.skins.push_back(2.68);
-	tmp.skins.push_back(30.0);
-	tmp.skins.push_back(30.0);
+	tmp.skins.push_back(0.0);//30.0);
+	tmp.skins.push_back(0.0);// 30.0);
 	tmp.radiuses_eff.push_back(1.0);
 	tmp.radiuses_eff.push_back(1.0);
 
@@ -367,8 +365,8 @@ using namespace std;
 	tmp.m = 0.10;
 	tmp.perm_mu = 10.0;
 	tmp.perm_z = 1.0;
-	tmp.skins[0] = 20.0;
-	tmp.skins[1] = 20.0;
+	tmp.skins[0] = 0.0;// 20.0;
+	tmp.skins[1] = 0.0;// 20.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -376,8 +374,8 @@ using namespace std;
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
-	tmp.skins[0] = 40.0;
-	tmp.skins[1] = 40.0;
+	tmp.skins[0] = 0.0;// 40.0;
+	tmp.skins[1] = 0.0;// 40.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -385,8 +383,8 @@ using namespace std;
 	tmp.m = 0.20;
 	tmp.perm_mu = 30.0;
 	tmp.perm_z = 3.0;
-	tmp.skins[0] = 0.0;
-	tmp.skins[1] = 0.0;
+	tmp.skins[0] = 0.0;// 30.0;
+	tmp.skins[1] = 0.0;// 30.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -394,8 +392,8 @@ using namespace std;
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
-	tmp.skins[0] = 30.0;
-	tmp.skins[1] = 30.0;
+	tmp.skins[0] = 0.0;// 30.0;
+	tmp.skins[1] = 0.0;// 30.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -411,8 +409,11 @@ using namespace std;
 	props->props_oil.c = 1880.0;
 	props->props_oil.lambda = 0.16;
 	
+	props->alpha = 3600.0;
+	props->wellboreDuration = 86400.0;
+
 	return props;
-}*/
+}
 /*blackoil_rz::Properties* getProps()
 {
 	blackoil_rz::Properties* props = new blackoil_rz::Properties();
@@ -557,7 +558,7 @@ using namespace std;
 	return props;
 }*/
 
-blackoilnit_elliptic::Properties* getProps()
+/*blackoilnit_elliptic::Properties* getProps()
 {
 	blackoilnit_elliptic::Properties* props = new blackoilnit_elliptic::Properties();
 
@@ -658,18 +659,21 @@ blackoilnit_elliptic::Properties* getProps()
 	props->depth_point = 0.0;
 
 	props->props_oil.visc = 1.0;
-	props->props_oil.oil.rho_stc = 887.261;
+	props->props_oil.dens_stc = 887.261;
 	props->props_oil.beta = 1.0 * 1.e-9;
-	props->props_oil.p_sat = 70.625 * 1.0e+5;
+	//props->props_oil.p_sat = 70.625 * 1.0e+5;
 	props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
 	props->props_oil.lambda = 0.16;
 
 	return props;
-}
+}*/
 
 double acid2d::Component::T = 300.0;
+double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
+double blackoilnit_elliptic::Oil_Props::dens_stc = 887.261;
+double blackoilnit_elliptic::Gas_Props::dens_stc = 0.8;
 
 int main(int argc, char* argv[])
 {
@@ -685,17 +689,17 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	/*oilnit_elliptic::Properties* props = getProps();
+	oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
-	scene.load(*props/*, argc, argv);
-	scene.setSnapshotterType("VTK");
-	scene.start();*/
-
-	blackoilnit_elliptic::Properties* props = getProps();
-	Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties> scene;
 	scene.load(*props/*, argc, argv*/);
 	scene.setSnapshotterType("VTK");
 	scene.start();
+
+	/*blackoilnit_elliptic::Properties* props = getProps();
+	Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties> scene;
+	scene.load(*props/*, argc, argv);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
 
 	/*gasOil_elliptic::Properties* props = getProps();
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
