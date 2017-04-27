@@ -136,6 +136,7 @@ namespace oilnit_elliptic
 		double ht_max;
 		// During the time flow rate decreases 'e' times in well test [sec] 
 		double alpha;
+		double wellboreDuration;
 
 		// Inner radius of well [m]
 		double r_w;

@@ -49,11 +49,47 @@ void ParSolver::Solve()
 		
 	x.MoveToHost();
 }
+void ParSolver::Solve(const PRECOND key)
+{
+	//SolveGMRES();
+	if (key == PRECOND::ILU_SERIOUS)
+		SolveBiCGStab();
+	else if (key == PRECOND::ILU_SIMPLE)
+		SolveBiCGStab_Simple();
+
+	x.MoveToHost();
+}
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
 	//p.Set(1.E-15, 100);
 	p.Set(2);
+	bicgstab.SetPreconditioner(p);
+	bicgstab.Build();
+	isAssembled = true;
+
+	bicgstab.Init(1.E-17, 1.E-12, 1E+12, 500);
+	Mat.info();
+
+	//bicgstab.RecordResidualHistory();
+	bicgstab.Solve(Rhs, &x);
+	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
+	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
+	//bicgstab.RecordHistory(resHistoryFile);
+	//writeSystem();
+
+	//getResiduals();
+	//cout << "Initial residual: " << initRes << endl;
+	//cout << "Final residual: " << finalRes << endl;
+	//cout << "Number of iterations: " << iterNum << endl << endl;
+
+	bicgstab.Clear();
+}
+void ParSolver::SolveBiCGStab_Simple()
+{
+	bicgstab.SetOperator(Mat);
+	//p.Set(1.E-15, 100);
+	p.Set(0);
 	bicgstab.SetPreconditioner(p);
 	bicgstab.Build();
 	isAssembled = true;

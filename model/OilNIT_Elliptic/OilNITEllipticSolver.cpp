@@ -246,7 +246,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 
 		fill(PRES);
 		pres_solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		pres_solver.Solve();
+		pres_solver.Solve(PRECOND::ILU_SIMPLE);
 		copySolution(pres_solver.getSolution(), PRES);
 
 		err_newton = convergance(cellIdx, varIdx);
@@ -289,7 +289,7 @@ void OilNITEllipticSolver<ParSolver>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
-	temp_solver.Solve();
+	temp_solver.Solve(PRECOND::ILU_SERIOUS);
 	copySolution(temp_solver.getSolution(), TEMP);
 }
 void OilNITEllipticSolver<HypreSolver>::solveTempStep()
