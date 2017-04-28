@@ -495,47 +495,62 @@ oilnit_elliptic::Properties* getProps()
 {
 	acid2d::Properties* props = new acid2d::Properties;
 
-	props->cellsNum_r = 20;
-	props->cellsNum_z = 1;
+	props->cellsNum_r = 100;
+	props->cellsNum_z = 10;
 
-	props->timePeriods.push_back(20.0 * 86400.0);
-	props->timePeriods.push_back(40.0 * 86400.0);
-	props->leftBoundIsRate = true;
+	props->timePeriods.push_back(5.0 * 3600.0);
+	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(0.0);
-	props->rates.push_back(0.0);
-	props->xa.push_back(0.00);
-	props->xa.push_back(0.00);
+	//props->rates.push_back(0.0);
+	props->pwf.push_back(250.0 * 1.0e+5);
+	props->xa.push_back(0.13);
 
-	props->ht = 100.0;
-	props->ht_min = 100.0;
-	props->ht_max = 100000.0;
+	props->ht = 1.0;
+	props->ht_min = 1.0;
+	props->ht_max = 10000.0;
 
 	props->alpha = 7200.0;
 
 	props->r_w = 0.1;
-	props->r_e = 1000.0;
+	props->r_e = 150.0;
 
-	props->perfIntervals.push_back(make_pair(1, 1));
+	props->perfIntervals.push_back(make_pair(5, 5));
+	//props->perfIntervals.push_back(make_pair(15, 15));
 
 	acid2d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 10;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 200.0 * 1.0e+5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
 	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
-	tmp.s_wc = 0.1;		tmp.s_oc = 0.1;		tmp.s_gc = 0.05;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.00;
 	tmp.xa_eqbm = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
 	tmp.height = 10.0;
-	tmp.perm_r = 20.0;
-	tmp.perm_z = 20.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 30.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back(tmp);
+
+	/*tmp.cellsNum_z = 10;
+	tmp.m_init = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_ref = 200.0 * 1.0e+5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.00;
+	tmp.xa_eqbm = 0.0;
+	tmp.h1 = 5.0;
+	tmp.h2 = 10.0;
+	tmp.height = 5.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 10.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	props->props_sk.push_back(tmp);
 
@@ -713,7 +728,7 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	/*(acid2d::Properties* props = getProps();
+	/*acid2d::Properties* props = getProps();
 	Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");

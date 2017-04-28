@@ -236,6 +236,8 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	polygon->GetPointIds()->SetNumberOfIds(4);
 	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro->SetName("porosity");
+	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
+	perm->SetName("permeability");
 	auto pres =	vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
@@ -275,6 +277,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(next.m);
+		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
 		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 		sat_w->InsertNextValue(next.sw);
 		sat_o->InsertNextValue(next.so);
@@ -307,6 +310,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(next.m);
+			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
 			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w->InsertNextValue(next.sw);
 			sat_o->InsertNextValue(next.so);
@@ -333,6 +337,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
+	fd->AddArray(perm);
 	fd->AddArray(pres);
 	fd->AddArray(sat_w);
 	fd->AddArray(sat_o);

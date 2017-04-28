@@ -63,7 +63,7 @@ void Acid2dSolver::solveStep()
 		for (const auto& val : dAverVal)
 			result += (val > 1.e-10);
 		
-		return result * (err_newton > 1.e-4) * (iterations < 9);
+		return result * (err_newton > 1.e-4) * (iterations < 20);
 	};
 
 	while (continueIterations())
