@@ -318,16 +318,16 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			conc_a->InsertNextValue(next.xa);
 			conc_w->InsertNextValue(next.xw);
 			conc_s->InsertNextValue(1.0 - next.xw - next.xa);
-			vel[0] = r_dim / t_dim * model->getWaterVelocity(cell, NEXT, R_AXIS);
-			vel[1] = r_dim / t_dim * model->getWaterVelocity(cell, NEXT, Z_AXIS);
+			vel[0] = r_dim / t_dim * model->getWaterVelocity(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getWaterVelocity(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_w->InsertNextTuple(vel);
-			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, R_AXIS);
-			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, NEXT, Z_AXIS);
+			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_o->InsertNextTuple(vel);
-			vel[0] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, R_AXIS);
-			vel[1] = r_dim / t_dim * model->getGasVelocity(cell, NEXT, Z_AXIS);
+			vel[0] = r_dim / t_dim * model->getGasVelocity(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getGasVelocity(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_g->InsertNextTuple(vel);
 		}

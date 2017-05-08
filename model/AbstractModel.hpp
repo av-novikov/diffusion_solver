@@ -78,7 +78,7 @@ class AbstractModel
 
 		static const int var_size;
 	public:
-		AbstractModel() { isWriteSnaps = true; };
+		AbstractModel() { isWriteSnaps = true;	grav = 9.8; };
 		virtual ~AbstractModel() {};
 	
 		// Dimensions
@@ -88,6 +88,7 @@ class AbstractModel
 		double P_dim;
 		double T_dim;
 		double Q_dim;
+		double grav;
 
 		void setSnapshotter(std::string type, modelType* model)
 		{

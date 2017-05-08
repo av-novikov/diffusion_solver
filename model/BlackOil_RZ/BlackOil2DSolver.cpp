@@ -9,8 +9,8 @@ BlackOil2dSolver::BlackOil2dSolver(BlackOil_RZ* _model) : basic2d::Basic2dSolver
 	S.open("snaps/S.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
 
-	chop_mult = 0.1;
-	max_sat_change = 0.1;
+	CHOP_MULT = 0.1;
+	MAX_SAT_CHANGE = 0.1;
 }
 BlackOil2dSolver::~BlackOil2dSolver()
 {
@@ -49,11 +49,11 @@ void BlackOil2dSolver::checkStability()
 {
 	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
 	{
-		return s_crit + fabs(s_cur - s_crit) * chop_mult;
+		return s_crit + fabs(s_cur - s_crit) * CHOP_MULT;
 	};
 	auto barelyMobilRight = [this](double s_cur, double s_crit) -> double
 	{
-		return s_crit - fabs(s_crit - s_cur) * chop_mult;
+		return s_crit - fabs(s_crit - s_cur) * CHOP_MULT;
 	};
 	auto checkBubPoint = [](auto cell, auto next)
 	{
@@ -78,6 +78,7 @@ void BlackOil2dSolver::checkStability()
 	};
 	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
 	{
+		// Oil
 		if ((next.s_o - props.s_oc) * (iter.s_o - props.s_oc) < 0.0)
 			next.s_o = barelyMobilLeft(next.s_o, props.s_oc);
 		if ((next.s_o - (1.0 - props.s_wc - props.s_gc)) * (iter.s_o - (1.0 - props.s_wc - props.s_gc)) < 0.0)
@@ -101,10 +102,10 @@ void BlackOil2dSolver::checkStability()
 	};
 	auto checkMaxResidual = [=, this](auto next, auto iter)
 	{
-		if (fabs(next.s_w - iter.s_w) > max_sat_change)
-			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * max_sat_change;
-		if (fabs(next.s_o - iter.s_o) > max_sat_change)
-			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * max_sat_change;
+		if (fabs(next.s_w - iter.s_w) > MAX_SAT_CHANGE)
+			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * MAX_SAT_CHANGE;
+		if (fabs(next.s_o - iter.s_o) > MAX_SAT_CHANGE)
+			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * MAX_SAT_CHANGE;
 	};
 
 	for (auto cell : model->cells)

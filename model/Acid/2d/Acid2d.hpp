@@ -88,76 +88,40 @@ namespace acid2d
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
 		};
-		inline double getWaterVelocity(Cell& cell, int varNum, int axis)
+		inline double getWaterVelocity(Cell& cell, const int axis)
 		{
-			Variable* var;
-			switch (varNum)
-			{
-			case PREV:
-				var = &cell.u_prev;
-				break;
-			case ITER:
-				var = &cell.u_iter;
-				break;
-			case NEXT:
-				var = &cell.u_next;
-				break;
-			}
+			const Variable next = cell.u_next;
 
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_w.getKr(var->sw, var->so, cell.props).value() / props_w.getViscosity(var->p, var->xa, var->xw).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(next.m).value() * props_w.getKr(next.sw, next.so, cell.props).value() / props_w.getViscosity(next.p, next.xa, next.xw).value() * getNablaP(cell, NEXT, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_w.getKr(var->sw, var->so, cell.props).value() / props_w.getViscosity(var->p, var->xa, var->xw).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(next.m).value() * props_w.getKr(next.sw, next.so, cell.props).value() / props_w.getViscosity(next.p, next.xa, next.xw).value() * (getNablaP(cell, NEXT, axis) - props_w.getDensity(next.p, next.xa, next.xw).value() * grav);
 			}
 		};
-		inline double getGasVelocity(Cell& cell, int varNum, int axis)
+		inline double getGasVelocity(Cell& cell, const int axis)
 		{
-			Variable* var;
-			switch (varNum)
-			{
-			case PREV:
-				var = &cell.u_prev;
-				break;
-			case ITER:
-				var = &cell.u_iter;
-				break;
-			case NEXT:
-				var = &cell.u_next;
-				break;
-			}
+			const Variable next = cell.u_next;
 
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_g.getKr(var->sw, var->so, cell.props).value() / props_g.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(next.m).value() * props_g.getKr(next.sw, next.so, cell.props).value() / props_g.getViscosity(next.p).value() * getNablaP(cell, NEXT, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_g.getKr(var->sw, var->so, cell.props).value() / props_g.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(next.m).value() * props_g.getKr(next.sw, next.so, cell.props).value() / props_g.getViscosity(next.p).value() * (getNablaP(cell, NEXT, axis) - props_g.getDensity(next.p).value() * grav);
 			}
 		};
-		inline double getOilVelocity(Cell& cell, int varNum, int axis)
+		inline double getOilVelocity(Cell& cell, const int axis)
 		{
-			Variable* var;
-			switch (varNum)
-			{
-			case PREV:
-				var = &cell.u_prev;
-				break;
-			case ITER:
-				var = &cell.u_iter;
-				break;
-			case NEXT:
-				var = &cell.u_next;
-				break;
-			}
+			const Variable next = cell.u_next;
 
 			switch (axis)
 			{
 			case R_AXIS:
-				return -cell.props->getPermCoseni_r(cell.u_next.m).value() * props_o.getKr(var->sw, var->so, cell.props).value() / props_o.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_r(next.m).value() * props_o.getKr(next.sw, next.so, cell.props).value() / props_o.getViscosity(next.p).value() * getNablaP(cell, NEXT, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(cell.u_next.m).value() * props_o.getKr(var->sw, var->so, cell.props).value() / props_o.getViscosity(var->p).value() * getNablaP(cell, varNum, axis);
+				return -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, next.so, cell.props).value() / props_o.getViscosity(next.p).value() * (getNablaP(cell, NEXT, axis) - props_o.getDensity(next.p).value() * grav);
 			}
 		};
 

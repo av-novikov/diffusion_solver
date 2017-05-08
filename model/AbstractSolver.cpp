@@ -17,7 +17,7 @@ using namespace std;
 template <class modelType>
 AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
-	newton_step = 1.0;
+	NEWTON_STEP = 1.0;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -28,7 +28,7 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 }
 AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::AbstractSolver(gasOil_elliptic::GasOil_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
-	newton_step = 1.0;
+	NEWTON_STEP = 1.0;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -36,7 +36,7 @@ AbstractSolver<gasOil_elliptic::GasOil_Elliptic>::AbstractSolver(gasOil_elliptic
 }
 AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::AbstractSolver(oilnit_elliptic::OilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
-	newton_step = 1.0;
+	NEWTON_STEP = 1.0;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
@@ -44,7 +44,7 @@ AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::AbstractSolver(oilnit_elliptic
 }
 AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::AbstractSolver(blackoilnit_elliptic::BlackOilNIT_Elliptic* _model) : model(_model), size(_model->getCellsNum()), Tt(model->period[model->period.size() - 1])
 {
-	newton_step = 1.0;
+	NEWTON_STEP = 1.0;
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 

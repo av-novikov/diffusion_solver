@@ -36,10 +36,13 @@ class AbstractSolver {
 		virtual void doNextStep() = 0;
 		virtual void solveStep() = 0;
 
-		double newton_step;
-		double chop_mult;
-		double max_sat_change;
+		double NEWTON_STEP;
+		double CHOP_MULT;
+		double MAX_SAT_CHANGE;
+		double CONV_W2, CONV_VAR;
+		int MAX_ITER;
 
+		
 		virtual void checkStability();
 
 	public:

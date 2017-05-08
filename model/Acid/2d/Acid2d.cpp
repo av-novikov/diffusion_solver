@@ -198,12 +198,17 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw), cell, props_w.getDensity(nebr.p, nebr.xa, nebr.xw), beta);
 		adouble dens_o = getAverage(props_o.getDensity(next.p), cell, props_o.getDensity(nebr.p), beta);
 		adouble dens_g = getAverage(props_g.getDensity(next.p), cell, props_g.getDensity(nebr.p), beta);
-		adouble buf = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p);
-		adouble buf_w = buf * dens_w * props_w.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw);
+		
+		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
+						dens_o * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
+		adouble buf_g = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_g * grav * (cell.z - beta.z)) *
+						dens_g * props_g.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_g.getViscosity(upwd.p);
+		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_w * grav * (cell.z - beta.z)) *
+						dens_w * props_w.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw);
 
-		h[1] += buf * dens_g * props_g.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_g.getViscosity(upwd.p);
+		h[1] += buf_g;
 		h[2] += buf_w;
-		h[3] += buf * dens_o * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
+		h[3] += buf_o;
 		h[4] += buf_w * upwd.xa;
 		h[5] += buf_w * upwd.xw;
 	}

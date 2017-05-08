@@ -136,6 +136,7 @@ namespace basic2d
 					pwf[i] /= P_dim;
 			}
 
+			grav /= (R_dim / t_dim / t_dim);
 			// Rest properties
 			alpha /= t_dim;
 			//depth_point = 0.0;

@@ -11,8 +11,11 @@ Acid2dSolver::Acid2dSolver(Acid2d* _model) : basic2d::Basic2dSolver<Acid2d>(_mod
 	//S.open("snaps/S.dat", ofstream::out);
 	//qcells.open("snaps/q_cells.dat", ofstream::out);
 
-	chop_mult = 0.1;
-	max_sat_change = 0.1;
+	CHOP_MULT = 0.1;
+	MAX_SAT_CHANGE = 0.1;
+	
+	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
+	MAX_ITER = 20;
 }
 Acid2dSolver::~Acid2dSolver()
 {
@@ -48,6 +51,58 @@ void Acid2dSolver::writeData()
 	qcells << endl;
 	*/
 }
+void Acid2dSolver::checkStability()
+{
+	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit + fabs(s_cur - s_crit) * CHOP_MULT;
+	};
+	auto barelyMobilRight = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit - fabs(s_crit - s_cur) * CHOP_MULT;
+	};
+	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
+	{
+		// Oil
+		if ((next.so - props.s_oc) * (iter.so - props.s_oc) < 0.0)
+			next.so = barelyMobilLeft(next.so, props.s_oc);
+		if ((next.so - (1.0 - props.s_wc - props.s_gc)) * (iter.so - (1.0 - props.s_wc - props.s_gc)) < 0.0)
+			next.so = barelyMobilRight(next.so, 1.0 - props.s_wc - props.s_gc);
+		// Water
+		if ((next.sw - props.s_wc) * (iter.sw - props.s_wc) < 0.0)
+			next.sw = barelyMobilLeft(next.sw, props.s_wc);
+		if ((next.sw - (1.0 - props.s_oc - props.s_gc)) * (iter.sw - (1.0 - props.s_oc - props.s_gc)) < 0.0)
+			next.sw = barelyMobilRight(next.sw, 1.0 - props.s_oc - props.s_gc);
+		// Gas
+		if ((1.0 - next.sw - next.so - props.s_gc) * (1.0 - iter.sw - iter.so - props.s_gc) < 0.0)
+			if (fabs(next.so - iter.so) > fabs(next.sw - iter.sw))
+				next.so = 1.0 - next.sw - barelyMobilLeft(1.0 - next.so - next.sw, props.s_gc);
+			else
+				next.sw = 1.0 - next.so - barelyMobilLeft(1.0 - next.so - next.sw, props.s_gc);
+		if ((props.s_wc - next.sw + props.s_oc - next.so) * (props.s_wc - iter.sw + props.s_oc - iter.so) < 0.0)
+			if (fabs(next.so - iter.so) > fabs(next.sw - iter.sw))
+				next.so = 1.0 - next.sw - barelyMobilRight(1.0 - next.so - next.sw, 1.0 - props.s_oc - props.s_wc);
+			else
+				next.sw = 1.0 - next.so - barelyMobilRight(1.0 - next.so - next.sw, 1.0 - props.s_oc - props.s_wc);
+	};
+	auto checkMaxResidual = [=, this](auto next, auto iter)
+	{
+		if (fabs(next.sw - iter.sw) > MAX_SAT_CHANGE)
+			next.sw = iter.sw + sign(next.sw - iter.sw) * MAX_SAT_CHANGE;
+		if (fabs(next.so - iter.so) > MAX_SAT_CHANGE)
+			next.so = iter.so + sign(next.so - iter.so) * MAX_SAT_CHANGE;
+	};
+
+	for (auto cell : model->cells)
+	{
+		const Skeleton_Props& props = *cell.props;
+		Variable& next = cell.u_next;
+		const Variable& iter = cell.u_iter;
+
+		checkCritPoints(next, iter, props);
+		//checkMaxResidual(next, iter);
+	}
+}
 void Acid2dSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -61,9 +116,9 @@ void Acid2dSolver::solveStep()
 		bool result = false;
 
 		for (const auto& val : dAverVal)
-			result += (val > 1.e-10);
+			result += (val > CONV_VAR);
 		
-		return result * (err_newton > 1.e-4) * (iterations < 20);
+		return result * (err_newton > CONV_W2) * (iterations < MAX_ITER);
 	};
 
 	while (continueIterations())
@@ -72,7 +127,7 @@ void Acid2dSolver::solveStep()
 
 		Solve(model->cellsNum_r + 1, var_size * (model->cellsNum_z + 2), PRES);
 		construction_from_fz(model->cellsNum_r + 2, var_size * (model->cellsNum_z + 2), PRES);
-		//checkStability();
+		checkStability();
 
 		err_newton = convergance(cellIdx, varIdx);
 
