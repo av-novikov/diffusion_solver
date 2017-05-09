@@ -25,6 +25,7 @@ namespace acid2d
 	template <typename TVariable> using TCell = NewCylCell2D<TVariable, Skeleton_Props>;
 	typedef CalciteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
+	typedef Cell::Type Type;
 
 	class Acid2d : public basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, Acid2d>
 	{

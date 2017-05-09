@@ -213,6 +213,9 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 		h[5] += buf_w * upwd.xw;
 	}
 
+	//for (int i = 0; i < var_size; i++)
+	//	h[i] /= P_dim;
+
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
@@ -241,16 +244,46 @@ void Acid2d::solve_eqLeft(const Cell& cell)
 	const Variable& prev = cell.u_prev;
 	const Skeleton_Props& props = *cell.props;
 
-	h[0] = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
-		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
+	adouble isPerforated, leftPresPerforated, leftPresNonPerforated;
+	auto it = Qcell.find(cell.num);
+	double rate;
+	if (it != Qcell.end())
+	{
+		leftPresPerforated = !leftBoundIsRate;
+		leftPresNonPerforated = false;
+		isPerforated = true;
+		rate = Qcell[cell.num];
+	}
+	else
+	{
+		isPerforated = false;
+		leftPresPerforated = false;
+		leftPresNonPerforated = !leftBoundIsRate;
+		rate = 0.0;
+	}
+
+	condassign(h[0], isPerforated, (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
+		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props),
+									next.m - nebr.m);
+	
 	condassign(h[1], leftIsRate, props_w.getDensity(next.p, next.xa, next.xw) * getTrans(cell, next.m, beta, nebr.m) /
 		props_w.getViscosity(next.p, next.xa, next.xw) * (nebr.p - next.p) +
-		props_w.getDensity(Component::p_std, next.xa, next.xw) * Qcell[cell.num],
-		next.p - Pwf);
-	h[2] = next.sw - (1.0 - props.s_oc);
-	h[3] = next.so - props.s_oc;
-	h[4] = next.xa - xa;
-	h[5] = next.xw - (1.0 - xa);
+		props_w.getDensity(Component::p_std, next.xa, next.xw) * rate,
+									next.p - Pwf);
+	condassign(h[1], leftPresPerforated, next.p - Pwf);
+	condassign(h[1], leftPresNonPerforated, next.p - nebr.p);
+
+	condassign(h[2], isPerforated, next.sw - (1.0 - props.s_oc), 
+									next.sw - nebr.sw);
+	condassign(h[3], isPerforated, next.so - props.s_oc,
+									next.so - nebr.so);
+	condassign(h[4], isPerforated, next.xa - xa,
+									next.xa - nebr.xa);
+	condassign(h[5], isPerforated, next.xw - (1.0 - xa), 
+									next.xw - nebr.xw);
+
+	for (int i = 0; i < var_size; i++)
+		h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -286,6 +319,9 @@ void Acid2d::solve_eqRight(const Cell& cell)
 	h[5] = next.xw - nebr.xw;
 	
 	for (int i = 0; i < var_size; i++)
+		h[i] /= P_dim;
+
+	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
 	trace_off();
@@ -315,6 +351,8 @@ void Acid2d::solve_eqVertical(const Cell& cell)
 	h[3] = next.so - nebr.so;
 	h[4] = next.xa - nebr.xa;
 	h[5] = next.xw - nebr.xw;
+	for (int i = 0; i < var_size; i++)
+		h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];

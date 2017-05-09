@@ -40,6 +40,13 @@ Scene<modelType, methodType, propsType>::~Scene()
 	delete model;
 	delete method;
 }
+Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	delete method;
+}
 Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties>::~Scene()
 {
 	paralution::stop_paralution();
@@ -79,6 +86,12 @@ void Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolv
 	model->load(props);
 	paralution::init_paralution();
 	method = new gasOil_elliptic::GasOilEllipticSolver(model);
+}
+void Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>::load(acid2d::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	method = new acid2d::Acid2dSolver(model);
 }
 void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props)
 {
