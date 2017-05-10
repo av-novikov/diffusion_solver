@@ -170,7 +170,17 @@ namespace oilnit_elliptic
 				idx++;
 			}*/
 			const double nu = (cell.nu >= M_PI) ? 2.0 * M_PI - cell.nu : cell.nu;
-			return int(5.0 * (nu - EQUALITY_TOLERANCE) / M_PI);
+			if ((nu - EQUALITY_TOLERANCE) < 5.5 * M_PI / 20.0)
+				return 0;
+			else if ((nu - EQUALITY_TOLERANCE) < 8.5 * M_PI / 20.0)
+				return 1;
+			else if ((nu - EQUALITY_TOLERANCE) < 11.5 * M_PI / 20.0)
+				return 2;
+			else if ((nu - EQUALITY_TOLERANCE) < 14.5 * M_PI / 20.0)
+				return 3;
+			else if ((nu - EQUALITY_TOLERANCE) < M_PI)
+				return 4;
+			//return int(5.0 * (nu - EQUALITY_TOLERANCE) / M_PI);
 		};
 		inline Cell& getCell(const int num)
 		{
