@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-#define ADOLC_ADVANCED_BRANCHING
+//#define ADOLC_ADVANCED_BRANCHING
 
 #include "model/cells/Variables.hpp"
 #include "model/BlackOilNIT_Elliptic/Properties.hpp"
@@ -21,9 +21,9 @@ namespace blackoilnit_elliptic
 	static const int Z_AXIS = 2;
 
 	static const int stencil = 7;
-	static const int Lstencil = 2;
+	static const int Lstencil = 3;
 	static const int TLstencil = 3;
-	static const int Rstencil = 3;
+	static const int Rstencil = 2;
 	static const int Vstencil = 2;
 
 	typedef VarBlackOilNIT Variable;

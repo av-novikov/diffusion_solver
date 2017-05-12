@@ -46,6 +46,11 @@ public:
 	{
 		return a * sqrt(sinh(mu) * sinh(mu) + sin(nu) * sin(nu));
 	};
+
+	bool operator==(const EllipticCell& rhs) const
+	{
+		return (mu == rhs.mu && nu == rhs.nu && z == rhs.z);
+	}
 };
 
 template <typename varType, typename PropsType>

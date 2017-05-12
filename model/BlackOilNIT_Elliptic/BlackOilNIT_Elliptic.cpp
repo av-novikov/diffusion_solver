@@ -675,56 +675,91 @@ void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 	{
 		trace_on(mid);
 
-		adouble h[Variable::size - 1];
+		adouble h[Variable::size - 1], tmp;
 		TapeVariable var[stencil];
 		const Variable& prev = cell.u_prev;
 
 		for (int i = 0; i < nebrNum + 1; i++)
-			var[i].p <<= x[i];
+		{
+			var[i].p <<= x[i * var_size];
+			var[i].s_w <<= x[i * var_size + 1];
+			var[i].s_o <<= x[i * var_size + 2];
+			var[i].p_bub <<= x[i * var_size + 3];
+		}
 
 		const TapeVariable& next = var[0];
+		adouble satur = cell.u_next.SATUR;
 
-//		h[0] = props.getPoro(next.p) * props_oil.getDensity(next.p) - props.getPoro(prev.p) * props_oil.getDensity(prev.p);
+		h[0] = props.getPoro(next.p) * next.s_w / props_wat.getB(next.p) -
+			props.getPoro(prev.p) * prev.s_w / props_wat.getB(prev.p);
+		h[1] = props.getPoro(next.p) * next.s_o / props_oil.getB(next.p, next.p_bub, next.SATUR) -
+			props.getPoro(prev.p) * prev.s_o / props_oil.getB(prev.p, prev.p_bub, prev.SATUR);
+		condassign(h[2], satur,
+			props.getPoro(next.p) * ((1.0 - next.s_o - next.s_w) / props_gas.getB(next.p) +
+				next.s_o * props_oil.getRs(next.p, next.p_bub, next.SATUR) / props_oil.getB(next.p, next.p_bub, next.SATUR)) -
+			props.getPoro(prev.p) * ((1.0 - prev.s_o - prev.s_w) / props_gas.getB(prev.p) +
+				prev.s_o * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR)),
+			props.getPoro(next.p) *	next.s_o * props_oil.getRs(next.p, next.p_bub, next.SATUR) / props_oil.getB(next.p, next.p_bub, next.SATUR) -
+			props.getPoro(prev.p) *	prev.s_o * props_oil.getRs(prev.p, prev.p_bub, prev.SATUR) / props_oil.getB(prev.p, prev.p_bub, prev.SATUR));
 
 		Cell* neighbor[6];
 		getNeighbors(cell, neighbor);
-		adouble tmp[Variable::size - 1];
 		for (int i = 0; i < nebrNum; i++)
 		{
 			const Cell& beta = *neighbor[i];
+			const int upwd_idx = (getUpwindCell(cell, beta) == cell) ? 0 : i + 1;
+			TapeVariable& upwd = var[upwd_idx];
 			const TapeVariable& nebr = var[i + 1];
 
-//			h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) * getDensity(next.p, cell, nebr.p, beta) / props_oil.getViscosity(next.p);
+			h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+				props_wat.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_wat.getViscosity(upwd.p) /
+				props_wat.getB(upwd.p);
+			h[1] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+				props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p) /
+				props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR);
+			condassign(tmp, satur,
+				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+				(props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
+					props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR) +
+					props_gas.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p)),
+				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+				props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
+				props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR));
+			h[2] += tmp;
 		}
 
-		adouble buf = h[0];
+		adouble buf[3];
+		buf[0] = h[0];		buf[1] = h[1];		buf[2] = h[2];
 		adouble isMiddleSide = ((cell.nu == 0.0 || cell.nu == M_PI) && cell.mu < 10.0 * mu_init) ? true : false;
-		condassign(h[0], isMiddleSide, buf * sqrt(cell.V));
+		condassign(h[0], isMiddleSide, buf[0] * sqrt(cell.V));
+		condassign(h[1], isMiddleSide, buf[1] * sqrt(cell.V));
+		condassign(h[2], isMiddleSide, buf[2] * sqrt(cell.V));
 
-		h[0] >>= y[0];
+		for (int i = 0; i < var_size-1; i++)
+			h[i] >>= y[i];
 
 		trace_off();
 	}
 }
 void BlackOilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 {
+	const Cell& beta1 = cells[nebrMap[cell.num].first];
+	const Cell& beta2 = cells[nebrMap[cell.num].second];
+
+	double dist1, dist2;
+	if (cell.hz == 0)
+	{
+		dist1 = cell.z - beta1.z;
+		dist2 = beta1.z - beta2.z;
+	}
+	else
+	{
+		dist1 = Cell::getH(cell.mu + sign(beta1.mu - cell.mu) * cell.hmu / 2.0, cell.nu) * (cell.mu - beta1.mu);
+		dist2 = Cell::getH(beta1.mu + sign(beta2.mu - beta1.mu) * beta1.hmu / 2.0, beta1.nu) * (beta1.mu - beta2.mu);
+	}
+
 	if (val == TEMP)
 	{
-		const Cell& beta1 = cells[nebrMap[cell.num].first];
-		const Cell& beta2 = cells[nebrMap[cell.num].second];
-
-		double dist1, dist2;
-		if (cell.hz == 0)
-		{
-			dist1 = cell.z - beta1.z;
-			dist2 = beta1.z - beta2.z;
-		}
-		else
-		{
-			dist1 = Cell::getH(cell.mu + sign(beta1.mu - cell.mu) * cell.hmu / 2.0, cell.nu) * (cell.mu - beta1.mu);
-			dist2 = Cell::getH(beta1.mu + sign(beta2.mu - beta1.mu) * beta1.hmu / 2.0, beta1.nu) * (beta1.mu - beta2.mu);
-		}
-
 		trace_on(tleft);
 		adouble h[Variable::size - 1];
 		TapeVariableNIT var[TLstencil];
@@ -749,16 +784,20 @@ void BlackOilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 	}
 	else if (val == PRES)
 	{
-		const Cell& beta = cells[nebrMap[cell.num].first];
-
 		trace_on(left);
 		adouble h[Variable::size - 1];
 		TapeVariable var[Lstencil];
 		for (int i = 0; i < Lstencil; i++)
-			var[i].p <<= x[i];
+		{
+			var[i].p <<= x[i * var_size];
+			var[i].s_w <<= x[i * var_size + 1];
+			var[i].s_o <<= x[i * var_size + 2];
+			var[i].p_bub <<= x[i * var_size + 3];
+		}
 
 		const TapeVariable& next = var[0];
-		const TapeVariable& nebr = var[1];
+		const TapeVariable& nebr1 = var[1];
+		const TapeVariable& nebr2 = var[1];
 
 		double rate;
 		adouble leftIsRate = leftBoundIsRate;
@@ -778,13 +817,21 @@ void BlackOilNIT_Elliptic::solve_eqWell(const Cell& cell, const int val)
 		}
 
 		condassign(h[0], leftIsRate,
-			(adouble)(getTrans(cell, beta)) * props_oil.getKr(next.s_w, next.s_o, cell.props) /
-			props_oil.getViscosity(next.p) / props_oil.getB(next.p, next.p_bub, next.SATUR) * (nebr.p - next.p) - rate,
+			(adouble)(getTrans(cell, beta1)) * props_oil.getKr(next.s_w, next.s_o, cell.props) /
+			props_oil.getViscosity(next.p) / props_oil.getB(next.p, next.p_bub, next.SATUR) * (nebr1.p - next.p) - rate,
 			(next.p - Pwf) / P_dim);
 		condassign(h[0], leftPresPerforated, (next.p - Pwf) / P_dim);
-		condassign(h[0], leftPresNonPerforated, (next.p - nebr.p) / P_dim);
+		condassign(h[0], leftPresNonPerforated, (next.p - nebr1.p) / P_dim);
 
-		h[0] >>= y[0];
+		h[1] = ((next.s_w - nebr1.s_w) / (adouble)(dist1) - (nebr1.s_w - nebr2.s_w) / (adouble)(dist2)) / P_dim;
+
+		adouble satur = cell.u_next.SATUR;
+		condassign(h[2], satur,
+			((next.s_o - nebr1.s_o) / (adouble)(dist1) - (nebr1.s_o - nebr2.s_o) / (adouble)(dist2)) / P_dim,
+			((next.p_bub - nebr1.p_bub) / (adouble)(dist1) - (nebr1.p_bub - nebr2.p_bub) / (adouble)(dist2)) / P_dim);
+
+		for (int i = 0; i < var_size-1; i++)
+			h[i] >>= y[i];
 
 		trace_off();
 	}
@@ -814,14 +861,22 @@ void BlackOilNIT_Elliptic::solve_eqRight(const Cell& cell, const int val)
 		TapeVariable var[2];
 		adouble rightIsPres = rightBoundIsPres;
 		for (int i = 0; i < Rstencil; i++)
-			var[i].p <<= x[i];
-
+		{
+			var[i].p <<= x[i * var_size];
+			var[i].s_w <<= x[i * var_size + 1];
+			var[i].s_o <<= x[i * var_size + 2];
+			var[i].p_bub <<= x[i * var_size + 3];
+		}
 		const TapeVariable& next = var[0];
 		const TapeVariable& nebr = var[1];
 
-		condassign(h[0], rightIsPres, (next.p - (adouble)(cell.props->p_out)) / P_dim, (next.p - (adouble)(nebr.p)) / P_dim);
+		condassign(h[0], rightIsPres, (next.p - cell.props->p_out) / P_dim, (next.p - nebr.p) / P_dim);
+		h[1] = (next.s_w - nebr.s_w) / P_dim;
+		adouble satur = cell.u_next.SATUR;
+		condassign(h[2], satur, (next.s_o - nebr.s_o) / P_dim, (next.p_bub - nebr.p_bub) / P_dim);
 
-		h[0] >>= y[0];
+		for (int i = 0; i < var_size-1; i++)
+			h[i] >>= y[i];
 
 		trace_off();
 	}
@@ -852,13 +907,23 @@ void BlackOilNIT_Elliptic::solve_eqVertical(const Cell& cell, const int val)
 		TapeVariable var[Vstencil];
 
 		for (int i = 0; i < Vstencil; i++)
-			var[i].p <<= x[i];
+		{
+			var[i].p <<= x[i * var_size];
+			var[i].s_w <<= x[i * var_size + 1];
+			var[i].s_o <<= x[i * var_size + 2];
+			var[i].p_bub <<= x[i * var_size + 3];
+		}
 
 		const TapeVariable& next = var[0];
 		const TapeVariable& nebr = var[1];
 
 		h[0] = (next.p - nebr.p) / P_dim;
-		h[0] >>= y[0];
+		h[1] = (next.s_w - nebr.s_w) / P_dim;
+		adouble satur = cell.u_next.SATUR;
+		condassign(h[2], satur, (next.s_o - nebr.s_o) / P_dim, (next.p_bub - nebr.p_bub) / P_dim);
+
+		for (int i = 0; i < var_size; i++)
+			h[i] >>= y[i];
 
 		trace_off();
 	}
@@ -891,8 +956,8 @@ void BlackOilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			for (int i = 0; i < var_size; i++)
 			{
 				x[i] = next.values[i + 1];
-				x[Variable::size + i] = nebr1.values[i + 1];
-				x[2 * Variable::size + i] = nebr2.values[i + 1];
+				x[var_size + i] = nebr1.values[i + 1];
+				x[2 * var_size + i] = nebr2.values[i + 1];
 			}
 
 			solve_eqWell(cell, val);
@@ -917,8 +982,7 @@ void BlackOilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			for (int i = 0; i < var_size; i++)
 			{
 				x[i] = next.values[i+1];
-				x[Variable::size + i] = nebr1.values[i+1];
-				x[2 * Variable::size + i] = nebr2.values[i+1];
+				x[var_size + i] = nebr1.values[i+1];
 			}
 			solve_eqRight(cell, val);
 			jacobian(right, var_size - 1, var_size * Rstencil, x, jac);
@@ -941,7 +1005,7 @@ void BlackOilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			for (int i = 0; i < var_size; i++)
 			{
 				x[i] = next.values[i + 1];
-				x[Variable::size + i] = nebr.values[i + 1];
+				x[var_size + i] = nebr.values[i + 1];
 			}
 			solve_eqVertical(cell, val);
 			jacobian(vertical, var_size - 1, var_size * Vstencil, x, jac);
@@ -964,7 +1028,7 @@ void BlackOilNIT_Elliptic::setVariables(const Cell& cell, const int val)
 			for (int i = 0; i < var_size; i++)
 			{
 				x[i] = next.values[i + 1];
-				x[Variable::size + i] = nebr.values[i + 1];
+				x[var_size + i] = nebr.values[i + 1];
 			}
 			solve_eqVertical(cell, val);
 			jacobian(vertical, var_size - 1, var_size * Vstencil, x, jac);
