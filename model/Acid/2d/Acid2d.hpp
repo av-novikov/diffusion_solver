@@ -122,7 +122,7 @@ namespace acid2d
 			case R_AXIS:
 				return -cell.props->getPermCoseni_r(next.m).value() * props_o.getKr(next.sw, next.so, cell.props).value() / props_o.getViscosity(next.p).value() * getNablaP(cell, NEXT, axis);
 			case Z_AXIS:
-				return -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, next.so, cell.props).value() / props_o.getViscosity(next.p).value() * (getNablaP(cell, NEXT, axis) - props_o.getDensity(next.p).value() * grav);
+				return -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, next.so, cell.props).value() / props_o.getViscosity(next.p).value() * (getNablaP(cell, NEXT, axis) - props_o.getDensity(next.p, next.p_bub, next.SATUR).value() * grav);
 			}
 		};
 
@@ -142,7 +142,7 @@ namespace acid2d
 
 		void setPeriod(int period);
 		double getRate(int cur);
-		static const int var_size = Variable::size;
+		static const int var_size = Variable::size - 1;
 	};
 };
 

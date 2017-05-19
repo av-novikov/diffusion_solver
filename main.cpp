@@ -491,21 +491,21 @@ using namespace std;
 
 	return props;
 }*/
-/*acid2d::Properties* getProps()
+acid2d::Properties* getProps()
 {
 	acid2d::Properties* props = new acid2d::Properties;
 
-	props->cellsNum_r = 1;
-	props->cellsNum_z = 1;
+	props->cellsNum_r = 100;
+	props->cellsNum_z = 5;
 
 	props->timePeriods.push_back(5.0 * 3600.0);
 	props->timePeriods.push_back(30.0 * 3600.0);
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
-	props->pwf.push_back(200.0 * 1.0e+5);
 	props->pwf.push_back(250.0 * 1.0e+5);
-	props->xa.push_back(0.0);
+	props->pwf.push_back(250.0 * 1.0e+5);
+	props->xa.push_back(0.13);
 	props->xa.push_back(0.0);
 
 	props->ht = 0.1;
@@ -517,13 +517,13 @@ using namespace std;
 	props->r_w = 0.1;
 	props->r_e = 150.0;
 
-	props->perfIntervals.push_back(make_pair(1, 1));
+	props->perfIntervals.push_back(make_pair(3, 3));
 	//props->perfIntervals.push_back(make_pair(15, 15));
 
 	acid2d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 5;
 	tmp.m_init = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_ref = 200.0 * 1.0e+5;
+	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
 	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.00;
@@ -532,7 +532,7 @@ using namespace std;
 	tmp.h2 = 10.0;
 	tmp.height = 10.0;
 	tmp.perm_r = 100.0;
-	tmp.perm_z = 30.0;
+	tmp.perm_z = 10.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
@@ -559,7 +559,7 @@ using namespace std;
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);
+	props->props_sk.push_back(tmp);*/
 
 	props->depth_point = 0.0;
 
@@ -576,10 +576,13 @@ using namespace std;
 	props->props_g.visc = 0.03;
 	props->props_g.dens_stc = 0.8;
 	props->props_g.co2 = acid2d::getCO2();
+
+	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
+	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
 	
 	return props;
-}*/
-blackoilnit_elliptic::Properties* getProps()
+}
+/*blackoilnit_elliptic::Properties* getProps()
 {
 	blackoilnit_elliptic::Properties* props = new blackoilnit_elliptic::Properties();
 
@@ -689,7 +692,7 @@ blackoilnit_elliptic::Properties* getProps()
 	props->props_oil.lambda = 0.16;
 
 	return props;
-}
+}*/
 
 double acid2d::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
@@ -716,11 +719,11 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	blackoilnit_elliptic::Properties* props = getProps();
+	/*blackoilnit_elliptic::Properties* props = getProps();
 	Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties> scene;
-	scene.load(*props/*, argc, argv*/);
+	scene.load(*props/*, argc, argv);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	/*gasOil_elliptic::Properties* props = getProps();
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
@@ -734,11 +737,11 @@ int main(int argc, char* argv[])
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 
-	/*acid2d::Properties* props = getProps();
+	acid2d::Properties* props = getProps();
 	Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 
 	return 0;
 }

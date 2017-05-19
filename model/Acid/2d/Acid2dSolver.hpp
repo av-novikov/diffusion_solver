@@ -23,7 +23,7 @@ namespace acid2d
 		void checkStability();
 
 		void construction_from_fz(int N, int n, int key);
-		static const int var_size = Variable::size;
+		static const int var_size = Variable::size - 1;
 		static const int size = Variable::size;
 
 		std::array<double, var_size> averVal, averValPrev, dAverVal;

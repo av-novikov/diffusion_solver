@@ -5,7 +5,7 @@
 
 struct FirstAcid
 {
-	static const int size = 6;
+	static const int size = 7;
 
 	union {
 		double values[size];
@@ -14,22 +14,27 @@ struct FirstAcid
 			double m;
 			double p;
 			double sw;
-			double so;
 			double xa;
 			double xw;
+			double so;
+			double p_bub;
 		};
 	};
+
+	bool SATUR;
 };
 struct TapeFirstAcid
 {
-	static const int size = 6;
+	static const int size = 7;
 
 	adouble m;
 	adouble p;
 	adouble sw;
-	adouble so;
 	adouble xa;
 	adouble xw;
+	adouble so;
+	adouble p_bub;
+	bool SATUR;
 };
 
 #endif /* ACIDVARIABLES_HPP_ */

@@ -94,6 +94,27 @@ void Acid2dSolver::copySolution(const Vector& sol)
 
 void Acid2dSolver::checkStability()
 {
+	auto checkBubPoint = [](auto cell, auto next)
+	{
+		if (next.SATUR)
+		{
+			if (next.so + next.sw > 1.0 + EQUALITY_TOLERANCE)
+			{
+				next.SATUR = false;
+				next.so = 1.0 - next.sw;
+				next.p_bub = 0.999 * cell.u_iter.p_bub;
+			}
+		}
+		else
+		{
+			if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+			{
+				next.SATUR = true;
+				next.so = 0.999 * cell.u_iter.so;
+				next.p_bub = next.p;
+			}
+		}
+	};
 	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
 	{
 		return s_crit + fabs(s_cur - s_crit) * CHOP_MULT;
@@ -140,8 +161,9 @@ void Acid2dSolver::checkStability()
 		Variable& next = cell.u_next;
 		const Variable& iter = cell.u_iter;
 
+		checkBubPoint(cell, next);
 		checkCritPoints(next, iter, props);
-		//checkMaxResidual(next, iter);
+		checkMaxResidual(next, iter);
 	}
 }
 void Acid2dSolver::solveStep()
@@ -166,16 +188,16 @@ void Acid2dSolver::solveStep()
 	{
 		copyIterLayer();
 
-		fill();
-		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE);
-		copySolution(solver.getSolution());
+		//fill();
+		//solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
+		//solver.Solve(PRECOND::ILU_SIMPLE);
+		//copySolution(solver.getSolution());
 
 		//writeMatrixes();
-		//Solve(model->cellsNum_r + 1, var_size * (model->cellsNum_z + 2), PRES);
-		//construction_from_fz(model->cellsNum_r + 2, var_size * (model->cellsNum_z + 2), PRES);
-		checkStability();
+		Solve(model->cellsNum_r + 1, var_size * (model->cellsNum_z + 2), PRES);
+		construction_from_fz(model->cellsNum_r + 2, var_size * (model->cellsNum_z + 2), PRES);
 
+		checkStability();
 		err_newton = convergance(cellIdx, varIdx);
 
 		averValue(averVal);
@@ -260,8 +282,21 @@ void Acid2dSolver::construction_from_fz(int N, int n, int key)
 			{
 				Variable& next = model->cells[i*(model->cellsNum_z + 2) + j].u_next;
 
-				for (int k = 0; k < var_size; k++)
-					next.values[k] += fz[i][var_size * j + k + 1];
+				next.m += fz[i][var_size * j + 1];
+				next.p += fz[i][var_size * j + 2];
+				next.sw += fz[i][var_size * j + 3];
+				next.xa += fz[i][var_size * j + 4];
+				next.xw += fz[i][var_size * j + 5];
+				if (next.SATUR)
+				{
+					next.so += fz[i][var_size * j + 6];
+					next.p_bub = next.p;
+				}
+				else
+				{
+					next.so -= fz[i][var_size * j + 3];
+					next.p_bub += fz[i][var_size * j + 6];
+				}
 			}
 		}
 	}
@@ -291,11 +326,22 @@ void Acid2dSolver::MiddleAppr(int current, int MZ, int key)
 		{
 			RightSide[idx + i][0] = -model->y[i];
 
-			for (int j = 0; j < var_size; j++)
+			for (int j = 0; j < var_size - 1; j++)
 			{
-				B[idx + i][idx + j] = model->jac[i][j];
-				B[idx + i][idx + j + var_size] = model->jac[i][j + size];
+					B[idx + i][idx + j] = model->jac[i][j];
+					B[idx + i][idx + j + var_size] = model->jac[i][j + size];
 			}
+
+			// so / p_bub
+			if (model->cells[cell_idx].u_next.SATUR)
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
+			else
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
+			if (model->cells[cell_idx + 1].u_next.SATUR)
+				B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size + var_size - 1];
+			else
+				B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size + var_size];
+
 		}
 		idx += var_size;
 
@@ -308,14 +354,36 @@ void Acid2dSolver::MiddleAppr(int current, int MZ, int key)
 			{
 				RightSide[idx + i][0] = -model->y[i];
 
-				for (int j = 0; j < var_size; j++)
+				for (int j = 0; j < var_size - 1; j++)
 				{
-					B[idx + i][idx + j] = model->jac[i][j];
-					C[idx + i][idx + j] = model->jac[i][j + size];
-					A[idx + i][idx + j] = model->jac[i][j + size * 2];
-					B[idx + i][idx + j - var_size] = model->jac[i][j + size * 3];
-					B[idx + i][idx + j + var_size] = model->jac[i][j + size * 4];
+						B[idx + i][idx + j] = model->jac[i][j];
+						C[idx + i][idx + j] = model->jac[i][j + size];
+						A[idx + i][idx + j] = model->jac[i][j + size * 2];
+						B[idx + i][idx + j - var_size] = model->jac[i][j + size * 3];
+						B[idx + i][idx + j + var_size] = model->jac[i][j + size * 4];
 				}
+
+				// so / p_bub
+				if (model->cells[cell_idx].u_next.SATUR)
+					B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
+				else
+					B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
+				if (model->cells[cell_idx - model->cellsNum_z - 2].u_next.SATUR)
+					C[idx + i][idx + var_size - 1] = model->jac[i][size + var_size - 1];
+				else
+					C[idx + i][idx + var_size - 1] = model->jac[i][size + var_size];
+				if (model->cells[cell_idx + model->cellsNum_z + 2].u_next.SATUR)
+					A[idx + i][idx + var_size - 1] = model->jac[i][size * 2 + var_size - 1];
+				else
+					A[idx + i][idx + var_size - 1] = model->jac[i][size * 2 + var_size];
+				if (model->cells[cell_idx - 1].u_next.SATUR)
+					B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size * 3 + var_size - 1];
+				else
+					B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size * 3 + var_size];
+				if (model->cells[cell_idx + 1].u_next.SATUR)
+					B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size * 4 + var_size - 1];
+				else
+					B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size * 4 + var_size];
 			}
 
 			idx += var_size;
@@ -324,15 +392,25 @@ void Acid2dSolver::MiddleAppr(int current, int MZ, int key)
 		// Bottom cell
 		model->setVariables(model->cells[cell_idx]);
 
-		for (int i = 0; i < Variable::size; i++)
+		for (int i = 0; i < var_size; i++)
 		{
 			RightSide[idx + i][0] = -model->y[i];
 
-			for (int j = 0; j < var_size; j++)
+			for (int j = 0; j < var_size - 1; j++)
 			{
 				B[idx + i][idx + j] = model->jac[i][j];
 				B[idx + i][idx + j - var_size] = model->jac[i][j + size];
 			}
+
+			// so / p_bub
+			if (model->cells[cell_idx].u_next.SATUR)
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
+			else
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
+			if (model->cells[cell_idx + 1].u_next.SATUR)
+				B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size + var_size - 1];
+			else
+				B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size + var_size];
 		}
 	}
 
@@ -354,6 +432,11 @@ void Acid2dSolver::LeftBoundAppr(int MZ, int key)
 		const Variable& next = model->cells[int(i / var_size)].u_next;
 		const Variable& nebr = model->cells[int(i / var_size) + model->cellsNum_z + 2].u_next;
 		RightSide[i][0] = -next.values[i % var_size] + nebr.values[i % var_size];
+		
+		if (i % var_size == var_size - 1)
+			RightSide[i][0] = -next.values[var_size - 1 + !next.SATUR] + nebr.values[var_size - 1 + !nebr.SATUR];
+		else
+			RightSide[i][0] = -next.values[i % var_size] + nebr.values[i % var_size];
 	}
 
 	map<int, double>::iterator it;
@@ -369,12 +452,26 @@ void Acid2dSolver::LeftBoundAppr(int MZ, int key)
 			{
 				RightSide[idx + i][0] = -model->y[i];
 
-				for (int j = 0; j < var_size; j++)
+				for (int j = 0; j < var_size - 1; j++)
 				{
 					C[idx + i][idx + j] = model->jac[i][j];
 					B[idx + i][idx + j] = model->jac[i][j + size];
 					A[idx + i][idx + j] = model->jac[i][j + 2 * size];
 				}
+
+				// s_o / p_bub
+				if (model->cells[it->first].u_next.SATUR)
+					C[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
+				else
+					C[idx + i][idx + var_size - 1] = model->jac[i][var_size];
+				if (model->cells[it->first + model->cellsNum_z + 2].u_next.SATUR)
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size - 1];
+				else
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size];
+				if (model->cells[it->first + 2 * model->cellsNum_z + 4].u_next.SATUR)
+					A[idx + i][idx + var_size - 1] = model->jac[i][2 * size + var_size - 1];
+				else
+					A[idx + i][idx + var_size - 1] = model->jac[i][2 * size + var_size];
 			}
 		}
 	}
@@ -406,11 +503,21 @@ void Acid2dSolver::RightBoundAppr(int MZ, int key)
 			{
 				RightSide[idx + i][0] = -model->y[i];
 
-				for (int j = 0; j < var_size; j++)
+				for (int j = 0; j < var_size - 1; j++)
 				{
 					A[idx + i][idx + j] = model->jac[i][j];
 					B[idx + i][idx + j] = model->jac[i][j + size];
 				}
+
+				// s_o / p_bub
+				if (model->cells[cell_idx].u_next.SATUR)
+					A[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
+				else
+					A[idx + i][idx + var_size - 1] = model->jac[i][var_size];
+				if (model->cells[cell_idx - model->cellsNum_z - 2].u_next.SATUR)
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size - 1];
+				else
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size];
 			}
 
 			idx += var_size;

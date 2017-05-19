@@ -20,6 +20,7 @@ namespace acid2d
 
 		// Initial values
 		double p_init;
+		double p_sat;
 		double sw_init;
 		double so_init;
 		double xa_init;
@@ -75,7 +76,19 @@ namespace acid2d
 	};
 	struct Oil_Props : public basic2d::Liquid_Props
 	{
+		double gas_dens_stc;
 		//LiquidComponent oil;
+		Interpolate* b;
+		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
+		{
+			adouble tmp;
+			condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub) * exp((adouble)beta * (p_bub - p)));
+			return tmp;
+		};
+		inline adouble getDensity(adouble p, adouble p_bub, adouble SATUR) const
+		{
+			return (dens_stc + gas_dens_stc * getRs(p, p_bub, SATUR)) / getB(p, p_bub, SATUR);
+		};
 
 		Interpolate* kr;
 		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
@@ -91,10 +104,6 @@ namespace acid2d
 		{
 			return visc;
 		};
-		inline adouble getDensity(adouble p) const
-		{
-			return dens_stc;
-		}
 	};
 	struct Gas_Props : public basic2d::Gas_Props
 	{
