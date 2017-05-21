@@ -242,6 +242,8 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	pres->SetName("pressure");
 	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
 	p_bub->SetName("bublePoint");
+	auto satur = vtkSmartPointer<vtkIntArray>::New();
+	satur->SetName("SATUR");
 	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
 	sat_w->SetName("WaterSaturation");
 	auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
@@ -282,6 +284,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
 		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 		p_bub->InsertNextValue(next.p_bub * P_dim / BAR_TO_PA);
+		satur->InsertNextValue(next.SATUR);
 		sat_w->InsertNextValue(next.sw);
 		sat_o->InsertNextValue(next.so);
 		sat_g->InsertNextValue(1.0 - next.sw - next.so);
@@ -316,6 +319,7 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
 			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			p_bub->InsertNextValue(next.p_bub * P_dim / BAR_TO_PA);
+			satur->InsertNextValue(next.SATUR);
 			sat_w->InsertNextValue(next.sw);
 			sat_o->InsertNextValue(next.so);
 			sat_g->InsertNextValue(1.0 - next.sw - next.so);
@@ -343,6 +347,8 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	fd->AddArray(poro);
 	fd->AddArray(perm);
 	fd->AddArray(pres);
+	fd->AddArray(p_bub);
+	fd->AddArray(satur);
 	fd->AddArray(sat_w);
 	fd->AddArray(sat_o);
 	fd->AddArray(sat_g);

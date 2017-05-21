@@ -39,12 +39,13 @@ void Acid2d::setProps(Properties& props)
 	props_w.visc = cPToPaSec(props_w.visc);
 
 	props_o = props.props_o;
-	props_o.gas_dens_stc = props_g.dens_stc;
 	props_o.visc = cPToPaSec(props_o.visc);
 
 	props_g = props.props_g;
 	props_g.visc = cPToPaSec(props_g.visc);
 	props_g.co2.mol_weight = gramToKg(props_g.co2.mol_weight);
+
+	props_o.gas_dens_stc = props_g.co2.rho_stc;
 
 	for (auto& comp : reac.comps)
 		comp.mol_weight = gramToKg(comp.mol_weight);
@@ -312,8 +313,8 @@ void Acid2d::solve_eqLeft(const Cell& cell)
 		next.so - nebr.so);
 	condassign(h[5], nonsatur, next.p_bub - nebr.p_bub);
 
-	for (int i = 0; i < var_size; i++)
-		h[i] /= P_dim;
+	//for (int i = 0; i < var_size; i++)
+	//	h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -350,8 +351,8 @@ void Acid2d::solve_eqRight(const Cell& cell)
 	h[4] = next.xw - nebr.xw;
 	condassign(h[5], satur, next.so - nebr.so, next.p_bub - nebr.p_bub);
 	
-	for (int i = 0; i < var_size; i++)
-		h[i] /= P_dim;
+	//for (int i = 0; i < var_size; i++)
+	//	h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -386,8 +387,8 @@ void Acid2d::solve_eqVertical(const Cell& cell)
 	h[4] = next.xw - nebr.xw;
 	condassign(h[5], satur, next.so - nebr.so, next.p_bub - nebr.p_bub);
 
-	for (int i = 0; i < var_size; i++)
-		h[i] /= P_dim;
+	//for (int i = 0; i < var_size; i++)
+	//	h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];

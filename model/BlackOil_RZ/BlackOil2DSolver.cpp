@@ -55,7 +55,7 @@ void BlackOil2dSolver::checkStability()
 	{
 		return s_crit - fabs(s_crit - s_cur) * CHOP_MULT;
 	};
-	auto checkBubPoint = [](auto cell, auto next)
+	auto checkBubPoint = [](auto& cell, auto& next)
 	{
 		if (next.SATUR)
 		{
@@ -76,7 +76,7 @@ void BlackOil2dSolver::checkStability()
 			}
 		}
 	};
-	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
+	auto checkCritPoints = [=, this](auto& next, auto& iter, auto& props)
 	{
 		// Oil
 		if ((next.s_o - props.s_oc) * (iter.s_o - props.s_oc) < 0.0)
@@ -100,7 +100,7 @@ void BlackOil2dSolver::checkStability()
 			else
 				next.s_w = 1.0 - next.s_o - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);
 	};
-	auto checkMaxResidual = [=, this](auto next, auto iter)
+	auto checkMaxResidual = [=, this](auto& next, auto& iter)
 	{
 		if (fabs(next.s_w - iter.s_w) > MAX_SAT_CHANGE)
 			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * MAX_SAT_CHANGE;
@@ -108,7 +108,7 @@ void BlackOil2dSolver::checkStability()
 			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * MAX_SAT_CHANGE;
 	};
 
-	for (auto cell : model->cells)
+	for (auto& cell : model->cells)
 	{
 		const Skeleton_Props& props = *cell.props;
 		Variable& next = cell.u_next;

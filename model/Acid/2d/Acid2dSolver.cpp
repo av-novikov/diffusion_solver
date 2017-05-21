@@ -94,7 +94,7 @@ void Acid2dSolver::copySolution(const Vector& sol)
 
 void Acid2dSolver::checkStability()
 {
-	auto checkBubPoint = [](auto cell, auto next)
+	auto checkBubPoint = [](auto& cell, auto& next)
 	{
 		if (next.SATUR)
 		{
@@ -123,7 +123,7 @@ void Acid2dSolver::checkStability()
 	{
 		return s_crit - fabs(s_crit - s_cur) * CHOP_MULT;
 	};
-	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
+	auto checkCritPoints = [=, this](auto& next, auto& iter, auto& props)
 	{
 		// Oil
 		if ((next.so - props.s_oc) * (iter.so - props.s_oc) < 0.0)
@@ -147,7 +147,7 @@ void Acid2dSolver::checkStability()
 			else
 				next.sw = 1.0 - next.so - barelyMobilRight(1.0 - next.so - next.sw, 1.0 - props.s_oc - props.s_wc);
 	};
-	auto checkMaxResidual = [=, this](auto next, auto iter)
+	auto checkMaxResidual = [=, this](auto& next, auto& iter)
 	{
 		if (fabs(next.sw - iter.sw) > MAX_SAT_CHANGE)
 			next.sw = iter.sw + sign(next.sw - iter.sw) * MAX_SAT_CHANGE;
@@ -155,7 +155,7 @@ void Acid2dSolver::checkStability()
 			next.so = iter.so + sign(next.so - iter.so) * MAX_SAT_CHANGE;
 	};
 
-	for (auto cell : model->cells)
+	for (auto& cell : model->cells)
 	{
 		const Skeleton_Props& props = *cell.props;
 		Variable& next = cell.u_next;
