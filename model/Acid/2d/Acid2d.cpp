@@ -135,10 +135,10 @@ void Acid2d::setInitialState()
 		it->u_prev.xw = it->u_iter.xw = it->u_next.xw = props->xw_init;
 		it->u_prev.so = it->u_iter.so = it->u_next.so = props->so_init;
 		it->u_prev.p_bub = it->u_iter.p_bub = it->u_next.p_bub = props->p_sat;
-		if (props->p_init > props->p_sat)
-			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
-		else
+		if (props->p_init < props->p_sat)
 			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = true;
+		else
+			it->u_prev.SATUR = it->u_iter.SATUR = it->u_next.SATUR = false;
 
 		it->props = props;
 	}
@@ -206,7 +206,8 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 	h[4] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw) * next.xw -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw) * prev.xw -
 		ht * reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight * rate;
-	h[5] = next.m * next.so * props_o.getDensity(next.p, next.p_bub, next.SATUR) - prev.m * prev.so * props_o.getDensity(prev.p, prev.p_bub, prev.SATUR);
+	h[5] = next.m * next.so * props_o.dens_stc / props_o.getB(next.p, next.p_bub, next.SATUR) - 
+			prev.m * prev.so * props_o.dens_stc / props_o.getB(prev.p, prev.p_bub, prev.SATUR);
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
@@ -218,20 +219,21 @@ void Acid2d::solve_eqMiddle(const Cell& cell)
 		TapeVariable& upwd = var[upwd_idx];
 		
 		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw), cell, props_w.getDensity(nebr.p, nebr.xa, nebr.xw), beta);
-		adouble dens_o = getAverage(props_o.getDensity(next.p, next.p_bub, next.SATUR), cell, props_o.getDensity(nebr.p, nebr.p_bub, nebr.SATUR), beta);
+		adouble dens_o = getAverage(props_o.dens_stc / props_o.getB(next.p, next.p_bub, next.SATUR), cell, 
+									props_o.dens_stc / props_o.getB(nebr.p, nebr.p_bub, nebr.SATUR), beta);
 		adouble dens_g = getAverage(props_g.getDensity(next.p), cell, props_g.getDensity(nebr.p), beta);
 		adouble dens_go = props_o.gas_dens_stc *
 				getAverage(props_o.getRs(next.p, next.p_bub, next.SATUR) / props_o.getB(next.p, next.p_bub, next.SATUR), cell,
 							props_o.getRs(nebr.p, nebr.p_bub, nebr.SATUR) / props_o.getB(nebr.p, nebr.p_bub, nebr.SATUR), beta);
 		
-		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
-						dens_o * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
 		adouble buf_g = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_g * grav * (cell.z - beta.z)) *
 						dens_g * props_g.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_g.getViscosity(upwd.p);
 		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_w * grav * (cell.z - beta.z)) *
 						dens_w * props_w.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw);
 		adouble buf_go = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
 						dens_go * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
+		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
+			dens_o * props_o.getKr(upwd.sw, upwd.so, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
 
 		condassign(tmp, satur, buf_g + buf_go, buf_go);
 		h[1] += tmp;
