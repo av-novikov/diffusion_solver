@@ -19,7 +19,7 @@ Acid2dSolver::Acid2dSolver(Acid2d* _model) : basic2d::Basic2dSolver<Acid2d>(_mod
 	rhs = new double[strNum];
 
 	CHOP_MULT = 0.1;
-	MAX_SAT_CHANGE = 0.1;
+	MAX_SAT_CHANGE = 1.0;
 	
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
