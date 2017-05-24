@@ -24,9 +24,10 @@ namespace blackoilnit_elliptic
 
 			// Porosity in STC
 			double m;
+			double p_ref;
 			inline adouble getPoro(adouble p) const
 			{
-				return (adouble)(m)* ((adouble)(1.0) + (adouble)(beta)* (p /*- cell.props->p_init*/));
+				return (adouble)(m)* ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
 			};
 			// Density of skeleton matter in STC [kg/m3]
 			double dens_stc;
@@ -279,10 +280,19 @@ namespace blackoilnit_elliptic
 
 			double depth_point;
 
-			// Data set (pressure, oil viscosity) ([Pa], [cP])
+			std::vector< std::pair<double, double> > kr_wat;
+			std::vector< std::pair<double, double> > kr_oil;
+			std::vector< std::pair<double, double> > kr_gas;
+
+			std::vector< std::pair<double, double> > B_wat;
+			std::vector< std::pair<double, double> > B_oil;
+			std::vector< std::pair<double, double> > B_gas;
+
+			std::vector< std::pair<double, double> > visc_wat;
 			std::vector< std::pair<double, double> > visc_oil;
-			// Data set (pressure, gas viscosity) ([Pa], [cP])
 			std::vector< std::pair<double, double> > visc_gas;
+
+			std::vector< std::pair<double, double> > Rs;
 		};
 	};
 

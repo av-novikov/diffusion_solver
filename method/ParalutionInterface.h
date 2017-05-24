@@ -5,7 +5,7 @@
 
 #include "paralution.hpp"
 
-enum class PRECOND {ILU_SIMPLE, ILU_SERIOUS, ILUT};
+enum class PRECOND {ILU_SIMPLE, ILU_SERIOUS, ILUT, ILU_GMRES};
 
 class ParSolver
 {
@@ -22,6 +22,7 @@ protected:
 	paralution::GMRES<Matrix,Vector,double> gmres;
 	void SolveGMRES();
 	paralution::ILU<Matrix,Vector,double> p;
+	paralution::ILUT<Matrix, Vector, double> p_ilut;
 
 	bool isAssembled;
 	bool isPrecondBuilt;

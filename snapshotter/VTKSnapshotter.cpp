@@ -1,4 +1,4 @@
-#include <vtkVersion.h>
+﻿#include <vtkVersion.h>
 #include <vtkSmartPointer.h>
 #include <vtkDoubleArray.h>
 #include <vtkIntArray.h>
@@ -1057,6 +1057,16 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 	polygon->GetPointIds()->SetNumberOfIds(4);
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
+	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
+	p_bub->SetName("buble_point");
+	auto sat_wat = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_wat->SetName("waterSaturation");
+	auto sat_oil = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_oil->SetName("oilSaturation");
+	auto sat_gas = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_gas->SetName("gasSaturation");
+	auto satur = vtkSmartPointer<vtkIntArray>::New();
+	satur->SetName("SATUR");
 	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
 	temp->SetName("temperature");
 	auto perm_xy = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1094,12 +1104,17 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
 				pres->InsertNextValue(cell.u_next.p * P_dim);
+				p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
+				satur->InsertNextValue(cell.u_next.SATUR);
+				sat_wat->InsertNextValue(cell.u_next.s_w);
+				sat_oil->InsertNextValue(cell.u_next.s_o);
+				sat_gas->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o);
 				perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 				model->getNeighbors(cell, neighbor);
-				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
-					model->getVelocity(cell, neighbor, NU_AXIS),
-					model->getVelocity(cell, neighbor, Z_AXIS));
+				auto vel_cart = cell.getVectorCartesian(model->getOilVelocity(cell, neighbor, MU_AXIS),
+					model->getOilVelocity(cell, neighbor, NU_AXIS),
+					model->getOilVelocity(cell, neighbor, Z_AXIS));
 				vel[0] = vel_cart[0] * r_dim / t_dim;
 				vel[1] = vel_cart[1] * r_dim / t_dim;
 				vel[2] = -vel_cart[2] * r_dim / t_dim;
@@ -1130,12 +1145,17 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 
 				temp->InsertNextValue(cell.u_next.t * T_dim);
 				pres->InsertNextValue(cell.u_next.p * P_dim);
+				p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
+				satur->InsertNextValue(cell.u_next.SATUR);
+				sat_wat->InsertNextValue(cell.u_next.s_w);
+				sat_oil->InsertNextValue(cell.u_next.s_o);
+				sat_gas->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o);
 				perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 				model->getNeighbors(cell, neighbor);
-				auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
-					model->getVelocity(cell, neighbor, NU_AXIS),
-					model->getVelocity(cell, neighbor, Z_AXIS));
+				auto vel_cart = cell.getVectorCartesian(model->getOilVelocity(cell, neighbor, MU_AXIS),
+					model->getOilVelocity(cell, neighbor, NU_AXIS),
+					model->getOilVelocity(cell, neighbor, Z_AXIS));
 				vel[0] = vel_cart[0] * r_dim / t_dim;
 				vel[1] = vel_cart[1] * r_dim / t_dim;
 				vel[2] = -vel_cart[2] * r_dim / t_dim;
@@ -1167,12 +1187,17 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 
 			temp->InsertNextValue(cell.u_next.t * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim);
+			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
+			satur->InsertNextValue(cell.u_next.SATUR);
+			sat_wat->InsertNextValue(cell.u_next.s_w);
+			sat_oil->InsertNextValue(cell.u_next.s_o);
+			sat_gas->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o);
 			perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 			model->getNeighbors(cell, neighbor);
-			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
-				model->getVelocity(cell, neighbor, NU_AXIS),
-				model->getVelocity(cell, neighbor, Z_AXIS));
+			auto vel_cart = cell.getVectorCartesian(model->getOilVelocity(cell, neighbor, MU_AXIS),
+				model->getOilVelocity(cell, neighbor, NU_AXIS),
+				model->getOilVelocity(cell, neighbor, Z_AXIS));
 			vel[0] = vel_cart[0] * r_dim / t_dim;
 			vel[1] = vel_cart[1] * r_dim / t_dim;
 			vel[2] = -vel_cart[2] * r_dim / t_dim;
@@ -1203,12 +1228,17 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 
 			pres->InsertNextValue(cell.u_next.p * P_dim);
 			temp->InsertNextValue(cell.u_next.t * T_dim);
+			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
+			satur->InsertNextValue(cell.u_next.SATUR);
+			sat_wat->InsertNextValue(cell.u_next.s_w);
+			sat_oil->InsertNextValue(cell.u_next.s_o);
+			sat_gas->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o);
 			perm_xy->InsertNextValue(M2toMilliDarcy(model->getPerm_mu(cell) * r_dim * r_dim));
 
 			model->getNeighbors(cell, neighbor);
-			auto vel_cart = cell.getVectorCartesian(model->getVelocity(cell, neighbor, MU_AXIS),
-				model->getVelocity(cell, neighbor, NU_AXIS),
-				model->getVelocity(cell, neighbor, Z_AXIS));
+			auto vel_cart = cell.getVectorCartesian(model->getOilVelocity(cell, neighbor, MU_AXIS),
+				model->getOilVelocity(cell, neighbor, NU_AXIS),
+				model->getOilVelocity(cell, neighbor, Z_AXIS));
 			vel[0] = vel_cart[0] * r_dim / t_dim;
 			vel[1] = vel_cart[1] * r_dim / t_dim;
 			vel[2] = -vel_cart[2] * r_dim / t_dim;
@@ -1219,6 +1249,11 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 	grid->SetCells(VTK_HEXAHEDRON, hexs);
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(pres);
+	fd->AddArray(p_bub);
+	fd->AddArray(satur);
+	fd->AddArray(sat_wat);
+	fd->AddArray(sat_oil);
+	fd->AddArray(sat_gas);
 	fd->AddArray(temp);
 	fd->AddArray(perm_xy);
 	fd->AddArray(vel_oil);

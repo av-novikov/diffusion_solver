@@ -29,6 +29,12 @@ namespace blackoilnit_elliptic
 		TMatrix<double> mat;
 		TVector<double> b;
 
+		static const int var_size = Variable::size - 2;
+		static const int size = Variable::size - 1;
+		
+		std::array<double, size> averVal, averValPrev, dAverVal;
+		double err_newton;
+
 		void fillq();
 		void fillDq();
 		void filldPdQ(double mult);
@@ -148,6 +154,104 @@ namespace blackoilnit_elliptic
 					stencil_idx.resize(Lstencil);
 					stencil_idx[0] = model->cellsNum + cell.num;
 					stencil_idx[1] = model->nebrMap[cell.num].first;
+					stencil_idx[2] = model->nebrMap[cell.num].second;
+					return stencil_idx;
+				}
+			}
+		};
+		inline std::vector<const Cell*> getMatrixCellStencil(const Cell& cell, const int val) const
+		{
+			std::vector<const Cell*> stencil_idx;
+
+			if (cell.type == Type::MIDDLE)
+			{
+				stencil_idx.resize(stencil);
+				stencil_idx[0] = &cell;
+				// Special neighbor search for center cells
+				if (cell.num % ((model->cellsNum_mu + 2) * (model->cellsNum_z + 2)) > model->cellsNum_z + 1)
+					stencil_idx[1] = &model->getCell(cell.num, cell.num - model->cellsNum_z - 2);
+				else
+				{
+					int nu_idx = cell.num / ((model->cellsNum_z + 2) * (model->cellsNum_mu + 2));
+					stencil_idx[1] = &model->getCell(cell.num, model->cellsNum + cell.num - 2 * nu_idx * (model->cellsNum_z + 2) * (model->cellsNum_mu + 2));
+				}
+				stencil_idx[2] = &model->getCell(cell.num, cell.num + model->cellsNum_z + 2);
+				stencil_idx[3] = &model->getCell(cell.num, cell.num - 1);
+				stencil_idx[4] = &model->getCell(cell.num, cell.num + 1);
+
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2))
+					stencil_idx[5] = &model->getCell(cell.num, cell.num +
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				else
+					stencil_idx[5] = &model->getCell(cell.num, cell.num -
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1))
+					stencil_idx[6] = &model->getCell(cell.num, cell.num +
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				else
+					stencil_idx[6] = &model->getCell(cell.num, cell.num -
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				return stencil_idx;
+			}
+			else if (cell.type == Type::MIDDLE_SIDE)
+			{
+				stencil_idx.resize(stencil - 1);
+				stencil_idx[0] = &cell;
+				stencil_idx[1] = &model->getCell(cell.num, cell.num + model->cellsNum_z + 2);
+				stencil_idx[2] = &model->getCell(cell.num, cell.num - 1);
+				stencil_idx[3] = &model->getCell(cell.num, cell.num + 1);
+
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2))
+					stencil_idx[4] = &model->getCell(cell.num, cell.num +
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				else
+					stencil_idx[4] = &model->getCell(cell.num, cell.num -
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				if (cell.num < (model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1))
+					stencil_idx[5] = &model->getCell(cell.num, cell.num +
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2));
+				else
+					stencil_idx[5] = &model->getCell(cell.num, cell.num -
+					(model->cellsNum_mu + 2) * (model->cellsNum_z + 2) * (model->cellsNum_nu - 1));
+				return stencil_idx;
+			}
+			else if (cell.type == Type::RIGHT)
+			{
+				stencil_idx.resize(Rstencil);
+				stencil_idx[0] = &cell;
+				stencil_idx[1] = &model->cells[cell.num - model->cellsNum_z - 2];
+				return stencil_idx;
+			}
+			else if (cell.type == Type::TOP)
+			{
+				stencil_idx.resize(Vstencil);
+				stencil_idx[0] = &cell;
+				stencil_idx[1] = &model->cells[cell.num + 1];
+				return stencil_idx;
+			}
+			else if (cell.type == Type::BOTTOM)
+			{
+				stencil_idx.resize(Vstencil);
+				stencil_idx[0] = &cell;
+				stencil_idx[1] = &model->cells[cell.num - 1];
+				return stencil_idx;
+			}
+			else
+			{
+				if (val == TEMP)
+				{
+					stencil_idx.resize(TLstencil);
+					stencil_idx[0] = &cell;
+					stencil_idx[1] = &model->cells[model->nebrMap[cell.num].first];
+					stencil_idx[2] = &model->cells[model->nebrMap[cell.num].second];
+					return stencil_idx;
+				}
+				else if (val == PRES)
+				{
+					stencil_idx.resize(Lstencil);
+					stencil_idx[0] = &cell;
+					stencil_idx[1] = &model->cells[model->nebrMap[cell.num].first];
+					stencil_idx[2] = &model->cells[model->nebrMap[cell.num].second];
 					return stencil_idx;
 				}
 			}
@@ -169,6 +273,7 @@ namespace blackoilnit_elliptic
 		std::vector<std::vector<double>> rateRatios;
 		std::vector<double> rateRatiosAmongIntervals;
 
+		void checkStability();
 	public:
 		BlackOilNITEllipticSolver(BlackOilNIT_Elliptic* _model);
 		~BlackOilNITEllipticSolver();

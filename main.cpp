@@ -365,8 +365,8 @@ using namespace std;
 	tmp.m = 0.10;
 	tmp.perm_mu = 10.0;
 	tmp.perm_z = 1.0;
-	tmp.skins[0] = 30.0;
-	tmp.skins[1] = 30.0;
+	tmp.skins[0] = 50.0;
+	tmp.skins[1] = 50.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -374,8 +374,8 @@ using namespace std;
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
-	tmp.skins[0] = 30.0;
-	tmp.skins[1] = 30.0;
+	tmp.skins[0] = 100.0;
+	tmp.skins[1] = 100.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -383,8 +383,8 @@ using namespace std;
 	tmp.m = 0.20;
 	tmp.perm_mu = 30.0;
 	tmp.perm_z = 3.0;
-	tmp.skins[0] = 30.0;
-	tmp.skins[1] = 30.0;
+	tmp.skins[0] = 0.0;
+	tmp.skins[1] = 0.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -593,12 +593,12 @@ acid2d::Properties* getProps()
 	props->timePeriods.push_back(10.0 * 86400.0);
 	props->timePeriods.push_back(20.0 * 86400.0);
 
-	props->leftBoundIsRate = true;
+	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->rates.push_back(50.0);
-	props->rates.push_back(0.0);
-	//props->pwf.push_back(150.0 * 1.E+5);
-	//props->pwf.push_back(200.0 * 1.E+5);
+	//props->rates.push_back(10.0);
+	//props->rates.push_back(0.0);
+	props->pwf.push_back(50.0 * 1.E+5);
+	props->pwf.push_back(70.625 * 1.E+5);
 
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
@@ -621,7 +621,9 @@ acid2d::Properties* getProps()
 	tmp.isWellHere = true;
 	tmp.cellsNum_z = 13;
 	tmp.m = 0.15;
-	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
+	tmp.p_init = tmp.p_out = tmp.p_sat = tmp.p_ref = 70.625 * 1.0e+5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.s_wc = 0.1;		tmp.s_oc = 0.1;		tmp.s_gc = 0.05;
 	tmp.t_init = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
@@ -631,8 +633,8 @@ acid2d::Properties* getProps()
 	tmp.perm_z = 2.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
-	tmp.lambda_r = 5.0;
-	tmp.lambda_z = 5.0;
+	tmp.lambda_r = 0.0;// 5.0;
+	tmp.lambda_z = 0.0;// 5.0;
 	tmp.c = 1800.0;
 
 	//tmp.skins.push_back(2.68);
@@ -647,8 +649,8 @@ acid2d::Properties* getProps()
 	tmp.m = 0.10;
 	tmp.perm_mu = 10.0;
 	tmp.perm_z = 1.0;
-	tmp.skins[0] = 20.0;
-	tmp.skins[1] = 20.0;
+	tmp.skins[0] = 30.0;
+	tmp.skins[1] = 30.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -656,17 +658,17 @@ acid2d::Properties* getProps()
 	tmp.m = 0.15;
 	tmp.perm_mu = 20.0;
 	tmp.perm_z = 2.0;
-	tmp.skins[0] = 40.0;
-	tmp.skins[1] = 40.0;
+	tmp.skins[0] = 30.0;
+	tmp.skins[1] = 30.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
 
-	tmp.m = 0.20;
+	tmp.m = 0.2;
 	tmp.perm_mu = 30.0;
 	tmp.perm_z = 3.0;
-	tmp.skins[0] = 0.0;
-	tmp.skins[1] = 0.0;
+	tmp.skins[0] = 30.0;
+	tmp.skins[1] = 30.0;
 	tmp.radiuses_eff[0] = 1.0;
 	tmp.radiuses_eff[1] = 1.0;
 	props->props_sk.push_back(tmp);
@@ -685,11 +687,40 @@ acid2d::Properties* getProps()
 	props->props_oil.visc = 1.0;
 	props->props_oil.dens_stc = 887.261;
 	props->props_oil.beta = 1.0 * 1.e-9;
-	//props->props_oil.p_sat = 70.625 * 1.0e+5;
-	props->props_oil.jt = 4.0 * 1.e-7;
+	props->props_oil.jt = 0.0;// 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
-	props->props_oil.lambda = 0.16;
+	props->props_oil.lambda = 0.0;// 0.16;
+
+	props->props_wat.visc = 0.6;
+	props->props_wat.dens_stc = 1000.0;
+	props->props_wat.beta = 1.0 * 1.e-9;
+	props->props_wat.p_ref = tmp.p_ref;
+	props->props_wat.jt = 0.0;// 2.0 * 1.e-7;
+	props->props_wat.ad = 1.5 * 1.e-7;
+	props->props_wat.c = 4181.0;
+	props->props_wat.lambda = 0.0;// 0.65;
+
+	props->props_gas.visc = 0.03;
+	props->props_gas.dens_stc = 0.8;
+	props->props_gas.jt = 0.0;// -1.7 * 1.e-6;
+	props->props_gas.ad = 3.6 * 1.e-6;
+	props->props_gas.c = 3400.0;
+	props->props_gas.lambda = 0.0;// 0.06;
+
+	props->L = 0.0;//  -50.0 * 1.e+3;
+	// Defining relative permeabilities
+	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
+	//setDataFromFile(props->kr_gas, "props/kgas_tempest.txt");
+
+	// Defining volume factors
+	//props->byDefault.B_oil = true;
+	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
+	//props->byDefault.B_gas = false;
+	setDataFromFile(props->B_gas, "props/Bgas_tempest.txt");
+
+	//props->byDefault.Rs = true;
+	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
 
 	return props;
 }*/

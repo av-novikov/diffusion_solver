@@ -149,7 +149,6 @@ void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::copyTimeLayer()
 		cell.u_prev = cell.u_iter = cell.u_next;
 }
 
-
 template <class modelType>
 double AbstractSolver<modelType>::convergance(int& ind, int& varInd)
 {
@@ -476,12 +475,30 @@ void AbstractSolver<acid2d::Acid2d>::averValue(std::array<double, acid2d::Acid2d
 	for (const auto& cell : model->cells)
 	{
 		for (int i = 0; i < acid2d::Acid2d::var_size - 1; i++)
+		aver[i] += cell.u_next.values[i] * cell.V;
+
+	if (cell.u_next.SATUR)
+		aver[acid2d::Acid2d::var_size - 1] += cell.u_next.values[acid2d::Acid2d::var_size - 1] * cell.V;
+	else
+		aver[acid2d::Acid2d::var_size - 1] += cell.u_next.values[acid2d::Acid2d::var_size] * cell.V;
+	}
+
+	for (auto& val : aver)
+		val /= model->Volume;
+}
+void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::averValue(std::array<double, blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size>& aver)
+{
+	std::fill(aver.begin(), aver.end(), 0.0);
+
+	for (const auto& cell : model->cells)
+	{
+		for (int i = 0; i < blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size - 1; i++)
 			aver[i] += cell.u_next.values[i] * cell.V;
 
 		if (cell.u_next.SATUR)
-			aver[acid2d::Acid2d::var_size - 1] += cell.u_next.values[acid2d::Acid2d::var_size - 1] * cell.V;
+			aver[blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size - 1] += cell.u_next.values[blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size - 1] * cell.V;
 		else
-			aver[acid2d::Acid2d::var_size - 1] += cell.u_next.values[acid2d::Acid2d::var_size] * cell.V;
+			aver[blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size - 1] += cell.u_next.values[blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size] * cell.V;
 	}
 
 	for (auto& val : aver)

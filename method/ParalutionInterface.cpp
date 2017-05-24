@@ -56,6 +56,8 @@ void ParSolver::Solve(const PRECOND key)
 		SolveBiCGStab();
 	else if (key == PRECOND::ILU_SIMPLE)
 		SolveBiCGStab_Simple();
+	else if (key == PRECOND::ILU_GMRES)
+		SolveGMRES();
 
 	x.MoveToHost();
 }
@@ -114,12 +116,13 @@ void ParSolver::SolveBiCGStab_Simple()
 void ParSolver::SolveGMRES()
 {
 	gmres.SetOperator(Mat);
-	//p.Set(1.E-20, 100);
-	gmres.SetPreconditioner(p);
+	p_ilut.Set(1.E-20, 100);
+	//p.Set(3);
+	gmres.SetPreconditioner(p_ilut);
 	gmres.Build();
 	isAssembled = true;
 
-	gmres.Init(1.E-22, 1.E-15, 1E+12, 5000);
+	gmres.Init(1.E-17, 1.E-12, 1E+12, 500);
 	Mat.info();
 
 	//gmres.RecordResidualHistory();

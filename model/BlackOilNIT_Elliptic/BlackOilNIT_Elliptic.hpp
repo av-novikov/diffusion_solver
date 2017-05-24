@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-//#define ADOLC_ADVANCED_BRANCHING
+#define ADOLC_ADVANCED_BRANCHING
 
 #include "model/cells/Variables.hpp"
 #include "model/BlackOilNIT_Elliptic/Properties.hpp"
@@ -487,44 +487,72 @@ namespace blackoilnit_elliptic
 
 			return (nebr2->u_next.p - nebr1->u_next.p) / h;
 		};
-		inline double getVelocity(Cell& cell, Cell** neighbor, const int axis)
+		inline double getOilVelocity(Cell& cell, Cell** neighbor, const int axis)
 		{
-			return -getPerm(cell, axis) / props_oil.getViscosity(cell.u_next.p).value() * getNablaP(cell, neighbor, axis);
+			const Variable& next = cell.u_next;
+			return -getPerm(cell, axis) * props_oil.getKr(next.s_w, next.s_o, cell.props).value() / props_oil.getViscosity(next.p).value() * getNablaP(cell, neighbor, axis);
+		};
+		inline double getWatVelocity(Cell& cell, Cell** neighbor, const int axis)
+		{
+			const Variable& next = cell.u_next;
+			return -getPerm(cell, axis) * props_wat.getKr(next.s_w, next.s_o, cell.props).value() / props_wat.getViscosity(next.p).value() * getNablaP(cell, neighbor, axis);
+		};
+		inline double getGasVelocity(Cell& cell, Cell** neighbor, const int axis)
+		{
+			const Variable& next = cell.u_next;
+			return -getPerm(cell, axis) * props_gas.getKr(next.s_w, next.s_o, cell.props).value() / props_gas.getViscosity(next.p).value() * getNablaP(cell, neighbor, axis);
 		};
 		inline double getCn(const Cell& cell) const
 		{
 			const Variable& next = cell.u_next;
-			return cell.props->getPoro(next.p).value() * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * props_oil.c +
+			return cell.props->getPoro(next.p).value() * 
+					(next.s_o * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * props_oil.c +
+					next.s_w * props_wat.getDensity(next.p).value() * props_wat.c + 
+					(1.0 - next.s_w - next.s_o) * props_gas.getDensity(next.p).value() * props_gas.c) +
 					(1.0 - cell.props->getPoro(next.p).value()) * cell.props->getDensity(next.p).value() * 
 								cell.props->c;
 		};
 		inline double getAd(const Cell& cell) const
 		{
 			const Variable& next = cell.u_next;
-			return cell.props->getPoro(next.p).value() * (props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * props_oil.ad * props_oil.c);
+			return cell.props->getPoro(next.p).value() * 
+					(next.s_o * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * props_oil.ad * props_oil.c + 
+					next.s_w * props_wat.getDensity(next.p).value() * props_wat.ad * props_wat.c + 
+					(1.0 - next.s_w - next.s_o) * props_gas.getDensity(next.p).value() * props_gas.ad * props_gas.c);
 		};
 		inline double getLambda(const Cell& cell, const int axis) const
 		{
 			const Variable& next = cell.u_next;
 			if (axis == Z_AXIS)
-				return cell.props->getPoro(next.p).value() * props_oil.lambda +
+				return cell.props->getPoro(next.p).value() * 
+						(next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + (1.0 - next.s_o - next.s_w) * props_gas.lambda) + 
 						(1.0 - cell.props->getPoro(next.p).value()) * cell.props->lambda_z;
 			else
-				return cell.props->getPoro(next.p).value() * props_oil.lambda +
-					(1.0 - cell.props->getPoro(next.p).value()) * cell.props->lambda_r;
+				return cell.props->getPoro(next.p).value() *
+						(next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + (1.0 - next.s_o - next.s_w) * props_gas.lambda) +
+						(1.0 - cell.props->getPoro(next.p).value()) * cell.props->lambda_r;
 		};
 		inline double getJT(Cell& cell, Cell** neighbor, const int axis)
 		{
 			const Variable& next = cell.u_next;
-			return props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() *
-				props_oil.c * props_oil.jt * getVelocity(cell, neighbor, axis);
+			return	props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() *
+				props_oil.c * props_oil.jt * getOilVelocity(cell, neighbor, axis) + 
+					props_wat.getDensity(next.p).value() *
+				props_wat.c * props_wat.jt * getWatVelocity(cell, neighbor, axis) + 
+					props_gas.getDensity(next.p).value() *
+				props_gas.c * props_gas.jt * getGasVelocity(cell, neighbor, axis);
 		};
 		inline double getA(Cell& cell, Cell** neighbor, const int axis)
 		{
 			const Variable& next = cell.u_next;
-			return props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * 
-						props_oil.c * getVelocity(cell, neighbor, axis);
+			return	props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() * 
+						props_oil.c * getOilVelocity(cell, neighbor, axis) + 
+					props_wat.getDensity(next.p).value() *
+						props_wat.c * getWatVelocity(cell, neighbor, axis) + 
+					props_gas.getDensity(next.p).value() *
+						props_gas.c * getGasVelocity(cell, neighbor, axis);
 		};
+		double phaseTrans(const Cell& cell);
 		struct DivIndices 
 		{
 			double ther;
@@ -533,11 +561,15 @@ namespace blackoilnit_elliptic
 		};
 		inline DivIndices getDivCoeff(Cell& cell, Cell& beta, Cell** neighbor)
 		{
-			double r1, r2, lambda, A, a;
+			double r1, r2, lambda, A, a, jt, JT;
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 			{
 				A = getA(cell, neighbor, Z_AXIS);
 				a = std::max(0.0, sign(cell.z - beta.z) * A);
+
+				JT = getJT(cell, neighbor, Z_AXIS);
+				jt = std::max(0.0, sign(cell.z - beta.z) * JT);
+
 				r1 = cell.hz;		r2 = beta.hz;
 				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
 			}
@@ -551,6 +583,10 @@ namespace blackoilnit_elliptic
 					dmu = sign(cell.mu - beta.mu);
 				A = getA(cell, neighbor, MU_AXIS);
 				a = std::max(0.0, dmu * A);
+
+				JT = getJT(cell, neighbor, MU_AXIS);
+				jt = std::max(0.0, dmu * JT);
+
 				r1 = cell.hmu * Cell::getH(cell.mu, cell.nu);
 				r2 = beta.hmu * Cell::getH(beta.mu, beta.nu);
 				lambda = (r1 * getLambda(beta, MU_AXIS) + r2 * getLambda(cell, MU_AXIS)) / (r1 + r2) / r1;
@@ -561,12 +597,16 @@ namespace blackoilnit_elliptic
 
 				const double signum = sign(getDistance(beta, cell));
 				a = std::max(0.0, signum * A);
+
+				JT = getJT(cell, neighbor, NU_AXIS);
+				jt = std::max(0.0, signum * JT);
+
 				r1 = cell.hnu * Cell::getH(cell.mu, cell.nu);
 				r2 = beta.hnu * Cell::getH(beta.mu, beta.nu);
 				lambda = (r1 * getLambda(beta, NU_AXIS) + r2 * getLambda(cell, NU_AXIS)) / (r1 + r2) / r1;
 			}
 
-			DivIndices coeff (a + lambda, a * props_oil.jt);
+			DivIndices coeff (a + lambda, jt);
 			return coeff;
 		};
 

@@ -31,18 +31,23 @@ BlackOilNITEllipticSolver<solType>::BlackOilNITEllipticSolver(BlackOilNIT_Ellipt
 	Tt = model->period[model->period.size() - 1];
 
 	// Memory allocating
-	ind_i = new int[stencil * (model->cellsNum + model->wellCells.size())];
-	ind_j = new int[stencil * (model->cellsNum + model->wellCells.size())];
-	cols = new int[model->cellsNum + model->wellCells.size()];
+	ind_i = new int[stencil * var_size * var_size * (model->cellsNum + model->wellCells.size())];
+	ind_j = new int[stencil * var_size * var_size * (model->cellsNum + model->wellCells.size())];
+	cols = new int[var_size * (model->cellsNum + model->wellCells.size())];
 	tind_i = new int[stencil * (model->cellsNum + model->wellCells.size())];
 	tind_j = new int[stencil * (model->cellsNum + model->wellCells.size())];
 	t_cols = new int[model->cellsNum + model->wellCells.size()];
-	a = new double[stencil * (model->cellsNum + model->wellCells.size())];
-	ind_rhs = new int[model->cellsNum + model->wellCells.size()];
-	rhs = new double[model->cellsNum + model->wellCells.size()];
+	a = new double[stencil * var_size * var_size * (model->cellsNum + model->wellCells.size())];
+	ind_rhs = new int[var_size * (model->cellsNum + model->wellCells.size())];
+	rhs = new double[var_size * (model->cellsNum + model->wellCells.size())];
 
 	rateRatios.resize( model->perfIntervals.size() );
 	rateRatiosAmongIntervals.resize( model->perfIntervals.size(), 0.0);
+
+	CHOP_MULT = 0.1;
+	MAX_SAT_CHANGE = 0.1;
+	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
+	MAX_ITER = 20;
 }
 template <typename solType>
 BlackOilNITEllipticSolver<solType>::~BlackOilNITEllipticSolver()
@@ -167,7 +172,7 @@ void BlackOilNITEllipticSolver<solType>::start()
 	iterations = 8;
 
 	fillIndices();
-	pres_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-15, 1.e-15);
+	pres_solver.Init(var_size * (model->cellsNum + model->wellCells.size()), 1.e-15, 1.e-15);
 	temp_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-8, 1.e-5);
 
 	model->setPeriod(curTimePeriod);
@@ -216,35 +221,173 @@ void BlackOilNITEllipticSolver<solType>::start()
 template <typename solType>
 void BlackOilNITEllipticSolver<solType>::copySolution(const Vector& sol, const int val)
 {
-	for (int i = 0; i < model->cellsNum; i++)
-		model->cells[i].u_next.values[val] += sol[i];
+	if (val == TEMP)
+	{
+		for (int i = 0; i < model->cellsNum; i++)
+			model->cells[i].u_next.values[TEMP] += sol[i];
 
-	for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
-		model->wellCells[i - model->cellsNum].u_next.values[val] += sol[i];
+		for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
+			model->wellCells[i - model->cellsNum].u_next.values[TEMP] += sol[i];
+	}
+	else if (val == PRES)
+	{
+		for (int i = 0; i < model->cellsNum; i++)
+		{
+			Variable& next = model->cells[i].u_next;
+			next.p += sol[i * var_size];
+			next.s_w += sol[i * var_size + 1];
+			if (next.SATUR)
+			{
+				next.s_o += sol[i * var_size + 2];
+				next.p_bub = next.p;
+			}
+			else
+			{
+				next.s_o -= sol[i * var_size + 1];
+				next.p_bub += sol[i * var_size + 2];
+			}
+		}
+
+		for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
+		{
+			Variable& next = model->wellCells[i - model->cellsNum].u_next;
+			next.p += sol[i * var_size];
+			next.s_w += sol[i * var_size + 1];
+			if (next.SATUR)
+			{
+				next.s_o += sol[i * var_size + 2];
+				next.p_bub = next.p;
+			}
+			else
+			{
+				next.s_o -= sol[i * var_size + 1];
+				next.p_bub += sol[i * var_size + 2];
+			}
+		}
+	}
+}
+template <typename solType>
+void BlackOilNITEllipticSolver<solType>::checkStability()
+{
+	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit + fabs(s_cur - s_crit) * CHOP_MULT;
+	};
+	auto barelyMobilRight = [this](double s_cur, double s_crit) -> double
+	{
+		return s_crit - fabs(s_crit - s_cur) * CHOP_MULT;
+	};
+	auto checkBubPoint = [](auto cell, auto next)
+	{
+		if (next.SATUR)
+		{
+			if (next.s_o + next.s_w > 1.0 + EQUALITY_TOLERANCE)
+			{
+				next.SATUR = false;
+				next.s_o = 1.0 - next.s_w;
+				next.p_bub = 0.999 * cell.u_iter.p_bub;
+			}
+		}
+		else
+		{
+			if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+			{
+				next.SATUR = true;
+				next.s_o = 0.999 * cell.u_iter.s_o;
+				next.p_bub = next.p;
+			}
+		}
+	};
+	auto checkCritPoints = [=, this](auto next, auto iter, auto props)
+	{
+		// Oil
+		if ((next.s_o - props.s_oc) * (iter.s_o - props.s_oc) < 0.0)
+			next.s_o = barelyMobilLeft(next.s_o, props.s_oc);
+		if ((next.s_o - (1.0 - props.s_wc - props.s_gc)) * (iter.s_o - (1.0 - props.s_wc - props.s_gc)) < 0.0)
+			next.s_o = barelyMobilRight(next.s_o, 1.0 - props.s_wc - props.s_gc);
+		// Water
+		if ((next.s_w - props.s_wc) * (iter.s_w - props.s_wc) < 0.0)
+			next.s_w = barelyMobilLeft(next.s_w, props.s_wc);
+		if ((next.s_w - (1.0 - props.s_oc - props.s_gc)) * (iter.s_w - (1.0 - props.s_oc - props.s_gc)) < 0.0)
+			next.s_w = barelyMobilRight(next.s_w, 1.0 - props.s_oc - props.s_gc);
+		// Gas
+		if ((1.0 - next.s_w - next.s_o - props.s_gc) * (1.0 - iter.s_w - iter.s_o - props.s_gc) < 0.0)
+			if (fabs(next.s_o - iter.s_o) > fabs(next.s_w - iter.s_w))
+				next.s_o = 1.0 - next.s_w - barelyMobilLeft(1.0 - next.s_o - next.s_w, props.s_gc);
+			else
+				next.s_w = 1.0 - next.s_o - barelyMobilLeft(1.0 - next.s_o - next.s_w, props.s_gc);
+		if ((props.s_wc - next.s_w + props.s_oc - next.s_o) * (props.s_wc - iter.s_w + props.s_oc - iter.s_o) < 0.0)
+			if (fabs(next.s_o - iter.s_o) > fabs(next.s_w - iter.s_w))
+				next.s_o = 1.0 - next.s_w - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);
+			else
+				next.s_w = 1.0 - next.s_o - barelyMobilRight(1.0 - next.s_o - next.s_w, 1.0 - props.s_oc - props.s_wc);
+	};
+	auto checkMaxResidual = [=, this](auto next, auto iter)
+	{
+		if (fabs(next.s_w - iter.s_w) > MAX_SAT_CHANGE)
+			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * MAX_SAT_CHANGE;
+		if (fabs(next.s_o - iter.s_o) > MAX_SAT_CHANGE)
+			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * MAX_SAT_CHANGE;
+	};
+
+	for (auto cell : model->cells)
+	{
+		const Skeleton_Props& props = *cell.props;
+		Variable& next = cell.u_next;
+		const Variable& iter = cell.u_iter;
+
+		checkBubPoint(cell, next);
+		checkCritPoints(next, iter, props);
+		checkMaxResidual(next, iter);
+	}
+	for (auto cell : model->wellCells)
+	{
+		const Skeleton_Props& props = *cell.props;
+		Variable& next = cell.u_next;
+		const Variable& iter = cell.u_iter;
+
+		checkBubPoint(cell, next);
+		checkCritPoints(next, iter, props);
+		checkMaxResidual(next, iter);
+	}
 }
 void BlackOilNITEllipticSolver<ParSolver>::solveStep()
 {
 	int cellIdx, varIdx;
-	double err_newton = 1.0;
+	err_newton = 1.0;
+	averValue(averValPrev);
+	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	double averPresPrev = averValue(PRES);
 	double averPres;
 	double dAverPres = 1.0;
-
 	iterations = 0;
-	while (err_newton > 1.e-4 && dAverPres > 1.e-7 && iterations < 10)
+
+	auto continueIterations = [this]()
+	{
+		bool result = false;
+
+		for (const auto& val : dAverVal)
+			result += (val > CONV_VAR);
+
+		return result * (err_newton > CONV_W2) * (iterations < MAX_ITER);
+	};
+
+	while (continueIterations())
 	{
 		copyIterLayer();
 
 		fill(PRES);
 		pres_solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		pres_solver.Solve();
+		pres_solver.Solve(PRECOND::ILU_SIMPLE);
 		copySolution(pres_solver.getSolution(), PRES);
+		checkStability();
 
 		err_newton = convergance(cellIdx, varIdx);
 
-		averPres = averValue(PRES);
-		dAverPres = fabs(averPres - averPresPrev);	
-		averPresPrev = averPres;
+		averValue(averVal);
+		for (int i = 0; i < var_size; i++)
+			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
+		averValPrev = averVal;
 
 		iterations++;
 	}
@@ -340,16 +483,38 @@ void BlackOilNITEllipticSolver<solType>::doNextStep()
 	solveTempStep();
 	cout << "Newton Iterations = " << iterations << endl;
 }
+
 template <typename solType>
 void BlackOilNITEllipticSolver<solType>::fill(const int val)
 {
 	int counter = 0;
 	int i;
 	Cell* neighbor[7];
-
-	for (const auto& cell : model->cells)
+	if (val == TEMP)
 	{
-		if (cell.isUsed)
+		for (const auto& cell : model->cells)
+		{
+			if (cell.isUsed)
+			{
+				model->setVariables(cell, val);
+
+				i = 0;
+				auto& mat_idx = getMatrixStencil(cell, val);
+				for (const int idx : mat_idx)
+				{
+					a[counter++] = model->jac[0][i];	i++;
+				}
+				mat_idx.clear();
+
+				rhs[cell.num] = -model->y[0];
+			}
+			else
+			{
+				a[counter++] = 1.0 / model->P_dim;		rhs[cell.num] = 0.0;
+			}
+		}
+
+		for (const auto& cell : model->wellCells)
 		{
 			model->setVariables(cell, val);
 
@@ -357,32 +522,70 @@ void BlackOilNITEllipticSolver<solType>::fill(const int val)
 			auto& mat_idx = getMatrixStencil(cell, val);
 			for (const int idx : mat_idx)
 			{
-				a[counter++] = model->jac[0][i];	i++;
+				a[counter++] = model->jac[0][i];
+				i++;
 			}
 			mat_idx.clear();
 
-			rhs[cell.num] = -model->y[0];
-		}
-		else
-		{
-			a[counter++] = 1.0 / model->P_dim;		rhs[cell.num] = 0.0;
+			rhs[cell.num + model->cellsNum] = -model->y[0];
 		}
 	}
-
-	for (const auto& cell : model->wellCells)
+	else if (val == PRES)
 	{
-		model->setVariables(cell, val);
-
-		i = 0;
-		auto& mat_idx = getMatrixStencil(cell, val);
-		for (const int idx : mat_idx)
+		for (const auto& cell : model->cells)
 		{
-			a[counter++] = model->jac[0][i];
-			i++;
+			if (cell.isUsed)
+			{
+				model->setVariables(cell, val);
+				auto& mat_idx = getMatrixStencil(cell, val);
+				const auto& cells = getMatrixCellStencil(cell, val);
+				for (int j = 0; j < var_size; j++)
+				{
+					i = 0;
+					for (const int idx : mat_idx)
+					{
+						a[counter++] = model->jac[j][size * i];
+						a[counter++] = model->jac[j][size * i + 1];
+						if(cells[i]->u_next.SATUR)
+							a[counter++] = model->jac[j][size * i + 2];
+						else 
+							a[counter++] = model->jac[j][size * i + 3];
+						i++;
+					}
+					rhs[var_size * cell.num + j] = -model->y[j];
+				}
+				mat_idx.clear();
+			}
+			else
+			{
+				a[counter++] = 1.0 / model->P_dim;		rhs[var_size * cell.num] = 0.0;
+				a[counter++] = 1.0 / model->P_dim;		rhs[var_size * cell.num + 1] = 0.0;
+				a[counter++] = 1.0 / model->P_dim;		rhs[var_size * cell.num + 2] = 0.0;
+			}
 		}
-		mat_idx.clear();
 
-		rhs[cell.num + model->cellsNum] = -model->y[0];
+		for (const auto& cell : model->wellCells)
+		{
+			model->setVariables(cell, val);
+			auto& mat_idx = getMatrixStencil(cell, val);
+			const auto& cells = getMatrixCellStencil(cell, val);
+			for (int j = 0; j < var_size; j++)
+			{
+				i = 0;
+				for (const int idx : mat_idx)
+				{
+					a[counter++] = model->jac[j][size * i];
+					a[counter++] = model->jac[j][size * i + 1];
+					if (cells[i]->u_next.SATUR)
+						a[counter++] = model->jac[j][size * i + 2];
+					else
+						a[counter++] = model->jac[j][size * i + 3];
+					i++;
+				}
+				rhs[var_size * (cell.num + model->cellsNum) + j] = -model->y[j];
+			}
+			mat_idx.clear();
+		}
 	}
 }
 template <typename solType>
@@ -397,11 +600,21 @@ void BlackOilNITEllipticSolver<solType>::fillIndices()
 		if (cell.isUsed)
 		{
 			auto& pres_idx = getMatrixStencil(cell, PRES);
-			for (const int idx : pres_idx)
+			for (int i = 0; i < var_size; i++)
 			{
-				ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = idx;
+				for (const int idx : pres_idx)
+				{
+					ind_i[pres_counter] = var_size * cell.num + i;
+					ind_j[pres_counter++] = var_size * idx;
+
+					ind_i[pres_counter] = var_size * cell.num + i;
+					ind_j[pres_counter++] = var_size * idx + 1;
+
+					ind_i[pres_counter] = var_size * cell.num + i;
+					ind_j[pres_counter++] = var_size * idx + 2;
+				}
+				cols[i] += 3 * pres_idx.size();
 			}
-			cols[i] += pres_idx.size();
 			pres_idx.clear();
 
 			auto& temp_idx = getMatrixStencil(cell, TEMP);
@@ -414,8 +627,11 @@ void BlackOilNITEllipticSolver<solType>::fillIndices()
 		}
 		else
 		{
-			ind_i[pres_counter] = cell.num;			ind_j[pres_counter++] = cell.num;
-			cols[i]++;
+			ind_i[pres_counter] = var_size * cell.num;			ind_j[pres_counter++] = var_size * cell.num;
+			ind_i[pres_counter] = var_size * cell.num + 1;		ind_j[pres_counter++] = var_size * cell.num + 1;
+			ind_i[pres_counter] = var_size * cell.num + 2;		ind_j[pres_counter++] = var_size * cell.num + 2;
+			cols[i] += 3;
+
 			tind_i[temp_counter] = cell.num;		tind_j[temp_counter++] = cell.num;
 			t_cols[i++]++;
 		}
@@ -426,11 +642,21 @@ void BlackOilNITEllipticSolver<solType>::fillIndices()
 		cols[i] = t_cols[i] = 0;
 
 		auto& pres_idx = getMatrixStencil(cell, PRES);
-		for (const int idx : pres_idx)
+		for (int i = 0; i < var_size; i++)
 		{
-			ind_i[pres_counter] = cell.num + model->cellsNum;			ind_j[pres_counter++] = idx;
+			for (const int idx : pres_idx)
+			{
+				ind_i[pres_counter] = var_size * (cell.num + model->cellsNum) + i;
+				ind_j[pres_counter++] = var_size * idx;
+
+				ind_i[pres_counter] = var_size * (cell.num + model->cellsNum) + i;
+				ind_j[pres_counter++] = var_size * idx + 1;
+
+				ind_i[pres_counter] = var_size * (cell.num + model->cellsNum) + i;
+				ind_j[pres_counter++] = var_size * idx + 2;
+			}
+			cols[i] += 3 * pres_idx.size();
 		}
-		cols[i] += pres_idx.size();
 		pres_idx.clear();
 
 		auto& temp_idx = getMatrixStencil(cell, TEMP);
@@ -444,9 +670,10 @@ void BlackOilNITEllipticSolver<solType>::fillIndices()
 
 	elemNum = pres_counter;		telemNum = temp_counter;
 
-	for (int i = 0; i < model->cellsNum + model->wellCells.size(); i++)
+	for (int i = 0; i < var_size * (model->cellsNum + model->wellCells.size()); i++)
 		ind_rhs[i] = i;
 }
+
 template <typename solType>
 void BlackOilNITEllipticSolver<solType>::fillq()
 {

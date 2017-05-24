@@ -95,6 +95,10 @@ void BlackOilNIT_Elliptic::setProps(Properties& props)
 	makeDimLess();
 
 	Cell::a = l / 2;
+
+	props_oil.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
+	props_gas.b = setDataset(props.B_gas, P_dim / BAR_TO_PA, 1.0);
+	props_oil.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
 };
 void BlackOilNIT_Elliptic::makeDimLess()
 {
@@ -124,6 +128,7 @@ void BlackOilNIT_Elliptic::makeDimLess()
 		props_sk[i].perm_z /= (R_dim * R_dim);
 
 		props_sk[i].beta /= (1.0 / P_dim);
+		props_sk[i].p_ref /= P_dim;
 		props_sk[i].dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 		props_sk[i].h1 = (props_sk[i].h1 - depth_point) / R_dim;
 		props_sk[i].h2 = (props_sk[i].h2 - depth_point) / R_dim;
@@ -169,19 +174,17 @@ void BlackOilNIT_Elliptic::makeDimLess()
 	props_wat.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_wat.beta /= (1.0 / P_dim);
 	props_wat.p_ref /= P_dim;
-	props_wat.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
-	props_wat.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
-	props_wat.jt = props_oil.jt * P_dim / T_dim;
-	props_wat.ad = props_oil.ad * P_dim / T_dim;
+	props_wat.c = props_wat.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_wat.lambda = props_wat.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_wat.jt = props_wat.jt * P_dim / T_dim;
+	props_wat.ad = props_wat.ad * P_dim / T_dim;
 	// Gas
 	props_gas.visc /= (P_dim * t_dim);
 	props_gas.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
-	//props_gas.beta /= (1.0 / P_dim);
-	//props_gas.p_ref /= P_dim;
-	props_gas.c = props_oil.c / R_dim / R_dim * T_dim * t_dim * t_dim;
-	props_gas.lambda = props_oil.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
-	props_gas.jt = props_oil.jt * P_dim / T_dim;
-	props_gas.ad = props_oil.ad * P_dim / T_dim;
+	props_gas.c = props_gas.c / R_dim / R_dim * T_dim * t_dim * t_dim;
+	props_gas.lambda = props_gas.lambda * T_dim * t_dim / P_dim / R_dim / R_dim;
+	props_gas.jt = props_gas.jt * P_dim / T_dim;
+	props_gas.ad = props_gas.ad * P_dim / T_dim;
 
 	L = L / R_dim / R_dim * t_dim * t_dim;
 };
@@ -630,6 +633,32 @@ double BlackOilNIT_Elliptic::getRate(int cur) const
 			props_oil.getB(next.p, next.p_bub, next.SATUR).value() / props_oil.getViscosity(next.p).value() * 
 			(beta.u_next.p - next.p);
 }
+double BlackOilNIT_Elliptic::phaseTrans(const Cell& cell)
+{
+	const Skeleton_Props& props = *cell.props;
+	const int nebrNum = (cell.type == Type::MIDDLE) ? 6 : 5;
+	const Variable& next = cell.u_next;
+	const Variable& prev = cell.u_prev;
+
+	double H = (props.getPoro(next.p).value() * next.s_o * props_oil.getDensity(next.p, next.p_bub, next.SATUR).value() -
+				props.getPoro(prev.p).value() * prev.s_o * props_oil.getDensity(prev.p, prev.p_bub, prev.SATUR).value()) / ht;
+
+	Cell* neighbor[6];
+	getNeighbors(cell, neighbor);
+	for (int i = 0; i < nebrNum; i++)
+	{
+		const Cell& beta = *neighbor[i];
+		const Cell& upwd_cell = getUpwindCell(cell, beta);
+		const Variable& upwd = upwd_cell.u_next;
+		const Variable& nebr = beta.u_next;
+
+		H += 1.0 / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			props_oil.getKr(upwd.s_w, upwd.s_o, upwd_cell.props).value() / props_oil.getViscosity(upwd.p).value() * 
+			props_oil.getDensity(upwd.p, upwd.p_bub, upwd.SATUR).value();
+	}
+
+	return H;
+}
 
 void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 {
@@ -649,11 +678,10 @@ void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 
 		const TapeVariableNIT& next = var[0];
 
-		h[0] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (cell.u_next.p - prev.p);
+		h[0] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (cell.u_next.p - prev.p) + ht * L * phaseTrans(cell);
 
 		Cell* neighbor[6];
 		getNeighbors(cell, neighbor);
-		adouble tmp[Variable::size - 1];
 		for (int i = 0; i < nebrNum; i++)
 		{
 			const Cell& beta = *neighbor[i];
@@ -707,33 +735,35 @@ void BlackOilNIT_Elliptic::solve_eqMiddle(const Cell& cell, const int val)
 		for (int i = 0; i < nebrNum; i++)
 		{
 			const Cell& beta = *neighbor[i];
-			const int upwd_idx = (getUpwindCell(cell, beta) == cell) ? 0 : i + 1;
+			const Cell& upwd_cell = getUpwindCell(cell, beta);
+			const int upwd_idx = (upwd_cell == cell) ? 0 : i + 1;
 			TapeVariable& upwd = var[upwd_idx];
 			const TapeVariable& nebr = var[i + 1];
 
 			h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-				props_wat.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_wat.getViscosity(upwd.p) /
+				props_wat.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) / props_wat.getViscosity(upwd.p) /
 				props_wat.getB(upwd.p);
 			h[1] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-				props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p) /
+				props_oil.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) / props_oil.getViscosity(upwd.p) /
 				props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR);
 			condassign(tmp, satur,
 				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-				(props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
+				(props_oil.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
 					props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR) +
-					props_gas.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p)),
+					props_gas.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) / props_gas.getViscosity(upwd.p) / props_gas.getB(upwd.p)),
 				ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-				props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
+				props_oil.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) * props_oil.getRs(upwd.p, upwd.p_bub, upwd.SATUR) /
 				props_oil.getViscosity(upwd.p) / props_oil.getB(upwd.p, upwd.p_bub, upwd.SATUR));
 			h[2] += tmp;
 		}
 
+		h[0] *= sqrt(cell.V);		h[1] *= cell.V;		h[2] *= cell.V;
 		adouble buf[3];
 		buf[0] = h[0];		buf[1] = h[1];		buf[2] = h[2];
-		adouble isMiddleSide = ((cell.nu == 0.0 || cell.nu == M_PI) && cell.mu < 10.0 * mu_init) ? true : false;
-		condassign(h[0], isMiddleSide, buf[0] * sqrt(cell.V));
-		condassign(h[1], isMiddleSide, buf[1] * sqrt(cell.V));
-		condassign(h[2], isMiddleSide, buf[2] * sqrt(cell.V));
+		adouble isMiddleSide = ((cell.nu == 0.0 || cell.nu == M_PI) && cell.mu < 2.0 * mu_init) ? true : false;
+		condassign(h[0], isMiddleSide, buf[0] * 100.0);
+		condassign(h[1], isMiddleSide, buf[1] * 100.0);
+		condassign(h[2], isMiddleSide, buf[2] * 100.0);
 
 		for (int i = 0; i < var_size-1; i++)
 			h[i] >>= y[i];
@@ -922,7 +952,7 @@ void BlackOilNIT_Elliptic::solve_eqVertical(const Cell& cell, const int val)
 		adouble satur = cell.u_next.SATUR;
 		condassign(h[2], satur, (next.s_o - nebr.s_o) / P_dim, (next.p_bub - nebr.p_bub) / P_dim);
 
-		for (int i = 0; i < var_size; i++)
+		for (int i = 0; i < var_size-1; i++)
 			h[i] >>= y[i];
 
 		trace_off();
