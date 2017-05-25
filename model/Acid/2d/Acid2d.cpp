@@ -56,7 +56,7 @@ void Acid2d::setProps(Properties& props)
 	// Data sets
 	props_o.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
 	props_o.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
-	
+	props_g.rho = setDataset(props.rho_co2, P_dim / BAR_TO_PA, (P_dim * t_dim * t_dim / R_dim / R_dim));
 }
 void Acid2d::makeDimLess()
 {

@@ -496,7 +496,7 @@ acid2d::Properties* getProps()
 	acid2d::Properties* props = new acid2d::Properties;
 
 	props->cellsNum_r = 100;
-	props->cellsNum_z = 5;
+	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(5.0 * 3600.0);
 	props->timePeriods.push_back(30.0 * 3600.0);
@@ -517,11 +517,11 @@ acid2d::Properties* getProps()
 	props->r_w = 0.1;
 	props->r_e = 150.0;
 
-	props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(1, 1));
 	//props->perfIntervals.push_back(make_pair(15, 15));
 
 	acid2d::Skeleton_Props tmp;
-	tmp.cellsNum_z = 5;
+	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
@@ -573,12 +573,13 @@ acid2d::Properties* getProps()
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = tmp.p_ref;
 
-	props->props_g.visc = 0.03;
+	props->props_g.visc = 0.06;
 	props->props_g.dens_stc = 0.8;
 	props->props_g.co2 = acid2d::getCO2();
 
 	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
 	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
+	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 	
 	return props;
 }

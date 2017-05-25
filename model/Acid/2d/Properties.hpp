@@ -123,9 +123,11 @@ namespace acid2d
 		{
 			return visc;
 		};
+		Interpolate* rho;
 		inline adouble getDensity(adouble p) const
 		{
-			return co2.getDensity(p);
+			return rho->Solve(p);
+			//return co2.getDensity(p);
 		};
 	};
 	struct Properties : public basic2d::Properties
@@ -136,6 +138,8 @@ namespace acid2d
 		Gas_Props props_g;
 
 		std::vector<double> xa;
+
+		std::vector< std::pair<double, double> > rho_co2;
 	};
 };
 
