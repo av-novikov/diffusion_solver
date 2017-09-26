@@ -12,7 +12,7 @@
 namespace bing1d
 {
 	static const int stencil = 3;
-	static const int Lstencil = 3;
+	static const int Lstencil = 2;
 	static const int Rstencil = 2;
 	static const int mid = 1;
 	static const int left = 2;
@@ -24,7 +24,7 @@ namespace bing1d
 		double m;
 		inline adouble getPoro(adouble p) const
 		{
-			return (adouble)(m)* ((adouble)(1.0) + (adouble)(beta)* (p /*- cell.props->p_init*/));
+			return (adouble)(m)* ((adouble)(1.0) + (adouble)(beta)* (p - p_init));
 		};
 
 		// Density of skeleton matter in STC [kg/m3]
@@ -63,16 +63,24 @@ namespace bing1d
 	};
 	struct Oil_Props
 	{
-		// Viscosity [cP]
-		double visc;
-		Interpolate* visc_table;
-		inline adouble getViscosity(const adouble p) const
+
+		Interpolate* u_dp;
+		inline adouble getU(const adouble dp) const
 		{
-			return (adouble)(visc);
+			adouble out_of_range = (dp - u_dp->xmax > 0) ? true : false;
+			adouble tmp;
+			condassign(tmp, out_of_range, 1.0 - tau0 / d / dp, u_dp->Solve(dp));
+			return tmp;
 		};
 
-		// Yield stress
+		// Viscosity [cP]
+		double visc;
+		// Yield stress [cP]
 		double tau0;
+		// Characteristic length [m]
+		double d;
+		// Regularization parameter
+		double m;
 
 		// Density of fluid in STC [kg/m3]
 		double dens_stc;
@@ -125,7 +133,7 @@ namespace bing1d
 		double depth_point;
 
 		// Data set (pressure, oil viscosity) ([Pa], [cP])
-		std::vector< std::pair<double, double> > visc_oil;
+		std::vector< std::pair<double, double> > u_dp_dimless;
 	};
 
 	typedef Var1phase Variable;
@@ -202,12 +210,7 @@ namespace bing1d
 		inline double getOilVelocity(const Cell& cell)
 		{
 			double gradp = getNablaP(cell);
-
-			if (fabs(gradp) >= props_oil.tau0)
-				return -props_sk.getPerm_r(cell.r) / props_oil.getViscosity(cell.u_next.p).value() *
-							(1.0 - props_oil.tau0 / fabs(gradp)) * gradp;
-			else
-				return 0.0;
+			return -props_sk.getPerm_r(cell.r) / props_oil.visc * gradp * props_oil.getU(gradp).value();
 		};
 		inline adouble linearInterp(adouble f1, const Cell& cell1, adouble f2, const Cell& cell2)
 		{
@@ -216,15 +219,16 @@ namespace bing1d
 				(adouble)(cell2.r - cell1.r);
 		};
 
-		void solve_eqMiddle(int cur);
-		void solve_eqLeft();
-		void solve_eqRight();
-		void setVariables(int cur);
+		void solve_eqMiddle(const Cell& cell);
+		void solve_eqLeft(const Cell& cell);
+		void solve_eqRight(const Cell& cell);
+		void setVariables(const Cell& cell);
 	public:
 		Bingham1d();
 		~Bingham1d();
 
 		double *x, *y;
+		double** jac;
 
 		void setPeriod(int period);
 		double getRate(int cur);

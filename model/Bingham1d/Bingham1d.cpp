@@ -1,6 +1,9 @@
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "util/utils.h"
 
+#include "adolc/drivers/drivers.h"
+#include "adolc/adolc.h"
+
 using namespace std;
 using namespace bing1d;
 
@@ -8,11 +11,19 @@ Bingham1d::Bingham1d()
 {
 	x = new double[stencil * Variable::size];
 	y = new double[Variable::size];
+
+	jac = new double*[var_size];
+	for (int i = 0; i < var_size; i++)
+		jac[i] = new double[stencil * Variable::size];
 }
 Bingham1d::~Bingham1d()
 {
 	delete x;
 	delete y;
+
+	for (int i = 0; i < var_size; i++)
+		delete[] jac[i];
+	delete[] jac;
 }
 void Bingham1d::setProps(Properties& props)
 {
@@ -52,6 +63,8 @@ void Bingham1d::setProps(Properties& props)
 	props_oil.visc = cPToPaSec(props_oil.visc);
 
 	makeDimLess();
+
+	props_oil.u_dp = setDataset(props.u_dp_dimless, props_oil.d / props_oil.tau0, 1);
 }
 void Bingham1d::makeDimLess()
 {
@@ -99,7 +112,9 @@ void Bingham1d::makeDimLess()
 	props_oil.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_oil.beta /= (1.0 / P_dim);
 	props_oil.p_ref /= P_dim;
-	props_oil.tau0 /= (P_dim / R_dim);
+
+	props_oil.tau0 /= (P_dim);
+	props_oil.d /= (R_dim);
 }
 void Bingham1d::buildGridLog()
 {
@@ -165,15 +180,13 @@ double Bingham1d::getRate(int cur)
 	int neighbor = cur + 1;
 	Variable& upwd = cells[getUpwindIdx(cur, neighbor)].u_next;
 	Variable& next = cells[cur].u_next;
-	return getTrans(cells[cur], cells[neighbor]) /
-		props_oil.getViscosity(next.p).value() / props_oil.getB(next.p).value() *
-		(cells[neighbor].u_next.p - next.p);
+	double dp = cells[neighbor].u_next.p - next.p;
+	return getTrans(cells[cur], cells[neighbor]) / props_oil.visc / props_oil.getB(next.p).value() *
+		dp * props_oil.getU(fabs(dp / (cells[neighbor].r - cells[cur].r))).value();
 }
 
-void Bingham1d::solve_eqMiddle(int cur)
+void Bingham1d::solve_eqMiddle(const Cell& cell)
 {
-	const Cell& cell = cells[cur];
-
 	trace_on(mid);
 	adouble h[Variable::size];
 	TapeVariable var[stencil];
@@ -187,63 +200,101 @@ void Bingham1d::solve_eqMiddle(int cur)
 		props_sk.getPoro(prev.p) * props_oil.getDensity(prev.p);
 
 	int neighbor[2];
-	getNeighborIdx(cur, neighbor);
-	adouble tmp;
+	getNeighborIdx(cell.num, neighbor);
 	for (int i = 0; i < 2; i++)
 	{
 		Cell& beta = cells[neighbor[i]];
 		const TapeVariable& nebr = var[i + 1];
-		adouble aboveYieldPoint = (getNablaP(cell, beta) > props_oil.tau0) ? 1.0 : 0.0;
 
-		condassign(tmp, aboveYieldPoint,
-			ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
-			linearInterp(props_oil.getDensity(next.p), cell, props_oil.getDensity(nebr.p), beta) /
-			linearInterp(props_oil.getViscosity(next.p), cell, props_oil.getViscosity(nebr.p), beta) *
-			(1.0 - props_oil.tau0 / getNablaP(cell, beta)),
-			(adouble)0.0);
-
-		h[0] += tmp;
+		h[0] += ht / cell.V * getTrans(cell, beta) * (next.p - nebr.p) *
+			linearInterp(props_oil.getDensity(next.p), cell, props_oil.getDensity(nebr.p), beta) / 
+			props_oil.visc * props_oil.getU(fabs((next.p - nebr.p) / (cell.r - beta.r)));
 	}
-
-	for (int i = 0; i < Variable::size - 1; i++)
-		h[i] >>= y[i];
+	h[0] >>= y[0];
 
 	trace_off();
 }
-void Bingham1d::setVariables(int cur)
+void Bingham1d::solve_eqLeft(const Cell& cell)
 {
-	if (cur == 0)
+	const Cell& beta = cells[1];
+
+	trace_on(left);
+	adouble h[var_size];
+	TapeVariable var[Lstencil];
+	for (int i = 0; i < Lstencil; i++)
+		var[i].p <<= x[i * Variable::size];
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr = var[1];
+
+	adouble leftIsRate = leftBoundIsRate;
+	condassign(h[0], leftIsRate,
+		getTrans(cell, beta) * props_oil.visc / props_oil.getB(next.p).value() *
+		(next.p - nebr.p) * props_oil.getU(fabs((next.p - nebr.p) / (cell.r - beta.r))) - Qcell[cell.num],
+		next.p - Pwf);
+
+	h[0] >>= y[0];
+
+	trace_off();
+}
+void Bingham1d::solve_eqRight(const Cell& cell)
+{
+	const Cell& beta = cells[cellsNum - 2];
+
+	trace_on(right);
+	adouble h[var_size];
+	TapeVariable var[Rstencil];
+	for (int i = 0; i < Rstencil; i++)
+		var[i].p <<= x[i * Variable::size];
+
+	const TapeVariable& next = var[0];
+	const TapeVariable& nebr = var[1];
+
+	adouble rightIsPres = rightBoundIsPres;
+	condassign(h[0], rightIsPres, next.p - (adouble)(props_sk.p_out), next.p - (adouble)(nebr.p));
+
+	h[0] >>= y[0];
+
+	trace_off();
+}
+void Bingham1d::setVariables(const Cell& cell)
+{
+	if (cell.num == 0)
 	{
 		// Left
-		const Variable& next = cells[cur].u_next;
-		const Variable& nebr1 = cells[cur + 1].u_next;
-		const Variable& nebr2 = cells[cur + 2].u_next;
+		const Variable& next = cells[cell.num].u_next;
+		const Variable& nebr1 = cells[cell.num + 1].u_next;
 
 		for (int i = 0; i < Variable::size; i++)
 		{
 			x[i] = next.values[i];
 			x[Variable::size + i] = nebr1.values[i];
-			x[2 * Variable::size + i] = nebr2.values[i];
 		}
+
+		solve_eqLeft(cell);
+		jacobian(left, var_size, Variable::size * Lstencil, x, jac);
 	}
-	else if (cur == cellsNum_r + 1)
+	else if (cell.num == cellsNum_r + 1)
 	{
 		// Right
-		const Variable& next = cells[cur].u_next;
-		const Variable& nebr = cells[cur - 1].u_next;
+		const Variable& next = cells[cell.num].u_next;
+		const Variable& nebr = cells[cell.num - 1].u_next;
 
 		for (int i = 0; i < Variable::size; i++)
 		{
 			x[i] = next.values[i];
 			x[Variable::size + i] = nebr.values[i];
 		}
+
+		solve_eqRight(cell);
+		jacobian(right, var_size, Variable::size * Rstencil, x, jac);
 	}
 	else
 	{
 		// Middle
-		const Variable& next = cells[cur].u_next;
+		const Variable& next = cells[cell.num].u_next;
 		int neighbor[2];
-		getNeighborIdx(cur, neighbor);
+		getNeighborIdx(cell.num, neighbor);
 
 		for (int i = 0; i < Variable::size; i++)
 		{
@@ -255,5 +306,8 @@ void Bingham1d::setVariables(int cur)
 				x[(j + 1) * Variable::size + i] = nebr.values[i];
 			}
 		}
+
+		solve_eqMiddle(cell);
+		jacobian(mid, var_size, Variable::size * stencil, x, jac);
 	}
 }

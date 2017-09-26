@@ -27,7 +27,6 @@ namespace bing1d
 		std::ofstream plot_Pdyn;
 		std::ofstream plot_qcells;
 
-		double** jac;
 	public:
 		Bing1dSolver(Bingham1d* _model);
 		~Bing1dSolver();
