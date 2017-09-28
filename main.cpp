@@ -491,7 +491,7 @@ using namespace std;
 
 	return props;
 }*/
-acid2d::Properties* getProps()
+/*acid2d::Properties* getProps()
 {
 	acid2d::Properties* props = new acid2d::Properties;
 
@@ -504,8 +504,8 @@ acid2d::Properties* getProps()
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
 	props->pwf.push_back(250.0 * 1.0e+5);
-	props->pwf.push_back(250.0 * 1.0e+5);
-	props->xa.push_back(0.13);
+	props->pwf.push_back(200.0 * 1.0e+5);
+	props->xa.push_back(0.0);
 	props->xa.push_back(0.0);
 
 	props->ht = 0.1;
@@ -526,7 +526,7 @@ acid2d::Properties* getProps()
 	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
 	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
-	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.00;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
 	tmp.xa_eqbm = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
@@ -559,7 +559,7 @@ acid2d::Properties* getProps()
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);*/
+	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;
 
@@ -582,7 +582,7 @@ acid2d::Properties* getProps()
 	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 	
 	return props;
-}
+}*/
 /*blackoilnit_elliptic::Properties* getProps()
 {
 	blackoilnit_elliptic::Properties* props = new blackoilnit_elliptic::Properties();
@@ -725,6 +725,57 @@ acid2d::Properties* getProps()
 
 	return props;
 }*/
+bing1d::Properties* getProps()
+{
+	bing1d::Properties* props = new bing1d::Properties;
+
+	props->cellsNum_r = 100;
+
+	props->timePeriods.push_back(5.0 * 3600.0);
+	props->timePeriods.push_back(30.0 * 3600.0);
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	//props->rates.push_back(0.0);
+	props->pwf.push_back(199.0 * 1.0e+5);
+	props->pwf.push_back(200.0 * 1.0e+5);
+
+	props->ht = 0.1;
+	props->ht_min = 0.1;
+	props->ht_max = 10000.0;
+
+	props->r_w = 0.1;
+	props->r_e = 1000.0;
+
+	props->perfIntervals.push_back(make_pair(0, 0));
+
+	bing1d::Skeleton_Props tmp;
+	tmp.m = 0.1;
+	tmp.cellsNum_z = 1;
+	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
+	tmp.height = 10.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 10.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk = tmp;
+
+	props->depth_point = 0.0;
+
+	props->props_oil.visc = 1.0;
+	props->props_oil.dens_stc = 887.261;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.p_ref = tmp.p_init;
+	props->props_oil.tau0 = 500;
+	props->props_oil.d = 0.01;
+	props->props_oil.m = 0.002;
+	setDataFromFile(props->u_dp_dimless, "props/u_dp.txt");
+
+	return props;
+}
 
 double acid2d::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
@@ -738,39 +789,38 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
 	/*vpp2d::Properties* props = getProps();
 	Scene<vpp2d::VPP2d, vpp2d::VPPSolver, vpp2d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
 	/*oilnit_elliptic::Properties* props = getProps();
 	Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties> scene;
 	scene.load(*props/*, argc, argv);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
 	/*blackoilnit_elliptic::Properties* props = getProps();
 	Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties> scene;
 	scene.load(*props/*, argc, argv);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
 	/*gasOil_elliptic::Properties* props = getProps();
 	Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
 	/*blackoil_rz::Properties* props = getProps();
 	Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-
-	acid2d::Properties* props = getProps();
+	/*acid2d::Properties* props = getProps();
 	Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
+	bing1d::Properties* props = getProps();
+	Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

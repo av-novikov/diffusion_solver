@@ -67,9 +67,10 @@ namespace bing1d
 		Interpolate* u_dp;
 		inline adouble getU(const adouble dp) const
 		{
-			adouble out_of_range = (dp - u_dp->xmax > 0) ? true : false;
+			//adouble out_of_range = (dp - u_dp->xmax > 0) ? true : false;
 			adouble tmp;
-			condassign(tmp, out_of_range, 1.0 - tau0 / d / dp, u_dp->Solve(dp));
+			//condassign(tmp, out_of_range, 1.0 - tau0 / d / dp, u_dp->Solve(dp));
+			tmp = 1.0;// -tau0 / d / dp;
 			return tmp;
 		};
 
@@ -111,6 +112,8 @@ namespace bing1d
 		// If right boundary condition would be 1st type
 		bool rightBoundIsPres;
 
+		// Perforated intervals
+		std::vector<std::pair<int, int> > perfIntervals;
 		// Time step limits
 		// Initial time step [sec]
 		double ht;

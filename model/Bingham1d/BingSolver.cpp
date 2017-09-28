@@ -81,13 +81,13 @@ void Bing1dSolver::solveStep()
 		Solve(model->cellsNum_r + 1, Variable::size, PRES);
 		construction_from_fz(model->cellsNum_r + 2, Variable::size, PRES);
 
-
 		err_newton = convergance(cellIdx, varIdx);
 
 		averPres = averValue(0);
 		dAverPres = fabs(averPres - averPresPrev);
 		averPresPrev = averPres;
 
+		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 
@@ -195,8 +195,6 @@ void Bing1dSolver::MiddleAppr(int current, int MZ, int key)
 	{
 		int idx = 0;
 		int cell_idx = current;
-
-		idx += Variable::size;
 
 		// Middle cells
 		for (cell_idx = current; cell_idx < current + 1; cell_idx++)

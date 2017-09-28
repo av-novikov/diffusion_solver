@@ -36,9 +36,13 @@ void Bingham1d::setProps(Properties& props)
 	cellsNum_r = props.cellsNum_r;
 	cellsNum = cellsNum_r + 2;
 
+	props_sk = props.props_sk;
 	props_sk.perm_r = MilliDarcyToM2(props_sk.perm_r);
 	props_sk.perm_z = MilliDarcyToM2(props_sk.perm_z);
 
+	perfIntervals = props.perfIntervals;
+
+	periodsNum = props.timePeriods.size();
 	for (int i = 0; i < periodsNum; i++)
 	{
 		period.push_back(props.timePeriods[i]);
