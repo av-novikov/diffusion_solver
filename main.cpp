@@ -731,13 +731,13 @@ bing1d::Properties* getProps()
 
 	props->cellsNum_r = 100;
 
-	props->timePeriods.push_back(5.0 * 3600.0);
-	props->timePeriods.push_back(30.0 * 3600.0);
+	props->timePeriods.push_back(50.0 * 24 * 3600.0);
+	//props->timePeriods.push_back(30.0 * 3600.0);
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
-	props->pwf.push_back(199.0 * 1.0e+5);
-	props->pwf.push_back(200.0 * 1.0e+5);
+	props->pwf.push_back(150.0 * 1.0e+5);
+	//props->pwf.push_back(200.0 * 1.0e+5);
 
 	props->ht = 0.1;
 	props->ht_min = 0.1;
@@ -754,13 +754,13 @@ bing1d::Properties* getProps()
 	tmp.p_init = tmp.p_out = 200.0 * 1.0e+5;
 	tmp.height = 10.0;
 	tmp.perm_r = 100.0;
-	tmp.perm_z = 10.0;
+	tmp.perm_z = 100.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
+	//tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
+	//tmp.radiuses_eff.push_back(props->r_w);
 	props->props_sk = tmp;
 
 	props->depth_point = 0.0;

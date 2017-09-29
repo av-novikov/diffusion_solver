@@ -87,7 +87,6 @@ void Bing1dSolver::solveStep()
 		dAverPres = fabs(averPres - averPresPrev);
 		averPresPrev = averPres;
 
-		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 

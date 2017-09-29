@@ -67,10 +67,10 @@ namespace bing1d
 		Interpolate* u_dp;
 		inline adouble getU(const adouble dp) const
 		{
-			//adouble out_of_range = (dp - u_dp->xmax > 0) ? true : false;
+			adouble out_of_range = (dp - u_dp->xmax > 0) ? true : false;
 			adouble tmp;
-			//condassign(tmp, out_of_range, 1.0 - tau0 / d / dp, u_dp->Solve(dp));
-			tmp = 1.0;// -tau0 / d / dp;
+			condassign(tmp, out_of_range, 1.0 - tau0 / d / dp, u_dp->Solve(dp));
+			//tmp = 1.0;// -tau0 / d / dp;
 			return tmp;
 		};
 
@@ -218,8 +218,7 @@ namespace bing1d
 		inline adouble linearInterp(adouble f1, const Cell& cell1, adouble f2, const Cell& cell2)
 		{
 			double r = cell1.r + sign(cell2.num - cell1.num) * cell1.hr / 2.0;
-			return ((adouble)(fabs(r - cell1.r)) * f2 + (adouble)(fabs(r - cell2.r)) * f1) /
-				(adouble)(cell2.r - cell1.r);
+			return (fabs(r - cell1.r) * f2 + fabs(r - cell2.r) * f1) / fabs((cell2.r - cell1.r));
 		};
 
 		void solve_eqMiddle(const Cell& cell);

@@ -304,7 +304,7 @@ void Bingham1d::setVariables(const Cell& cell)
 		{
 			x[i] = next.values[i];
 
-			for (int j = 0; j < 2; j++)
+			for (int j = 0; j < stencil - 1; j++)
 			{
 				const Variable& nebr = cells[neighbor[j]].u_next;
 				x[(j + 1) * Variable::size + i] = nebr.values[i];
