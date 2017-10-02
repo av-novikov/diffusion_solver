@@ -233,8 +233,8 @@ void Bingham1d::solve_eqLeft(const Cell& cell)
 
 	adouble leftIsRate = leftBoundIsRate;
 	condassign(h[0], leftIsRate,
-		getTrans(cell, beta) * props_oil.visc / props_oil.getB(next.p).value() *
-		(next.p - nebr.p) * props_oil.getU(fabs((next.p - nebr.p) / (cell.r - beta.r))) - Qcell[cell.num],
+		getTrans(cell, beta) / props_oil.visc / props_oil.getB(next.p).value() *
+		(nebr.p - next.p) * props_oil.getU(fabs((next.p - nebr.p) / (cell.r - beta.r))) - Qcell[cell.num],
 		next.p - Pwf);
 
 	h[0] >>= y[0];

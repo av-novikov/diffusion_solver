@@ -731,16 +731,16 @@ bing1d::Properties* getProps()
 
 	props->cellsNum_r = 100;
 
-	props->timePeriods.push_back(500.0 * 24 * 3600.0);
+	props->timePeriods.push_back(5000.0 * 24 * 3600.0);
 	//props->timePeriods.push_back(30.0 * 3600.0);
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	//props->rates.push_back(0.0);
+	//props->rates.push_back(1.0);
 	props->pwf.push_back(150.0 * 1.0e+5);
 	//props->pwf.push_back(200.0 * 1.0e+5);
 
-	props->ht = 1000.0;
-	props->ht_min = 1000.0;
+	props->ht = 100.0;
+	props->ht_min = 100.0;
 	props->ht_max = 1000000.0;
 
 	props->r_w = 0.1;
@@ -765,7 +765,7 @@ bing1d::Properties* getProps()
 
 	props->depth_point = 0.0;
 
-	props->props_oil.visc = 1.0;
+	props->props_oil.visc = 10.0;
 	props->props_oil.dens_stc = 887.261;
 	props->props_oil.beta = 1.0 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_init;
