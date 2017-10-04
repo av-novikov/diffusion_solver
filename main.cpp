@@ -772,7 +772,7 @@ bing1d::Properties* getProps()
 	props->props_oil.tau0 = 500;
 	props->props_oil.d = 0.01;
 	props->props_oil.m = 0.002;
-	setDataFromFile(props->u_dp_dimless, "props/u_dp.txt");
+	setDataFromFile(props->u_dp_dimless, "props/u_dp_500_002.txt");
 
 	return props;
 }
