@@ -1,12 +1,12 @@
-#ifndef BLACKOIL2DSOLVER_HPP_
-#define BLACKOIL2DSOLVER_HPP_
+#ifndef WAXNITSOLVER_HPP_
+#define WAXNITSOLVER_HPP_
 
 #include "model/Basic2d/Basic2dSolver.hpp"
-#include "model/BlackOil_RZ/BlackOil_RZ.hpp"
+#include "model/WaxNIT/WaxNIT.hpp"
 
-namespace blackoil_rz
+namespace wax_nit
 {
-	class BlackOil2dSolver : public basic2d::Basic2dSolver<BlackOil_RZ>
+	class WaxNITSolver : public basic2d::Basic2dSolver<WaxNIT>
 	{
 	private:
 		void MiddleAppr(int current, int MZ, int key);
@@ -17,17 +17,21 @@ namespace blackoil_rz
 		void writeData();
 		void construction_from_fz(int N, int n, int key);
 		void checkStability();
-
+		
 		static const int var_size = Variable::size - 1;
 		static const int size = Variable::size;
 
+		std::array<double, var_size> averVal, averValPrev, dAverVal;
+		double err_newton;
+
 		std::ofstream S;
 		std::ofstream P;
+		std::ofstream poro;
 		std::ofstream qcells;
 	public:
-		BlackOil2dSolver(BlackOil_RZ* _model);
-		~BlackOil2dSolver();
+		WaxNITSolver(WaxNIT* _model);
+		~WaxNITSolver();
 	};
 };
 
-#endif /* BLACKOIL2DSOLVER_HPP_ */
+#endif /* WAXNITSOLVER_HPP_ */

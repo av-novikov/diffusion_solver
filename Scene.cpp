@@ -29,6 +29,9 @@
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/2d/Acid2dSolver.hpp"
 
+#include "model/WaxNIT/WaxNIT.hpp"
+#include "model/WaxNIT/WaxNITSolver.hpp"
+
 template <class modelType, class methodType, typename propsType>
 Scene<modelType, methodType, propsType>::Scene()
 {
@@ -145,3 +148,4 @@ template class Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_ell
 template class Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<HypreSolver>, blackoilnit_elliptic::Properties>;
 template class Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties>;
 template class Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>;
+template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;

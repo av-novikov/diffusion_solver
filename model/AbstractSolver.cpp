@@ -9,6 +9,7 @@
 #include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
+#include "model/WaxNIT/WaxNIT.hpp"
 
 #include <iomanip>
 
@@ -252,6 +253,38 @@ double AbstractSolver<blackoil_rz::BlackOil_RZ>::convergance(int& ind, int& varI
 
 	return relErr;
 }
+double AbstractSolver<wax_nit::WaxNIT>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+	double var_next, var_iter;
+
+	for (int j = 0; j < model->cells.size(); j++)
+	{
+		wax_nit::Cell& cell = model->cells[j];
+
+		for (int i = 0; i < model->var_size; i++)
+		{
+			if (i == 3 && !cell.u_next.SATUR) { var_next = cell.u_next.values[i + 1];	var_iter = cell.u_iter.values[i + 1]; }
+			else { var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i]; }
+
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = j;
+					varInd = 0;
+				}
+			}
+			else
+				exit(-1);
+		}
+	}
+
+	return relErr;
+}
 double AbstractSolver<acid2d::Acid2d>::convergance(int& ind, int& varInd)
 {
 	double relErr = 0.0;
@@ -468,6 +501,24 @@ void AbstractSolver<modelType>::averValue(std::array<double, modelType::var_size
 	for(auto& val : aver)
 		val /= model->Volume;
 }
+void AbstractSolver<wax_nit::WaxNIT>::averValue(std::array<double, wax_nit::WaxNIT::var_size>& aver)
+{
+	std::fill(aver.begin(), aver.end(), 0.0);
+
+	for (const auto& cell : model->cells)
+		for (int i = 0; i < wax_nit::WaxNIT::var_size; i++)
+		{
+			if (i == 3)
+			{
+				if (!cell.u_next.SATUR)
+					aver[i] += cell.u_next.values[i + 1] * cell.V;
+			}
+			else
+				aver[i] += cell.u_next.values[i] * cell.V;
+		}
+	for (auto& val : aver)
+		val /= model->Volume;
+}
 void AbstractSolver<acid2d::Acid2d>::averValue(std::array<double, acid2d::Acid2d::var_size>& aver)
 {
 	std::fill(aver.begin(), aver.end(), 0.0);
@@ -613,3 +664,4 @@ template class AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>;
 template class AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class AbstractSolver<blackoil_rz::BlackOil_RZ>;
 template class AbstractSolver<acid2d::Acid2d>;
+template class AbstractSolver<wax_nit::WaxNIT>;

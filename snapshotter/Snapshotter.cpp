@@ -10,6 +10,7 @@
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
+#include "model/WaxNIT/WaxNIT.hpp"
 
 using namespace std;
 
@@ -141,6 +142,20 @@ void Snapshotter<blackoil_rz::BlackOil_RZ>::setModel(blackoil_rz::BlackOil_RZ* _
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
+template <>
+void Snapshotter<wax_nit::WaxNIT>::setModel(wax_nit::WaxNIT* _model)
+{
+	model = _model;
+
+	T_dim = model->T_dim;
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_r + 2;
+	ny = model->cellsNum_z + 2;
+}
 template <class modelType>
 string Snapshotter<modelType>::replace(string filename, string from, string to)
 {
@@ -168,3 +183,4 @@ template class Snapshotter<gasOil_elliptic::GasOil_Elliptic>;
 template class Snapshotter<oilnit_elliptic::OilNIT_Elliptic>;
 template class Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class Snapshotter<blackoil_rz::BlackOil_RZ>;
+template class Snapshotter<wax_nit::WaxNIT>;

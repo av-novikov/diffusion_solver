@@ -129,6 +129,37 @@ struct VarBlackOilNIT
 	bool SATUR;
 };
 
+struct VarWaxNIT
+{
+	static const int size = 5;
+
+	union {
+		double values[5];
+		struct
+		{
+			double m;
+			//double t;
+			double p;
+			double s_w;
+			double s_o;
+			double p_bub;
+		};
+	};
+	bool SATUR;
+};
+struct TapeVarWaxNIT
+{
+	static const int size = 5;
+	
+	adouble m;
+	//adouble t;
+	adouble p;
+	adouble s_w;
+	adouble s_o;
+	adouble p_bub;
+	bool SATUR;
+};
+
 template <typename DataType>
 struct VarSimpleVPP
 {

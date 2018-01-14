@@ -35,6 +35,9 @@
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/2d/Acid2dSolver.hpp"
 
+#include "model/WaxNIT/WaxNIT.hpp"
+#include "model/WaxNIT/WaxNITSolver.hpp"
+
 using namespace std;
 
 /*gasOil_rz::Properties* getProps()
@@ -589,17 +592,17 @@ using namespace std;
 
 	props->cellsNum_mu = 15;
 	props->cellsNum_nu = 28;
-	props->cellsNum_z = 13;
+	props->cellsNum_z = 7;
 
-	props->timePeriods.push_back(10.0 * 86400.0);
-	props->timePeriods.push_back(20.0 * 86400.0);
+	props->timePeriods.push_back(100.0 * 86400.0);
+	//props->timePeriods.push_back(20.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(10.0);
 	//props->rates.push_back(0.0);
 	props->pwf.push_back(50.0 * 1.E+5);
-	props->pwf.push_back(70.625 * 1.E+5);
+	//props->pwf.push_back(70.625 * 1.E+5);
 
 	props->ht = 1000.0;
 	props->ht_min = 100.0;
@@ -620,7 +623,7 @@ using namespace std;
 
 	blackoilnit_elliptic::Skeleton_Props tmp;
 	tmp.isWellHere = true;
-	tmp.cellsNum_z = 13;
+	tmp.cellsNum_z = 7;
 	tmp.m = 0.15;
 	tmp.p_init = tmp.p_out = tmp.p_sat = tmp.p_ref = 70.625 * 1.0e+5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
@@ -725,7 +728,7 @@ using namespace std;
 
 	return props;
 }*/
-bing1d::Properties* getProps()
+/*bing1d::Properties* getProps()
 {
 	bing1d::Properties* props = new bing1d::Properties;
 
@@ -775,6 +778,84 @@ bing1d::Properties* getProps()
 	setDataFromFile(props->u_dp_dimless, "props/u_dp_500_002.txt");
 
 	return props;
+}*/
+wax_nit::Properties* getProps()
+{
+	wax_nit::Properties* props = new wax_nit::Properties();
+
+	props->cellsNum_r = 20;
+	props->cellsNum_z = 1;
+
+	props->timePeriods.push_back(20.0 * 86400.0);
+	props->timePeriods.push_back(40.0 * 86400.0);
+
+	props->leftBoundIsRate = true;
+	props->rightBoundIsPres = true;
+	props->rates.push_back(10.0);
+	props->rates.push_back(0.0);
+
+	props->ht = 100.0;
+	props->ht_min = 100.0;
+	props->ht_max = 100000.0;
+
+	props->alpha = 7200.0;
+
+	props->r_w = 0.1;
+	props->r_e = 1000.0;
+
+	props->perfIntervals.push_back(make_pair(1, 1));
+
+	wax_nit::Skeleton_Props tmp;
+	tmp.cellsNum_z = 1;
+	tmp.m_init = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_sat = tmp.p_ref = 70.625 * 1.0e+5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.s_wc = 0.1;		tmp.s_oc = 0.1;		tmp.s_gc = 0.05;
+	tmp.h1 = 0.0;
+	tmp.h2 = 10.0;
+	tmp.height = 10.0;
+	tmp.perm_r = 20.0;
+	tmp.perm_z = 20.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back(props->r_w);
+
+	props->props_sk.push_back(tmp);
+
+	props->depth_point = 0.0;
+
+	props->props_oil.visc = 5.0;
+	props->props_oil.dens_stc = 887.261;
+	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.p_ref = tmp.p_ref;
+
+	props->props_wat.visc = 1.0;
+	props->props_wat.dens_stc = 1000.0;
+	props->props_wat.beta = 1.0 * 1.e-9;
+	props->props_wat.p_ref = tmp.p_ref;
+
+	props->props_gas.visc = 0.03;
+	props->props_oil.dens_gas_stc = props->props_gas.dens_stc = 0.8;
+
+	// Defining relative permeabilities
+	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
+	//setDataFromFile(props->kr_gas, "props/kgas_tempest.txt");
+
+	// Defining volume factors
+	//props->byDefault.B_oil = true;
+	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
+	//props->byDefault.B_gas = false;
+	setDataFromFile(props->B_gas, "props/Bgas_tempest.txt");
+
+	//props->byDefault.Rs = true;
+	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
+	setDataFromFile(props->lp, "props/lp.txt");
+
+	return props;
 }
 
 double acid2d::Component::T = 300.0;
@@ -801,7 +882,7 @@ int main(int argc, char* argv[])
 	scene.start();*/
 	/*blackoilnit_elliptic::Properties* props = getProps();
 	Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties> scene;
-	scene.load(*props/*, argc, argv);
+	scene.load(*props);// , argc, argv);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
 	/*gasOil_elliptic::Properties* props = getProps();
@@ -819,8 +900,13 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	bing1d::Properties* props = getProps();
+	/*bing1d::Properties* props = getProps();
 	Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
+	wax_nit::Properties* props = getProps();
+	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();
