@@ -148,6 +148,7 @@ void WaxNITSolver::solveStep()
 	{
 		copyIterLayer();
 
+		//writeMatrixes();
 		Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		
@@ -159,6 +160,7 @@ void WaxNITSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
+		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 
@@ -220,7 +222,7 @@ void WaxNITSolver::MiddleAppr(int current, int MZ, int key)
 			B[idx + i][idx + var_size] = model->jac[i][size];
 			// p
 			B[idx + i][idx + 1] = model->jac[i][1];
-			B[idx + i][idx + var_size] = model->jac[i][1 + size];
+			B[idx + i][idx + 1 + var_size] = model->jac[i][1 + size];
 			// s_w
 			B[idx + i][idx + 2] = model->jac[i][2];
 			B[idx + i][idx + 2 + var_size] = model->jac[i][2 + size];
@@ -432,3 +434,72 @@ void WaxNITSolver::RightBoundAppr(int MZ, int key)
 
 	construction_bz(MZ, 1);
 }
+void WaxNITSolver::writeMatrixes()
+{
+	const int MZ = (model->cellsNum_z + 2) * var_size;
+
+	// Left
+	mat_a.open("snaps/a_left.dat", ofstream::out);
+	mat_b.open("snaps/b_left.dat", ofstream::out);
+	mat_c.open("snaps/c_left.dat", ofstream::out);
+	rhs_os.open("snaps/rhs_left.dat", ofstream::out);
+
+	LeftBoundAppr(MZ, PRES);
+	for (int i = 0; i < MZ; i++)
+	{
+		for (int j = 0; j < MZ; j++)
+		{
+			mat_a << i << "\t" << j << "\t" << A[i][j] << endl;
+			mat_b << i << "\t" << j << "\t" << B[i][j] << endl;
+			mat_c << i << "\t" << j << "\t" << C[i][j] << endl;
+		}
+		rhs_os << i << "\t" << RightSide[i][0] << endl;
+	}
+	mat_a.close();		mat_b.close();		mat_c.close();		rhs_os.close();
+
+	// Middle
+	for (int k = 0; k < model->cellsNum_r; k++)
+	{
+		const string afilename = "snaps/a_" + to_string(k + 1) + ".dat";
+		const string bfilename = "snaps/b_" + to_string(k + 1) + ".dat";
+		const string cfilename = "snaps/c_" + to_string(k + 1) + ".dat";
+		const string rhsfilename = "snaps/rhs_" + to_string(k + 1) + ".dat";
+		mat_a.open(afilename.c_str(), ofstream::out);
+		mat_b.open(bfilename.c_str(), ofstream::out);
+		mat_c.open(cfilename.c_str(), ofstream::out);
+		rhs_os.open(rhsfilename.c_str(), ofstream::out);
+
+		MiddleAppr(k + 1, MZ, PRES);
+		for (int i = 0; i < MZ; i++)
+		{
+			for (int j = 0; j < MZ; j++)
+			{
+				mat_a << i << "\t" << j << "\t" << A[i][j] << endl;
+				mat_b << i << "\t" << j << "\t" << B[i][j] << endl;
+				mat_c << i << "\t" << j << "\t" << C[i][j] << endl;
+			}
+			rhs_os << i << "\t" << RightSide[i][0] << endl;
+		}
+
+		mat_a.close();		mat_b.close();		mat_c.close();		rhs_os.close();
+	}
+
+	// Right
+	mat_a.open("snaps/a_right.dat", ofstream::out);
+	mat_b.open("snaps/b_right.dat", ofstream::out);
+	mat_c.open("snaps/c_right.dat", ofstream::out);
+	rhs_os.open("snaps/rhs_right.dat", ofstream::out);
+
+	RightBoundAppr(MZ, PRES);
+	for (int i = 0; i < MZ; i++)
+	{
+		for (int j = 0; j < MZ; j++)
+		{
+			mat_a << i << "\t" << j << "\t" << A[i][j] << endl;
+			mat_b << i << "\t" << j << "\t" << B[i][j] << endl;
+			mat_c << i << "\t" << j << "\t" << C[i][j] << endl;
+		}
+		rhs_os << i << "\t" << RightSide[i][0] << endl;
+	}
+	mat_a.close();		mat_b.close();		mat_c.close();		rhs_os.close();
+};

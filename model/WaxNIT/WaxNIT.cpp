@@ -175,8 +175,8 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 		TapeVariable& upwd = var[upwd_idx];
 
 		h[1] += ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
-			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p) /
-			props_oil.getRho(upwd.p, upwd.p_bub, upwd.SATUR) * props_oil.getlp(next.p);
+			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p) *
+			props_oil.getRho(upwd.p, upwd.p_bub, upwd.SATUR) * props_oil.getlp(upwd.p);
 		h[2] += ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
 			props_wat.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_wat.getViscosity(upwd.p) *
 			props_wat.getRho(upwd.p, upwd.p_bub, upwd.SATUR);
@@ -186,7 +186,7 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 				props_gas.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_gas.getRho(upwd.p) / props_gas.getViscosity(upwd.p)),
 			ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
 				props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) * props_oil.getRhoTilde(upwd.p, upwd.p_bub, upwd.SATUR) / props_oil.getViscosity(upwd.p));
-		h[2] += tmp;
+		h[3] += tmp;
 	}
 
 	for (int i = 0; i < var_size; i++)
@@ -234,9 +234,10 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 		rate = 0.0;
 	}
 
-	condassign(h[0], isPerforated, props.dens_stc * ((1.0 - next.m) - (1.0 - prev.m)) -
+	/*condassign(h[0], isPerforated, props.dens_stc * ((1.0 - next.m) - (1.0 - prev.m)) -
 		props_oil.gamma * props_oil.getRho(next.p, next.p_bub, next.SATUR) * props_oil.getlp(next.p) * getOilVelocityAbs(cell),
-		next.m - nebr1.m);
+		next.m - nebr1.m);*/
+	h[0] = next.m - nebr1.m;
 	condassign(h[1], leftIsRate, props_oil.getRho(next.p, next.p_bub, next.SATUR) * getTrans(cell, next.m, beta1, nebr1.m) * 
 		props_oil.getKr(next.s_w, next.s_o, cell.props) / props_oil.getViscosity(next.p) * (nebr1.p - next.p) + props_oil.dens_stc * rate,
 		next.p - Pwf);

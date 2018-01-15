@@ -116,9 +116,10 @@ namespace wax_nit
 		Interpolate* lp;
 		inline adouble getlp(adouble t) const
 		{
-			adouble tmp;
-			//condassign(tmp, SATUR, Rs->Solve(p), Rs->Solve(p_bub));
-			return tmp;
+			//adouble tmp;
+			//adouble decrease = (t <= t_prev) ? true : false;
+			//condassign(tmp, decrease, lp->Solve(t), );
+			return lp->Solve(t);
 		};
 		inline adouble getRhoTilde(adouble p, adouble p_bub, adouble SATUR) const
 		{
