@@ -127,6 +127,7 @@ void WaxNITSolver::checkStability()
 		checkMaxResidual(next, iter);
 	}
 }
+#include <xmmintrin.h>
 void WaxNITSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -148,7 +149,7 @@ void WaxNITSolver::solveStep()
 	{
 		copyIterLayer();
 
-		//writeMatrixes();
+		writeMatrixes();
 		Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		

@@ -783,8 +783,8 @@ wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
-	props->cellsNum_r = 50;
-	props->cellsNum_z = 5;
+	props->cellsNum_r = 5;
+	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(20.0 * 86400.0);
 	props->timePeriods.push_back(40.0 * 86400.0);
@@ -805,10 +805,10 @@ wax_nit::Properties* getProps()
 	props->r_w = 0.1;
 	props->r_e = 1000.0;
 
-	props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(1, 1));
 
 	wax_nit::Skeleton_Props tmp;
-	tmp.cellsNum_z = 5;
+	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 80.625 * 1.0e+5;
 	tmp.p_sat = 70.625 * 1.0e+5;
