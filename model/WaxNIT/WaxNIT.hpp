@@ -111,6 +111,20 @@ namespace wax_nit
 				return 2.0 * k1 * k2 * S / (k1 * beta.hr + k2 * cell.hr);
 			}
 		};
+		inline adouble getAverage(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
+		{
+			double r1, r2;
+			if (abs(cell1.num - cell2.num) == 1)
+			{
+				r1 = cell1.hz;		r2 = cell2.hz;
+			}
+			else
+			{
+				r1 = cell1.hr;		r2 = cell2.hr;
+			}
+
+			return (p1 * (adouble)r2 + p2 * (adouble)r1) / (adouble)(r1 + r2);
+		};
 
 		TapeVariable* var;
 		adouble* h;

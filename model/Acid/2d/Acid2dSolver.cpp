@@ -408,7 +408,7 @@ void Acid2dSolver::MiddleAppr(int current, int MZ, int key)
 				B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
 			else
 				B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
-			if (model->cells[cell_idx + 1].u_next.SATUR)
+			if (model->cells[cell_idx - 1].u_next.SATUR)
 				B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size + var_size - 1];
 			else
 				B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size + var_size];

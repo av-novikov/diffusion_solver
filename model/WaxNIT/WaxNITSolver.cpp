@@ -217,24 +217,20 @@ void WaxNITSolver::MiddleAppr(int current, int MZ, int key)
 		for (int i = 0; i < var_size; i++)
 		{
 			RightSide[idx + i][0] = -model->y[i];
-			// m
-			B[idx + i][idx] = model->jac[i][0];
-			B[idx + i][idx + var_size] = model->jac[i][size];
-			// p
-			B[idx + i][idx + 1] = model->jac[i][1];
-			B[idx + i][idx + 1 + var_size] = model->jac[i][1 + size];
-			// s_w
-			B[idx + i][idx + 2] = model->jac[i][2];
-			B[idx + i][idx + 2 + var_size] = model->jac[i][2 + size];
+			for (int j = 0; j < var_size - 1; j++)
+			{
+				B[idx + i][idx + j] = model->jac[i][j];
+				B[idx + i][idx + j + var_size] = model->jac[i][j + size];
+			}
 			// s_o / p_bub
 			if (model->cells[cell_idx].u_next.SATUR)
-				B[idx + i][idx + 3] = model->jac[i][3];
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
 			else
-				B[idx + i][idx + 3] = model->jac[i][4];
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
 			if (model->cells[cell_idx + 1].u_next.SATUR)
-				B[idx + i][idx + 3 + var_size] = model->jac[i][size + 3];
+				B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size + var_size - 1];
 			else
-				B[idx + i][idx + 3 + var_size] = model->jac[i][size + 4];
+				B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size + var_size];
 		}
 		idx += var_size;
 
@@ -246,45 +242,35 @@ void WaxNITSolver::MiddleAppr(int current, int MZ, int key)
 			for (int i = 0; i < var_size; i++)
 			{
 				RightSide[idx + i][0] = -model->y[i];
-				// m
-				B[idx + i][idx] = model->jac[i][0];
-				C[idx + i][idx] = model->jac[i][size];
-				A[idx + i][idx] = model->jac[i][size * 2];
-				B[idx + i][idx - var_size] = model->jac[i][size * 3];
-				B[idx + i][idx + var_size] = model->jac[i][size * 4];
-				// p
-				B[idx + i][idx + 1] = model->jac[i][1];
-				C[idx + i][idx + 1] = model->jac[i][size + 1];
-				A[idx + i][idx + 1] = model->jac[i][size * 2 + 1];
-				B[idx + i][idx + 1 - var_size] = model->jac[i][size * 3 + 1];
-				B[idx + i][idx + 1 + var_size] = model->jac[i][size * 4 + 1];
-				// s_w
-				B[idx + i][idx + 2] = model->jac[i][2];
-				C[idx + i][idx + 2] = model->jac[i][size + 2];
-				A[idx + i][idx + 2] = model->jac[i][size * 2 + 2];
-				B[idx + i][idx + 2 - var_size] = model->jac[i][size * 3 + 2];
-				B[idx + i][idx + 2 + var_size] = model->jac[i][size * 4 + 2];
+				for (int j = 0; j < var_size - 1; j++)
+				{
+					B[idx + i][idx + j] = model->jac[i][j];
+					C[idx + i][idx + j] = model->jac[i][j + size];
+					A[idx + i][idx + j] = model->jac[i][j + size * 2];
+					B[idx + i][idx + j - var_size] = model->jac[i][j + size * 3];
+					B[idx + i][idx + j + var_size] = model->jac[i][j + size * 4];
+				}
 				// s_o / p_bub
 				if (model->cells[cell_idx].u_next.SATUR)
-					B[idx + i][idx + 3] = model->jac[i][3];
+					B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
 				else
-					B[idx + i][idx + 3] = model->jac[i][4];
+					B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
 				if (model->cells[cell_idx - model->cellsNum_z - 2].u_next.SATUR)
-					C[idx + i][idx + 3] = model->jac[i][size + 3];
+					C[idx + i][idx + var_size - 1] = model->jac[i][size + var_size - 1];
 				else
-					C[idx + i][idx + 3] = model->jac[i][size + 4];
+					C[idx + i][idx + var_size - 1] = model->jac[i][size + var_size];
 				if (model->cells[cell_idx + model->cellsNum_z + 2].u_next.SATUR)
-					A[idx + i][idx + 3] = model->jac[i][size * 2 + 3];
+					A[idx + i][idx + var_size - 1] = model->jac[i][size * 2 + var_size - 1];
 				else
-					A[idx + i][idx + 3] = model->jac[i][size * 2 + 4];
+					A[idx + i][idx + var_size - 1] = model->jac[i][size * 2 + var_size];
 				if (model->cells[cell_idx - 1].u_next.SATUR)
-					B[idx + i][idx + 3 - var_size] = model->jac[i][size * 3 + 3];
+					B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size * 3 + var_size - 1];
 				else
-					B[idx + i][idx + 3 - var_size] = model->jac[i][size * 3 + 4];
+					B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][size * 3 + var_size];
 				if (model->cells[cell_idx + 1].u_next.SATUR)
-					B[idx + i][idx + 3 + var_size] = model->jac[i][size * 4 + 3];
+					B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size * 4 + var_size - 1];
 				else
-					B[idx + i][idx + 3 + var_size] = model->jac[i][size * 4 + 4];
+					B[idx + i][idx + var_size - 1 + var_size] = model->jac[i][size * 4 + var_size];
 			}
 
 			idx += var_size;
@@ -293,27 +279,23 @@ void WaxNITSolver::MiddleAppr(int current, int MZ, int key)
 		// Bottom cell
 		model->setVariables(model->cells[cell_idx]);
 
-		for (int i = 0; i < Variable::size - 1; i++)
+		for (int i = 0; i < var_size; i++)
 		{
 			RightSide[idx + i][0] = -model->y[i];
-			// m
-			B[idx + i][idx] = model->jac[i][0];
-			B[idx + i][idx - var_size] = model->jac[i][size];
-			// p
-			B[idx + i][idx + 1] = model->jac[i][1];
-			B[idx + i][idx + 1 - var_size] = model->jac[i][1 + size];
-			// s_w
-			B[idx + i][idx + 2] = model->jac[i][2];
-			B[idx + i][idx + 2 - var_size] = model->jac[i][2 + size];
+			for (int j = 0; j < var_size - 1; j++)
+			{
+				B[idx + i][idx + j] = model->jac[i][j];
+				B[idx + i][idx + j - var_size] = model->jac[i][j + size];
+			}
 			// s_o / p_bub
 			if (model->cells[cell_idx].u_next.SATUR)
-				B[idx + i][idx + 3] = model->jac[i][3];
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
 			else
-				B[idx + i][idx + 3] = model->jac[i][4];
+				B[idx + i][idx + var_size - 1] = model->jac[i][var_size];
 			if (model->cells[cell_idx - 1].u_next.SATUR)
-				B[idx + i][idx + 3 - var_size] = model->jac[i][Variable::size + 3];
+				B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][Variable::size + var_size - 1];
 			else
-				B[idx + i][idx + 3 - var_size] = model->jac[i][Variable::size + 4];
+				B[idx + i][idx + var_size - 1 - var_size] = model->jac[i][Variable::size + var_size];
 		}
 	}
 
@@ -335,8 +317,8 @@ void WaxNITSolver::LeftBoundAppr(int MZ, int key)
 		const Variable& next = model->cells[int(i / var_size)].u_next;
 		const Variable& nebr = model->cells[int(i / var_size) + model->cellsNum_z + 2].u_next;
 
-		if (i % var_size == 3)
-			RightSide[i][0] = -next.values[3 + !next.SATUR] + nebr.values[3 + !nebr.SATUR];
+		if (i % var_size == var_size - 1)
+			RightSide[i][0] = -next.values[var_size - 1 + !next.SATUR] + nebr.values[var_size - 1 + !nebr.SATUR];
 		else
 			RightSide[i][0] = -next.values[i % var_size] + nebr.values[i % var_size];
 	}
@@ -353,31 +335,25 @@ void WaxNITSolver::LeftBoundAppr(int MZ, int key)
 			for (int i = 0; i < var_size; i++)
 			{
 				RightSide[idx + i][0] = -model->y[i];
-				// m
-				C[idx + i][idx] = model->jac[i][0];
-				B[idx + i][idx] = model->jac[i][size];
-				A[idx + i][idx] = model->jac[i][2 * size];
-				// p
-				C[idx + i][idx + 1] = model->jac[i][1];
-				B[idx + i][idx + 1] = model->jac[i][size + 1];
-				A[idx + i][idx + 1] = model->jac[i][2 * size + 1];
-				// s_w
-				C[idx + i][idx + 2] = model->jac[i][2];
-				B[idx + i][idx + 2] = model->jac[i][2 + size];
-				A[idx + i][idx + 2] = model->jac[i][2 + 2 * size];
+				for (int j = 0; j < var_size - 1; j++)
+				{
+					C[idx + i][idx + j] = model->jac[i][j];
+					B[idx + i][idx + j] = model->jac[i][j + size];
+					A[idx + i][idx + j] = model->jac[i][j + 2 * size];
+				}
 				// s_o / p_bub
 				if (model->cells[it->first].u_next.SATUR)
-					C[idx + i][idx + 3] = model->jac[i][3];
+					C[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
 				else
-					C[idx + i][idx + 3] = model->jac[i][4];
+					C[idx + i][idx + var_size - 1] = model->jac[i][var_size];
 				if (model->cells[it->first + model->cellsNum_z + 2].u_next.SATUR)
-					B[idx + i][idx + 3] = model->jac[i][size + 3];
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size - 1];
 				else
-					B[idx + i][idx + 3] = model->jac[i][size + 4];
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size];
 				if (model->cells[it->first + 2 * model->cellsNum_z + 4].u_next.SATUR)
-					A[idx + i][idx + 3] = model->jac[i][2 * size + 3];
+					A[idx + i][idx + var_size - 1] = model->jac[i][2 * size + var_size - 1];
 				else
-					A[idx + i][idx + 3] = model->jac[i][2 * size + 4];
+					A[idx + i][idx + var_size - 1] = model->jac[i][2 * size + var_size];
 			}
 		}
 	}
@@ -408,24 +384,20 @@ void WaxNITSolver::RightBoundAppr(int MZ, int key)
 			for (int i = 0; i < var_size; i++)
 			{
 				RightSide[idx + i][0] = -model->y[i];
-				// m
-				A[idx + i][idx] = model->jac[i][0];
-				B[idx + i][idx] = model->jac[i][size];
-				// p
-				A[idx + i][idx + 1] = model->jac[i][1];
-				B[idx + i][idx + 1] = model->jac[i][1 + size];
-				// s_w
-				A[idx + i][idx + 2] = model->jac[i][2];
-				B[idx + i][idx + 2] = model->jac[i][2 + size];
+				for (int j = 0; j < var_size - 1; j++)
+				{
+					A[idx + i][idx + j] = model->jac[i][j];
+					B[idx + i][idx + j] = model->jac[i][j + size];
+				}
 				// s_o / p_bub
 				if (model->cells[cell_idx].u_next.SATUR)
-					A[idx + i][idx + 3] = model->jac[i][3];
+					A[idx + i][idx + var_size - 1] = model->jac[i][var_size - 1];
 				else
-					A[idx + i][idx + 3] = model->jac[i][4];
+					A[idx + i][idx + var_size - 1] = model->jac[i][var_size];
 				if (model->cells[cell_idx - model->cellsNum_z - 2].u_next.SATUR)
-					B[idx + i][idx + 3] = model->jac[i][size + 3];
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size - 1];
 				else
-					B[idx + i][idx + 3] = model->jac[i][size + 4];
+					B[idx + i][idx + var_size - 1] = model->jac[i][size + var_size];
 			}
 
 			idx += var_size;
