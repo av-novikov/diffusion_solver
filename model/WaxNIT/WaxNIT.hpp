@@ -128,6 +128,77 @@ namespace wax_nit
 
 		TapeVariable* var;
 		adouble* h;
+		inline adouble getCn(const Cell& cell) const
+		{
+			const TapeVariable& next = var[0];
+			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, next.SATUR) * props_oil.c +
+					next.s_w * props_wat.getRho(next.p) * props_wat.c +
+					(1.0 - next.s_w - next.s_o) * props_gas.getRho(next.p) * props_gas.c) +
+					(1.0 - next.m) * cell.props->dens_stc * cell.props->c;
+		};
+		inline adouble getAd(const Cell& cell) const
+		{
+			const TapeVariable& next = var[0];
+			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, next.SATUR) * props_oil.ad * props_oil.c +
+					next.s_w * props_wat.getRho(next.p) * props_wat.ad * props_wat.c +
+					(1.0 - next.s_w - next.s_o) * props_gas.getRho(next.p) * props_gas.ad * props_gas.c);
+		};
+		inline adouble getLambda(const Cell& cell, const int axis) const
+		{
+			const TapeVariable& next = var[0];
+			adouble tmp;
+			adouble is_R_axis = (axis == R_AXIS) ? true : false;
+			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
+			condassign(tmp, is_R_axis, next.m *	(next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + (1.0 - next.s_o - next.s_w) * props_gas.lambda) +
+				(1.0 - next.m) * cell.props->lambda_r);
+			condassign(tmp, is_Z_axis, next.m * (next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + (1.0 - next.s_o - next.s_w) * props_gas.lambda) +
+				(1.0 - next.m) * cell.props->lambda_z);
+			return tmp;
+		};
+		inline adouble getJT(const Cell& cell, const int axis) const
+		{
+			const TapeVariable& next = var[0];
+			return	props_oil.getRho(next.p, next.p_bub, next.SATUR) * props_oil.c * props_oil.jt * getOilVelocity(cell, axis) +
+					props_wat.getRho(next.p) * props_wat.c * props_wat.jt * getWatVelocity(cell, axis) +
+					props_gas.getRho(next.p) * props_gas.c * props_gas.jt * getGasVelocity(cell, axis);
+		};
+		inline adouble getA(const Cell& cell, const int axis) const
+		{
+			const TapeVariable& next = var[0];
+			return	props_oil.getRho(next.p, next.p_bub, next.SATUR) * props_oil.c * getOilVelocity(cell, axis) +
+					props_wat.getRho(next.p) * props_wat.c * getWatVelocity(cell, axis) +
+					props_gas.getRho(next.p) * props_gas.c * getGasVelocity(cell, axis);
+		};
+		adouble phaseTrans(const Cell& cell);
+		struct DivIndices
+		{
+			adouble ther;
+			adouble pres;
+			DivIndices(adouble _ther, adouble _pres) : ther(_ther), pres(_pres) {};
+		};
+		inline DivIndices getDivCoeff(const Cell& cell, const Cell& beta) const
+		{
+			adouble r1, r2, lambda, A, a, jt, JT;
+			if (abs(cell.num - beta.num) == 1)
+			{
+				A = getA(cell, Z_AXIS);
+				a = fmax((adouble)0.0, signA(cell.z - beta.z) * A);
+				JT = getJT(cell, Z_AXIS);
+				jt = fmax(0.0, sign(cell.z - beta.z) * JT);
+				r1 = cell.hz;		r2 = beta.hz;
+				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
+			} else
+			{
+				A = getA(cell, R_AXIS);
+				a = fmax((adouble)0.0, signA(cell.r - beta.r) * A);
+				JT = getJT(cell, Z_AXIS);
+				jt = fmax(0.0, sign(cell.z - beta.z) * JT);
+				r1 = cell.hr;		r2 = beta.hr;
+				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
+			}
+			DivIndices coeff(a + lambda, jt);
+			return coeff;
+		};
 
 		void solve_eqMiddle(const Cell& cell);
 		void solve_eqLeft(const Cell& cell);

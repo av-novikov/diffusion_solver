@@ -71,6 +71,13 @@ double sign(TData a)
 	if (a > (TData)0) return 1.0;
 	else if (a < (TData)0) return -1.0;
 	else return 0.0;
+}
+template <typename TData>
+adouble signA(TData a)
+{
+	if (a >(TData)0) return 1.0;
+	else if (a < (TData)0) return -1.0;
+	else return 0.0;
 };
 
 inline double MilliDarcyToM2(double perm)

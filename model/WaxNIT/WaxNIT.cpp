@@ -130,6 +130,31 @@ double WaxNIT::getRate(int cur) const
 		props_oil.getRho(next.p, next.p_bub, next.SATUR).value() / props_oil.getViscosity(next.p).value() * (nebr.p - next.p);
 }
 
+adouble WaxNIT::phaseTrans(const Cell& cell)
+{
+	const Skeleton_Props& props = *cell.props;
+	const TapeVariable& next = var[0];
+	const Variable& prev = cell.u_prev;
+
+	adouble H = (next.m * (1.0 - next.s_o - next.s_w) * props_gas.getRho(next.p) -
+					prev.m * (1.0 - prev.s_o - prev.s_w) * props_gas.getRho(prev.p)) / ht;
+	int neighbor[4];
+	getNeighborIdx(cell.num, neighbor);
+	for (int i = 0; i < 4; i++)
+	{
+		const Cell& beta = cells[neighbor[i]];
+		const Cell& upwd_cell = cells[getUpwindIdx(cell.num, neighbor[i])];
+		const int upwd_idx = (upwd_cell.num == cell.num) ? 0 : i + 1;
+		const TapeVariable& nebr = var[i + 1];
+		TapeVariable& upwd = var[upwd_idx];
+
+		H += 1.0 / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+			props_gas.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) * 
+			getAverage(props_gas.getRho(next.p) / props_gas.getViscosity(next.p), cell,
+				props_gas.getRho(nebr.p) / props_gas.getViscosity(nebr.p), beta);
+	}
+	return -H;
+}
 void WaxNIT::solve_eqMiddle(const Cell& cell)
 {
 	const Skeleton_Props& props = *cell.props;
