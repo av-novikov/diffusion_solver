@@ -45,7 +45,7 @@ namespace wax_nit
 	{
 		// Fluid volume factor
 		Interpolate* b;
-		inline adouble getB(adouble p, adouble p_bub, adouble SATUR) const
+		inline adouble getB(adouble p) const
 		{
 			//adouble tmp;
 			//condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
@@ -67,9 +67,9 @@ namespace wax_nit
 			return tmp;
 			//return kr->Solve(s_w);
 		};
-		inline adouble getRho(adouble p, adouble p_bub, adouble SATUR) const
+		inline adouble getRho(adouble p) const
 		{
-			return dens_stc / getB(p, p_bub, SATUR);
+			return dens_stc / getB(p);
 		};
 		// Mass heat capacity [J/kg/K]
 		double c;

@@ -783,7 +783,7 @@ wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
-	props->cellsNum_r = 5;
+	props->cellsNum_r = 50;
 	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(20.0 * 86400.0);
@@ -791,13 +791,13 @@ wax_nit::Properties* getProps()
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(75.0 * 1.0e+5);
-	props->pwf.push_back(80.625 * 1.0e+5);
+	props->pwf.push_back(65.625 * 1.0e+5);
+	props->pwf.push_back(70.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
 
-	props->ht = 100.0;
-	props->ht_min = 100.0;
+	props->ht = 10.0;
+	props->ht_min = 10.0;
 	props->ht_max = 100000.0;
 
 	props->alpha = 7200.0;
@@ -810,10 +810,10 @@ wax_nit::Properties* getProps()
 	wax_nit::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_ref = 80.625 * 1.0e+5;
+	tmp.p_init = tmp.p_out = tmp.p_ref = 70.625 * 1.0e+5;
 	tmp.p_sat = 70.625 * 1.0e+5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
-	tmp.s_wc = 0.1;		tmp.s_oc = 0.1;		tmp.s_gc = 0.05;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
 	tmp.height = 10.0;
