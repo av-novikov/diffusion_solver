@@ -6,6 +6,7 @@ using namespace wax_nit;
 WaxNITSolver::WaxNITSolver(WaxNIT* _model) : basic2d::Basic2dSolver<WaxNIT>(_model)
 {
 	poro.open("snaps/poro.dat", ofstream::out);
+	T.open("snaps/t.dat", ofstream::out);
 	P.open("snaps/P.dat", ofstream::out);
 	S.open("snaps/S.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
@@ -19,13 +20,14 @@ WaxNITSolver::WaxNITSolver(WaxNIT* _model) : basic2d::Basic2dSolver<WaxNIT>(_mod
 WaxNITSolver::~WaxNITSolver()
 {
 	poro.close();
+	T.close();
 	P.close();
 	S.close();
 	qcells.close();
 }
 void WaxNITSolver::writeData()
 {
-	double p = 0.0, s_w = 0.0, s_o = 0.0, m = 0.0;
+	double p = 0.0, s_w = 0.0, s_o = 0.0, m = 0.0, temp = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
 
@@ -33,6 +35,7 @@ void WaxNITSolver::writeData()
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
 		m += model->cells[it->first].u_next.m;
+		temp += model->cells[it->first].u_next.t * model->T_dim;
 		p += model->cells[it->first].u_next.p * model->P_dim;
 		s_w += model->cells[it->first].u_next.s_w;
 		s_o += model->cells[it->first].u_next.s_o;
@@ -44,6 +47,8 @@ void WaxNITSolver::writeData()
 
 	poro << cur_t * t_dim / 3600.0 <<
 		"\t" << m / (double)(model->Qcell.size()) << endl;
+	T << cur_t * t_dim / 3600.0 <<
+		"\t" << temp / (double)(model->Qcell.size()) << endl;
 	P << cur_t * t_dim / 3600.0 << 
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 	S << cur_t * t_dim / 3600.0 << 
@@ -127,7 +132,6 @@ void WaxNITSolver::checkStability()
 		checkMaxResidual(next, iter);
 	}
 }
-#include <xmmintrin.h>
 void WaxNITSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -161,7 +165,7 @@ void WaxNITSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
-		//model->snapshot_all(iterations + 1);
+		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 
@@ -178,17 +182,18 @@ void WaxNITSolver::construction_from_fz(int N, int n, int key)
 			{
 				Variable& next = model->cells[i*(model->cellsNum_z + 2) + j].u_next;
 				next.m += fz[i][var_size * j + 1];
-				next.p += fz[i][var_size * j + 2];
-				next.s_w += fz[i][var_size * j + 3];
+				next.t += fz[i][var_size * j + 2];
+				next.p += fz[i][var_size * j + 3];
+				next.s_w += fz[i][var_size * j + 4];
 				if (next.SATUR)
 				{
-					next.s_o += fz[i][var_size * j + 4];
+					next.s_o += fz[i][var_size * j + 5];
 					next.p_bub = next.p;
 				}
 				else
 				{
-					next.s_o -= fz[i][var_size * j + 3];
-					next.p_bub += fz[i][var_size * j + 4];
+					next.s_o -= fz[i][var_size * j + 4];
+					next.p_bub += fz[i][var_size * j + 5];
 				}
 			}
 		}

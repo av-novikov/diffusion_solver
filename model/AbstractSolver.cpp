@@ -265,7 +265,7 @@ double AbstractSolver<wax_nit::WaxNIT>::convergance(int& ind, int& varInd)
 
 		for (int i = 0; i < model->var_size; i++)
 		{
-			if (i == 3 && !cell.u_next.SATUR) { var_next = cell.u_next.values[i + 1];	var_iter = cell.u_iter.values[i + 1]; }
+			if ((i == model->var_size - 1) && !cell.u_next.SATUR) { var_next = cell.u_next.values[i + 1];	var_iter = cell.u_iter.values[i + 1]; }
 			else { var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i]; }
 
 			if (fabs(var_next) > EQUALITY_TOLERANCE)
@@ -508,7 +508,7 @@ void AbstractSolver<wax_nit::WaxNIT>::averValue(std::array<double, wax_nit::WaxN
 	for (const auto& cell : model->cells)
 		for (int i = 0; i < wax_nit::WaxNIT::var_size; i++)
 		{
-			if (i == 3)
+			if (i == model->var_size - 1)
 			{
 				if (!cell.u_next.SATUR)
 					aver[i] += cell.u_next.values[i + 1] * cell.V;

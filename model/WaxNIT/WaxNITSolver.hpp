@@ -27,6 +27,7 @@ namespace wax_nit
 		std::ofstream S;
 		std::ofstream P;
 		std::ofstream poro;
+		std::ofstream T;
 		std::ofstream qcells;
 		
 		std::ofstream mat_a, mat_b, mat_c, rhs_os;

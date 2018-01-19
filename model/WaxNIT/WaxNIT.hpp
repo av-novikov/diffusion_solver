@@ -33,6 +33,7 @@ namespace wax_nit
 		Water_Props props_wat;
 		Oil_Props props_oil;
 		Gas_Props props_gas;
+		double L;
 
 		void setProps(Properties& props);
 		void makeDimLess();
@@ -67,6 +68,7 @@ namespace wax_nit
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_wat.getKr(next.s_w, next.s_o, cell.props) / props_wat.getViscosity(next.p) *
 				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
+			return tmp;
 		};
 		inline adouble getGasVelocity(const Cell& cell, const int axis) const
 		{
@@ -81,6 +83,7 @@ namespace wax_nit
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_gas.getKr(next.s_w, next.s_o, cell.props) / props_gas.getViscosity(next.p) *
 				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
+			return tmp;
 		};
 		inline adouble getOilVelocityAbs(const Cell& cell) const 
 		{
@@ -198,6 +201,16 @@ namespace wax_nit
 			}
 			DivIndices coeff(a + lambda, jt);
 			return coeff;
+		};
+		inline double getDistance(const Cell& cell1, const Cell& cell2) const
+		{
+			double dist;
+			if (fabs(cell2.z - cell1.z) > EQUALITY_TOLERANCE)
+				dist = cell2.z - cell1.z;
+			else
+				dist = cell2.r - cell1.r;
+
+			return dist;
 		};
 
 		void solve_eqMiddle(const Cell& cell);

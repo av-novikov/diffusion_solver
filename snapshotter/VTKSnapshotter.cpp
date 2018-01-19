@@ -1428,6 +1428,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro->SetName("porosity");
+	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
+	temp->SetName("temperature");
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1463,6 +1465,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(cell.u_next.m);
+		temp->InsertNextValue(cell.u_next.t * T_dim);
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 		satur->InsertNextValue(cell.u_next.SATUR);
@@ -1497,6 +1500,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(cell.u_next.m);
+			temp->InsertNextValue(cell.u_next.t * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 			satur->InsertNextValue(cell.u_next.SATUR);
@@ -1520,6 +1524,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
+	fd->AddArray(temp);
 	fd->AddArray(pres);
 	fd->AddArray(p_bub);
 	fd->AddArray(satur);

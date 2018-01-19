@@ -119,7 +119,7 @@ namespace wax_nit
 			//adouble tmp;
 			//adouble decrease = (t <= t_prev) ? true : false;
 			//condassign(tmp, decrease, lp->Solve(t), );
-			return lp->Solve(t);
+			return lp->Solve(t).value();
 		};
 		inline adouble getRhoTilde(adouble p, adouble p_bub, adouble SATUR) const
 		{
@@ -176,6 +176,7 @@ namespace wax_nit
 		Oil_Props props_oil;
 		Water_Props props_wat;
 		Gas_Props props_gas;
+		double L;
 
 		std::vector< std::pair<double, double> > lp;
 	};

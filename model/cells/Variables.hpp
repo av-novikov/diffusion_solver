@@ -131,14 +131,14 @@ struct VarBlackOilNIT
 
 struct VarWaxNIT
 {
-	static const int size = 5;
+	static const int size = 6;
 
 	union {
-		double values[5];
+		double values[6];
 		struct
 		{
 			double m;
-			//double t;
+			double t;
 			double p;
 			double s_w;
 			double s_o;
@@ -149,10 +149,10 @@ struct VarWaxNIT
 };
 struct TapeVarWaxNIT
 {
-	static const int size = 5;
+	static const int size = 6;
 	
 	adouble m;
-	//adouble t;
+	adouble t;
 	adouble p;
 	adouble s_w;
 	adouble s_o;
