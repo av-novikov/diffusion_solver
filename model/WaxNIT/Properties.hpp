@@ -119,15 +119,15 @@ namespace wax_nit
 			//adouble tmp;
 			//adouble decrease = (t <= t_prev) ? true : false;
 			//condassign(tmp, decrease, lp->Solve(t), );
-			return lp->Solve(t).value();
+			return lp->Solve(t);
 		};
 		inline adouble getRhoTilde(adouble p, adouble p_bub, adouble SATUR) const
 		{
 			return dens_stc + getRs(p, p_bub, SATUR) * dens_gas_stc / getB(p, p_bub, SATUR);
 		};
-		inline adouble getRho(adouble p, adouble p_bub, adouble SATUR/*, adouble t*/) const
+		inline adouble getRho(adouble p, adouble p_bub, adouble SATUR, adouble t) const
 		{
-			return 1.0 / (1.0 - getlp(p)) * getRhoTilde(p, p_bub, SATUR);
+			return 1.0 / (1.0 - getlp(t)) * getRhoTilde(p, p_bub, SATUR);
 		};
 		// Mass heat capacity [J/kg/K]
 		double c;

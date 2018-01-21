@@ -16,9 +16,21 @@ WaxNITSolver::WaxNITSolver(WaxNIT* _model) : basic2d::Basic2dSolver<WaxNIT>(_mod
 
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
+
+	const int strNum = var_size * model->cellsNum;
+	ind_i = new int[stencil * var_size * strNum];
+	ind_j = new int[stencil * var_size * strNum];
+	cols = new int[strNum];
+	a = new double[stencil * var_size * strNum];
+	ind_rhs = new int[strNum];
+	rhs = new double[strNum];
 }
 WaxNITSolver::~WaxNITSolver()
 {
+	delete[] ind_i, ind_j, ind_rhs;
+	delete[] cols;
+	delete[] a, rhs;
+
 	poro.close();
 	T.close();
 	P.close();
@@ -57,6 +69,50 @@ void WaxNITSolver::writeData()
 		"\t" << 1.0 - (s_w + s_o) / (double)(model->Qcell.size()) << endl;
 
 	qcells << endl;
+}
+void WaxNITSolver::start()
+{
+	int counter = 0;
+	iterations = 8;
+
+	fillIndices();
+	solver.Init(var_size * model->cellsNum, 1.e-15, 1.e-15);
+
+	model->setPeriod(curTimePeriod);
+
+	while (cur_t < Tt)
+	{
+		control();
+		if (model->isWriteSnaps)
+			model->snapshot_all(counter++);
+		doNextStep();
+		copyTimeLayer();
+		cout << "---------------------NEW TIME STEP---------------------" << endl;
+	}
+	if (model->isWriteSnaps)
+		model->snapshot_all(counter++);
+	writeData();
+}
+void WaxNITSolver::copySolution(const Vector& sol)
+{
+	for (int i = 0; i < model->cellsNum; i++)
+	{
+		Variable& next = model->cells[i].u_next;
+		next.m += sol[i * var_size];
+		next.t += sol[i * var_size + 1];
+		next.p += sol[i * var_size + 2];
+		next.s_w += sol[i * var_size + 3];
+		if (next.SATUR)
+		{
+			next.s_o += sol[i * var_size + 4];
+			next.p_bub = next.p;
+		}
+		else
+		{
+			next.s_o -= sol[i * var_size + 4];
+			next.p_bub += sol[i * var_size + 5];
+		}
+	}
 }
 void WaxNITSolver::checkStability()
 {
@@ -154,8 +210,11 @@ void WaxNITSolver::solveStep()
 		copyIterLayer();
 
 		//writeMatrixes();
-		Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
-		construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
+		fill();
+		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
+		solver.Solve(PRECOND::ILU_SERIOUS);
+		//Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
+		//construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		
 		checkStability();
 		err_newton = convergance(cellIdx, varIdx);
@@ -171,6 +230,68 @@ void WaxNITSolver::solveStep()
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
+
+void WaxNITSolver::fillIndices()
+{
+	int pres_counter = 0;
+	int col_idx = 0;
+
+	for (const auto& cell : model->cells)
+	{
+		cols[col_idx] = 0;
+		auto& pres_idx = getMatrixStencil(cell);
+
+		for (int i = 0; i < var_size; i++)
+		{
+			const int str_idx = var_size * cell.num + i;
+			for (const int idx : pres_idx)
+			{
+				for (int j = 0; j < var_size; j++)
+				{
+					ind_i[pres_counter] = str_idx;			ind_j[pres_counter++] = var_size * idx + j;
+				}
+			}
+		}
+
+		cols[col_idx++] += var_size * pres_idx.size();
+		pres_idx.clear();
+	}
+
+	elemNum = pres_counter;
+
+	for (int i = 0; i < model->cellsNum * var_size; i++)
+		ind_rhs[i] = i;
+}
+void WaxNITSolver::fill()
+{
+	int counter = 0;
+	int nebr_idx;
+
+	for (const auto& cell : model->cells)
+	{
+		model->setVariables(cell);
+
+		auto& mat_idx = getMatrixStencil(cell);
+		for (int i = 0; i < var_size; i++)
+		{
+			const int str_idx = var_size * cell.num + i;
+			nebr_idx = 0;
+			for (const int idx : mat_idx)
+			{
+				for (int j = 0; j < var_size; j++)
+					a[counter++] = model->jac[i][var_size * nebr_idx + j];
+
+				nebr_idx++;
+			}
+
+			rhs[str_idx] = -model->y[i];
+		}
+		mat_idx.clear();
+	}
+
+}
+
+
 void WaxNITSolver::construction_from_fz(int N, int n, int key)
 {
 	vector<Cell>::iterator it;

@@ -783,7 +783,7 @@ wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
-	props->cellsNum_r = 50;
+	props->cellsNum_r = 5;
 	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(20.0 * 86400.0);
@@ -839,7 +839,7 @@ wax_nit::Properties* getProps()
 	props->props_oil.dens_stc = 887.261;
 	props->props_oil.beta = 1.0 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
-	props->props_oil.gamma = 0.0001;
+	props->props_oil.gamma = 0.0;
 
 	props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
