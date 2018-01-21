@@ -4,6 +4,7 @@
 #include "model/GasOil_RZ/GasOil_RZ.h"
 
 #include "model/Acid/2d/Acid2d.hpp"
+#include "model/Acid/1d/Acid1d.hpp"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
@@ -34,7 +35,6 @@ void Snapshotter<modelType>::setModel(modelType* _model)
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 }
-
 template <>
 void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
 {
@@ -104,6 +104,19 @@ void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
 
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
+}
+template <>
+void Snapshotter<acid1d::Acid1d>::setModel(acid1d::Acid1d* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_x + 2;
+	ny = 3;
 }
 template <>
 void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
@@ -176,6 +189,7 @@ string Snapshotter<modelType>::getFileName(int i)
 }
 
 template class Snapshotter<gasOil_rz::GasOil_RZ>;
+template class Snapshotter<acid1d::Acid1d>;
 template class Snapshotter<acid2d::Acid2d>;
 template class Snapshotter<vpp2d::VPP2d>;
 template class Snapshotter<bing1d::Bingham1d>;

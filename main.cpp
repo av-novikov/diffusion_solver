@@ -35,6 +35,9 @@
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/2d/Acid2dSolver.hpp"
 
+#include "model/Acid/1d/Acid1d.hpp"
+#include "model/Acid/1d/Acid1dSolver.hpp"
+
 #include "model/WaxNIT/WaxNIT.hpp"
 #include "model/WaxNIT/WaxNITSolver.hpp"
 
@@ -586,6 +589,71 @@ using namespace std;
 	
 	return props;
 }*/
+acid1d::Properties* getProps()
+{
+	acid1d::Properties* props = new acid1d::Properties;
+
+	props->cellsNum_x = 100;
+
+	props->timePeriods.push_back(5.0 * 3600.0);
+	props->timePeriods.push_back(30.0 * 3600.0);
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	//props->rates.push_back(0.0);
+	props->pwf.push_back(250.0 * 1.0e+5);
+	props->pwf.push_back(200.0 * 1.0e+5);
+	props->xa.push_back(0.0);
+	props->xa.push_back(0.0);
+
+	props->ht = 0.1;
+	props->ht_min = 0.1;
+	props->ht_max = 10000.0;
+
+	props->alpha = 7200.0;
+
+	props->r_w = 0.1;
+	props->r_e = 150.0;
+
+	auto& tmp = props->props_sk;
+	tmp.m_init = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
+	tmp.xa_eqbm = 0.0;
+	tmp.h1 = 0.0;
+	tmp.h2 = 10.0;
+	tmp.height = 10.0;
+	tmp.perm = 100.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back(props->r_w);
+
+	props->depth_point = 0.0;
+
+	props->props_o.visc = 1.0;
+	props->props_o.dens_stc = 887.261;
+	props->props_o.beta = 1.0 * 1.e-9;
+	props->props_o.p_ref = tmp.p_ref;
+
+	props->props_w.visc = 1.0;
+	props->props_w.dens_stc = 1000.0;
+	props->props_w.beta = 1.0 * 1.e-9;
+	props->props_w.p_ref = tmp.p_ref;
+
+	props->props_g.visc = 0.06;
+	props->props_g.dens_stc = 0.8;
+	props->props_g.co2 = acid1d::getCO2();
+
+	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
+	//setDataFromFile(props->Rs, "props/Rs_tempest.txt");
+	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
+
+	return props;
+}
 /*blackoilnit_elliptic::Properties* getProps()
 {
 	blackoilnit_elliptic::Properties* props = new blackoilnit_elliptic::Properties();
@@ -779,7 +847,7 @@ using namespace std;
 
 	return props;
 }*/
-wax_nit::Properties* getProps()
+/*wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
@@ -881,8 +949,9 @@ wax_nit::Properties* getProps()
 	setDataFromFile(props->lp, "props/lp.txt");
 
 	return props;
-}
+}*/
 
+double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
 double blackoilnit_elliptic::Oil_Props::dens_stc = 887.261;
@@ -930,8 +999,13 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	wax_nit::Properties* props = getProps();
+	/*wax_nit::Properties* props = getProps();
 	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
+	scene.load(*props);
+	scene.setSnapshotterType("VTK");
+	scene.start();*/
+	acid1d::Properties* props = getProps();
+	Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

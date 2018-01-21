@@ -36,5 +36,33 @@ struct TapeFirstAcid
 	adouble p_bub;
 	bool SATUR;
 };
+struct JustAcid
+{
+	static const int size = 6;
+
+	union {
+		double values[size];
+		struct
+		{
+			double m;
+			double p;
+			double sw;
+			double xa;
+			double xw;
+			double xs;
+		};
+	};
+};
+struct TapeJustAcid
+{
+	static const int size = 6;
+
+	adouble m;
+	adouble p;
+	adouble sw;
+	adouble xa;
+	adouble xw;
+	adouble xs;
+};
 
 #endif /* ACIDVARIABLES_HPP_ */
