@@ -47,8 +47,8 @@ struct JustAcid
 			double m;
 			double p;
 			double sw;
-			double xa;
 			double xw;
+			double xa;
 			double xs;
 		};
 	};
@@ -60,8 +60,8 @@ struct TapeJustAcid
 	adouble m;
 	adouble p;
 	adouble sw;
-	adouble xa;
 	adouble xw;
+	adouble xa;
 	adouble xs;
 };
 

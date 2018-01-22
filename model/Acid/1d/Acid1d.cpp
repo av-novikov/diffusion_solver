@@ -75,6 +75,7 @@ void Acid1d::makeDimLess()
 	props_o.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_o.gas_dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_o.beta /= (1.0 / P_dim);
+	props_o.p_ref /= P_dim;
 	props_g.visc /= (P_dim * t_dim);
 	props_g.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_g.co2.mol_weight /= (P_dim * t_dim * t_dim * R_dim);
@@ -155,14 +156,13 @@ void Acid1d::solve_eqMiddle(const Cell& cell)
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].xa <<= x[i * Variable::size + 3];
-		var[i].xw <<= x[i * Variable::size + 4];
+		var[i].xw <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 4];
 		var[i].xs <<= x[i * Variable::size + 5];
 	}
 
 	TapeVariable& next = var[0];
 	adouble rate = getReactionRate(next);
-	double rate0 = getReactionRate(next).value();
 
 	h[0] = (1.0 - next.m) * props_sk.getDensity(next.p) -
 			(1.0 - prev.m) * props_sk.getDensity(prev.p) - 
@@ -199,17 +199,16 @@ void Acid1d::solve_eqMiddle(const Cell& cell)
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		const Cell& beta = cells[neighbor[i]];
 		const int upwd_idx = (getUpwindIdx(cell.num, neighbor[i]) == cell.num) ? 0 : i + 1;
 		const TapeVariable& nebr = var[i + 1];
 		TapeVariable& upwd = var[upwd_idx];
-		
 		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), cell, 
-									props_w.getDensity(nebr.p, nebr.xa, nebr.xw, next.xs), beta);
+									props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), beta);
 		adouble dens_o = getAverage(props_o.getDensity(next.p), cell, 
-									props_o.getDensity(next.p), beta);
+									props_o.getDensity(nebr.p), beta);
 		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
 						dens_w * props_w.getKr(upwd.sw, &props_sk) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
 		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
@@ -243,8 +242,8 @@ void Acid1d::solve_eqLeft(const Cell& cell)
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].xa <<= x[i * Variable::size + 3];
-		var[i].xw <<= x[i * Variable::size + 4];
+		var[i].xw <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 4];
 		var[i].xs <<= x[i * Variable::size + 5];
 	}
 
@@ -297,13 +296,13 @@ void Acid1d::solve_eqRight(const Cell& cell)
 	adouble h[var_size];
 	TapeVariable var[Rstencil];
 	adouble rightIsPres = rightBoundIsPres;
-	for (int i = 0; i < stencil; i++)
+	for (int i = 0; i < Lstencil; i++)
 	{
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
 		var[i].sw <<= x[i * Variable::size + 2];
-		var[i].xa <<= x[i * Variable::size + 3];
-		var[i].xw <<= x[i * Variable::size + 4];
+		var[i].xw <<= x[i * Variable::size + 3];
+		var[i].xa <<= x[i * Variable::size + 4];
 		var[i].xs <<= x[i * Variable::size + 5];
 	}
 

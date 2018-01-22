@@ -600,9 +600,9 @@ acid1d::Properties* getProps()
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
-	props->pwf.push_back(250.0 * 1.0e+5);
+	props->pwf.push_back(210.0 * 1.0e+5);
 	props->pwf.push_back(200.0 * 1.0e+5);
-	props->xa.push_back(0.0);
+	props->xa.push_back(0.15);
 	props->xa.push_back(0.0);
 
 	props->ht = 0.1;

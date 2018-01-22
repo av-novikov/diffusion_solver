@@ -160,7 +160,6 @@ void Acid1dSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
-		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 
@@ -178,8 +177,8 @@ void Acid1dSolver::construction_from_fz(int N, int n, int key)
 				next.m += fz[i][1];
 				next.p += fz[i][2];
 				next.sw += fz[i][3];
-				next.xa += fz[i][4];
-				next.xw += fz[i][5];
+				next.xw += fz[i][4];
+				next.xa += fz[i][5];
 				next.xs += fz[i][6];
 		}
 	}

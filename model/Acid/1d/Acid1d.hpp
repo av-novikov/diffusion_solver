@@ -54,11 +54,40 @@ namespace acid1d
 					(var.xa - props_sk.xa_eqbm) * 
 					reac.getReactionRate(props_sk.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
 		};
+		double getNablaP(Cell& cell, int varNum)
+		{
+			Cell* nebr1;
+			Cell* nebr2;
+			double h, r_eff;
+
+			nebr1 = &cells[cell.num - 1];
+			nebr2 = &cells[cell.num + 1];
+
+			r_eff = props_sk.radius_eff;
+			if ((nebr1->x < r_eff) && (nebr2->x > r_eff))
+			{
+				if (cell.x > r_eff)
+					nebr1 = &cell;
+				else
+					nebr2 = &cell;
+			}
+			h = nebr2->x - nebr1->x;
+			switch (varNum)
+			{
+			case PREV:
+				return (nebr2->u_prev.p - nebr1->u_prev.p) / h;
+			case ITER:
+				return (nebr2->u_iter.p - nebr1->u_iter.p) / h;
+			case NEXT:
+				return (nebr2->u_next.p - nebr1->u_next.p) / h;
+			}
+		};
+
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
 		{
 			adouble k1, k2, S;
-			k1 = cell.props->getPermCoseni(m_cell);
-			k2 = beta.props->getPermCoseni(m_beta);
+			k1 = props_sk.getPermCoseni(m_cell);
+			k2 = props_sk.getPermCoseni(m_beta);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 			S = props_sk.height * (cell.x + sign(beta.num - cell.num) * cell.hx / 2.0);
@@ -67,18 +96,17 @@ namespace acid1d
 		inline double getWaterVelocity(Cell& cell)
 		{
 			const Variable next = cell.u_next;
-			return -cell.props->getPermCoseni(next.m).value() * props_w.getKr(next.sw, &props_sk).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * getNablaP(cell, NEXT);
+			return -props_sk.getPermCoseni(next.m).value() * props_w.getKr(next.sw, &props_sk).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * getNablaP(cell, NEXT);
 		};
 		inline double getOilVelocity(Cell& cell)
 		{
 			const Variable next = cell.u_next;
-			return -cell.props->getPermCoseni(next.m).value() * props_o.getKr(next.sw, &props_sk).value() / props_o.getViscosity(next.p).value() * getNablaP(cell, NEXT);
+			return -props_sk.getPermCoseni(next.m).value() * props_o.getKr(next.sw, &props_sk).value() / props_o.getViscosity(next.p).value() * getNablaP(cell, NEXT);
 		};
 
 		void solve_eqMiddle(const Cell& cell);
 		void solve_eqLeft(const Cell& cell);
 		void solve_eqRight(const Cell& cell);
-		void solve_eqVertical(const Cell& cell);
 		void setVariables(const Cell& cell);
 
 	public:

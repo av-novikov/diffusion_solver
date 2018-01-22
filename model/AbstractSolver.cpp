@@ -23,7 +23,7 @@ AbstractSolver<modelType>::AbstractSolver(modelType* _model) : model(_model), si
 	cur_t = cur_t_log = 0.0;
 	curTimePeriod = 0;
 
-	idx1 = int((model->perfIntervals[0].first + model->perfIntervals[0].second) / 2);
+	//idx1 = int((model->perfIntervals[0].first + model->perfIntervals[0].second) / 2);
 	//idx2 = idx1 + model->cellsNum_z + 1;
 
 	t_dim = model->t_dim;

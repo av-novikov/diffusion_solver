@@ -177,7 +177,7 @@ namespace basic1d
 
 			return H;
 		}
-		inline double getNablaP(Cell& cell, int varNum)
+		virtual double getNablaP(Cell& cell, int varNum)
 		{
 			Cell* nebr1;
 			Cell* nebr2;

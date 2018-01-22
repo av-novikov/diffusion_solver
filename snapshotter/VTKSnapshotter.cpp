@@ -455,7 +455,7 @@ void VTKSnapshotter<acid1d::Acid1d>::dump_all(int i)
 	for (k = 1; k < nx - 1; k++)
 	{
 			idx = k * (ny - 1);
-			idx1 = k * ny + 1;
+			idx1 = k;
 			Cell& cell = model->cells[idx1];
 			Variable& next = cell.u_next;
 
@@ -466,7 +466,7 @@ void VTKSnapshotter<acid1d::Acid1d>::dump_all(int i)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(next.m);
-			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m).value() * r_dim * r_dim));
+			perm->InsertNextValue(M2toMilliDarcy(model->props_sk.getPermCoseni(next.m).value() * r_dim * r_dim));
 			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w->InsertNextValue(next.sw);
 			sat_o->InsertNextValue(1.0 - next.sw);
