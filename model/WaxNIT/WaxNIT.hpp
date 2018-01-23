@@ -34,6 +34,7 @@ namespace wax_nit
 		Water_Props props_wat;
 		Oil_Props props_oil;
 		Gas_Props props_gas;
+		Wax_Props props_wax;
 		double L;
 
 		void setProps(Properties& props);
@@ -135,7 +136,7 @@ namespace wax_nit
 		inline adouble getCn(const Cell& cell) const
 		{
 			const TapeVariable& next = var[0];
-			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, next.SATUR, next.t) * props_oil.c +
+			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.c +
 					next.s_w * props_wat.getRho(next.p) * props_wat.c +
 					(1.0 - next.s_w - next.s_o) * props_gas.getRho(next.p) * props_gas.c) +
 					(1.0 - next.m) * cell.props->dens_stc * cell.props->c;
@@ -143,7 +144,7 @@ namespace wax_nit
 		inline adouble getAd(const Cell& cell) const
 		{
 			const TapeVariable& next = var[0];
-			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, next.SATUR, next.t) * props_oil.ad * props_oil.c +
+			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.ad * props_oil.c +
 					next.s_w * props_wat.getRho(next.p) * props_wat.ad * props_wat.c +
 					(1.0 - next.s_w - next.s_o) * props_gas.getRho(next.p) * props_gas.ad * props_gas.c);
 		};
@@ -162,14 +163,14 @@ namespace wax_nit
 		inline adouble getJT(const Cell& cell, const int axis) const
 		{
 			const TapeVariable& next = var[0];
-			return	props_oil.getRho(next.p, next.p_bub, next.SATUR, next.t) * props_oil.c * props_oil.jt * getOilVelocity(cell, axis) +
+			return	props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.c * props_oil.jt * getOilVelocity(cell, axis) +
 					props_wat.getRho(next.p) * props_wat.c * props_wat.jt * getWatVelocity(cell, axis) +
 					props_gas.getRho(next.p) * props_gas.c * props_gas.jt * getGasVelocity(cell, axis);
 		};
 		inline adouble getA(const Cell& cell, const int axis) const
 		{
 			const TapeVariable& next = var[0];
-			return	props_oil.getRho(next.p, next.p_bub, next.SATUR, next.t) * props_oil.c * getOilVelocity(cell, axis) +
+			return	props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.c * getOilVelocity(cell, axis) +
 					props_wat.getRho(next.p) * props_wat.c * getWatVelocity(cell, axis) +
 					props_gas.getRho(next.p) * props_gas.c * getGasVelocity(cell, axis);
 		};
@@ -230,7 +231,7 @@ namespace wax_nit
 		double* y;
 		double** jac;
 
-		static const int var_size = Variable::size - 1;
+		static const int var_size = Variable::size - 2;
 	};
 };
 

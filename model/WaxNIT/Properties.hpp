@@ -17,7 +17,9 @@ namespace wax_nit
 		double p_sat;
 		double so_init;
 		double sw_init;
+		double sg_init;
 		double t_init;
+		double t_sat;
 		double m_init;
 		double a_init;
 
@@ -114,20 +116,27 @@ namespace wax_nit
 		double gamma;
 		// Wax-oil ratio
 		Interpolate* lp;
-		inline adouble getlp(adouble t) const
+		inline adouble getlp(adouble t, adouble t_bub, adouble satur_wax) const
 		{
 			//adouble tmp;
 			//adouble decrease = (t <= t_prev) ? true : false;
 			//condassign(tmp, decrease, lp->Solve(t), );
 			return lp->Solve(t);
 		};
+		inline adouble getfp(adouble p, adouble p_bub, adouble satur_gas, adouble t, adouble t_bub, adouble satur_wax) const
+		{
+			adouble tmp_lp = getlp(t, t_bub, satur_wax);
+			adouble tmp_rho = getRhoTilde(p, p_bub, satur_gas);
+			return tmp_lp * tmp_rho / ((1.0 - tmp_lp) * dens_wax_stc + tmp_lp * tmp_rho);
+		};
 		inline adouble getRhoTilde(adouble p, adouble p_bub, adouble SATUR) const
 		{
 			return dens_stc + getRs(p, p_bub, SATUR) * dens_gas_stc / getB(p, p_bub, SATUR);
 		};
-		inline adouble getRho(adouble p, adouble p_bub, adouble SATUR, adouble t) const
+		inline adouble getRho(adouble p, adouble p_bub, adouble satur_gas, adouble t, adouble t_bub, adouble satur_wax) const
 		{
-			return 1.0 / (1.0 - getlp(t)) * getRhoTilde(p, p_bub, SATUR);
+			adouble tmp = getfp(p, p_bub, satur_gas, t, t_bub, satur_wax);
+			return tmp * dens_wax_stc + (1.0 - tmp) * getRhoTilde(p, p_bub, satur_gas);
 		};
 		// Mass heat capacity [J/kg/K]
 		double c;
@@ -169,6 +178,15 @@ namespace wax_nit
 		// Adiabatic coefficient [K/Pa]
 		double ad;
 	};
+	struct Wax_Props
+	{
+		// Density of wax in STC [kg/m3]
+		double dens_stc;
+		inline adouble getRho() const
+		{
+			return dens_stc;
+		};
+	};
 
 	struct Properties : public basic2d::Properties
 	{
@@ -176,6 +194,7 @@ namespace wax_nit
 		Oil_Props props_oil;
 		Water_Props props_wat;
 		Gas_Props props_gas;
+		Wax_Props props_wax;
 		double L;
 
 		std::vector< std::pair<double, double> > lp;
