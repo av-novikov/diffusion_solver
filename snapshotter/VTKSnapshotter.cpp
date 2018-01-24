@@ -1565,6 +1565,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	poro->SetName("porosity");
 	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
 	temp->SetName("temperature");
+	auto temp_sat = vtkSmartPointer<vtkDoubleArray>::New();
+	temp_sat->SetName("wax_saturation_temp");
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1575,8 +1577,12 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	sat_oil->SetName("oilSaturation");
 	auto sat_gas = vtkSmartPointer<vtkDoubleArray>::New();
 	sat_gas->SetName("gasSaturation");
-	auto satur = vtkSmartPointer<vtkIntArray>::New();
-	satur->SetName("SATUR");
+	auto sat_wax = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_wax->SetName("waxSaturation");
+	auto satur_gas = vtkSmartPointer<vtkIntArray>::New();
+	satur_gas->SetName("satur_gas");
+	auto satur_wax = vtkSmartPointer<vtkIntArray>::New();
+	satur_wax->SetName("satur_wax");
 	auto vel_oil = vtkSmartPointer<vtkDoubleArray>::New();
 	vel_oil->SetName("oilVelocity");
 	vel_oil->SetNumberOfComponents(3);
@@ -1601,12 +1607,15 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 		poro->InsertNextValue(cell.u_next.m);
 		temp->InsertNextValue(cell.u_next.t * T_dim);
+		temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim);
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
-		satur->InsertNextValue(cell.u_next.SATUR);
+		satur_gas->InsertNextValue(cell.u_next.satur_gas);
+		satur_wax->InsertNextValue(cell.u_next.satur_wax);
 		sat_wat->InsertNextValue(cell.u_next.s_w);
 		sat_oil->InsertNextValue(cell.u_next.s_o);
-		sat_gas->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o);
+		sat_gas->InsertNextValue(cell.u_next.s_g);
+		sat_wax->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o - cell.u_next.s_g);
 		vel[0] = 0.0;
 		vel[1] = 0.0;
 		vel[2] = 0.0;
@@ -1636,12 +1645,15 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 			poro->InsertNextValue(cell.u_next.m);
 			temp->InsertNextValue(cell.u_next.t * T_dim);
+			temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
-			satur->InsertNextValue(cell.u_next.SATUR);
+			satur_gas->InsertNextValue(cell.u_next.satur_gas);
+			satur_wax->InsertNextValue(cell.u_next.satur_wax);
 			sat_wat->InsertNextValue(cell.u_next.s_w);
 			sat_oil->InsertNextValue(cell.u_next.s_o);
-			sat_gas->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o);
+			sat_gas->InsertNextValue(cell.u_next.s_g);
+			sat_wax->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o - cell.u_next.s_g);
 			vel[0] = 0.0;
 			vel[1] = 0.0;
 			vel[2] = 0.0;
@@ -1660,12 +1672,15 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
 	fd->AddArray(temp);
+	fd->AddArray(temp_sat);
 	fd->AddArray(pres);
 	fd->AddArray(p_bub);
-	fd->AddArray(satur);
+	fd->AddArray(satur_gas);
+	fd->AddArray(satur_wax);
 	fd->AddArray(sat_wat);
 	fd->AddArray(sat_oil);
 	fd->AddArray(sat_gas);
+	fd->AddArray(sat_wax);
 	fd->AddArray(vel_oil);
 	fd->AddArray(vel_gas);
 

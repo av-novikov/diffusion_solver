@@ -39,7 +39,7 @@ WaxNITSolver::~WaxNITSolver()
 }
 void WaxNITSolver::writeData()
 {
-	double p = 0.0, s_w = 0.0, s_o = 0.0, m = 0.0, temp = 0.0;
+	double p = 0.0, s_w = 0.0, s_o = 0.0, s_g = 0.0, m = 0.0, temp = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
 
@@ -51,6 +51,7 @@ void WaxNITSolver::writeData()
 		p += model->cells[it->first].u_next.p * model->P_dim;
 		s_w += model->cells[it->first].u_next.s_w;
 		s_o += model->cells[it->first].u_next.s_o;
+		s_g += model->cells[it->first].u_next.s_g;
 		if (model->leftBoundIsRate)
 			qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
@@ -66,7 +67,8 @@ void WaxNITSolver::writeData()
 	S << cur_t * t_dim / 3600.0 << 
 		"\t" << s_w / (double)(model->Qcell.size()) << 
 		"\t" << s_o / (double)(model->Qcell.size()) <<
-		"\t" << 1.0 - (s_w + s_o) / (double)(model->Qcell.size()) << endl;
+		"\t" << s_g / (double)(model->Qcell.size()) <<
+		"\t" << (1.0 - s_w - s_o - s_g) / (double)(model->Qcell.size()) << endl;
 
 	qcells << endl;
 }
@@ -102,15 +104,34 @@ void WaxNITSolver::copySolution(const Vector& sol)
 		next.t += sol[i * var_size + 1];
 		next.p += sol[i * var_size + 2];
 		next.s_w += sol[i * var_size + 3];
-		if (next.SATUR)
+		
+		if (next.satur_gas && next.satur_wax)
+		{
+			next.s_o += sol[i * var_size + 4];
+			next.s_g += sol[i * var_size + 5];
+			next.p_bub = next.p;
+			next.t_bub = next.t;
+		}
+		else if (next.satur_gas)
 		{
 			next.s_o += sol[i * var_size + 4];
 			next.p_bub = next.p;
+			next.s_g -= (sol[i * var_size + 3] + sol[i * var_size + 4]);
+			next.t_bub += sol[i * var_size + 7];
 		}
+		else if (next.satur_wax)
+		{
+			next.s_o -= (sol[i * var_size + 3] + sol[i * var_size + 5]);
+			next.p_bub += sol[i * var_size + 6];
+			next.s_g += sol[i * var_size + 5];
+			next.t_bub = next.t;
+		} 
 		else
 		{
-			next.s_o -= sol[i * var_size + 4];
-			next.p_bub += sol[i * var_size + 5];
+			next.s_o -= sol[i * var_size + 3] / 2.0;
+			next.p_bub += sol[i * var_size + 6];
+			next.s_g -= sol[i * var_size + 3] / 2.0;
+			next.t_bub += sol[i * var_size + 7];
 		}
 	}
 }
@@ -126,11 +147,12 @@ void WaxNITSolver::checkStability()
 	};
 	auto checkBubPoint = [](auto& cell, auto& next)
 	{
-		if (next.SATUR)
+		if (next.satur_gas)
 		{
+
 			if (next.s_o + next.s_w > 1.0 + EQUALITY_TOLERANCE)
 			{
-				next.SATUR = false;
+				next.satur_gas = false;
 				next.s_o = 1.0 - next.s_w;
 				next.p_bub = 0.999 * cell.u_iter.p_bub;
 			}
@@ -139,7 +161,7 @@ void WaxNITSolver::checkStability()
 		{
 			if (next.p_bub > next.p + EQUALITY_TOLERANCE)
 			{
-				next.SATUR = true;
+				next.satur_gas = true;
 				next.s_o = 0.999 * cell.u_iter.s_o;
 				next.p_bub = next.p;
 			}
@@ -175,6 +197,8 @@ void WaxNITSolver::checkStability()
 			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * MAX_SAT_CHANGE;
 		if (fabs(next.s_o - iter.s_o) > MAX_SAT_CHANGE)
 			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * MAX_SAT_CHANGE;
+		if (fabs(next.s_g - iter.s_g) > MAX_SAT_CHANGE)
+			next.s_g = iter.s_g + sign(next.s_g - iter.s_g) * MAX_SAT_CHANGE;
 	};
 
 	for (auto& cell : model->cells)
@@ -278,8 +302,18 @@ void WaxNITSolver::fill()
 			nebr_idx = 0;
 			for (const int idx : mat_idx)
 			{
-				for (int j = 0; j < var_size; j++)
-					a[counter++] = model->jac[i][var_size * nebr_idx + j];
+				a[counter++] = model->jac[i][size * nebr_idx];
+				a[counter++] = model->jac[i][size * nebr_idx + 1];
+				a[counter++] = model->jac[i][size * nebr_idx + 2];
+				a[counter++] = model->jac[i][size * nebr_idx + 3];
+				if (cell.u_next.satur_gas)
+					a[counter++] = model->jac[i][size * nebr_idx + 4];
+				else
+					a[counter++] = model->jac[i][size * nebr_idx + 6];
+				if (cell.u_next.satur_wax)
+					a[counter++] = model->jac[i][size * nebr_idx + 5];
+				else
+					a[counter++] = model->jac[i][size * nebr_idx + 7];
 
 				nebr_idx++;
 			}
@@ -292,7 +326,7 @@ void WaxNITSolver::fill()
 }
 
 
-void WaxNITSolver::construction_from_fz(int N, int n, int key)
+/*void WaxNITSolver::construction_from_fz(int N, int n, int key)
 {
 	vector<Cell>::iterator it;
 	if (key == PRES)
@@ -601,4 +635,4 @@ void WaxNITSolver::writeMatrixes()
 		rhs_os << i << "\t" << RightSide[i][0] << endl;
 	}
 	mat_a.close();		mat_b.close();		mat_c.close();		rhs_os.close();
-};
+};*/

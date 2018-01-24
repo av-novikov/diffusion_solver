@@ -12,16 +12,16 @@ namespace wax_nit
 	public:
 		typedef ParSolver::Vector Vector;
 	private:
-		void MiddleAppr(int current, int MZ, int key);
-		void LeftBoundAppr(int MZ, int key);
-		void RightBoundAppr(int MZ, int key);
+		//void MiddleAppr(int current, int MZ, int key);
+		//void LeftBoundAppr(int MZ, int key);
+		//void RightBoundAppr(int MZ, int key);
 	protected:
 		void solveStep();
 		void writeData();
-		void construction_from_fz(int N, int n, int key);
+		//void construction_from_fz(int N, int n, int key);
 		void checkStability();
 		
-		static const int var_size = Variable::size - 1;
+		static const int var_size = Variable::size - 2;
 		static const int size = Variable::size;
 
 		std::array<double, var_size> averVal, averValPrev, dAverVal;
@@ -33,8 +33,8 @@ namespace wax_nit
 		std::ofstream T;
 		std::ofstream qcells;
 		
-		std::ofstream mat_a, mat_b, mat_c, rhs_os;
-		void writeMatrixes();
+		//std::ofstream mat_a, mat_b, mat_c, rhs_os;
+		//void writeMatrixes();
 
 
 		// Coordinate form of sparse matrix & dense vector
