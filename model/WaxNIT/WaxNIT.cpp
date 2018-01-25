@@ -259,6 +259,7 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 	const Cell& beta1 = cells[cell.num + cellsNum_z + 2];
 	const Cell& beta2 = cells[cell.num + 2 * cellsNum_z + 4];
 	
+	trace_on(left);
 	for (int i = 0; i < Lstencil; i++)
 	{
 		var[i].m <<= x[i * Variable::size];
@@ -355,7 +356,7 @@ void WaxNIT::solve_eqRight(const Cell& cell)
 void WaxNIT::solve_eqVertical(const Cell& cell)
 {
 	trace_on(vertical);
-	for (int i = 0; i < Rstencil; i++)
+	for (int i = 0; i < Vstencil; i++)
 	{
 		var[i].m <<= x[i * Variable::size];
 		var[i].t <<= x[i * Variable::size + 1];

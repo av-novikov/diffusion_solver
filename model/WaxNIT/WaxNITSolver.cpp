@@ -237,6 +237,7 @@ void WaxNITSolver::solveStep()
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
 		solver.Solve(PRECOND::ILU_SERIOUS);
+		copySolution(solver.getSolution());
 		//Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		//construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		
@@ -248,7 +249,7 @@ void WaxNITSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
-		model->snapshot_all(iterations + 1);
+		//model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 

@@ -64,13 +64,13 @@ void ParSolver::Solve(const PRECOND key)
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
-	//p.Set(1.E-15, 100);
+	//p_ilut.Set(1.E-15, 100);
 	p.Set(2);
 	bicgstab.SetPreconditioner(p);
 	bicgstab.Build();
 	isAssembled = true;
 
-	bicgstab.Init(1.E-17, 1.E-12, 1E+12, 500);
+	bicgstab.Init(1.E-25, 1.E-17, 1E+12, 500);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
@@ -78,7 +78,7 @@ void ParSolver::SolveBiCGStab()
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
-	//writeSystem();
+	writeSystem();
 
 	//getResiduals();
 	//cout << "Initial residual: " << initRes << endl;

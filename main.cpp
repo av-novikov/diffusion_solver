@@ -589,7 +589,7 @@ using namespace std;
 	
 	return props;
 }*/
-acid1d::Properties* getProps()
+/*acid1d::Properties* getProps()
 {
 	acid1d::Properties* props = new acid1d::Properties;
 
@@ -653,7 +653,7 @@ acid1d::Properties* getProps()
 	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 
 	return props;
-}
+}*/
 /*blackoilnit_elliptic::Properties* getProps()
 {
 	blackoilnit_elliptic::Properties* props = new blackoilnit_elliptic::Properties();
@@ -847,11 +847,11 @@ acid1d::Properties* getProps()
 
 	return props;
 }*/
-/*wax_nit::Properties* getProps()
+wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
-	props->cellsNum_r = 5;
+	props->cellsNum_r = 100;
 	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(20.0 * 86400.0);
@@ -879,9 +879,10 @@ acid1d::Properties* getProps()
 	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 70.625 * 1.0e+5;
-	tmp.t_init = 273.15 + 20.0;
+	tmp.t_init = 291.0;
 	tmp.p_sat = 70.625 * 1.0e+5;
-	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.t_sat = tmp.t_init;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.75;	tmp.sg_init = 0.0;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
@@ -926,6 +927,7 @@ acid1d::Properties* getProps()
 
 	props->props_gas.visc = 0.03;
 	props->props_oil.dens_gas_stc = props->props_gas.dens_stc = 0.8;
+	props->props_oil.dens_wax_stc = props->props_wax.dens_stc = 1200.0;
 
 	props->props_gas.jt = -1.7 * 1.e-6;
 	props->props_gas.ad = 3.6 * 1.e-6;
@@ -949,7 +951,7 @@ acid1d::Properties* getProps()
 	setDataFromFile(props->lp, "props/lp.txt");
 
 	return props;
-}*/
+}
 
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
@@ -999,16 +1001,16 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*wax_nit::Properties* props = getProps();
+	wax_nit::Properties* props = getProps();
 	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
-	acid1d::Properties* props = getProps();
+	scene.start();
+	/*acid1d::Properties* props = getProps();
 	Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 
 	return 0;
 }

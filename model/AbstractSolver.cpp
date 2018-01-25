@@ -280,8 +280,6 @@ double AbstractSolver<wax_nit::WaxNIT>::convergance(int& ind, int& varInd)
 					varInd = 0;
 				}
 			}
-			else
-				exit(-1);
 		}
 	}
 
