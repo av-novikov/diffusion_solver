@@ -852,31 +852,31 @@ wax_nit::Properties* getProps()
 	wax_nit::Properties* props = new wax_nit::Properties();
 
 	props->cellsNum_r = 100;
-	props->cellsNum_z = 1;
+	props->cellsNum_z = 5;
 
-	props->timePeriods.push_back(20.0 * 86400.0);
-	props->timePeriods.push_back(40.0 * 86400.0);
+	props->timePeriods.push_back(10.0 * 86400.0);
+	//props->timePeriods.push_back(40.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(65.625 * 1.0e+5);
-	props->pwf.push_back(70.625 * 1.0e+5);
+	props->pwf.push_back(20.625 * 1.0e+5);
+	//props->pwf.push_back(70.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
 
 	props->ht = 10.0;
 	props->ht_min = 10.0;
-	props->ht_max = 100000.0;
+	props->ht_max = 50000.0;
 
 	props->alpha = 7200.0;
 
 	props->r_w = 0.1;
 	props->r_e = 1000.0;
 
-	props->perfIntervals.push_back(make_pair(1, 1));
+	props->perfIntervals.push_back(make_pair(3, 3));
 
 	wax_nit::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
+	tmp.cellsNum_z = 5;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 70.625 * 1.0e+5;
 	tmp.t_init = 291.0;
@@ -895,10 +895,10 @@ wax_nit::Properties* getProps()
 	tmp.lambda_z = 5.0;
 	tmp.c = 1800.0;
 	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
+	//tmp.skins.push_back(0.0);
 
 	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
+	//tmp.radiuses_eff.push_back(props->r_w);
 
 	props->props_sk.push_back(tmp);
 
@@ -934,7 +934,7 @@ wax_nit::Properties* getProps()
 	props->props_gas.c = 3400.0;
 	props->props_gas.lambda = 0.06;
 
-	props->L = 0.0;//  -50.0 * 1.e+3;
+	props->L = 0.0;// -50.0 * 1.e+3;
 
 	// Defining relative permeabilities
 	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");

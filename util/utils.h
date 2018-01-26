@@ -13,6 +13,7 @@
 #define BAR_TO_PA 1.E5
 #define P_ATM 1.0
 #define EQUALITY_TOLERANCE 1.E-8
+#define KELVIN_2_CELSIUS -273.15
 
 using std::vector;
 using std::pair;

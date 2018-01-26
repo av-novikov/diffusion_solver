@@ -141,7 +141,8 @@ double WaxNIT::getRate(int cur) const
 	const Variable& upwd = cells[getUpwindIdx(cur, cur + cellsNum_z + 2)].u_next;
 
 	return getTrans(cell, next.m, beta, nebr.m).value() * props_oil.getKr(upwd.s_w, upwd.s_o, cell.props).value() * 
-		props_oil.getRho(next.p, next.p_bub, next.satur_gas, next.t, next.t_bub, next.satur_wax).value() / props_oil.getViscosity(next.p).value() * (nebr.p - next.p);
+		(1.0 - props_oil.getfp(next.p, next.p_bub, next.satur_gas, next.t, next.t_bub, next.satur_wax).value()) /	
+		props_oil.getB(next.p, next.p_bub, next.satur_gas).value() / props_oil.getViscosity(next.p).value() * (nebr.p - next.p);
 }
 
 adouble WaxNIT::phaseTrans(const Cell& cell)
@@ -199,7 +200,7 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 	adouble fp = props_oil.getfp(next.p, next.p_bub, satur_gas, next.t, next.t_bub, satur_wax);
 	adouble fp_prev = props_oil.getfp(prev.p, prev.p_bub, prev.satur_gas, prev.t, prev.t_bub, prev.satur_wax);
 	h[0] = props.dens_stc * ((1.0 - next.m) - (1.0 - prev.m)) - dadt;
-	h[1] = next.t - prev.t;// getCn(cell) * (next.t - prev.t) - getAd(cell) * (cell.u_next.p - prev.p) + ht * L * phaseTrans(cell);
+	h[1] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (cell.u_next.p - prev.p) - ht * L * phaseTrans(cell);
 	condassign(h[2], satur_wax,
 		next.m * (next.s_o * fp * props_oil.dens_wax_stc + (1.0 - next.s_w - next.s_o - next.s_g) * props_wax.getRho()) -
 		prev.m * (prev.s_o * fp_prev * props_oil.dens_wax_stc + (1.0 - prev.s_w - prev.s_o - prev.s_g) * props_wax.getRho()) + dadt,
@@ -228,7 +229,7 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 		const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta));
 		tmp_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
 			props_oil.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p);
-		//h[1] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (next.p - nebr.p)) / fabs(getDistance(beta, cell));
+		h[1] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (next.p - nebr.p)) / fabs(getDistance(beta, cell));
 		condassign(tmp, satur_wax, (props_oil.dens_wax_stc * fp_avg + 
 									props_wax.getRho() * (1.0 - upwd.s_w - upwd.s_o - upwd.s_g) / upwd.s_o) * tmp_o, 
 									props_oil.dens_wax_stc * fp_avg * tmp_o);
@@ -305,6 +306,7 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 	condassign(h[2], leftIsRate, props_oil.getRho(next.p, next.p_bub, next.satur_gas, next.t, next.t_bub, next.satur_wax) * getTrans(cell, next.m, beta1, nebr1.m) * 
 		props_oil.getKr(next.s_w, next.s_o, cell.props) / props_oil.getViscosity(next.p) * (nebr1.p - next.p) + props_oil.dens_stc * rate,
 		next.p - Pwf);
+	condassign(h[2], leftPresNonPerforated, next.p - nebr1.p);
 	h[3] = (next.s_w - nebr1.s_w) / (adouble)(cell.r - beta1.r) - (nebr1.s_w - nebr2.s_w) / (adouble)(beta1.r - beta2.r);
 	adouble satur_gas = cell.u_next.satur_gas;
 	adouble satur_wax = cell.u_next.satur_wax;

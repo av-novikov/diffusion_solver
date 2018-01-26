@@ -61,7 +61,7 @@ void WaxNITSolver::writeData()
 	poro << cur_t * t_dim / 3600.0 <<
 		"\t" << m / (double)(model->Qcell.size()) << endl;
 	T << cur_t * t_dim / 3600.0 <<
-		"\t" << temp / (double)(model->Qcell.size()) << endl;
+		"\t" << temp / (double)(model->Qcell.size()) + KELVIN_2_CELSIUS << endl;
 	P << cur_t * t_dim / 3600.0 << 
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 	S << cur_t * t_dim / 3600.0 << 
@@ -149,8 +149,7 @@ void WaxNITSolver::checkStability()
 	{
 		if (next.satur_gas)
 		{
-
-			if (next.s_o + next.s_w > 1.0 + EQUALITY_TOLERANCE)
+			if (next.s_o + next.s_w + next.s_g > 1.0 + EQUALITY_TOLERANCE)
 			{
 				next.satur_gas = false;
 				next.s_o = 1.0 - next.s_w;
@@ -164,6 +163,15 @@ void WaxNITSolver::checkStability()
 				next.satur_gas = true;
 				next.s_o = 0.999 * cell.u_iter.s_o;
 				next.p_bub = next.p;
+			}
+		}
+		if (next.satur_wax)
+		{
+			if (next.s_o + next.s_w + next.s_g > 1.0 + EQUALITY_TOLERANCE)
+			{
+				next.satur_gas = false;
+				next.s_o = 1.0 - next.s_w;
+				next.p_bub = 0.999 * cell.u_iter.p_bub;
 			}
 		}
 	};
@@ -236,7 +244,7 @@ void WaxNITSolver::solveStep()
 		//writeMatrixes();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SERIOUS);
+		solver.Solve(PRECOND::ILU_SIMPLE);
 		copySolution(solver.getSolution());
 		//Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		//construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
@@ -253,7 +261,7 @@ void WaxNITSolver::solveStep()
 		iterations++;
 	}
 
-	cout << "Newton Iterations = " << iterations << endl;
+	cout << "Newton Iterations = " << iterations << "\t cur_t = " << cur_t << endl;
 }
 
 void WaxNITSolver::fillIndices()
@@ -325,7 +333,6 @@ void WaxNITSolver::fill()
 	}
 
 }
-
 
 /*void WaxNITSolver::construction_from_fz(int N, int n, int key)
 {

@@ -1606,8 +1606,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(cell.u_next.m);
-		temp->InsertNextValue(cell.u_next.t * T_dim);
-		temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim);
+		temp->InsertNextValue(cell.u_next.t * T_dim + KELVIN_2_CELSIUS);
+		temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim + KELVIN_2_CELSIUS);
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 		satur_gas->InsertNextValue(cell.u_next.satur_gas);
@@ -1644,8 +1644,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(cell.u_next.m);
-			temp->InsertNextValue(cell.u_next.t * T_dim);
-			temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim);
+			temp->InsertNextValue(cell.u_next.t * T_dim + KELVIN_2_CELSIUS);
+			temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim + KELVIN_2_CELSIUS);
 			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 			satur_gas->InsertNextValue(cell.u_next.satur_gas);

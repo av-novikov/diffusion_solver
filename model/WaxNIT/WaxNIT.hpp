@@ -136,9 +136,10 @@ namespace wax_nit
 		inline adouble getCn(const Cell& cell) const
 		{
 			const TapeVariable& next = var[0];
-			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.c +
+			return next.m * 
+					(next.s_o * props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.c +
 					next.s_w * props_wat.getRho(next.p) * props_wat.c +
-					(1.0 - next.s_w - next.s_o) * props_gas.getRho(next.p) * props_gas.c) +
+					next.s_g * props_gas.getRho(next.p) * props_gas.c) +
 					(1.0 - next.m) * cell.props->dens_stc * cell.props->c;
 		};
 		inline adouble getAd(const Cell& cell) const
@@ -146,7 +147,7 @@ namespace wax_nit
 			const TapeVariable& next = var[0];
 			return next.m * (next.s_o * props_oil.getRho(next.p, next.p_bub, cell.u_next.satur_gas, next.t, next.t_bub, cell.u_next.satur_wax) * props_oil.ad * props_oil.c +
 					next.s_w * props_wat.getRho(next.p) * props_wat.ad * props_wat.c +
-					(1.0 - next.s_w - next.s_o) * props_gas.getRho(next.p) * props_gas.ad * props_gas.c);
+					next.s_g * props_gas.getRho(next.p) * props_gas.ad * props_gas.c);
 		};
 		inline adouble getLambda(const Cell& cell, const int axis) const
 		{
@@ -154,9 +155,9 @@ namespace wax_nit
 			adouble tmp;
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
-			condassign(tmp, is_R_axis, next.m *	(next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + (1.0 - next.s_o - next.s_w) * props_gas.lambda) +
+			condassign(tmp, is_R_axis, next.m *	(next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + next.s_g * props_gas.lambda) +
 				(1.0 - next.m) * cell.props->lambda_r);
-			condassign(tmp, is_Z_axis, next.m * (next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + (1.0 - next.s_o - next.s_w) * props_gas.lambda) +
+			condassign(tmp, is_Z_axis, next.m * (next.s_o * props_oil.lambda + next.s_w * props_wat.lambda + next.s_g * props_gas.lambda) +
 				(1.0 - next.m) * cell.props->lambda_z);
 			return tmp;
 		};
