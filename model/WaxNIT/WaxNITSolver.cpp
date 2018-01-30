@@ -46,12 +46,13 @@ void WaxNITSolver::writeData()
 	map<int, double>::iterator it;
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
-		m += model->cells[it->first].u_next.m;
-		temp += model->cells[it->first].u_next.t * model->T_dim;
-		p += model->cells[it->first].u_next.p * model->P_dim;
-		s_w += model->cells[it->first].u_next.s_w;
-		s_o += model->cells[it->first].u_next.s_o;
-		s_g += model->cells[it->first].u_next.s_g;
+		const auto& cell = model->cells[it->first];
+		m += cell.u_next.m;
+		temp += (cell.u_next.t - cell.props->t_init) * model->T_dim;
+		p += cell.u_next.p * model->P_dim;
+		s_w += cell.u_next.s_w;
+		s_o += cell.u_next.s_o;
+		s_g += cell.u_next.s_g;
 		if (model->leftBoundIsRate)
 			qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
@@ -61,7 +62,7 @@ void WaxNITSolver::writeData()
 	poro << cur_t * t_dim / 3600.0 <<
 		"\t" << m / (double)(model->Qcell.size()) << endl;
 	T << cur_t * t_dim / 3600.0 <<
-		"\t" << temp / (double)(model->Qcell.size()) + KELVIN_2_CELSIUS << endl;
+		"\t" << temp / (double)(model->Qcell.size()) << endl;
 	P << cur_t * t_dim / 3600.0 << 
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 	S << cur_t * t_dim / 3600.0 << 
@@ -149,8 +150,9 @@ void WaxNITSolver::checkStability()
 	{
 		if (next.satur_gas)
 		{
-			if (next.s_o + next.s_w + next.s_g > 1.0 + EQUALITY_TOLERANCE)
+			if (next.s_o + next.s_w + next.s_g > 1.0 + 1000.0 * EQUALITY_TOLERANCE)
 			{
+				double qwe = next.s_o + next.s_w + next.s_g;
 				next.satur_gas = false;
 				next.s_o = 1.0 - next.s_w;
 				next.p_bub = 0.999 * cell.u_iter.p_bub;
@@ -158,14 +160,14 @@ void WaxNITSolver::checkStability()
 		}
 		else
 		{
-			if (next.p_bub > next.p + EQUALITY_TOLERANCE)
+			if (next.p_bub > next.p + 100.0 * EQUALITY_TOLERANCE)
 			{
 				next.satur_gas = true;
 				next.s_o = 0.999 * cell.u_iter.s_o;
 				next.p_bub = next.p;
 			}
 		}
-		if (next.satur_wax)
+		/*if (next.satur_wax)
 		{
 			if (next.s_o + next.s_w + next.s_g > 1.0 + EQUALITY_TOLERANCE)
 			{
@@ -173,7 +175,7 @@ void WaxNITSolver::checkStability()
 				next.s_o = 1.0 - next.s_w;
 				next.p_bub = 0.999 * cell.u_iter.p_bub;
 			}
-		}
+		}*/
 	};
 	auto checkCritPoints = [=, this](auto& next, auto& iter, auto& props)
 	{
@@ -244,7 +246,7 @@ void WaxNITSolver::solveStep()
 		//writeMatrixes();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE);
+		solver.Solve(PRECOND::ILU_SERIOUS);
 		copySolution(solver.getSolution());
 		//Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		//construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);

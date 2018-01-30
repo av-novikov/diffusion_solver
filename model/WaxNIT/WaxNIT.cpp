@@ -301,7 +301,7 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 	/*condassign(h[0], isPerforated, props.dens_stc * ((1.0 - next.m) - (1.0 - prev.m)) -
 		props_oil.gamma * props_oil.getRho(next.p, next.p_bub, next.SATUR) * props_oil.getlp(next.t) * getOilVelocityAbs(cell),
 		next.m - nebr1.m);*/
-	h[0] = next.m - nebr1.m;
+	h[0] = (next.m - nebr1.m) / (adouble)(cell.r - beta1.r) - (nebr1.m - nebr2.m) / (adouble)(beta1.r - beta2.r);
 	h[1] = next.t - nebr1.t;
 	condassign(h[2], leftIsRate, props_oil.getRho(next.p, next.p_bub, next.satur_gas, next.t, next.t_bub, next.satur_wax) * getTrans(cell, next.m, beta1, nebr1.m) * 
 		props_oil.getKr(next.s_w, next.s_o, cell.props) / props_oil.getViscosity(next.p) * (nebr1.p - next.p) + props_oil.dens_stc * rate,
@@ -316,6 +316,9 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 	condassign(h[5], satur_wax,
 		(next.s_g - nebr1.s_g) / (adouble)(cell.r - beta1.r) - (nebr1.s_g - nebr2.s_g) / (adouble)(beta1.r - beta2.r),
 		(next.t_bub - nebr1.t_bub) / (adouble)(cell.r - beta1.r) - (nebr1.t_bub - nebr2.t_bub) / (adouble)(beta1.r - beta2.r));
+
+	for (int i = 0; i < var_size; i++)
+		h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
@@ -351,6 +354,9 @@ void WaxNIT::solve_eqRight(const Cell& cell)
 	condassign(h[5], satur_wax, next.s_g - nebr.s_g, next.t_bub - nebr.t_bub);
 
 	for (int i = 0; i < var_size; i++)
+		h[i] /= P_dim;
+
+	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];
 
 	trace_off();
@@ -380,6 +386,9 @@ void WaxNIT::solve_eqVertical(const Cell& cell)
 	h[3] = next.s_w - nebr.s_w;
 	condassign(h[4], satur_gas, next.s_o - nebr.s_o, next.p_bub - nebr.p_bub);
 	condassign(h[5], satur_wax, next.s_g - nebr.s_g, next.t_bub - nebr.t_bub);
+
+	for (int i = 0; i < var_size; i++)
+		h[i] /= P_dim;
 
 	for (int i = 0; i < var_size; i++)
 		h[i] >>= y[i];

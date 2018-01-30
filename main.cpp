@@ -851,15 +851,15 @@ wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
-	props->cellsNum_r = 100;
-	props->cellsNum_z = 5;
+	props->cellsNum_r = 200;
+	props->cellsNum_z = 1;
 
 	props->timePeriods.push_back(10.0 * 86400.0);
 	//props->timePeriods.push_back(40.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(20.625 * 1.0e+5);
+	props->pwf.push_back(40.625 * 1.0e+5);
 	//props->pwf.push_back(70.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
@@ -873,22 +873,22 @@ wax_nit::Properties* getProps()
 	props->r_w = 0.1;
 	props->r_e = 1000.0;
 
-	props->perfIntervals.push_back(make_pair(3, 3));
+	props->perfIntervals.push_back(make_pair(1, 1));
 
 	wax_nit::Skeleton_Props tmp;
-	tmp.cellsNum_z = 5;
+	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 70.625 * 1.0e+5;
 	tmp.t_init = 291.0;
 	tmp.p_sat = 70.625 * 1.0e+5;
 	tmp.t_sat = tmp.t_init;
-	tmp.sw_init = 0.2;	tmp.so_init = 0.75;	tmp.sg_init = 0.0;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.798;	tmp.sg_init = 0.0;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
 	tmp.h1 = 0.0;
-	tmp.h2 = 10.0;
-	tmp.height = 10.0;
-	tmp.perm_r = 20.0;
-	tmp.perm_z = 20.0;
+	tmp.h2 = 6.5;
+	tmp.height = 6.5;
+	tmp.perm_r = 450.0;
+	tmp.perm_z = 45.0;
 	tmp.dens_stc = 2000.0;
 	tmp.beta = 4.35113e-10;
 	tmp.lambda_r = 5.0;
@@ -904,18 +904,18 @@ wax_nit::Properties* getProps()
 
 	props->depth_point = 0.0;
 
-	props->props_oil.visc = 5.0;
-	props->props_oil.dens_stc = 887.261;
-	props->props_oil.beta = 1.0 * 1.e-9;
+	props->props_oil.visc = 4.36;
+	props->props_oil.dens_stc = 855.6;
+	props->props_oil.beta = 1.22 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
-	props->props_oil.gamma = 0.0;
+	props->props_oil.gamma = 1000.0;
 
 	props->props_oil.jt = 4.0 * 1.e-7;
 	props->props_oil.ad = 2.0 * 1.e-7;
 	props->props_oil.c = 1880.0;
 	props->props_oil.lambda = 0.16;
 
-	props->props_wat.visc = 1.0;
+	props->props_wat.visc = 4.0;
 	props->props_wat.dens_stc = 1000.0;
 	props->props_wat.beta = 1.0 * 1.e-9;
 	props->props_wat.p_ref = tmp.p_ref;
@@ -926,15 +926,15 @@ wax_nit::Properties* getProps()
 	props->props_wat.lambda = 0.16;
 
 	props->props_gas.visc = 0.03;
-	props->props_oil.dens_gas_stc = props->props_gas.dens_stc = 0.8;
-	props->props_oil.dens_wax_stc = props->props_wax.dens_stc = 1200.0;
+	props->props_oil.dens_gas_stc = props->props_gas.dens_stc = 1.45;
+	props->props_oil.dens_wax_stc = props->props_wax.dens_stc = 900.0;
 
 	props->props_gas.jt = -1.7 * 1.e-6;
 	props->props_gas.ad = 3.6 * 1.e-6;
 	props->props_gas.c = 3400.0;
 	props->props_gas.lambda = 0.06;
 
-	props->L = 0.0;// -50.0 * 1.e+3;
+	props->L = -50.0 * 1.e+3;
 
 	// Defining relative permeabilities
 	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");

@@ -1563,6 +1563,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro->SetName("porosity");
+	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
+	perm->SetName("permeability");
 	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
 	temp->SetName("temperature");
 	auto temp_sat = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1606,7 +1608,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(cell.u_next.m);
-		temp->InsertNextValue(cell.u_next.t * T_dim + KELVIN_2_CELSIUS);
+		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(cell.u_next.m).value() * r_dim * r_dim));
+		temp->InsertNextValue((cell.u_next.t - cell.props->t_init) * T_dim);
 		temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim + KELVIN_2_CELSIUS);
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
@@ -1644,7 +1647,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(cell.u_next.m);
-			temp->InsertNextValue(cell.u_next.t * T_dim + KELVIN_2_CELSIUS);
+			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(cell.u_next.m).value() * r_dim * r_dim));
+			temp->InsertNextValue((cell.u_next.t - cell.props->t_init) * T_dim);
 			temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim + KELVIN_2_CELSIUS);
 			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
@@ -1671,6 +1675,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
+	fd->AddArray(perm);
 	fd->AddArray(temp);
 	fd->AddArray(temp_sat);
 	fd->AddArray(pres);
