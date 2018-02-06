@@ -23,6 +23,7 @@ WaxNIT::~WaxNIT()
 	delete[] jac;
 
 	delete[] x, h;
+	delete[] var;
 }
 void WaxNIT::setProps(Properties& props)
 {

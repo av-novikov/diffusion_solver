@@ -16,6 +16,7 @@
 #include "snapshotter/VTKSnapshotter.h"
 
 #include "model/GasOil_RZ/GasOil_RZ.h"
+#include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/1d/Acid1d.hpp"
 #include "model/VPP2d/VPP2d.hpp"
@@ -40,6 +41,10 @@ VTKSnapshotter<modelType>::VTKSnapshotter()
 VTKSnapshotter<gasOil_rz::GasOil_RZ>::VTKSnapshotter()
 {
 	pattern = prefix + "GasOil_RZ_%{STEP}.vtp";
+}
+VTKSnapshotter<acid2dnit::Acid2dNIT>::VTKSnapshotter()
+{
+	pattern = prefix + "Acid2dNIT_%{STEP}.vtp";
 }
 VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter()
 {
@@ -368,6 +373,153 @@ void VTKSnapshotter<acid2d::Acid2d>::dump_all(int i)
 	fd->AddArray(vel_w);
 	fd->AddArray(vel_o);
 	fd->AddArray(vel_g);
+
+	// Writing
+	auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+
+	writer->SetFileName(getFileName(i).c_str());
+	writer->SetInputData(grid);
+	writer->Write();
+}
+void VTKSnapshotter<acid2dnit::Acid2dNIT>::dump_all(int i)
+{
+	using namespace acid2dnit;
+
+	// Grid
+	auto grid = vtkSmartPointer<vtkPolyData>::New();
+
+	// Points
+	auto points = vtkSmartPointer<vtkPoints>::New();
+	for (int j = 1; j < ny; j++)
+	{
+		Cell& cell = model->cells[j];
+		points->InsertNextPoint(r_dim * (0.99 * cell.r), -r_dim * (cell.z - cell.hz / 2.0), 0.0);
+	}
+	for (int k = 1; k < nx; k++)
+	{
+		for (int j = 1; j < ny; j++)
+		{
+			Cell& cell = model->cells[k * ny + j];
+			points->InsertNextPoint(r_dim * (cell.r - cell.hr / 2.0), -r_dim * (cell.z - cell.hz / 2.0), 0.0);
+		}
+	}
+	grid->SetPoints(points);
+
+	// Data
+	auto polygons = vtkSmartPointer<vtkCellArray>::New();
+	auto polygon = vtkSmartPointer<vtkPolygon>::New();
+	polygon->GetPointIds()->SetNumberOfIds(4);
+	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
+	poro->SetName("porosity");
+	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
+	perm->SetName("permeability");
+	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_w->SetName("WaterSaturation");
+	auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_o->SetName("OilSaturation");
+	auto conc_a = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_a->SetName("AcidConcentration");
+	auto conc_w = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_w->SetName("WaterConcentration");
+	auto conc_co2 = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_co2->SetName("CO2Concentration");
+	auto conc_s = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_s->SetName("SaltConcentration");
+	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
+	temp->SetName("temperature");
+	auto vel_w = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_w->SetName("WaterVelocity");		vel_w->SetNumberOfComponents(3);
+	auto vel_o = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_o->SetName("OilVelocity");			vel_o->SetNumberOfComponents(3);
+
+	int k, j, idx, idx1;
+
+	double vel[3];
+
+	for (j = 0; j < ny - 2; j++)
+	{
+		idx = j;
+		idx1 = j + 1;
+		Cell& cell = model->cells[idx1];
+		Variable& next = cell.u_next;
+
+		polygon->GetPointIds()->SetId(0, idx);
+		polygon->GetPointIds()->SetId(1, idx + ny - 1);
+		polygon->GetPointIds()->SetId(2, idx + ny);
+		polygon->GetPointIds()->SetId(3, idx + 1);
+		polygons->InsertNextCell(polygon);
+
+		poro->InsertNextValue(next.m);
+		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
+		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+		sat_w->InsertNextValue(next.sw);
+		sat_o->InsertNextValue(1.0 - next.sw);
+		conc_a->InsertNextValue(next.xa);
+		conc_w->InsertNextValue(next.xw);
+		conc_s->InsertNextValue(next.xs);
+		conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
+		temp->InsertNextValue(next.t * T_dim);
+		vel[0] = 0.0;
+		vel[1] = 0.0;
+		vel[2] = 0.0;
+		vel_w->InsertNextTuple(vel);
+		vel_o->InsertNextTuple(vel);
+	}
+
+	// Middle cells
+	for (k = 1; k < nx - 1; k++)
+	{
+		for (j = 0; j < ny - 2; j++)
+		{
+			idx = k * (ny - 1) + j;
+			idx1 = k * ny + j + 1;
+			Cell& cell = model->cells[idx1];
+			Variable& next = cell.u_next;
+
+			polygon->GetPointIds()->SetId(0, idx);
+			polygon->GetPointIds()->SetId(1, idx + ny - 1);
+			polygon->GetPointIds()->SetId(2, idx + ny);
+			polygon->GetPointIds()->SetId(3, idx + 1);
+			polygons->InsertNextCell(polygon);
+
+			poro->InsertNextValue(next.m);
+			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
+			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+			sat_w->InsertNextValue(next.sw);
+			sat_o->InsertNextValue(1.0 - next.sw);
+			conc_a->InsertNextValue(next.xa);
+			conc_w->InsertNextValue(next.xw);
+			conc_s->InsertNextValue(next.xs);
+			conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
+			temp->InsertNextValue(next.t * T_dim);
+			vel[0] = r_dim / t_dim * model->getWatVelocity(cell, R_AXIS).value();
+			vel[1] = r_dim / t_dim * model->getWatVelocity(cell, Z_AXIS).value();
+			vel[2] = 0.0;
+			vel_w->InsertNextTuple(vel);
+			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, R_AXIS).value();
+			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, Z_AXIS).value();
+			vel[2] = 0.0;
+			vel_o->InsertNextTuple(vel);
+		}
+	}
+
+	grid->SetPolys(polygons);
+
+	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(poro);
+	fd->AddArray(perm);
+	fd->AddArray(pres);
+	fd->AddArray(sat_w);
+	fd->AddArray(sat_o);
+	fd->AddArray(conc_a);
+	fd->AddArray(conc_w);
+	fd->AddArray(conc_s);
+	fd->AddArray(conc_co2);
+	fd->AddArray(vel_w);
+	fd->AddArray(vel_o);
+	fd->AddArray(temp);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
@@ -1699,6 +1851,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;
 template class VTKSnapshotter<acid2d::Acid2d>;
+template class VTKSnapshotter<acid2dnit::Acid2dNIT>;
+template class VTKSnapshotter<acid1d::Acid1d>;
 template class VTKSnapshotter<vpp2d::VPP2d>;
 template class VTKSnapshotter<bing1d::Bingham1d>;
 template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;

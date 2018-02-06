@@ -259,7 +259,6 @@ void WaxNITSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
-		//model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 

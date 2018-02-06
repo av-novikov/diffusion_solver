@@ -64,5 +64,35 @@ struct TapeJustAcid
 	adouble xa;
 	adouble xs;
 };
+struct JustAcidNIT
+{
+	static const int size = 7;
+
+	union {
+		double values[size];
+		struct
+		{
+			double m;
+			double p;
+			double sw;
+			double xw;
+			double xa;
+			double xs;
+			double t;
+		};
+	};
+};
+struct TapeJustAcidNIT
+{
+	static const int size = 7;
+
+	adouble m;
+	adouble p;
+	adouble sw;
+	adouble xw;
+	adouble xa;
+	adouble xs;
+	adouble t;
+};
 
 #endif /* ACIDVARIABLES_HPP_ */

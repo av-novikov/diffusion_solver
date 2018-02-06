@@ -10,6 +10,7 @@
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/Acid/1d/Acid1d.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
+#include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/WaxNIT/WaxNIT.hpp"
 
 #include <iomanip>
@@ -669,5 +670,6 @@ template class AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>;
 template class AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class AbstractSolver<blackoil_rz::BlackOil_RZ>;
 template class AbstractSolver<acid2d::Acid2d>;
+template class AbstractSolver<acid2dnit::Acid2dNIT>;
 template class AbstractSolver<acid1d::Acid1d>;
 template class AbstractSolver<wax_nit::WaxNIT>;
