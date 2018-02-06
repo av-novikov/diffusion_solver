@@ -236,9 +236,9 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 			props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), beta);
 		adouble dens_o = getAverage(props_o.getDensity(next.p), cell,
 			props_o.getDensity(nebr.p), beta);
-		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_w * grav * (cell.z - beta.z)) *
 			dens_w * props_w.getKr(upwd.sw, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
-		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
 			dens_o * props_o.getKr(upwd.sw, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
 		const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta));
 

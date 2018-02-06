@@ -78,7 +78,7 @@ class AbstractModel
 
 		static const int var_size;
 	public:
-		AbstractModel() { isWriteSnaps = true;	grav = 9.8; };
+		AbstractModel() { isWriteSnaps = true;	grav = 0.0; };
 		virtual ~AbstractModel() {};
 	
 		// Dimensions

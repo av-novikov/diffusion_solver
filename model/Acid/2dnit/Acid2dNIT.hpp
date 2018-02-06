@@ -68,7 +68,7 @@ namespace acid2dnit
 		{
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw, var.xs) *
 					(var.xa - props.xa_eqbm) * 
-					reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
+					reac.getReactionRate(props.m_init, var.m, var.t) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
 		{
@@ -97,13 +97,13 @@ namespace acid2dnit
 			adouble tmp;
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
-
 			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_o.getKr(next.sw, cell.props) / props_o.getViscosity(next.p) *
 				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_o.getKr(next.sw, cell.props) / props_o.getViscosity(next.p) *
-				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
+				((var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) -
+				grav * props_o.getDensity(next.p)));
 			return tmp;
 		};
 		inline adouble getWatVelocity(const Cell& cell, const int axis) const
@@ -112,25 +112,60 @@ namespace acid2dnit
 			adouble tmp;
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
-
-			/*condassign(tmp, is_R_axis,
+			double qwe;
+			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
 				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_w.getKr(next.sw, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
-				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));*/
+				((var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) - 
+				grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs)));
+			return tmp;
+		};
+		inline double getOilVel(const Cell& cell, const int axis) const
+		{
+			double tmp;
+			const auto& next = cell.u_next;
 			if (axis == R_AXIS)
-				tmp = -cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, cell.props) /
-				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
-				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r);
+			{
+				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
+				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_o.getKr(next.sw, cell.props).value() / 
+					props_o.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r);
+			}
 			else if (axis == Z_AXIS)
-				tmp = -cell.props->getPermCoseni_z(next.m) * props_w.getKr(next.sw, cell.props) /
-				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
-				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z);
-			else
-				exit(-1);
+			{
+				const Cell& cell1 = cells[cell.num - 1];
+				const Cell& cell2 = cells[cell.num + 1];
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, cell.props).value() / 
+					props_o.getViscosity(next.p).value() *
+					((cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z) - grav * props_o.getDensity(next.p).value());
+			}
+			return tmp;
+		};
+		inline double getWatVel(const Cell& cell, const int axis) const
+		{
+			double tmp;
+			const auto& next = cell.u_next;
+			if (axis == R_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
+				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_w.getKr(next.sw, cell.props).value() /
+					props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() *
+					((cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r) - grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs).value());
+			}
+			else if (axis == Z_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - 1];
+				const Cell& cell2 = cells[cell.num + 1];
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_w.getKr(next.sw, cell.props).value() /
+					props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() *
+					((cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z) - grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs).value());
+			}
 			return tmp;
 		};
 

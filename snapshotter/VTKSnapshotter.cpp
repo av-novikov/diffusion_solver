@@ -494,12 +494,12 @@ void VTKSnapshotter<acid2dnit::Acid2dNIT>::dump_all(int i)
 			conc_s->InsertNextValue(next.xs);
 			conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
 			temp->InsertNextValue(next.t * T_dim);
-			vel[0] = r_dim / t_dim * model->getWatVelocity(cell, R_AXIS).value();
-			vel[1] = r_dim / t_dim * model->getWatVelocity(cell, Z_AXIS).value();
+			vel[0] = r_dim / t_dim * model->getWatVel(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getWatVel(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_w->InsertNextTuple(vel);
-			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, R_AXIS).value();
-			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, Z_AXIS).value();
+			vel[0] = r_dim / t_dim * model->getOilVel(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVel(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_o->InsertNextTuple(vel);
 		}
