@@ -87,6 +87,74 @@ namespace wax_nit
 				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
 			return tmp;
 		};
+
+		inline double getOilVel(const Cell& cell, const int axis) const
+		{
+			double tmp;
+			const auto& next = cell.u_next;
+			if (axis == R_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
+				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_oil.getKr(next.s_w, next.s_o, cell.props).value() /
+					props_oil.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r);
+			}
+			else if (axis == Z_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - 1];
+				const Cell& cell2 = cells[cell.num + 1];
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_oil.getKr(next.s_w, next.s_o, cell.props).value() /
+					props_oil.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z);
+			}
+			return tmp;
+		};
+		inline double getWatVel(const Cell& cell, const int axis) const
+		{
+			double tmp;
+			const auto& next = cell.u_next;
+			if (axis == R_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
+				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_wat.getKr(next.s_w, next.s_o, cell.props).value() /
+					props_wat.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r);
+			}
+			else if (axis == Z_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - 1];
+				const Cell& cell2 = cells[cell.num + 1];
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_wat.getKr(next.s_w, next.s_o, cell.props).value() /
+					props_wat.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z);
+			}
+			return tmp;
+		};
+		inline double getGasVel(const Cell& cell, const int axis) const
+		{
+			double tmp;
+			const auto& next = cell.u_next;
+			if (axis == R_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
+				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_gas.getKr(next.s_w, next.s_o, cell.props).value() /
+					props_gas.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r);
+			}
+			else if (axis == Z_AXIS)
+			{
+				const Cell& cell1 = cells[cell.num - 1];
+				const Cell& cell2 = cells[cell.num + 1];
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_gas.getKr(next.s_w, next.s_o, cell.props).value() /
+					props_gas.getViscosity(next.p).value() *
+					(cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z);
+			}
+			return tmp;
+		};
+
 		inline adouble getOilVelocityAbs(const Cell& cell) const 
 		{
 			adouble vel_r = getOilVelocity(cell, R_AXIS);

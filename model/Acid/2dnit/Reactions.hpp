@@ -106,10 +106,10 @@ namespace acid2dnit
 		double surf_init;
 		double activation_energy;
 		double reaction_const;
-		inline adouble getReactionRate(double m0, adouble m) const
+		inline adouble getReactionRate(double m0, adouble m, adouble t) const
 		{
 			return reaction_const * surf_init * (1.0 - m) / (1 - m0) *
-				exp(-activation_energy / Component::R / Component::T);
+				exp(-activation_energy / Component::R / t);
 		}
 	};
 
