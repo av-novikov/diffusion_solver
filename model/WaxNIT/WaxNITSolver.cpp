@@ -10,7 +10,10 @@ WaxNITSolver::WaxNITSolver(WaxNIT* _model) : basic2d::Basic2dSolver<WaxNIT>(_mod
 	P.open("snaps/P.dat", ofstream::out);
 	S.open("snaps/S.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
-
+	pvd.open("snaps/WaxNIT.pvd", ofstream::out);
+	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
+	pvd << "\t<Collection>\n";
+	
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 0.1;
 
@@ -36,6 +39,9 @@ WaxNITSolver::~WaxNITSolver()
 	P.close();
 	S.close();
 	qcells.close();
+	pvd << "\t</Collection>\n";
+	pvd << "</VTKFile>\n";
+	pvd.close();
 }
 void WaxNITSolver::writeData()
 {
@@ -71,11 +77,13 @@ void WaxNITSolver::writeData()
 		"\t" << s_g / (double)(model->Qcell.size()) <<
 		"\t" << (1.0 - s_w - s_o - s_g) / (double)(model->Qcell.size()) << endl;
 
+	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) + 
+			"0\" file=\"WaxNIT_" + to_string(step_idx) + ".vtp\"/>\n";
 	qcells << endl;
 }
 void WaxNITSolver::start()
 {
-	int counter = 0;
+	step_idx = 0;
 	iterations = 8;
 
 	fillIndices();
@@ -87,13 +95,13 @@ void WaxNITSolver::start()
 	{
 		control();
 		if (model->isWriteSnaps)
-			model->snapshot_all(counter++);
+			model->snapshot_all(step_idx++);
 		doNextStep();
 		copyTimeLayer();
 		cout << "---------------------NEW TIME STEP---------------------" << endl;
 	}
 	if (model->isWriteSnaps)
-		model->snapshot_all(counter++);
+		model->snapshot_all(step_idx);
 	writeData();
 }
 void WaxNITSolver::copySolution(const Vector& sol)

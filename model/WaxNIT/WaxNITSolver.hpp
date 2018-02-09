@@ -26,12 +26,14 @@ namespace wax_nit
 
 		std::array<double, var_size> averVal, averValPrev, dAverVal;
 		double err_newton;
+		int step_idx;
 
 		std::ofstream S;
 		std::ofstream P;
 		std::ofstream poro;
 		std::ofstream T;
 		std::ofstream qcells;
+		std::ofstream pvd;
 		
 		//std::ofstream mat_a, mat_b, mat_c, rhs_os;
 		//void writeMatrixes();

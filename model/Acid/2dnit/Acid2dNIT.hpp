@@ -112,7 +112,6 @@ namespace acid2dnit
 			adouble tmp;
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
-			double qwe;
 			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *

@@ -26,7 +26,7 @@ namespace frac
 	class FractureModel : public AbstractModel<Variable, Properties, HexCell, FractureModel>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class snapshotter::VTKSnapshotter;
+		template<typename> friend class VTKSnapshotter;
 	protected:
 		int cellsNum_x, cellsNum_y, cellsNum_z;
 		double l2, w2, height;
