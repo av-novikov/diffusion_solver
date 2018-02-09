@@ -121,8 +121,6 @@ namespace basic1d
 		int cellsNum_x;
 		double depth_point;
 
-		Skeleton_Props props_sk;
-
 		std::vector< std::pair<double, double> > kr_wat;
 		std::vector< std::pair<double, double> > kr_oil;
 		std::vector< std::pair<double, double> > kr_gas;

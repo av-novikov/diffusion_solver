@@ -94,5 +94,24 @@ struct TapeJustAcidNIT
 	adouble xs;
 	adouble t;
 };
+struct VarFrac
+{
+	static const int size = 2;
+
+	union {
+		double values[size];
+		struct
+		{
+			double p;
+			double c;
+		};
+	};
+};
+struct TapeVarFrac
+{
+	static const int size = 2;
+	adouble p;
+	adouble c;
+};
 
 #endif /* ACIDVARIABLES_HPP_ */

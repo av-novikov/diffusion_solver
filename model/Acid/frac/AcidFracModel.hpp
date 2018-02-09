@@ -1,0 +1,88 @@
+#ifndef ACIDFRACMODEL_HPP_
+#define ACIDFRACMODEL_HPP_
+
+#include "model/Acid/frac/Properties.hpp"
+#include "model/cells/AcidVariables.hpp"
+#include "model/cells/LinearCell.hpp"
+#include "model/cells/HexCell.hpp"
+#include "model/Basic1d/Basic1d.hpp"
+#include "util/Interpolate.h"
+
+namespace acidfrac
+{
+	typedef JustAcid PoroVariable;
+	typedef TapeJustAcid PoroTapeVariable;
+	typedef JustAcid PoroVariable;
+	typedef TapeJustAcid PoroTapeVariable;
+	typedef VarFrac FracVariable;
+	typedef TapeVarFrac FracTapeVariable;
+	
+	template <typename TVariable> using TCell = LinearCell<TVariable, Skeleton_Props>;
+	typedef LinearCell<PoroVariable, Skeleton_Props> PoroCell;
+	typedef HexCell<FracVariable> FracCell;
+	typedef PoroCell::Type Type;
+	struct PoroGrid
+	{
+		std::vector<FracCell> cells;
+		int cellsNum_y, cellsNum;
+		double hx, hz, Volume;
+	};
+
+	typedef CalciteReaction CurrentReaction;
+	typedef CurrentReaction::REACTS REACTS;
+
+	class AcidFrac
+	{
+		template<typename> friend class Snapshotter;
+		template<typename> friend class VTKSnapshotter;
+		friend class AcidFracSolver; 
+	protected:
+		// Porous medium
+		int skeletonsNum;
+		std::vector<Skeleton_Props> props_sk;
+		// Fracture
+		FracProperties props_frac;
+		// Fluids
+		CurrentReaction reac;
+		Water_Props props_w;
+		Oil_Props props_o;
+		Gas_Props props_g;
+		// Grids
+		std::vector<PoroGrid> poro_grids;
+		std::vector<FracCell> cells_frac;
+		int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z;
+		// Temporary properties
+		double ht, ht_min, ht_max;
+		int periodsNum;
+		double Qsum, Pwf, c;
+		std::vector<double> period, rate, pwf, cs;
+		bool leftBoundIsRate, rightBoundIsPres;
+		// Scheme
+		/*TapeVariable* var;
+		adouble* h;
+		double* x;
+		double* y;
+		double** jac;*/
+		// Snapshotter
+		bool isWriteSnaps;
+		VTKSnapshotter<AcidFrac>* snapshotter;
+
+		void buildGrid();
+		void setProps(Properties& props);
+		void makeDimLess();
+		void setInitialState();
+
+		// Service functionss
+
+	public:
+		// Dimensions
+		double t_dim, R_dim, P_dim, T_dim, Q_dim, grav;
+
+		AcidFrac();
+		~AcidFrac();
+
+		void snapshot_all(int i) { snapshotter->dump_all(i); }
+	};
+};
+
+#endif /* ACIDFRACMODEL_HPP_ */
