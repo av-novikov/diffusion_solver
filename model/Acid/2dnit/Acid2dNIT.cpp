@@ -221,7 +221,7 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 	h[5] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xs -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xs -
 		ht * reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight * rate;
-	h[6] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (cell.u_next.p - prev.p);
+	h[6] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (next.p - prev.p);
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);

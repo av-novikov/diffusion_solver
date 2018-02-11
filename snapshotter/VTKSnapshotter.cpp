@@ -19,6 +19,7 @@
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/1d/Acid1d.hpp"
+#include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
@@ -53,6 +54,10 @@ VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter()
 VTKSnapshotter<acid1d::Acid1d>::VTKSnapshotter()
 {
 	pattern = prefix + "Acid1d_%{STEP}.vtp";
+}
+VTKSnapshotter<acidfrac::AcidFrac>::VTKSnapshotter()
+{
+	pattern = prefix + "AcidFrac_%{STEP}.vtp";
 }
 VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
 {
@@ -657,6 +662,10 @@ void VTKSnapshotter<acid1d::Acid1d>::dump_all(int i)
 	writer->SetFileName(getFileName(i).c_str());
 	writer->SetInputData(grid);
 	writer->Write();
+}
+void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
+{
+	using namespace acidfrac;
 }
 void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 {
@@ -1743,6 +1752,9 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	auto vel_gas = vtkSmartPointer<vtkDoubleArray>::New();
 	vel_gas->SetName("gasVelocity");
 	vel_gas->SetNumberOfComponents(3);
+	auto vel_wat = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_wat->SetName("waterVelocity");
+	vel_wat->SetNumberOfComponents(3);
 
 	int k, j, idx, idx1;
 	double vel[3];
@@ -1771,16 +1783,10 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 		sat_oil->InsertNextValue(cell.u_next.s_o);
 		sat_gas->InsertNextValue(cell.u_next.s_g);
 		sat_wax->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o - cell.u_next.s_g);
-		vel[0] = 0.0;
-		vel[1] = 0.0;
-		vel[2] = 0.0;
+		vel[0] = 0.0;	vel[1] = 0.0;	vel[2] = 0.0;
 		vel_oil->InsertNextTuple(vel);
-		vel[0] = 0.0;
-		vel[1] = 0.0;
-		vel[2] = 0.0;
 		vel_gas->InsertNextTuple(vel);
-		//vel[0] = model->getOilVelocity(cell, NEXT, R_AXIS);	vel[1] = model->getOilVelocity(cell, NEXT, Z_AXIS);	
-		//vel_oil->InsertNextValue(vel);
+		vel_wat->InsertNextTuple(vel);
 	}
 
 	// Middle cells
@@ -1810,16 +1816,18 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 			sat_oil->InsertNextValue(cell.u_next.s_o);
 			sat_gas->InsertNextValue(cell.u_next.s_g);
 			sat_wax->InsertNextValue(1.0 - cell.u_next.s_w - cell.u_next.s_o - cell.u_next.s_g);
-			vel[0] = 0.0;
-			vel[1] = 0.0;
+			vel[0] = r_dim / t_dim * model->getOilVel(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVel(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_oil->InsertNextTuple(vel);
-			vel[0] = 0.0;
-			vel[1] = 0.0;
+			vel[0] = r_dim / t_dim * model->getGasVel(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getGasVel(cell, Z_AXIS);
 			vel[2] = 0.0;
 			vel_gas->InsertNextTuple(vel);
-			//vel[0] = model->getOilVelocity(cell, NEXT, R_AXIS);	vel[1] = model->getOilVelocity(cell, NEXT, Z_AXIS);	
-			//vel_oil->InsertNextValue(vel);
+			vel[0] = r_dim / t_dim * model->getWatVel(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getWatVel(cell, Z_AXIS);
+			vel[2] = 0.0;
+			vel_wat->InsertNextTuple(vel);
 		}
 	}
 
@@ -1840,6 +1848,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	fd->AddArray(sat_wax);
 	fd->AddArray(vel_oil);
 	fd->AddArray(vel_gas);
+	fd->AddArray(vel_wat);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
@@ -1853,6 +1862,7 @@ template class VTKSnapshotter<gasOil_rz::GasOil_RZ>;
 template class VTKSnapshotter<acid2d::Acid2d>;
 template class VTKSnapshotter<acid2dnit::Acid2dNIT>;
 template class VTKSnapshotter<acid1d::Acid1d>;
+template class VTKSnapshotter<acidfrac::AcidFrac>;
 template class VTKSnapshotter<vpp2d::VPP2d>;
 template class VTKSnapshotter<bing1d::Bingham1d>;
 template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;

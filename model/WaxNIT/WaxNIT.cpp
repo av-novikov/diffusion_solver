@@ -172,7 +172,7 @@ adouble WaxNIT::phaseTrans(const Cell& cell)
 			getAverage((1.0 - fp) * props_oil.getRhoTilde(next.p, next.p_bub, next.satur_gas) / props_oil.getViscosity(next.p), cell,
 						(1.0 - fp_nebr) * props_oil.getRhoTilde(nebr.p, nebr.p_bub, nebr.satur_gas) / props_oil.getViscosity(nebr.p), beta);
 	}
-	return H;
+	return -H;
 }
 void WaxNIT::solve_eqMiddle(const Cell& cell)
 {
@@ -201,7 +201,7 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 	adouble fp = props_oil.getfp(next.p, next.p_bub, satur_gas, next.t, next.t_bub, satur_wax);
 	adouble fp_prev = props_oil.getfp(prev.p, prev.p_bub, prev.satur_gas, prev.t, prev.t_bub, prev.satur_wax);
 	h[0] = props.dens_stc * ((1.0 - next.m) - (1.0 - prev.m)) - dadt;
-	h[1] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (cell.u_next.p - prev.p) - ht * L * phaseTrans(cell);
+	h[1] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (next.p - prev.p) - ht * L * phaseTrans(cell);
 	condassign(h[2], satur_wax,
 		next.m * (next.s_o * fp * props_oil.dens_wax_stc + (1.0 - next.s_w - next.s_o - next.s_g) * props_wax.getRho()) -
 		prev.m * (prev.s_o * fp_prev * props_oil.dens_wax_stc + (1.0 - prev.s_w - prev.s_o - prev.s_g) * props_wax.getRho()) + dadt,

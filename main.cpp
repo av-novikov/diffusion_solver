@@ -41,6 +41,8 @@
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/2dnit/Acid2dNITSolver.hpp"
 
+#include "model/Acid/frac/AcidFracModel.hpp"
+
 #include "model/WaxNIT/WaxNIT.hpp"
 #include "model/WaxNIT/WaxNITSolver.hpp"
 
@@ -967,19 +969,19 @@ wax_nit::Properties* getProps()
 	props->cellsNum_r = 200;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(300.0 * 86400.0);
+	props->timePeriods.push_back(370.0 * 86400.0);
 	//props->timePeriods.push_back(40.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(40.625 * 1.0e+5);
+	props->pwf.push_back(140.625 * 1.0e+5);
 	//props->pwf.push_back(70.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
 
 	props->ht = 10.0;
 	props->ht_min = 10.0;
-	props->ht_max = 50000.0;
+	props->ht_max = 500000.0;
 
 	props->alpha = 7200.0;
 
@@ -991,11 +993,11 @@ wax_nit::Properties* getProps()
 	wax_nit::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_ref = 70.625 * 1.0e+5;
+	tmp.p_init = tmp.p_out = tmp.p_ref = 180.625 * 1.0e+5;
 	tmp.t_init = 291.0;
-	tmp.p_sat = 70.625 * 1.0e+5;
+	tmp.p_sat = 180.625 * 1.0e+5;
 	tmp.t_sat = tmp.t_init;
-	tmp.sw_init = 0.2;	tmp.so_init = 0.798;	tmp.sg_init = 0.0;
+	tmp.sw_init = 0.02;	tmp.so_init = 0.9799;	tmp.sg_init = 0.0;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 6.5;
@@ -1008,24 +1010,22 @@ wax_nit::Properties* getProps()
 	tmp.lambda_z = 5.0;
 	tmp.c = 1800.0;
 	tmp.skins.push_back(0.0);
-	//tmp.skins.push_back(0.0);
 
 	tmp.radiuses_eff.push_back(props->r_w);
-	//tmp.radiuses_eff.push_back(props->r_w);
 
 	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;
 
-	props->props_oil.visc = 4.36;
+	props->props_oil.visc = 8.36;
 	props->props_oil.dens_stc = 855.6;
 	props->props_oil.beta = 1.22 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
-	props->props_oil.gamma = 1000.0;
+	props->props_oil.gamma = 0.1;
 
-	props->props_oil.jt = 4.0 * 1.e-7;
-	props->props_oil.ad = 2.0 * 1.e-7;
-	props->props_oil.c = 1880.0;
+	props->props_oil.jt = 1.0 * 1.e-7;
+	props->props_oil.ad = 1.0 * 1.e-7;
+	props->props_oil.c = 1233.0;
 	props->props_oil.lambda = 0.16;
 
 	props->props_wat.visc = 4.0;
@@ -1047,7 +1047,7 @@ wax_nit::Properties* getProps()
 	props->props_gas.c = 3400.0;
 	props->props_gas.lambda = 0.06;
 
-	props->L = -50.0 * 1.e+3;
+	props->L = -300.0 * 1.e+3;
 
 	// Defining relative permeabilities
 	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
@@ -1055,13 +1055,13 @@ wax_nit::Properties* getProps()
 
 	// Defining volume factors
 	//props->byDefault.B_oil = true;
-	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
+	setDataFromFile(props->B_oil, "props/new/Boil200.txt");
 	//props->byDefault.B_gas = false;
-	setDataFromFile(props->B_gas, "props/Bgas_tempest.txt");
+	setDataFromFile(props->B_gas, "props/Bgas.txt");
 
 	//props->byDefault.Rs = true;
-	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
-	setDataFromFile(props->lp, "props/lp.txt");
+	setDataFromFile(props->Rs, "props/new/Rs200.txt");
+	setDataFromFile(props->lp, "props/lpx05.txt");
 
 	return props;
 }
@@ -1069,6 +1069,7 @@ wax_nit::Properties* getProps()
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
 double acid2dnit::Component::T = 300.0;
+double acidfrac::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
 double blackoilnit_elliptic::Oil_Props::dens_stc = 887.261;
 double blackoilnit_elliptic::Gas_Props::dens_stc = 0.8;

@@ -48,6 +48,9 @@ namespace basic1d
 		double s_wc, s_oc, s_gc;
 		
 		double p_out;
+
+		double hx, hz;
+		int cellsNum;
 	};
 	struct Liquid_Props
 	{

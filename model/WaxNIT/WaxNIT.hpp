@@ -51,10 +51,10 @@ namespace wax_nit
 
 			condassign(tmp, is_R_axis, 
 				-cell.props->getPermCoseni_r(next.m) * props_oil.getKr(next.s_w, next.s_o, cell.props) / props_oil.getViscosity(next.p) * 
-				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
+				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_oil.getKr(next.s_w, next.s_o, cell.props) / props_oil.getViscosity(next.p) *
-				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
+				(var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
 			return tmp;
 		};
 		inline adouble getWatVelocity(const Cell& cell, const int axis) const
@@ -66,10 +66,10 @@ namespace wax_nit
 
 			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_wat.getKr(next.s_w, next.s_o, cell.props) / props_wat.getViscosity(next.p) *
-				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
+				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_wat.getKr(next.s_w, next.s_o, cell.props) / props_wat.getViscosity(next.p) *
-				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
+				(var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
 			return tmp;
 		};
 		inline adouble getGasVelocity(const Cell& cell, const int axis) const
@@ -81,10 +81,10 @@ namespace wax_nit
 
 			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_gas.getKr(next.s_w, next.s_o, cell.props) / props_gas.getViscosity(next.p) *
-				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
+				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_gas.getKr(next.s_w, next.s_o, cell.props) / props_gas.getViscosity(next.p) *
-				(var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
+				(var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
 			return tmp;
 		};
 
@@ -265,10 +265,10 @@ namespace wax_nit
 			{
 				A = getA(cell, R_AXIS);
 				a = fmax((adouble)0.0, signA(cell.r - beta.r) * A);
-				JT = getJT(cell, Z_AXIS);
-				jt = fmax(0.0, sign(cell.z - beta.z) * JT);
+				JT = getJT(cell, R_AXIS);
+				jt = fmax(0.0, sign(cell.r - beta.r) * JT);
 				r1 = cell.hr;		r2 = beta.hr;
-				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
+				lambda = (r1 * getLambda(beta, R_AXIS) + r2 * getLambda(cell, R_AXIS)) / (r1 + r2) / r1;
 			}
 			DivIndices coeff(a + lambda, jt);
 			return coeff;

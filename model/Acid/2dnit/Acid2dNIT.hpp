@@ -99,10 +99,10 @@ namespace acid2dnit
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
 			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_o.getKr(next.sw, cell.props) / props_o.getViscosity(next.p) *
-				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
+				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_o.getKr(next.sw, cell.props) / props_o.getViscosity(next.p) *
-				((var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) -
+				((var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) -
 				grav * props_o.getDensity(next.p)));
 			return tmp;
 		};
@@ -115,11 +115,11 @@ namespace acid2dnit
 			condassign(tmp, is_R_axis,
 				-cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
-				(var[4].p - var[3].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
+				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
 				-cell.props->getPermCoseni_z(next.m) * props_w.getKr(next.sw, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
-				((var[2].p - var[1].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) - 
+				((var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) - 
 				grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs)));
 			return tmp;
 		};
@@ -230,10 +230,10 @@ namespace acid2dnit
 			{
 				A = getA(cell, R_AXIS);
 				a = fmax((adouble)0.0, signA(cell.r - beta.r) * A);
-				JT = getJT(cell, Z_AXIS);
-				jt = fmax(0.0, sign(cell.z - beta.z) * JT);
+				JT = getJT(cell, R_AXIS);
+				jt = fmax(0.0, sign(cell.r - beta.r) * JT);
 				r1 = cell.hr;		r2 = beta.hr;
-				lambda = (r1 * getLambda(beta, Z_AXIS) + r2 * getLambda(cell, Z_AXIS)) / (r1 + r2) / r1;
+				lambda = (r1 * getLambda(beta, R_AXIS) + r2 * getLambda(cell, R_AXIS)) / (r1 + r2) / r1;
 			}
 			DivIndices coeff(a + lambda, jt);
 			return coeff;

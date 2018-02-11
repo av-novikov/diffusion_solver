@@ -6,6 +6,7 @@
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/1d/Acid1d.hpp"
+#include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
@@ -36,7 +37,6 @@ void Snapshotter<modelType>::setModel(modelType* _model)
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 }
-template <>
 void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
 {
 	model = _model;
@@ -49,7 +49,6 @@ void Snapshotter<gasOil_rz::GasOil_RZ>::setModel(gasOil_rz::GasOil_RZ* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<gasOil_elliptic::GasOil_Elliptic>::setModel(gasOil_elliptic::GasOil_Elliptic* _model)
 {
 	model = _model;
@@ -63,7 +62,6 @@ void Snapshotter<gasOil_elliptic::GasOil_Elliptic>::setModel(gasOil_elliptic::Ga
 	ny = model->cellsNum_nu;
 	nz = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<oilnit_elliptic::OilNIT_Elliptic>::setModel(oilnit_elliptic::OilNIT_Elliptic* _model)
 {
 	model = _model;
@@ -78,7 +76,6 @@ void Snapshotter<oilnit_elliptic::OilNIT_Elliptic>::setModel(oilnit_elliptic::Oi
 	ny = model->cellsNum_nu;
 	nz = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::setModel(blackoilnit_elliptic::BlackOilNIT_Elliptic* _model)
 {
 	model = _model;
@@ -93,7 +90,6 @@ void Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::setModel(blackoiln
 	ny = model->cellsNum_nu;
 	nz = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
 {
 	model = _model;
@@ -106,7 +102,6 @@ void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<acid1d::Acid1d>::setModel(acid1d::Acid1d* _model)
 {
 	model = _model;
@@ -119,7 +114,6 @@ void Snapshotter<acid1d::Acid1d>::setModel(acid1d::Acid1d* _model)
 	nx = model->cellsNum_x + 2;
 	ny = 3;
 }
-template <>
 void Snapshotter<acid2dnit::Acid2dNIT>::setModel(acid2dnit::Acid2dNIT* _model)
 {
 	model = _model;
@@ -133,7 +127,6 @@ void Snapshotter<acid2dnit::Acid2dNIT>::setModel(acid2dnit::Acid2dNIT* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
 {
 	model = _model;
@@ -146,7 +139,6 @@ void Snapshotter<vpp2d::VPP2d>::setModel(vpp2d::VPP2d* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<bing1d::Bingham1d>::setModel(bing1d::Bingham1d* _model)
 {
 	model = _model;
@@ -157,7 +149,6 @@ void Snapshotter<bing1d::Bingham1d>::setModel(bing1d::Bingham1d* _model)
 
 	nx = model->cellsNum_r + 2;
 }
-template <>
 void Snapshotter<blackoil_rz::BlackOil_RZ>::setModel(blackoil_rz::BlackOil_RZ* _model)
 {
 	model = _model;
@@ -170,7 +161,6 @@ void Snapshotter<blackoil_rz::BlackOil_RZ>::setModel(blackoil_rz::BlackOil_RZ* _
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
-template <>
 void Snapshotter<wax_nit::WaxNIT>::setModel(wax_nit::WaxNIT* _model)
 {
 	model = _model;
@@ -207,6 +197,7 @@ template class Snapshotter<gasOil_rz::GasOil_RZ>;
 template class Snapshotter<acid1d::Acid1d>;
 template class Snapshotter<acid2d::Acid2d>;
 template class Snapshotter<acid2dnit::Acid2dNIT>;
+template class Snapshotter<acidfrac::AcidFrac>;
 template class Snapshotter<vpp2d::VPP2d>;
 template class Snapshotter<bing1d::Bingham1d>;
 template class Snapshotter<gasOil_elliptic::GasOil_Elliptic>;

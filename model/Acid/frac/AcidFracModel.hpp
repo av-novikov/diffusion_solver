@@ -23,9 +23,9 @@ namespace acidfrac
 	typedef PoroCell::Type Type;
 	struct PoroGrid
 	{
-		std::vector<FracCell> cells;
-		int cellsNum_y, cellsNum;
-		double hx, hz, Volume;
+		std::vector<PoroCell> cells;
+		double Volume;
+		const Skeleton_Props* props_sk;
 	};
 
 	typedef CalciteReaction CurrentReaction;
@@ -65,7 +65,7 @@ namespace acidfrac
 		double** jac;*/
 		// Snapshotter
 		bool isWriteSnaps;
-		VTKSnapshotter<AcidFrac>* snapshotter;
+		Snapshotter<AcidFrac>* snapshotter;
 
 		void buildGrid();
 		void setProps(Properties& props);

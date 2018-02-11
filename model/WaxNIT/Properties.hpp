@@ -124,7 +124,6 @@ namespace wax_nit
 			adouble tmp;
 			condassign(tmp, satur_wax, lp->Solve(t), lp->Solve(t_bub));
 			return tmp;
-			return lp->Solve(t);
 		};
 		inline adouble getfp(adouble p, adouble p_bub, adouble satur_gas, adouble t, adouble t_bub, adouble satur_wax) const
 		{
@@ -163,8 +162,8 @@ namespace wax_nit
 			adouble isAboveZero = (1.0 - s_o - s_w - props->s_gc > 0.0) ? true : false;
 			adouble isAboveCritical = (1.0 - s_o - s_w > 1.0 - props->s_wc - props->s_oc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, 0.5 * pow(((adouble)(1.0 - props->s_gc) - s_w - s_o) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
-			condassign(tmp, isAboveCritical, (adouble)0.5);
+			condassign(tmp, isAboveZero, 1.0 * pow(((adouble)(1.0 - props->s_gc) - s_w - s_o) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 2.0), (adouble)0.0);
+			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 			//return kr->Solve(s_w);
 		};

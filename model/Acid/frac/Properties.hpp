@@ -15,9 +15,7 @@ namespace acidfrac
 
 	struct FracProperties
 	{
-		int cellsNum_x, cellsNum_y, cellsNum_z;
 		double w2, l2, height;
-
 		double p_init, c_init;
 	};
 	struct Skeleton_Props : public basic1d::Skeleton_Props
@@ -27,7 +25,6 @@ namespace acidfrac
 
 		// Initial values
 		double p_init;
-		double p_sat;
 		double sw_init;
 		double so_init;
 		double xa_init;
