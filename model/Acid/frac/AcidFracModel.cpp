@@ -8,6 +8,7 @@ double acidfrac::Component::p_std = 101325.0;
 AcidFrac::AcidFrac()
 {
 	grav = 9.8;
+	Volume = 0.0;
 }
 AcidFrac::~AcidFrac()
 {
@@ -17,6 +18,7 @@ void AcidFrac::setProps(Properties& props)
 {
 	props_frac = props.props_frac;
 	props_sk = props.props_sk;
+	skeletonsNum = props.props_sk.size();
 
 	leftBoundIsRate = props.leftBoundIsRate;
 	rightBoundIsPres = props.rightBoundIsPres;
@@ -26,6 +28,8 @@ void AcidFrac::setProps(Properties& props)
 	cellsNum_y = props.cellsNum_y;
 	cellsNum_z = props.cellsNum_z;
 	cellsNum = (cellsNum_x + 2) * (cellsNum_z + 2) * (cellsNum_y + 1);
+	cellsNum_y_1d = props.cellsNum_y_1d;
+	xe = props.xe;
 
 	skeletonsNum = props.props_sk.size();
 	for (int j = 0; j < skeletonsNum; j++)
@@ -77,10 +81,10 @@ void AcidFrac::makeDimLess()
 	ht_min /= t_dim;
 	ht_max /= t_dim;
 	// Skeleton properties
-	for (auto& sk : props_sk)
+	for (int i = 0; i < skeletonsNum; i++)
 	{
+		auto& sk = props_sk[i];
 		sk.perm /= (R_dim * R_dim);
-
 		sk.beta /= (1.0 / P_dim);
 		sk.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 		sk.h1 /= R_dim;
@@ -96,6 +100,8 @@ void AcidFrac::makeDimLess()
 			sk.perms_eff[j] /= (R_dim * R_dim);
 			sk.radiuses_eff[j] /= R_dim;
 		}
+
+		xe[i] /= R_dim;
 	}
 
 	Q_dim = R_dim * R_dim * R_dim / t_dim;
@@ -140,16 +146,59 @@ void AcidFrac::makeDimLess()
 	props_frac.height /= R_dim;
 	props_frac.p_init /= P_dim;
 }
+size_t AcidFrac::getInitId2OutCell(const FracCell& cell)
+{
+	assert(cell.type == FracType::FRAC_OUT);
+	return 0;
+}
+void AcidFrac::build1dGrid(const FracCell& cell)
+{
+	assert(cell.type == FracType::FRAC_OUT);
+	poro_grids.push_back(PoroGrid()); 
+	PoroGrid& grid = poro_grids.back();
+	frac2poro[&const_cast<FracCell&>(cell)] = &grid;
+	grid.frac_nebr = &cell;
+	grid.Volume = 0.0;
+	const auto init_id = getInitId2OutCell(cell);
+	grid.cellsNum = cellsNum_y_1d[init_id];
+	auto& cells = grid.cells;
+
+	cells.reserve(grid.cellsNum);
+	int counter = 0;
+
+	double y_prev = cell.y + cell.hy / 2.0;
+	double logMax = log((xe[init_id] + y_prev) / y_prev);
+	double logStep = logMax / (double)grid.cellsNum;
+
+	grid.hx = cell.hx;	grid.hz = cell.hz;
+	double hy = y_prev * (exp(logStep) - 1.0);
+	double cm_y = y_prev;
+
+	// Left border
+	cells.push_back(PoroCell(counter++, cm_y, 0.0, grid.hx, grid.hz, PoroType::WELL_LAT));
+	// Middle cells
+	for (int j = 0; j < cellsNum_x; j++)
+	{
+		cm_y = y_prev * (exp(logStep) + 1.0) / 2.0;
+		hy = y_prev * (exp(logStep) - 1.0);
+		cells.push_back(PoroCell(counter++, cm_y, hy, grid.hx, grid.hz, PoroType::MIDDLE));
+		grid.Volume += cells.back().V;
+		y_prev *= exp(logStep);
+	}
+	// Right border
+	cm_y = xe[init_id] + cell.y + cell.hy / 2.0;
+	cells.push_back(PoroCell(counter++, cm_y, 0.0, grid.hx, grid.hz, PoroType::RIGHT));
+}
 void AcidFrac::buildGrid()
 {
 	int counter = 0;
-	//const double hx = props_frac.l2 / cellsNum_x;
-	double hy = 0.0;// props_frac.w2 / cellsNum_y;
-	double hz = 0.0;// props_frac.height / cellsNum_z;
+	double hy = 0.0, hz = 0.0, init_dx = props_frac.w2;
 	FracType cur_type;
 
-	double x_prev = props_frac.w2;
-	double logMax = log(props_frac.l2 / props_frac.w2);
+	poro_grids.reserve(cellsNum_x * cellsNum_z);
+	cells_frac.reserve(cellsNum);
+	double x_prev = init_dx;
+	double logMax = log((props_frac.l2 + init_dx) / init_dx);
 	double logStep = logMax / (double)cellsNum_x;
 	double x = x_prev, y = 0.0, z = 0.0;
 
@@ -164,10 +213,11 @@ void AcidFrac::buildGrid()
 			cur_type = FracType::FRAC_IN;
 			hx = 0.0;
 		}
-		else if (i == cellsNum_x)
+		else if (i == cellsNum_x + 1)
 		{
 			cur_type = FracType::FRAC_BORDER;
 			hx = 0.0;
+			x = props_frac.l2 + init_dx;
 		}
 		else
 		{
@@ -198,19 +248,22 @@ void AcidFrac::buildGrid()
 				else if (j == cellsNum_y)
 				{
 					cur_type = FracType::FRAC_OUT;
-					hy = props_frac.w2 / cellsNum_y;
+					hy = init_dx / cellsNum_y;
 				}
 				else 
-					hy = props_frac.w2 / cellsNum_y;
+					hy = init_dx / cellsNum_y;
 
-				cells_frac.push_back(FracCell(counter++, x - props_frac.w2, y, z, hx, hy, hz, cur_type));
+				cells_frac.push_back(FracCell(counter++, x - init_dx, y, z, hx, hy, hz, cur_type));
 				Volume += cells_frac.back().V;
 
 				if (j == 0)
-					y += props_frac.w2 / cellsNum_y / 2.0;
+					y += init_dx / cellsNum_y / 2.0;
 				else
 					y += hy;
 			}
+
+			if(i != 0 && k != 0 && i != cellsNum_x + 1 && k != cellsNum_z + 1)
+				build1dGrid(cells_frac.back());
 
 			if (k == 0 || k == cellsNum_z)
 				z += props_frac.height / cellsNum_z / 2.0;
@@ -218,7 +271,8 @@ void AcidFrac::buildGrid()
 				z += hz;
 		}
 
-		x_prev *= exp(logStep);
+		if(i != 0)
+			x_prev *= exp(logStep);
 	}
 }
 void AcidFrac::setInitialState() {}

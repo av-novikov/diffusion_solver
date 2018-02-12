@@ -1,6 +1,7 @@
 #ifndef ACIDFRACMODEL_HPP_
 #define ACIDFRACMODEL_HPP_
 
+#include <map>
 #include "model/Acid/frac/Properties.hpp"
 #include "model/cells/AcidVariables.hpp"
 #include "model/cells/LinearCell.hpp"
@@ -28,6 +29,9 @@ namespace acidfrac
 		std::vector<PoroCell> cells;
 		double Volume;
 		const Skeleton_Props* props_sk;
+		double hx, hz;
+		int cellsNum;
+		const FracCell* frac_nebr;
 	};
 
 	typedef CalciteReaction CurrentReaction;
@@ -54,6 +58,9 @@ namespace acidfrac
 		std::vector<FracCell> cells_frac;
 		int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z;
 		double Volume;
+		std::vector<int> cellsNum_y_1d;
+		std::vector<double> xe;
+		std::map<FracCell*, PoroGrid*> frac2poro;
 		// Temporary properties
 		double ht, ht_min, ht_max;
 		int periodsNum;
@@ -70,7 +77,9 @@ namespace acidfrac
 		bool isWriteSnaps;
 		Snapshotter<AcidFrac>* snapshotter;
 
+		size_t getInitId2OutCell(const FracCell& cell);
 		void buildGrid();
+		void build1dGrid(const FracCell& cell);
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState();

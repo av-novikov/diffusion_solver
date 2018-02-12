@@ -23,6 +23,11 @@ public:
 	{
 		V = hx * hz;
 	};
+	LinearCell(int _num, double _x, double _hx, double hy, double hz, const Type _type) :
+		AbstractCell<varType>(_num, _type), x(_x), hx(_hx)
+	{
+		V = hx * hy * hz;
+	};
 	~LinearCell() {};
 };
 
