@@ -7,9 +7,7 @@ double acidfrac::Component::p_std = 101325.0;
 
 AcidFrac::AcidFrac()
 {
-	isWriteSnaps = true;
 	grav = 9.8;
-	snapshotter = new VTKSnapshotter<AcidFrac>();
 }
 AcidFrac::~AcidFrac()
 {
@@ -144,33 +142,83 @@ void AcidFrac::makeDimLess()
 }
 void AcidFrac::buildGrid()
 {
-	/*int counter = 0;
-	const double hx = l2 / cellsNum_x;
-	const double hy = w2 / cellsNum_y;
-	const double hz = height / cellsNum_z;
-	double x = 0.0, y = 0.0, z = 0.0;
-	Type cur_type;
+	int counter = 0;
+	//const double hx = props_frac.l2 / cellsNum_x;
+	double hy = 0.0;// props_frac.w2 / cellsNum_y;
+	double hz = 0.0;// props_frac.height / cellsNum_z;
+	FracType cur_type;
+
+	double x_prev = props_frac.w2;
+	double logMax = log(props_frac.l2 / props_frac.w2);
+	double logStep = logMax / (double)cellsNum_x;
+	double x = x_prev, y = 0.0, z = 0.0;
+
+	//double hz = props_sk.h2 - props_sk.h1;
+	//double cm_z = props_sk[skel_idx].h1;
+	double hx = x_prev * (exp(logStep) - 1.0);
+
 	for (int i = 0; i < cellsNum_x + 2; i++)
+	{
+		if (i == 0)
 		{
-		for (int j = 0; j < cellsNum_y + 1; j++)
-			{
-			for (int k = 0; k < cellsNum_z + 2; k++)
-				{
-				
-					cells.push_back(Cell(counter++, x, y, z, hx, hy, hz, cur_type));
-				if (k == 0 || k == cellsNum_z)
-					z += hz / 2.0;
-				else
-					z += hz;
-				}
-			if (j == 0)
-				y += hy / 2.0;
-			else
-				y += hy;
-			}
-		if (i == 0 || i == cellsNum_x)
-			x += hx / 2.0;
+			cur_type = FracType::FRAC_IN;
+			hx = 0.0;
+		}
+		else if (i == cellsNum_x)
+		{
+			cur_type = FracType::FRAC_BORDER;
+			hx = 0.0;
+		}
 		else
-			x += hx;
-		}*/
+		{
+			cur_type = FracType::FRAC_MID;
+			x = x_prev * (exp(logStep) + 1.0) / 2.0;
+			hx = x_prev * (exp(logStep) - 1.0);
+		}
+
+		z = 0.0;	hz = 0.0;
+		for (int k = 0; k < cellsNum_z + 2; k++)
+		{
+			if (k == 0 || k == cellsNum_z + 1)
+			{
+				cur_type = FracType::FRAC_BORDER;
+				hz = 0.0;
+			}
+			else
+				hz = props_frac.height / cellsNum_z;
+
+			y = 0.0;	hy = 0.0;
+			for (int j = 0; j < cellsNum_y + 1; j++)
+			{
+				if (j == 0)
+				{
+					cur_type = FracType::FRAC_BORDER;
+					hy = 0.0;
+				}
+				else if (j == cellsNum_y)
+				{
+					cur_type = FracType::FRAC_OUT;
+					hy = props_frac.w2 / cellsNum_y;
+				}
+				else 
+					hy = props_frac.w2 / cellsNum_y;
+
+				cells_frac.push_back(FracCell(counter++, x - props_frac.w2, y, z, hx, hy, hz, cur_type));
+				Volume += cells_frac.back().V;
+
+				if (j == 0)
+					y += props_frac.w2 / cellsNum_y / 2.0;
+				else
+					y += hy;
+			}
+
+			if (k == 0 || k == cellsNum_z)
+				z += props_frac.height / cellsNum_z / 2.0;
+			else
+				z += hz;
+		}
+
+		x_prev *= exp(logStep);
+	}
 }
+void AcidFrac::setInitialState() {}

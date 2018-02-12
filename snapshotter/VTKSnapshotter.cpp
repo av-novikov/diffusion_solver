@@ -34,6 +34,11 @@
 
 using namespace std;
 
+template<>
+VTKSnapshotter<acidfrac::AcidFrac>::VTKSnapshotter()
+{
+	pattern = prefix + "AcidFrac_%{STEP}.vtu";
+}
 template <class modelType>
 VTKSnapshotter<modelType>::VTKSnapshotter()
 {
@@ -54,10 +59,6 @@ VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter()
 VTKSnapshotter<acid1d::Acid1d>::VTKSnapshotter()
 {
 	pattern = prefix + "Acid1d_%{STEP}.vtp";
-}
-VTKSnapshotter<acidfrac::AcidFrac>::VTKSnapshotter()
-{
-	pattern = prefix + "AcidFrac_%{STEP}.vtp";
 }
 VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
 {
@@ -666,6 +667,186 @@ void VTKSnapshotter<acid1d::Acid1d>::dump_all(int i)
 void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 {
 	using namespace acidfrac;
+
+	// Grid
+	auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+
+	// Points
+	auto points = vtkSmartPointer<vtkPoints>::New();
+	for (int k = 0; k < nz - 1; k++)
+	{
+		for (int j = 0; j < ny; j++)
+		{
+			const FracCell& cell = model->cells_frac[j + k * ny];
+			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
+			points->InsertNextPoint(-r_dim * xnebr.hx / 1.0, r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+		}
+	}
+	for(int i = 0; i < nx - 1; i++)
+		for (int k = 0; k < nz - 1; k++)
+		{
+			for (int j = 0; j < ny; j++)
+			{
+				FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
+				points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+			}
+		}
+	grid->SetPoints(points);
+
+	// Data
+	auto hexs = vtkSmartPointer<vtkCellArray>::New();
+/*	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
+	poro->SetName("porosity");
+	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
+	perm->SetName("permeability");
+	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
+	p_bub->SetName("bublePoint");
+	auto satur = vtkSmartPointer<vtkIntArray>::New();
+	satur->SetName("SATUR");
+	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_w->SetName("WaterSaturation");
+	auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_o->SetName("OilSaturation");
+	auto sat_g = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_g->SetName("GasSaturation");
+	auto conc_a = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_a->SetName("AcidConcentration");
+	auto conc_w = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_w->SetName("WaterConcentration");
+	auto conc_s = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_s->SetName("SaltConcentration");
+	auto vel_w = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_w->SetName("WaterVelocity");		vel_w->SetNumberOfComponents(3);
+	auto vel_o = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_o->SetName("OilVelocity");			vel_o->SetNumberOfComponents(3);
+	auto vel_g = vtkSmartPointer<vtkDoubleArray>::New();
+	vel_g->SetName("GasVelocity");			vel_g->SetNumberOfComponents(3);*/
+
+	int np = ny * (nz - 1);
+	double vel[3];
+
+
+	for (int k = 0; k < nz - 2; k++)
+	{
+		for (int j = 0; j < ny - 1; j++)
+		{
+			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
+			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+
+			hex->GetPointIds()->SetId(0, j + k * ny);
+			hex->GetPointIds()->SetId(1, j + 1 + k * ny);
+			hex->GetPointIds()->SetId(2, j + 1 + k * ny + np);
+			hex->GetPointIds()->SetId(3, j + k * ny + np);
+
+			hex->GetPointIds()->SetId(4, j + (k + 1) * ny);
+			hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny);
+			hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny + np);
+			hex->GetPointIds()->SetId(7, j + (k + 1) * ny + np);
+
+			hexs->InsertNextCell(hex);
+		}
+	}
+
+
+
+	/*for (j = 0; j < ny - 2; j++)
+	{
+		idx = j;
+		idx1 = j + 1;
+		Cell& cell = model->cells[idx1];
+		Variable& next = cell.u_next;
+
+		polygon->GetPointIds()->SetId(0, idx);
+		polygon->GetPointIds()->SetId(1, idx + ny - 1);
+		polygon->GetPointIds()->SetId(2, idx + ny);
+		polygon->GetPointIds()->SetId(3, idx + 1);
+		polygons->InsertNextCell(polygon);
+
+		poro->InsertNextValue(next.m);
+		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
+		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+		p_bub->InsertNextValue(next.p_bub * P_dim / BAR_TO_PA);
+		satur->InsertNextValue(next.SATUR);
+		sat_w->InsertNextValue(next.sw);
+		sat_o->InsertNextValue(next.so);
+		sat_g->InsertNextValue(1.0 - next.sw - next.so);
+		conc_a->InsertNextValue(next.xa);
+		conc_w->InsertNextValue(next.xw);
+		conc_s->InsertNextValue(1.0 - next.xw - next.xa);
+		vel[0] = 0.0;
+		vel[1] = 0.0;
+		vel[2] = 0.0;
+		vel_w->InsertNextTuple(vel);
+		vel_o->InsertNextTuple(vel);
+		vel_g->InsertNextTuple(vel);
+	}
+
+	// Middle cells
+	for (k = 1; k < nx - 1; k++)
+	{
+		for (j = 0; j < ny - 2; j++)
+		{
+			idx = k * (ny - 1) + j;
+			idx1 = k * ny + j + 1;
+			Cell& cell = model->cells[idx1];
+			Variable& next = cell.u_next;
+
+			polygon->GetPointIds()->SetId(0, idx);
+			polygon->GetPointIds()->SetId(1, idx + ny - 1);
+			polygon->GetPointIds()->SetId(2, idx + ny);
+			polygon->GetPointIds()->SetId(3, idx + 1);
+			polygons->InsertNextCell(polygon);
+
+			poro->InsertNextValue(next.m);
+			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
+			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+			p_bub->InsertNextValue(next.p_bub * P_dim / BAR_TO_PA);
+			satur->InsertNextValue(next.SATUR);
+			sat_w->InsertNextValue(next.sw);
+			sat_o->InsertNextValue(next.so);
+			sat_g->InsertNextValue(1.0 - next.sw - next.so);
+			conc_a->InsertNextValue(next.xa);
+			conc_w->InsertNextValue(next.xw);
+			conc_s->InsertNextValue(1.0 - next.xw - next.xa);
+			vel[0] = r_dim / t_dim * model->getWaterVelocity(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getWaterVelocity(cell, Z_AXIS);
+			vel[2] = 0.0;
+			vel_w->InsertNextTuple(vel);
+			vel[0] = r_dim / t_dim * model->getOilVelocity(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getOilVelocity(cell, Z_AXIS);
+			vel[2] = 0.0;
+			vel_o->InsertNextTuple(vel);
+			vel[0] = r_dim / t_dim * model->getGasVelocity(cell, R_AXIS);
+			vel[1] = r_dim / t_dim * model->getGasVelocity(cell, Z_AXIS);
+			vel[2] = 0.0;
+			vel_g->InsertNextTuple(vel);
+		}
+	}*/
+	grid->SetCells(VTK_HEXAHEDRON, hexs);
+	vtkCellData* fd = grid->GetCellData();
+	/*fd->AddArray(poro);
+	fd->AddArray(perm);
+	fd->AddArray(pres);
+	fd->AddArray(p_bub);
+	fd->AddArray(satur);
+	fd->AddArray(sat_w);
+	fd->AddArray(sat_o);
+	fd->AddArray(sat_g);
+	fd->AddArray(conc_a);
+	fd->AddArray(conc_w);
+	fd->AddArray(conc_s);
+	fd->AddArray(vel_w);
+	fd->AddArray(vel_o);
+	fd->AddArray(vel_g);*/
+
+	// Writing
+	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+
+	writer->SetFileName(getFileName(i).c_str());
+	writer->SetInputData(grid);
+	writer->Write();
 }
 void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 {
@@ -915,8 +1096,6 @@ void VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::dump_all(int snap_idx)
 
 	// Data
 	auto hexs = vtkSmartPointer<vtkCellArray>::New();
-	auto polygon = vtkSmartPointer<vtkPolygon>::New();
-	polygon->GetPointIds()->SetNumberOfIds(4);
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1141,8 +1320,6 @@ void VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::dump_all(int snap_idx)
 
 	// Data
 	auto hexs = vtkSmartPointer<vtkCellArray>::New();
-	auto polygon = vtkSmartPointer<vtkPolygon>::New();
-	polygon->GetPointIds()->SetNumberOfIds(4);
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1354,8 +1531,6 @@ void VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::dump_all(int sn
 
 	// Data
 	auto hexs = vtkSmartPointer<vtkCellArray>::New();
-	auto polygon = vtkSmartPointer<vtkPolygon>::New();
-	polygon->GetPointIds()->SetNumberOfIds(4);
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 	auto p_bub = vtkSmartPointer<vtkDoubleArray>::New();

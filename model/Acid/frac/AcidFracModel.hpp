@@ -20,7 +20,9 @@ namespace acidfrac
 	template <typename TVariable> using TCell = LinearCell<TVariable, Skeleton_Props>;
 	typedef LinearCell<PoroVariable, Skeleton_Props> PoroCell;
 	typedef HexCell<FracVariable> FracCell;
-	typedef PoroCell::Type Type;
+	typedef PoroCell::Type PoroType;
+	typedef FracCell::Type FracType;
+
 	struct PoroGrid
 	{
 		std::vector<PoroCell> cells;
@@ -51,6 +53,7 @@ namespace acidfrac
 		std::vector<PoroGrid> poro_grids;
 		std::vector<FracCell> cells_frac;
 		int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z;
+		double Volume;
 		// Temporary properties
 		double ht, ht_min, ht_max;
 		int periodsNum;
@@ -81,7 +84,22 @@ namespace acidfrac
 		AcidFrac();
 		~AcidFrac();
 
+		void load(Properties& props)
+		{
+			setProps(props);
+			setSnapshotter("", this);
+
+			buildGrid();
+			snapshotter->dump_all(0);
+			setInitialState();
+		};
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
+		void setSnapshotter(std::string type, AcidFrac* model)
+		{
+			snapshotter = new VTKSnapshotter<AcidFrac>();
+			snapshotter->setModel(model);
+			isWriteSnaps = true;
+		};
 	};
 };
 

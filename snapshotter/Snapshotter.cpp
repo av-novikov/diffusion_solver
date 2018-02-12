@@ -28,6 +28,21 @@ template <class modelType>
 Snapshotter<modelType>::~Snapshotter()
 {
 }
+template<>
+void Snapshotter<acidfrac::AcidFrac>::setModel(acidfrac::AcidFrac* _model)
+{
+	model = _model;
+
+	T_dim = model->T_dim;
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_x + 2;
+	ny = model->cellsNum_y + 1;
+	nz = model->cellsNum_z + 2;
+}
 template <class modelType>
 void Snapshotter<modelType>::setModel(modelType* _model)
 {

@@ -16,7 +16,7 @@ class AbstractCell
 {
 public: 
 	enum class Type : int
-	{MIDDLE, MIDDLE_SIDE, RIGHT, TOP, BOTTOM, WELL_LAT, WELL_TOP, WELL_BOT, WELL_SIDE, FRAC_IN, FRAC_BORDER, NOTYPE};
+	{MIDDLE, MIDDLE_SIDE, RIGHT, TOP, BOTTOM, WELL_LAT, WELL_TOP, WELL_BOT, WELL_SIDE, FRAC_IN, FRAC_OUT, FRAC_MID, FRAC_BORDER, NOTYPE};
 	public:		
 		const int num;
 		static const int varNum = varType::size;

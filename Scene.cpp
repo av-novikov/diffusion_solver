@@ -35,6 +35,9 @@
 #include "model/Acid/1d/Acid1d.hpp"
 #include "model/Acid/1d/Acid1dSolver.hpp"
 
+#include "model/Acid/frac/AcidFracModel.hpp"
+#include "model/Acid/frac/AcidFracSolver.hpp"
+
 #include "model/WaxNIT/WaxNIT.hpp"
 #include "model/WaxNIT/WaxNITSolver.hpp"
 
@@ -57,6 +60,13 @@ Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>::~Scene()
 	delete method;
 }
 Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	delete method;
+}
+Scene<acidfrac::AcidFrac, acidfrac::AcidFrac, acidfrac::Properties>::~Scene()
 {
 	paralution::stop_paralution();
 
@@ -122,6 +132,12 @@ void Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properti
 	paralution::init_paralution();
 	method = new acid2dnit::Acid2dNITSolver(model);
 }
+void Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>::load(acidfrac::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	method = new acidfrac::AcidFracSolver(model);
+}
 void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wax_nit::Properties& props)
 {
 	model->load(props);
@@ -182,4 +198,5 @@ template class Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, bl
 template class Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>;
 template class Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties>;
 template class Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties>;
+template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
