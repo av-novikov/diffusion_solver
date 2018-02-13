@@ -672,7 +672,6 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 	auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
 	// Points
-	std::vector<int> poro_pts;
 	auto points = vtkSmartPointer<vtkPoints>::New();
 	for (int k = 0; k < nz - 1; k++)
 	{
@@ -683,7 +682,6 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			points->InsertNextPoint(-r_dim * xnebr.hx / 10.0, r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 		}
 	}
-	int counter = 0;
 	for(int i = 0; i < nx - 1; i++)
 		for (int k = 0; k < nz - 1; k++)
 		{
@@ -692,32 +690,35 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
 				points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 			}
-
+		}
+	for (int i = 0; i < nx - 1; i++)
+		for (int k = 0; k < nz - 1; k++)
+		{
 			if (i != 0 && k != 0)
 			{
 				auto& frac_cell = model->cells_frac[ny - 1 + k * ny + i * ny * nz];
 				const auto& poro_grid = model->frac2poro[&frac_cell];
 				double dy = poro_grid->cells[1].hx / 10.0;
-				for (int k = 0; k < poro_grid->cellsNum + 1; k++)
+				for (int j = 0; j < poro_grid->cellsNum + 1; j++)
 				{
-					PoroCell& cell = poro_grid->cells[k];
+					PoroCell& cell = poro_grid->cells[j];
 					points->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
 					points->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
 					points->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
 					points->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
 				}
-				if (poro_pts.size() > 0)
-					poro_pts.push_back(poro_pts.back() + 4 * (poro_grid->cellsNum + 1));
-				else
-					poro_pts.push_back(4 * (poro_grid->cellsNum + 1));
 			}
 		}
 	grid->SetPoints(points);
 
 	// Data
 	auto hexs = vtkSmartPointer<vtkCellArray>::New();
+	enum REGION_TYPE { FRACTURE, POROUS};
+	auto reg = vtkSmartPointer<vtkIntArray>::New();
+	reg->SetName("region_type");
 
 	int np = ny * (nz - 1);
+	int np_frac = np * nx;
 	double vel[3];
 	for (int k = 0; k < nz - 2; k++)
 	{
@@ -725,6 +726,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
 			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+			reg->InsertNextValue(REGION_TYPE::FRACTURE);
 
 			hex->GetPointIds()->SetId(0, j + k * ny);
 			hex->GetPointIds()->SetId(1, j + 1 + k * ny);
@@ -747,9 +749,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			{
 				const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny + i * nz * ny];
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
-				
-				//const int ki = 0;
-				//const int k1i = poro_pts[k + 1 + i * (nz - 1)]
+				reg->InsertNextValue(REGION_TYPE::FRACTURE);
 
 				hex->GetPointIds()->SetId(0, j + k * ny + i * np);
 				hex->GetPointIds()->SetId(1, j + 1 + k * ny + i * np);
@@ -765,9 +765,53 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			}
 		}
 	}
+	int counter = 0;
+	for (int i = 1; i < nx - 1; i++)
+	{
+		for (int k = 0; k < nz - 2; k++)
+		{
+			FracCell& frac_cell = model->cells_frac[ny - 1 + (k + 1) * ny + i * nz * ny];
+			assert(frac_cell.type == FracType::FRAC_OUT);
+			const auto& poro_grid = model->frac2poro[&frac_cell];
+			const PoroCell& cell = poro_grid->cells[0];
+			reg->InsertNextValue(REGION_TYPE::POROUS);
+
+			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+			hex->GetPointIds()->SetId(0, ny - 1 + k * ny + i * np);
+			hex->GetPointIds()->SetId(1, np_frac + counter);
+			hex->GetPointIds()->SetId(2, np_frac + counter + 1);
+			hex->GetPointIds()->SetId(3, ny - 1 + k * ny + (i + 1) * np);
+
+			hex->GetPointIds()->SetId(4, ny - 1 + (k + 1) * ny + i * np);
+			hex->GetPointIds()->SetId(5, np_frac + counter + 3);
+			hex->GetPointIds()->SetId(6, np_frac + counter + 2);
+			hex->GetPointIds()->SetId(7, ny - 1 + (k + 1) * ny + (i + 1) * np);
+			hexs->InsertNextCell(hex);
+
+			for (int j = 1; j < poro_grid->cellsNum + 1; j++)
+			{
+				const PoroCell& cell = poro_grid->cells[j];
+				reg->InsertNextValue(REGION_TYPE::POROUS);
+				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+				hex->GetPointIds()->SetId(0, np_frac + counter + 4 * (j - 1));
+				hex->GetPointIds()->SetId(1, np_frac + counter + 4 * (j - 1) + 1);
+				hex->GetPointIds()->SetId(2, np_frac + counter + 4 * j + 1);
+				hex->GetPointIds()->SetId(3, np_frac + counter + 4 * j);
+
+				hex->GetPointIds()->SetId(4, np_frac + counter + 4 * (j - 1) + 3);
+				hex->GetPointIds()->SetId(5, np_frac + counter + 4 * (j - 1) + 2);
+				hex->GetPointIds()->SetId(6, np_frac + counter + 4 * j + 2);
+				hex->GetPointIds()->SetId(7, np_frac + counter + 4 * j + 3);
+				hexs->InsertNextCell(hex);
+			}
+
+			counter += 4 * (poro_grid->cellsNum + 1);
+		}
+	}
 
 	grid->SetCells(VTK_HEXAHEDRON, hexs);
 	vtkCellData* fd = grid->GetCellData();
+	fd->AddArray(reg);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();

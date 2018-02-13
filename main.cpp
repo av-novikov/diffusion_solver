@@ -1071,16 +1071,16 @@ acidfrac::Properties* getProps()
 	Properties* props = new Properties;
 	props->props_sk.push_back(acidfrac::Skeleton_Props());
 
-	props->xe.push_back(100.0);
+	props->xe.push_back(10.0);
 	props->cellsNum_y_1d.push_back(10);
 
-	props->props_frac.l2 = 1.0;
-	props->props_frac.w2 = 0.1;
+	props->props_frac.l2 = 10.0;
+	props->props_frac.w2 = 0.5;
 
 	props->props_frac.height = 1.0;
 	props->cellsNum_x = 10;
 	props->cellsNum_y = 5;
-	props->cellsNum_z = 1;
+	props->cellsNum_z = 5;
 
 	return props;
 }
