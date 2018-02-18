@@ -64,7 +64,8 @@ namespace acidfrac
 		// Temporary properties
 		double ht, ht_min, ht_max;
 		int periodsNum;
-		double Qsum, Pwf, c;
+		double Q_sum, Pwf, c, height_perf;
+		std::map<int, double> Qcell;
 		std::vector<double> period, rate, pwf, cs;
 		bool leftBoundIsRate, rightBoundIsPres;
 		// Scheme
@@ -83,6 +84,7 @@ namespace acidfrac
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState();
+		void setPerforated();
 
 		// Service functionss
 
@@ -97,10 +99,11 @@ namespace acidfrac
 		{
 			setProps(props);
 			setSnapshotter("", this);
-
 			buildGrid();
-			snapshotter->dump_all(0);
+			setPerforated();
 			setInitialState();
+
+			snapshotter->dump_all(0);
 		};
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
 		void setSnapshotter(std::string type, AcidFrac* model)
@@ -109,6 +112,13 @@ namespace acidfrac
 			snapshotter->setModel(model);
 			isWriteSnaps = true;
 		};
+
+
+		void setPeriod(int period);
+
+		adouble* h;
+		PoroTapeVariable* x_poro;
+		FracTapeVariable* x_frac;
 	};
 };
 

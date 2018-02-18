@@ -87,19 +87,11 @@ void AcidFrac::makeDimLess()
 		sk.perm /= (R_dim * R_dim);
 		sk.beta /= (1.0 / P_dim);
 		sk.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
-		sk.h1 /= R_dim;
-		sk.h2 /= R_dim;
-		sk.height /= R_dim;
 		sk.p_init /= P_dim;
 		sk.p_out /= P_dim;
 		sk.p_ref /= P_dim;
 		sk.hx /= R_dim;
 		sk.hz /= R_dim;
-		for (int j = 0; j < periodsNum; j++)
-		{
-			sk.perms_eff[j] /= (R_dim * R_dim);
-			sk.radiuses_eff[j] /= R_dim;
-		}
 
 		xe[i] /= R_dim;
 	}
@@ -161,6 +153,7 @@ void AcidFrac::build1dGrid(const FracCell& cell)
 	grid.Volume = 0.0;
 	const auto init_id = getInitId2OutCell(cell);
 	grid.cellsNum = cellsNum_y_1d[init_id];
+	grid.props_sk = &props_sk[init_id];
 	auto& cells = grid.cells;
 
 	cells.reserve(grid.cellsNum);
@@ -253,6 +246,9 @@ void AcidFrac::buildGrid()
 				else 
 					hy = init_dx / cellsNum_y;
 
+				if (cur_type == FracType::FRAC_OUT && hx * hz == 0.0)
+					cur_type = FracType::FRAC_BORDER;
+
 				cells_frac.push_back(FracCell(counter++, x - init_dx, y, z, hx, hy, hz, cur_type));
 				Volume += cells_frac.back().V;
 
@@ -275,4 +271,63 @@ void AcidFrac::buildGrid()
 			x_prev *= exp(logStep);
 	}
 }
-void AcidFrac::setInitialState() {}
+void AcidFrac::setPerforated()
+{
+	height_perf = 0.0;
+	vector<pair<int, int> >::iterator it;
+	for (const auto& cell : cells_frac)
+	{
+		if (cell.type == FracType::FRAC_IN)
+		{
+			Qcell[cell.num] = 0.0;
+			height_perf += cell.hz;
+		}
+	}
+};
+void AcidFrac::setPeriod(int period)
+{
+	if (leftBoundIsRate)
+	{
+		Q_sum = rate[period];
+
+		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) {
+			std::map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = Q_sum * cells_frac[it->first].hz / height_perf;
+		}
+		else {
+			std::map<int, double>::iterator it;
+			for (it = Qcell.begin(); it != Qcell.end(); ++it)
+				it->second = it->second * Q_sum / rate[period - 1];
+		}
+	}
+	else
+	{
+		Pwf = pwf[period];
+		Q_sum = 0.0;
+	}
+	c = cs[period];
+}
+void AcidFrac::setInitialState() 
+{
+	for (auto& cell : cells_frac)
+	{
+		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = props_frac.p_init;
+		cell.u_prev.c = cell.u_iter.c = cell.u_next.c = props_frac.c_init;
+
+		if (cell.type == FracType::FRAC_OUT)
+		{
+			const auto& poro_grid = frac2poro[&cell];
+			const auto& props = poro_grid->props_sk;
+			for (auto& poro_cell : poro_grid->cells)
+			{
+				poro_cell.u_prev.m = poro_cell.u_iter.m = poro_cell.u_next.m = props->m_init;
+				poro_cell.u_prev.p = poro_cell.u_iter.p = poro_cell.u_next.p = props->p_init;
+				poro_cell.u_prev.sw = poro_cell.u_iter.sw = poro_cell.u_next.sw = props->sw_init;
+				poro_cell.u_prev.xw = poro_cell.u_iter.xw = poro_cell.u_next.xw = props->xw_init;
+				poro_cell.u_prev.xa = poro_cell.u_iter.xa = poro_cell.u_next.xa = props->xa_init;
+				poro_cell.u_prev.xs = poro_cell.u_iter.xs = poro_cell.u_next.xs = 0.0;
+			}
+		}
+	}
+}

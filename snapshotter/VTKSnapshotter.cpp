@@ -716,6 +716,24 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 	enum REGION_TYPE { FRACTURE, POROUS};
 	auto reg = vtkSmartPointer<vtkIntArray>::New();
 	reg->SetName("region_type");
+	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
+	poro->SetName("porosity");
+	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
+	perm->SetName("permeability");
+	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
+	pres->SetName("pressure");
+	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_w->SetName("WaterSaturation");
+	auto sat_o = vtkSmartPointer<vtkDoubleArray>::New();
+	sat_o->SetName("OilSaturation");
+	auto conc_a = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_a->SetName("AcidConcentration");
+	auto conc_w = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_w->SetName("WaterConcentration");
+	auto conc_co2 = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_co2->SetName("CO2Concentration");
+	auto conc_s = vtkSmartPointer<vtkDoubleArray>::New();
+	conc_s->SetName("SaltConcentration");
 
 	int np = ny * (nz - 1);
 	int np_frac = np * nx;
@@ -725,8 +743,18 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 		for (int j = 0; j < ny - 1; j++)
 		{
 			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
+			const auto& next = cell.u_next;
 			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 			reg->InsertNextValue(REGION_TYPE::FRACTURE);
+			poro->InsertNextValue(1.0);
+			perm->InsertNextValue(M2toMilliDarcy(model->props_frac.w2 * model->props_frac.w2 * r_dim * r_dim / 3.0));
+			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+			sat_w->InsertNextValue(1.0);
+			sat_o->InsertNextValue(0.0);
+			conc_a->InsertNextValue(next.c);
+			conc_w->InsertNextValue(1.0 - next.c);
+			conc_s->InsertNextValue(0.0);
+			conc_co2->InsertNextValue(0.0);
 
 			hex->GetPointIds()->SetId(0, j + k * ny);
 			hex->GetPointIds()->SetId(1, j + 1 + k * ny);
@@ -748,8 +776,18 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			for (int j = 0; j < ny - 1; j++)
 			{
 				const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny + i * nz * ny];
+				const auto& next = cell.u_next;
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 				reg->InsertNextValue(REGION_TYPE::FRACTURE);
+				poro->InsertNextValue(1.0);
+				perm->InsertNextValue(M2toMilliDarcy(model->props_frac.w2 * model->props_frac.w2 * r_dim * r_dim / 3.0));
+				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+				sat_w->InsertNextValue(1.0);
+				sat_o->InsertNextValue(0.0);
+				conc_a->InsertNextValue(next.c);
+				conc_w->InsertNextValue(1.0 - next.c);
+				conc_s->InsertNextValue(0.0);
+				conc_co2->InsertNextValue(0.0);
 
 				hex->GetPointIds()->SetId(0, j + k * ny + i * np);
 				hex->GetPointIds()->SetId(1, j + 1 + k * ny + i * np);
@@ -774,7 +812,17 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			assert(frac_cell.type == FracType::FRAC_OUT);
 			const auto& poro_grid = model->frac2poro[&frac_cell];
 			const PoroCell& cell = poro_grid->cells[0];
+			const auto& next = cell.u_next;
 			reg->InsertNextValue(REGION_TYPE::POROUS);
+			poro->InsertNextValue(next.m);
+			perm->InsertNextValue(M2toMilliDarcy(poro_grid->props_sk->getPermCoseni(next.m).value() * r_dim * r_dim));
+			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+			sat_w->InsertNextValue(next.sw);
+			sat_o->InsertNextValue(1.0 - next.sw);
+			conc_a->InsertNextValue(next.xa);
+			conc_w->InsertNextValue(next.xw);
+			conc_s->InsertNextValue(next.xs);
+			conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
 
 			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 			hex->GetPointIds()->SetId(0, ny - 1 + k * ny + i * np);
@@ -792,6 +840,16 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			{
 				const PoroCell& cell = poro_grid->cells[j];
 				reg->InsertNextValue(REGION_TYPE::POROUS);
+				poro->InsertNextValue(next.m);
+				perm->InsertNextValue(M2toMilliDarcy(poro_grid->props_sk->getPermCoseni(next.m).value() * r_dim * r_dim));
+				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+				sat_w->InsertNextValue(next.sw);
+				sat_o->InsertNextValue(1.0 - next.sw);
+				conc_a->InsertNextValue(next.xa);
+				conc_w->InsertNextValue(next.xw);
+				conc_s->InsertNextValue(next.xs);
+				conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
+
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 				hex->GetPointIds()->SetId(0, np_frac + counter + 4 * (j - 1));
 				hex->GetPointIds()->SetId(1, np_frac + counter + 4 * (j - 1) + 1);
@@ -812,6 +870,15 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 	grid->SetCells(VTK_HEXAHEDRON, hexs);
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(reg);
+	fd->AddArray(poro);
+	fd->AddArray(perm);
+	fd->AddArray(pres);
+	fd->AddArray(sat_w);
+	fd->AddArray(sat_o);
+	fd->AddArray(conc_a);
+	fd->AddArray(conc_w);
+	fd->AddArray(conc_s);
+	fd->AddArray(conc_co2);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
