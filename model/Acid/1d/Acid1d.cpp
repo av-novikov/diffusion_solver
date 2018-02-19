@@ -312,7 +312,7 @@ void Acid1d::solve_eqRight(const Cell& cell)
 	const Skeleton_Props& props = *cell.props;
 
 	h[0] = next.m - nebr.m;
-	condassign(h[1], rightIsPres, next.p - (adouble)(props_sk.p_out), next.p - (adouble)(nebr.p));
+	condassign(h[1], rightIsPres, next.p - (adouble)(props_sk.p_out), next.p - nebr.p);
 	h[2] = next.sw - nebr.sw;
 	h[3] = next.xw - nebr.xw;
 	h[4] = next.xa - nebr.xa;

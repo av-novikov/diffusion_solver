@@ -11,6 +11,7 @@
 #include "model/Acid/1d/Acid1d.hpp"
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
+#include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/WaxNIT/WaxNIT.hpp"
 
 #include <iomanip>
@@ -114,12 +115,30 @@ void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::copyIterLayer()
 	for (auto& cell : model->wellCells)
 		cell.u_iter = cell.u_next;
 }
+void AbstractSolver<acidfrac::AcidFrac>::copyIterLayer()
+{
+	for (auto& cell : model->cells_frac)
+		cell.u_iter = cell.u_next;
+
+	for(auto& grid : model->poro_grids)
+		for (auto& cell : grid.cells)
+			cell.u_iter = cell.u_next;
+}
 
 template <class modelType>
 void AbstractSolver<modelType>::revertIterLayer()
 {
 	for (int i = 0; i < model->cells.size(); i++)
 		model->cells[i].u_next = model->cells[i].u_iter;
+}
+void AbstractSolver<acidfrac::AcidFrac>::revertIterLayer()
+{
+	for (auto& cell : model->cells_frac)
+		cell.u_next = cell.u_iter;
+
+	for (auto& grid : model->poro_grids)
+		for (auto& cell : grid.cells)
+			cell.u_next = cell.u_iter;
 }
 template <class modelType>
 void AbstractSolver<modelType>::copyTimeLayer()
@@ -150,6 +169,15 @@ void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::copyTimeLayer()
 
 	for (auto& cell : model->wellCells)
 		cell.u_prev = cell.u_iter = cell.u_next;
+}
+void AbstractSolver<acidfrac::AcidFrac>::copyTimeLayer()
+{
+	for (auto& cell : model->cells_frac)
+		cell.u_prev = cell.u_iter = cell.u_next;
+
+	for (auto& grid : model->poro_grids)
+		for (auto& cell : grid.cells)
+			cell.u_prev = cell.u_iter = cell.u_next;
 }
 
 template <class modelType>
@@ -477,6 +505,54 @@ double AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::convergance(i
 
 	return relErr;
 }
+double AbstractSolver<acidfrac::AcidFrac>::convergance(int& ind, int& varInd)
+{
+	double relErr = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int i = 0; i < acidfrac::var_frac_size; i++)
+	{
+		for (const auto& cell : model->cells_frac)
+		{
+			var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > relErr)
+				{
+					relErr = cur_relErr;
+					ind = cell.num;
+					varInd = i;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < acidfrac::var_poro_size; i++)
+	{
+		for (const auto& grid : model->poro_grids)
+		{
+			for (const auto& cell : grid.cells)
+			{
+				var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i];
+				if (fabs(var_next) > EQUALITY_TOLERANCE)
+				{
+					cur_relErr = fabs((var_next - var_iter) / var_next);
+					if (cur_relErr > relErr)
+					{
+						relErr = cur_relErr;
+						ind = model->cellsNum + grid.start_idx + cell.num;
+						varInd = i;
+					}
+				}
+			}
+		}
+	}
+
+	return relErr;
+}
 
 template <class modelType>
 double AbstractSolver<modelType>::averValue(const int varInd)
@@ -489,6 +565,10 @@ double AbstractSolver<modelType>::averValue(const int varInd)
 	}
 	
 	return tmp / model->Volume;
+}
+double AbstractSolver<acidfrac::AcidFrac>::averValue(const int varInd)
+{
+	return 0.0;
 }
 template <class modelType>
 void AbstractSolver<modelType>::averValue(std::array<double, modelType::var_size>& aver)
@@ -542,6 +622,22 @@ void AbstractSolver<acid2d::Acid2d>::averValue(std::array<double, acid2d::Acid2d
 
 	for (auto& val : aver)
 		val /= model->Volume;
+}
+void AbstractSolver<acidfrac::AcidFrac>::averValue(std::array<double, acidfrac::AcidFrac::var_size>& aver)
+{
+	std::fill(aver.begin(), aver.end(), 0.0);
+
+	for (const auto& cell : model->cells_frac)
+	{
+		aver[1] += cell.u_next.values[0] * cell.V;
+		aver[4] += cell.u_next.values[1] * cell.V;
+	}
+	aver[1] /= model->Volume;	aver[4] /= model->Volume;
+
+	for (const auto& grid : model->poro_grids)
+		for (const auto& cell : grid.cells)
+			for (int i = 0; i < acidfrac::var_poro_size; i++)
+				aver[i] += cell.u_next.values[i] * cell.V / grid.Volume;
 }
 void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::averValue(std::array<double, blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size>& aver)
 {
@@ -644,18 +740,6 @@ double AbstractSolver<oilnit_elliptic::OilNIT_Elliptic>::averValue(const int var
 
 	return tmp / model->Volume;
 }
-double AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::averValue(const int varInd)
-{
-	double tmp = 0.0;
-
-	for (const auto& cell : model->cells)
-		tmp += cell.u_next.values[varInd] * cell.V;
-
-	for (const auto& cell : model->wellCells)
-		tmp += cell.u_next.values[varInd] * cell.V;
-
-	return tmp / model->Volume;
-}
 
 template <class modelType>
 void AbstractSolver<modelType>::checkStability()
@@ -672,4 +756,5 @@ template class AbstractSolver<blackoil_rz::BlackOil_RZ>;
 template class AbstractSolver<acid2d::Acid2d>;
 template class AbstractSolver<acid2dnit::Acid2dNIT>;
 template class AbstractSolver<acid1d::Acid1d>;
+template class AbstractSolver<acidfrac::AcidFrac>;
 template class AbstractSolver<wax_nit::WaxNIT>;

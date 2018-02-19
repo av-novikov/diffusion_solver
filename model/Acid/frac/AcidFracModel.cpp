@@ -9,10 +9,12 @@ AcidFrac::AcidFrac()
 {
 	grav = 9.8;
 	Volume = 0.0;
+	cellsPoroNum = 0;
 }
 AcidFrac::~AcidFrac()
 {
 	delete snapshotter;
+	delete[] x_frac, x_poro, h;
 }
 void AcidFrac::setProps(Properties& props)
 {
@@ -143,16 +145,20 @@ size_t AcidFrac::getInitId2OutCell(const FracCell& cell)
 	assert(cell.type == FracType::FRAC_OUT);
 	return 0;
 }
-void AcidFrac::build1dGrid(const FracCell& cell)
+void AcidFrac::build1dGrid(const FracCell& cell, const int grid_id)
 {
 	assert(cell.type == FracType::FRAC_OUT);
 	poro_grids.push_back(PoroGrid()); 
 	PoroGrid& grid = poro_grids.back();
+	grid.id = grid_id;
 	frac2poro[&const_cast<FracCell&>(cell)] = &grid;
 	grid.frac_nebr = &cell;
 	grid.Volume = 0.0;
 	const auto init_id = getInitId2OutCell(cell);
 	grid.cellsNum = cellsNum_y_1d[init_id];
+	grid.start_idx = cellsPoroNum;
+	cellsPoroNum += (grid.cellsNum + 2);
+
 	grid.props_sk = &props_sk[init_id];
 	auto& cells = grid.cells;
 
@@ -184,7 +190,7 @@ void AcidFrac::build1dGrid(const FracCell& cell)
 }
 void AcidFrac::buildGrid()
 {
-	int counter = 0;
+	int counter = 0, grid_id = 0;
 	double hy = 0.0, hz = 0.0, init_dx = props_frac.w2;
 	FracType cur_type;
 
@@ -259,7 +265,7 @@ void AcidFrac::buildGrid()
 			}
 
 			if(i != 0 && k != 0 && i != cellsNum_x + 1 && k != cellsNum_z + 1)
-				build1dGrid(cells_frac.back());
+				build1dGrid(cells_frac.back(), grid_id++);
 
 			if (k == 0 || k == cellsNum_z)
 				z += props_frac.height / cellsNum_z / 2.0;
@@ -327,7 +333,162 @@ void AcidFrac::setInitialState()
 				poro_cell.u_prev.xw = poro_cell.u_iter.xw = poro_cell.u_next.xw = props->xw_init;
 				poro_cell.u_prev.xa = poro_cell.u_iter.xa = poro_cell.u_next.xa = props->xa_init;
 				poro_cell.u_prev.xs = poro_cell.u_iter.xs = poro_cell.u_next.xs = 0.0;
+				poro_cell.props = poro_grid;
 			}
 		}
 	}
+
+	x_poro = new PoroTapeVariable[cellsPoroNum];
+	x_frac = new FracTapeVariable[cellsNum];
+	h = new adouble[ var_frac_size * cellsNum + var_poro_size * cellsPoroNum];
+}
+
+PoroTapeVariable AcidFrac::solvePoro(const PoroCell& cell)
+{
+	if (cell.type == PoroType::MIDDLE)
+		return solvePoroMid(cell);
+	else if (cell.type == PoroType::WELL_LAT)
+		return solvePoroLeft(cell);
+	else if (cell.type == PoroType::RIGHT)
+		return solvePoroRight(cell);
+}
+PoroTapeVariable AcidFrac::solvePoroMid(const PoroCell& cell)
+{
+	assert(cell.type == PoroType::MIDDLE);
+	const auto& grid = *cell.props;
+	const auto& props = *grid.props_sk;
+	const auto& next = x_poro[grid.start_idx + cell.num];
+	const auto& prev = cell.u_prev;
+	adouble rate = getReactionRate(next, props);
+
+	PoroTapeVariable res;
+	res.m = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
+		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * rate;
+	res.p = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) -
+		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) -
+		ht * (reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight +
+			reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight +
+			reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight) * rate;
+	res.sw = next.m * (1.0 - next.sw) * props_o.getDensity(next.p) -
+		prev.m * (1.0 - prev.sw) * props_o.getDensity(prev.p);
+	res.xw = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xw -
+		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xw) * prev.xw -
+		ht * reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight * rate;
+	res.xa = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xa -
+		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xa -
+		ht * reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight * rate;
+	res.xs = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xs -
+		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xs -
+		ht * reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight * rate;
+
+	int neighbor[2];
+	getPoroNeighborIdx(cell.num, neighbor);
+	for (int i = 0; i < 2; i++)
+	{
+		const PoroCell& beta = grid.cells[neighbor[i]];
+		const auto& nebr = x_poro[grid.start_idx + neighbor[i]];
+		const int upwd_idx = getUpwindIdx(cell, beta);
+		const auto& upwd = x_poro[grid.start_idx + upwd_idx];
+		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), cell,
+			props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), beta);
+		adouble dens_o = getAverage(props_o.getDensity(next.p), cell,
+			props_o.getDensity(nebr.p), beta);
+		adouble buf_w = ht / cell.V * getPoroTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+			dens_w * props_w.getKr(upwd.sw, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
+		adouble buf_o = ht / cell.V * getPoroTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+			dens_o * props_o.getKr(upwd.sw, &props) / props_o.getViscosity(upwd.p);
+
+		res.p += buf_w;
+		res.sw += buf_o;
+		res.xw += buf_w * upwd.xw;
+		res.xa += buf_w * upwd.xa;
+		res.xs += buf_w * upwd.xs;
+	}
+	return res;
+}
+PoroTapeVariable AcidFrac::solvePoroLeft(const PoroCell& cell)
+{
+	assert(cell.type == PoroType::WELL_LAT);
+	const auto& grid = *cell.props;
+	const auto& props = *grid.props_sk;
+
+	const auto& nebr = x_frac[grid.frac_nebr->num];
+	const auto& next = x_poro[grid.start_idx + cell.num];
+	const auto& prev = cell.u_prev;
+
+	PoroTapeVariable res;
+	res.m = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
+		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
+	res.p = next.p - nebr.p;
+	res.sw = next.sw - (1.0 - props.s_oc);
+	res.xw = next.xw - (1.0 - nebr.c);
+	res.xa = next.xa - nebr.c;
+	res.xs = next.xs;
+	return res;
+}
+PoroTapeVariable AcidFrac::solvePoroRight(const PoroCell& cell)
+{
+	assert(cell.type == PoroType::RIGHT);
+	const auto& grid = *cell.props;
+	const auto& props = *grid.props_sk;
+
+	const auto& next = x_poro[grid.start_idx + cell.num];
+	const auto& nebr = x_poro[grid.start_idx + cell.num + 1];
+
+	adouble rightIsPres = rightBoundIsPres;
+	PoroTapeVariable res;
+	res.m = next.m - nebr.m;
+	condassign(res.p, rightIsPres, next.p - props.p_out, next.p - nebr.p);
+	res.sw = next.sw - nebr.sw;
+	res.xw = next.xw - nebr.xw;
+	res.xa = next.xa - nebr.xa;
+	res.xs = next.xs - nebr.xs;
+	return res;
+}
+FracTapeVariable AcidFrac::solveFrac(const FracCell& cell)
+{
+	if (cell.type == FracType::FRAC_MID)
+		return solveFracMid(cell);
+	else if (cell.type == FracType::FRAC_BORDER)
+		return solveFracBorder(cell);
+	else if (cell.type == FracType::FRAC_IN)
+		return solveFracIn(cell);
+	else if (cell.type == FracType::FRAC_OUT)
+		return solveFracOut(cell);
+}
+FracTapeVariable AcidFrac::solveFracIn(const FracCell& cell)
+{
+	assert(cell.type == FracType::FRAC_IN);
+	const auto& next = x_frac[cell.num];
+	FracTapeVariable res;
+	res.p = next.p - Pwf;
+	res.c = next.c - c;
+	return res;
+}
+FracTapeVariable AcidFrac::solveFracBorder(const FracCell& cell)
+{
+	assert(cell.type == FracType::FRAC_BORDER);
+	const auto& next = x_frac[cell.num];
+	FracTapeVariable res;
+	res.p = next.p - Pwf;
+	res.c = next.c - c;
+	return res;
+}
+FracTapeVariable AcidFrac::solveFracOut(const FracCell& cell)
+{
+	assert(cell.type == FracType::FRAC_OUT);
+	const auto& next = x_frac[cell.num];
+	FracTapeVariable res;
+	res.p = next.p - Pwf;
+	res.c = next.c - c;
+	return res;
+}
+FracTapeVariable AcidFrac::solveFracMid(const FracCell& cell)
+{
+	assert(cell.type == FracType::FRAC_MID);
+	const auto& next = x_frac[cell.num];
+	FracTapeVariable res;
+	res.p = next.p - Pwf;
+	res.c = next.c - c;
+	return res;
 }
