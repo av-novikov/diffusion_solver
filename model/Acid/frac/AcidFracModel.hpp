@@ -111,7 +111,7 @@ namespace acidfrac
 			k2 = props.getPermCoseni(m_beta);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
-			S = cell.props->hz * (cell.x + sign(beta.num - cell.num) * cell.hx / 2.0);
+			S = cell.props->hz * cell.props->hx;
 			return 2.0 * k1 * k2 * S / (k1 * beta.hx + k2 * cell.hx);
 		};
 		inline adouble getAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const

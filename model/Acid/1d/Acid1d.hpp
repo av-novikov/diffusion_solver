@@ -90,7 +90,7 @@ namespace acid1d
 			k2 = props_sk.getPermCoseni(m_beta);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
-			S = props_sk.height * (cell.x + sign(beta.num - cell.num) * cell.hx / 2.0);
+			S = props_sk.height;
 			return 2.0 * k1 * k2 * S / (k1 * beta.hx + k2 * cell.hx);
 		};
 		inline double getWaterVelocity(Cell& cell)

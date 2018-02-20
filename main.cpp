@@ -1070,15 +1070,16 @@ acidfrac::Properties* getProps()
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
 
+	props->ht = 0.1;
+	props->ht_min = 0.1;
+	props->ht_max = 10000.0;
+
 	props->timePeriods.push_back(5.0 * 3600.0);
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
-	props->pwf.push_back(200.0 * 1.0e+5);
-	props->cs.push_back(0.15);
-
-	props->xe.push_back(10.0);
-	props->cellsNum_y_1d.push_back(10);
+	props->pwf.push_back(101.0 * 1.0e+5);
+	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 10.0;
 	props->props_frac.w2 = 0.5;
@@ -1087,6 +1088,12 @@ acidfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 1.0;
 
+	props->cellsNum_x = 5;
+	props->cellsNum_y = 5;
+	props->cellsNum_z = 2;
+
+	props->xe.push_back(100.0);
+	props->cellsNum_y_1d.push_back(100);
 	acidfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
@@ -1099,9 +1106,19 @@ acidfrac::Properties* getProps()
 	props_sk.beta = 4.35113e-10;
 	props->props_sk.push_back(props_sk);
 
-	props->cellsNum_x = 10;
-	props->cellsNum_y = 5;
-	props->cellsNum_z = 5;
+	props->props_o.visc = 1.0;
+	props->props_o.dens_stc = 887.261;
+	props->props_o.beta = 1.0 * 1.e-9;
+	props->props_o.p_ref = props_sk.p_ref;
+
+	props->props_w.visc = 1.0;
+	props->props_w.dens_stc = 1000.0;
+	props->props_w.beta = 1.0 * 1.e-9;
+	props->props_w.p_ref = props_sk.p_ref;
+
+	props->props_g.visc = 0.06;
+	props->props_g.dens_stc = 0.8;
+	props->props_g.co2 = acidfrac::getCO2();
 
 	return props;
 }
@@ -1169,7 +1186,7 @@ int main(int argc, char* argv[])
 	acidfrac::Properties* props = getProps();
 	Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties> scene;
 	scene.load(*props);
-	//scene.start();
+	scene.start();
 	/*acid1d::Properties* props = getProps();
 	Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties> scene;
 	scene.load(*props);

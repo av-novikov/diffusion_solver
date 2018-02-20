@@ -625,19 +625,27 @@ void AbstractSolver<acid2d::Acid2d>::averValue(std::array<double, acid2d::Acid2d
 }
 void AbstractSolver<acidfrac::AcidFrac>::averValue(std::array<double, acidfrac::AcidFrac::var_size>& aver)
 {
+	std::array<double, acidfrac::AcidFrac::var_size> aver_poro;
+	std::fill(aver_poro.begin(), aver_poro.end(), 0.0);
 	std::fill(aver.begin(), aver.end(), 0.0);
 
 	for (const auto& cell : model->cells_frac)
 	{
-		aver[1] += cell.u_next.values[0] * cell.V;
-		aver[4] += cell.u_next.values[1] * cell.V;
+		aver_frac[1] += cell.u_next.values[0] * cell.V;
+		aver_frac[4] += cell.u_next.values[1] * cell.V;
 	}
-	aver[1] /= model->Volume;	aver[4] /= model->Volume;
+	aver_frac[1] /= model->Volume;	aver_frac[4] /= model->Volume;
+
+	double poro_vol = 0.0;
+	for (const auto& grid : model->poro_grids)
+		poro_vol += grid.Volume;
 
 	for (const auto& grid : model->poro_grids)
 		for (const auto& cell : grid.cells)
 			for (int i = 0; i < acidfrac::var_poro_size; i++)
-				aver[i] += cell.u_next.values[i] * cell.V / grid.Volume;
+				aver_poro[i] += cell.u_next.values[i] * cell.V / poro_vol;
+
+	for(int i = 0; i < )
 }
 void AbstractSolver<blackoilnit_elliptic::BlackOilNIT_Elliptic>::averValue(std::array<double, blackoilnit_elliptic::BlackOilNIT_Elliptic::var_size>& aver)
 {

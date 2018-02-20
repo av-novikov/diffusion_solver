@@ -104,7 +104,7 @@ void ParSolver::SolveBiCGStab_Simple()
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
-	//writeSystem();
+	writeSystem();
 	//getResiduals();
 	//cout << "Initial residual: " << initRes << endl;
 	//cout << "Final residual: " << finalRes << endl;

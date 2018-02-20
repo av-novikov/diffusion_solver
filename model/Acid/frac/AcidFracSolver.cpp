@@ -29,7 +29,7 @@ AcidFracSolver::AcidFracSolver(AcidFrac* _model) : AbstractSolver<AcidFrac>(_mod
 	options[1] = 0;          /*                         safe mode (default) */
 	options[2] = 0;          /*              not required if options[0] = 0 */
 	options[3] = 0;          /*                column compression (default) */
-
+	repeat = 0;
 	//P.open("snaps/P.dat", ofstream::out);
 	//S.open("snaps/S.dat", ofstream::out);
 	//qcells.open("snaps/Q.dat", ofstream::out);
@@ -104,7 +104,7 @@ void AcidFracSolver::copySolution(const paralution::LocalVector<double>& sol)
 	{
 		auto& cell = model->cells_frac[i];
 		for (int j = 0; j < var_frac_size; j++)
-			cell.u_next.values[j] = sol[i * var_frac_size + j];
+			cell.u_next.values[j] += sol[i * var_frac_size + j];
 	}
 
 	for (auto& grid : model->poro_grids)
@@ -114,7 +114,7 @@ void AcidFracSolver::copySolution(const paralution::LocalVector<double>& sol)
 			auto& cell = grid.cells[i];
 			const int start_idx = var_frac_size * model->cellsNum + var_poro_size * grid.start_idx;
 			for (int j = 0; j < var_poro_size; j++)
-				cell.u_next.values[j] = sol[start_idx + i * var_poro_size + j];
+				cell.u_next.values[j] += sol[start_idx + i * var_poro_size + j];
 		}
 	}
 }
@@ -146,7 +146,6 @@ void AcidFracSolver::checkStability()
 		if (fabs(next.s - iter.s) > MAX_SAT_CHANGE)
 			next.s = iter.s + sign(next.s - iter.s) * MAX_SAT_CHANGE;
 	};
-
 	/*for (size_t i = 0; i < size; i++)
 	{
 		auto& data = (*model)[i];
@@ -216,8 +215,8 @@ void AcidFracSolver::computeJac()
 			cur_x.m <<= cell.u_next.m;
 			cur_x.p <<= cell.u_next.p;
 			cur_x.sw <<= cell.u_next.sw;
-			cur_x.xw <<= cell.u_next.xa;
-			cur_x.xa <<= cell.u_next.xw;
+			cur_x.xw <<= cell.u_next.xw;
+			cur_x.xa <<= cell.u_next.xa;
 			cur_x.xs <<= cell.u_next.xs;
 
 			const int start_idx = model->cellsNum * var_frac_size + grid.start_idx * var_poro_size;

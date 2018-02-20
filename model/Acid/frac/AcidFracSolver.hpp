@@ -20,7 +20,6 @@ namespace acidfrac
 		void writeData();
 		void doNextStep();
 
-
 		double** jac;
 		double* y;
 		double* x;
