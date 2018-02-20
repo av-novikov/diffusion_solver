@@ -1,3 +1,4 @@
+#ifdef USE_HYPRE
 #include "method/HypreInterface.hpp"
 #include <algorithm>
 
@@ -84,3 +85,5 @@ const HypreSolver::Vector& HypreSolver::getSolution()
 	HYPRE_IJVectorGetValues(x, nrows, rows, x_sol);
 	return x_sol;
 }
+
+#endif /* USE_HYPRE */

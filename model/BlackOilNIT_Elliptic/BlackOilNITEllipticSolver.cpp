@@ -392,6 +392,7 @@ void BlackOilNITEllipticSolver<ParSolver>::solveStep()
 		iterations++;
 	}
 }
+#ifdef USE_HYPRE
 void BlackOilNITEllipticSolver<HypreSolver>::solveStep()
 {
 	int cellIdx, varIdx;
@@ -419,17 +420,18 @@ void BlackOilNITEllipticSolver<HypreSolver>::solveStep()
 		iterations++;
 	}
 }
-void BlackOilNITEllipticSolver<ParSolver>::solveTempStep()
-{
-	fill(TEMP);
-	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
-	temp_solver.Solve();
-	copySolution(temp_solver.getSolution(), TEMP);
-}
 void BlackOilNITEllipticSolver<HypreSolver>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(t_cols, tind_j, a, telemNum, ind_rhs, rhs);
+	temp_solver.Solve();
+	copySolution(temp_solver.getSolution(), TEMP);
+}
+#endif /* USE_HYPRE */
+void BlackOilNITEllipticSolver<ParSolver>::solveTempStep()
+{
+	fill(TEMP);
+	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
 	copySolution(temp_solver.getSolution(), TEMP);
 }
@@ -784,4 +786,6 @@ void BlackOilNITEllipticSolver<solType>::filldPdQ(double mult)
 }
 
 template class BlackOilNITEllipticSolver<ParSolver>;
+#ifdef USE_HYPRE
 template class BlackOilNITEllipticSolver<HypreSolver>;
+#endif /* USE_HYPRE */

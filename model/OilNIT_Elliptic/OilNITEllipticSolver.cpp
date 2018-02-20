@@ -258,6 +258,7 @@ void OilNITEllipticSolver<ParSolver>::solveStep()
 		iterations++;
 	}
 }
+#ifdef USE_HYPRE
 void OilNITEllipticSolver<HypreSolver>::solveStep()
 {
 	int cellIdx, varIdx;
@@ -285,18 +286,19 @@ void OilNITEllipticSolver<HypreSolver>::solveStep()
 		iterations++;
 	}
 }
-void OilNITEllipticSolver<ParSolver>::solveTempStep()
-{
-	fill(TEMP);
-	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
-	temp_solver.Solve(PRECOND::ILU_SERIOUS);
-	copySolution(temp_solver.getSolution(), TEMP);
-}
 void OilNITEllipticSolver<HypreSolver>::solveTempStep()
 {
 	fill(TEMP);
 	temp_solver.Assemble(t_cols, tind_j, a, telemNum, ind_rhs, rhs);
 	temp_solver.Solve();
+	copySolution(temp_solver.getSolution(), TEMP);
+}
+#endif /* USE_HYPRE */
+void OilNITEllipticSolver<ParSolver>::solveTempStep()
+{
+	fill(TEMP);
+	temp_solver.Assemble(tind_i, tind_j, a, telemNum, ind_rhs, rhs);
+	temp_solver.Solve(PRECOND::ILU_SERIOUS);
 	copySolution(temp_solver.getSolution(), TEMP);
 }
 template <typename solType>
@@ -566,4 +568,6 @@ void OilNITEllipticSolver<solType>::filldPdQ(double mult)
 }
 
 template class OilNITEllipticSolver<ParSolver>;
+#ifdef USE_HYPRE
 template class OilNITEllipticSolver<HypreSolver>;
+#endif /* USE_HYPRE */

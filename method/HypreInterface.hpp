@@ -1,6 +1,7 @@
 #ifndef HYPREINTERFACE_HPP_
 #define HYPREINTERFACE_HPP_
 
+#ifdef USE_HYPRE
 #include <mpi.h>
 #include "_hypre_utilities.h"
 #include "HYPRE_krylov.h"
@@ -36,5 +37,6 @@ public:
 	void Solve();
 	const Vector& getSolution();
 };
+#endif /* USE_HYPRE */
 
 #endif /* HYPREINTERFACE_HPP_ */

@@ -94,20 +94,6 @@ Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<Pa
 	delete model;
 	delete method;
 }
-Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::~Scene()
-{
-	MPI_Finalize();
-
-	delete model;
-	delete method;
-}
-Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<HypreSolver>, blackoilnit_elliptic::Properties>::~Scene()
-{
-	MPI_Finalize();
-
-	delete model;
-	delete method;
-}
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::load(propsType& props)
 {
@@ -150,17 +136,27 @@ void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolv
 	paralution::init_paralution();
 	method = new oilnit_elliptic::OilNITEllipticSolver<ParSolver>(model);
 }
-void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props, int argc, char* argv[])
-{
-	model->load(props);
-	MPI_Init(&argc, &argv);
-	method = new oilnit_elliptic::OilNITEllipticSolver<HypreSolver>(model);
-}
 void Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties>::load(blackoilnit_elliptic::Properties& props)
 {
 	model->load(props);
 	paralution::init_paralution();
 	method = new blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>(model);
+}
+
+#ifdef USE_HYPRE
+Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::~Scene()
+{
+	MPI_Finalize();
+
+	delete model;
+	delete method;
+}
+Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<HypreSolver>, blackoilnit_elliptic::Properties>::~Scene()
+{
+	MPI_Finalize();
+
+	delete model;
+	delete method;
 }
 void Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<HypreSolver>, blackoilnit_elliptic::Properties>::load(blackoilnit_elliptic::Properties& props, int argc, char* argv[])
 {
@@ -168,6 +164,14 @@ void Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::Bla
 	MPI_Init(&argc, &argv);
 	method = new blackoilnit_elliptic::BlackOilNITEllipticSolver<HypreSolver>(model);
 }
+void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props, int argc, char* argv[])
+{
+	model->load(props);
+	MPI_Init(&argc, &argv);
+	method = new oilnit_elliptic::OilNITEllipticSolver<HypreSolver>(model);
+}
+#endif /* USE_HYPRE */
+
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::load(propsType& props, int i) {}
 template <class modelType, class methodType, typename propsType>
@@ -191,9 +195,11 @@ template class Scene<vpp2d::VPP2d, vpp2d::VPPSolver, vpp2d::Properties>;
 template class Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties>;
 template class Scene<gasOil_elliptic::GasOil_Elliptic, gasOil_elliptic::GasOilEllipticSolver, gasOil_elliptic::Properties>;
 template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties>;
-template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>;
 template class Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>, blackoilnit_elliptic::Properties>;
+#ifdef USE_HYPRE
+template class Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>;
 template class Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::BlackOilNITEllipticSolver<HypreSolver>, blackoilnit_elliptic::Properties>;
+#endif /* USE_HYPRE */
 template class Scene<blackoil_rz::BlackOil_RZ, blackoil_rz::BlackOil2dSolver, blackoil_rz::Properties>;
 template class Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>;
 template class Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties>;
