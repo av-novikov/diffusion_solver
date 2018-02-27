@@ -839,6 +839,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			for (int j = 1; j < poro_grid->cellsNum + 1; j++)
 			{
 				const PoroCell& cell = poro_grid->cells[j];
+				const auto& next = cell.u_next;
 				reg->InsertNextValue(REGION_TYPE::POROUS);
 				poro->InsertNextValue(next.m);
 				perm->InsertNextValue(M2toMilliDarcy(poro_grid->props_sk->getPermCoseni(next.m).value() * r_dim * r_dim));

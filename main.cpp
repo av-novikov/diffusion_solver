@@ -1078,8 +1078,8 @@ acidfrac::Properties* getProps()
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
-	props->pwf.push_back(101.0 * 1.0e+5);
-	props->cs.push_back(0.0);
+	props->pwf.push_back(110.0 * 1.0e+5);
+	props->cs.push_back(0.1);
 
 	props->props_frac.l2 = 10.0;
 	props->props_frac.w2 = 0.5;
