@@ -1078,32 +1078,33 @@ acidfrac::Properties* getProps()
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
-	props->pwf.push_back(110.0 * 1.0e+5);
-	props->cs.push_back(0.1);
+	props->pwf.push_back(210.0 * 1.0e+5);
+	props->cs.push_back(0.0);
 
-	props->props_frac.l2 = 10.0;
-	props->props_frac.w2 = 0.5;
+	props->props_frac.l2 = 1.0;
+	props->props_frac.w2 = 0.1;
 
-	props->props_frac.p_init = 100.0 * BAR_TO_PA;
+	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
-	props->props_frac.height = 1.0;
+	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 5;
-	props->cellsNum_y = 5;
-	props->cellsNum_z = 2;
+	props->cellsNum_x = 1;
+	props->cellsNum_y = 1;
+	props->cellsNum_z = 1;
 
 	props->xe.push_back(100.0);
 	props->cellsNum_y_1d.push_back(100);
 	acidfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
-	props_sk.sw_init = 0.5;		props_sk.so_init = 0.5;
+	props_sk.sw_init = 0.2;		props_sk.so_init = 0.8;
 	props_sk.xa_init = 0.0;		props_sk.xw_init = 1.0;
 	props_sk.s_wc = 0.0;		props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
 	props_sk.xa_eqbm = 0.0;
 	props_sk.perm = 100.0;
 	props_sk.dens_stc = 2000.0;
 	props_sk.beta = 4.35113e-10;
+	props_sk.height = props->props_frac.height;
 	props->props_sk.push_back(props_sk);
 
 	props->props_o.visc = 1.0;

@@ -109,10 +109,10 @@ void AcidFracSolver::copySolution(const paralution::LocalVector<double>& sol)
 
 	for (auto& grid : model->poro_grids)
 	{
+		const int start_idx = var_frac_size * model->cellsNum + var_poro_size * grid.start_idx;
 		for (int i = 0; i < grid.cellsNum + 2; i++)
 		{
 			auto& cell = grid.cells[i];
-			const int start_idx = var_frac_size * model->cellsNum + var_poro_size * grid.start_idx;
 			for (int j = 0; j < var_poro_size; j++)
 				cell.u_next.values[j] += sol[start_idx + i * var_poro_size + j];
 		}
@@ -178,7 +178,7 @@ void AcidFracSolver::solveStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE);
+		solver.Solve(PRECOND::ILU_SERIOUS);
 		copySolution(solver.getSolution());
 
 		checkStability();
@@ -238,10 +238,11 @@ void AcidFracSolver::computeJac()
 	}
 	// Porous medium
 	for (const auto& grid : model->poro_grids)
+	{
+		const int start_idx = model->cellsNum * var_frac_size + grid.start_idx * var_poro_size;
 		for (const auto cell : grid.cells)
 		{
 			const auto res = model->solvePoro(cell);
-			const int start_idx = model->cellsNum * var_frac_size + grid.start_idx * var_poro_size;
 			model->h[start_idx + cell.num * var_poro_size] = res.m;
 			model->h[start_idx + cell.num * var_poro_size + 1] = res.p;
 			model->h[start_idx + cell.num * var_poro_size + 2] = res.sw;
@@ -249,6 +250,7 @@ void AcidFracSolver::computeJac()
 			model->h[start_idx + cell.num * var_poro_size + 4] = res.xa;
 			model->h[start_idx + cell.num * var_poro_size + 5] = res.xs;
 		}
+	}
 
 	for (int i = 0; i < strNum; i++)
 		model->h[i] >>= y[i];
