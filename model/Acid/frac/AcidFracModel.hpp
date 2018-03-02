@@ -68,6 +68,7 @@ namespace acidfrac
 		std::vector<int> cellsNum_y_1d;
 		std::vector<double> xe;
 		std::map<FracCell*, PoroGrid*> frac2poro;
+		std::map<int, int> border_nebrs;
 		// Temporary properties
 		double ht, ht_min, ht_max;
 		int periodsNum;

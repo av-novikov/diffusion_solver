@@ -208,19 +208,14 @@ void AcidFrac::buildGrid()
 	for (int i = 0; i < cellsNum_x + 2; i++)
 	{
 		if (i == 0)
-		{
-			//cur_type = FracType::FRAC_IN;
 			hx = 0.0;
-		}
 		else if (i == cellsNum_x + 1)
 		{
-			//cur_type = FracType::FRAC_BORDER;
 			hx = 0.0;
 			x = props_frac.l2 + init_dx;
 		}
 		else
 		{
-			//cur_type = FracType::FRAC_MID;
 			x = x_prev * (exp(logStep) + 1.0) / 2.0;
 			hx = x_prev * (exp(logStep) - 1.0);
 		}
@@ -229,10 +224,7 @@ void AcidFrac::buildGrid()
 		for (int k = 0; k < cellsNum_z + 2; k++)
 		{
 			if (k == 0 || k == cellsNum_z + 1)
-			{
-				//cur_type = FracType::FRAC_BORDER;
 				hz = 0.0;
-			}
 			else
 				hz = props_frac.height / cellsNum_z;
 
@@ -240,15 +232,9 @@ void AcidFrac::buildGrid()
 			for (int j = 0; j < cellsNum_y + 1; j++)
 			{
 				if (j == 0)
-				{
-					//cur_type = FracType::FRAC_BORDER;
 					hy = 0.0;
-				}
 				else if (j == cellsNum_y)
-				{
-					//cur_type = FracType::FRAC_OUT;
 					hy = init_dx / cellsNum_y;
-				}
 				else 
 					hy = init_dx / cellsNum_y;
 
@@ -283,6 +269,28 @@ void AcidFrac::buildGrid()
 
 		if(i != 0)
 			x_prev *= exp(logStep);
+	}
+
+	for (const auto& cell : cells_frac)
+	{
+		if (cell.type == FracType::FRAC_BORDER)
+		{
+			int nebr_idx;
+			if (cell.num % (cellsNum_y + 1) == 0)
+				 nebr_idx = cell.num + 1;
+			else if (cell.num % ((cellsNum_y + 1) * (cellsNum_z + 2)) < (cellsNum_y + 1))
+				nebr_idx = cell.num + cellsNum_y + 1;
+			else if (cell.num % ((cellsNum_y + 1) * (cellsNum_z + 2)) >= (cellsNum_y + 1) * (cellsNum_z + 1))
+				nebr_idx = cell.num - cellsNum_y - 1;
+			else if (cell.num >= (cellsNum_x + 1) * (cellsNum_y + 1) * (cellsNum_z + 2))
+				nebr_idx = cell.num - (cellsNum_y + 1) * (cellsNum_z + 2);
+			else
+				nebr_idx = cell.num - 1;
+
+			assert(nebr_idx > 0);
+			assert(nebr_idx < cellsNum);
+			border_nebrs[cell.num] = nebr_idx;
+		}
 	}
 }
 void AcidFrac::setPerforated()
