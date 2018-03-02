@@ -1079,18 +1079,18 @@ acidfrac::Properties* getProps()
 	props->rightBoundIsPres = true;
 	//props->rates.push_back(0.0);
 	props->pwf.push_back(210.0 * 1.0e+5);
-	props->cs.push_back(0.0);
+	props->cs.push_back(0.15);
 
-	props->props_frac.l2 = 1.0;
+	props->props_frac.l2 = 10.0;
 	props->props_frac.w2 = 0.1;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 1;
-	props->cellsNum_y = 1;
-	props->cellsNum_z = 1;
+	props->cellsNum_x = 10;
+	props->cellsNum_y = 5;
+	props->cellsNum_z = 5;
 
 	props->xe.push_back(100.0);
 	props->cellsNum_y_1d.push_back(100);

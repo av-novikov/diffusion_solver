@@ -26,8 +26,9 @@ namespace acidfrac
 
 		std::array<double, var_poro_size> averVal, averValPrev, dAverVal;
 		double err_newton;
+		int step_idx;
 
-		std::ofstream S, P, qcells;
+		std::ofstream S, P, qcells, pvd;
 		ParSolver solver;
 
 		int strNum;

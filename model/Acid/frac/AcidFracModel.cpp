@@ -389,14 +389,6 @@ PoroTapeVariable AcidFrac::solvePoroMid(const PoroCell& cell)
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xs -
 		ht * reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight * rate;
 
-	double qwe1 = res.m.value();
-	double qwe2 = res.p.value();
-	double qwe3 = res.sw.value();
-	double qwe4 = res.xw.value();
-	double qwe5 = res.xa.value();
-	double qwe6 = res.xs.value();
-	double rates = rate.value();
-
 	int neighbor[2];
 	getPoroNeighborIdx(cell.num, neighbor);
 	for (int i = 0; i < 2; i++)
@@ -413,22 +405,12 @@ PoroTapeVariable AcidFrac::solvePoroMid(const PoroCell& cell)
 			dens_w * props_w.getKr(upwd.sw, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
 		adouble buf_o = ht / cell.V * getPoroTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
 			dens_o * props_o.getKr(upwd.sw, &props) / props_o.getViscosity(upwd.p);
-		double tra1 = props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs).value();
-		double tra2 = props_o.getViscosity(upwd.p).value();
+
 		res.p += buf_w;
 		res.sw += buf_o;
 		res.xw += buf_w * upwd.xw;
 		res.xa += buf_w * upwd.xa;
 		res.xs += buf_w * upwd.xs;
-
-		double qw1 = res.m.value();
-		double qw2 = res.p.value();
-		double qw3 = res.sw.value();
-		double qw4 = res.xw.value();
-		double qw5 = res.xa.value();
-		double qw6 = res.xs.value();
-
-		double qwer = 123.0;
 	}
 	return res;
 }

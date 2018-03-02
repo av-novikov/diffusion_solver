@@ -743,11 +743,12 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 		for (int j = 0; j < ny - 1; j++)
 		{
 			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
+			const auto& props = model->props_sk[0];
 			const auto& next = cell.u_next;
 			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 			reg->InsertNextValue(REGION_TYPE::FRACTURE);
-			poro->InsertNextValue(1.0);
-			perm->InsertNextValue(M2toMilliDarcy(model->props_frac.w2 * model->props_frac.w2 * r_dim * r_dim / 3.0));
+			poro->InsertNextValue(props.m_init);
+			perm->InsertNextValue(M2toMilliDarcy(props.perm * r_dim * r_dim));
 			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w->InsertNextValue(1.0);
 			sat_o->InsertNextValue(0.0);
@@ -777,10 +778,11 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			{
 				const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny + i * nz * ny];
 				const auto& next = cell.u_next;
+				const auto& props = model->props_sk[0];
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 				reg->InsertNextValue(REGION_TYPE::FRACTURE);
-				poro->InsertNextValue(1.0);
-				perm->InsertNextValue(M2toMilliDarcy(model->props_frac.w2 * model->props_frac.w2 * r_dim * r_dim / 3.0));
+				poro->InsertNextValue(props.m_init);
+				perm->InsertNextValue(M2toMilliDarcy(props.perm * r_dim * r_dim));
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 				sat_w->InsertNextValue(1.0);
 				sat_o->InsertNextValue(0.0);

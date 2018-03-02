@@ -39,6 +39,10 @@ AcidFracSolver::AcidFracSolver(AcidFrac* _model) : AbstractSolver<AcidFrac>(_mod
 
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
+
+	pvd.open("snaps/AcidFrac.pvd", std::ofstream::out);
+	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
+	pvd << "\t<Collection>\n";
 }
 AcidFracSolver::~AcidFracSolver()
 {
@@ -46,9 +50,15 @@ AcidFracSolver::~AcidFracSolver()
 	delete[] ind_i, ind_j, ind_rhs;
 	delete[] cols;
 	delete[] a, rhs;
+
+	pvd << "\t</Collection>\n";
+	pvd << "</VTKFile>\n";
+	pvd.close();
 }
 void AcidFracSolver::writeData()
 {
+	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) +
+		"0\" file=\"AcidFrac_" + to_string(step_idx) + ".vtu\"/>\n";
 }
 void AcidFracSolver::control()
 {
@@ -73,8 +83,8 @@ void AcidFracSolver::control()
 }
 void AcidFracSolver::start()
 {
-	int counter = 0;
 	iterations = 8;
+	step_idx = 0;
 
 	fillIndices();
 	solver.Init(strNum, 1.e-15, 1.e-15);
@@ -84,14 +94,14 @@ void AcidFracSolver::start()
 	while (cur_t < Tt)
 	{
 		control();
-		model->snapshot_all(counter++);
+		model->snapshot_all(step_idx++);
 		doNextStep();
 		copyTimeLayer();
 		cout << "---------------------NEW TIME STEP---------------------" << endl;
 		cout << setprecision(6);
 		cout << "time = " << cur_t << endl;
 	}
-	model->snapshot_all(counter++);
+	model->snapshot_all(step_idx);
 	writeData();
 }
 void AcidFracSolver::doNextStep()
@@ -189,7 +199,6 @@ void AcidFracSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
-		model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 
