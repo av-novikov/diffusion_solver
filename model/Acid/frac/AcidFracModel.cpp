@@ -244,10 +244,23 @@ void AcidFrac::buildGrid()
 				if (i == 0)
 					cur_type = FracType::FRAC_IN;
 				if (i == cellsNum_x + 1 || k == 0 || k == cellsNum_z + 1 || j == 0)
+				{
 					cur_type = FracType::FRAC_BORDER;
+					if (i == cellsNum_x + 1)
+						border_nebrs[counter] = counter - (cellsNum_y + 1) * (cellsNum_z + 2);
+					if (k == 0)
+						border_nebrs[counter] = counter + cellsNum_y + 1;
+					if (k == cellsNum_z + 1)
+						border_nebrs[counter] = counter - cellsNum_y - 1;
+					if (j == 0)
+						border_nebrs[counter] = counter + 1;
+				}
 					
 				if (cur_type == FracType::FRAC_OUT && (hx * hz == 0.0))
+				{
 					cur_type = FracType::FRAC_BORDER;
+					border_nebrs[counter] = counter - 1;
+				}
 
 				cells_frac.push_back(FracCell(counter++, x - init_dx, y, z, hx, hy, hz, cur_type));
 				Volume += cells_frac.back().V;
@@ -271,7 +284,7 @@ void AcidFrac::buildGrid()
 			x_prev *= exp(logStep);
 	}
 
-	for (const auto& cell : cells_frac)
+	/*for (const auto& cell : cells_frac)
 	{
 		if (cell.type == FracType::FRAC_BORDER)
 		{
@@ -291,7 +304,7 @@ void AcidFrac::buildGrid()
 			assert(nebr_idx < cellsNum);
 			border_nebrs[cell.num] = nebr_idx;
 		}
-	}
+	}*/
 }
 void AcidFrac::setPerforated()
 {
@@ -486,9 +499,15 @@ FracTapeVariable AcidFrac::solveFracBorder(const FracCell& cell)
 {
 	assert(cell.type == FracType::FRAC_BORDER);
 	const auto& next = x_frac[cell.num];
+	const auto& nebr = x_frac[border_nebrs[cell.num]];
+	//const auto& beta = cells_frac[border_nebrs[cell.num]];
+	//double a = sqrt((cell.x - beta.x) * (cell.x - beta.x) + (cell.y - beta.y) * (cell.y - beta.y) + (cell.z - beta.z) * (cell.z - beta.z));
+	//double b = sqrt(cell.hx * cell.hx / 4 + cell.hy * cell.hy / 4 + cell.hz * cell.hz / 4) + sqrt(beta.hx * beta.hx / 4 + beta.hy * beta.hy / 4 + beta.hz * beta.hz / 4);
+	//assert(a <= b);
+
 	FracTapeVariable res;
-	res.p = next.p - Pwf;
-	res.c = next.c - c;
+	res.p = next.p - nebr.p;
+	res.c = next.c - nebr.c;
 	return res;
 }
 FracTapeVariable AcidFrac::solveFracOut(const FracCell& cell)
@@ -504,8 +523,18 @@ FracTapeVariable AcidFrac::solveFracMid(const FracCell& cell)
 {
 	assert(cell.type == FracType::FRAC_MID);
 	const auto& next = x_frac[cell.num];
+
 	FracTapeVariable res;
 	res.p = next.p - Pwf;
 	res.c = next.c - c;
+
+	int neighbor[6];
+	getNeighborIdx(cell.num, neighbor);
+	const auto& nebr_x_plus = x_frac[cell.num];
+
+	double sx = cell.hy * cell.hz, sy = cell.hx * cell.hz, sz = cell.hx * cell.hy;
+	//res.p = props_frac.w2 * props_frac.w2 / props_w.visc / 2.0 * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) *
+	//	(sx * ());
+
 	return res;
 }

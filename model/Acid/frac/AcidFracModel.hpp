@@ -125,6 +125,15 @@ namespace acidfrac
 				(var.xa - props.xa_eqbm) *
 				reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
 		};
+		inline adouble getFlowLeak(const FracCell& cell)
+		{
+			const auto& grid = frac2poro[&cells_frac[getRowOuter(cell.num)]];
+			const auto& next = x_poro[grid->start_idx + cell.num];
+			const auto& nebr = x_poro[grid->start_idx + cell.num + 1];
+			return -grid->props_sk->getPermCoseni(next.m) * props_w.getKr(next.sw, grid->props_sk) /
+				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
+				(nebr.p - next.p) / (grid->cells[1].x - grid->cells[0].x);
+		}
 		// Service functions
 		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
 		{
@@ -144,6 +153,21 @@ namespace acidfrac
 				return beta.num;
 			else
 				return cell.num;
+		};
+		inline const int getRowOuter(const int idx) const
+		{
+			const int outer_idx = int(idx / (cellsNum_y + 1)) * (cellsNum_y + 1) + cellsNum_y;
+			assert(cells_frac[outer_idx].type == FracType::FRAC_OUT);
+			return outer_idx;
+		};
+		inline void getNeighborIdx(int cur, int* const neighbor)
+		{
+			neighbor[0] = cur - (cellsNum_y + 1) * (cellsNum_z + 2);
+			neighbor[1] = cur + (cellsNum_y + 1) * (cellsNum_z + 2);
+			neighbor[2] = cur - 1;
+			neighbor[3] = cur + 1;
+			neighbor[4] = cur - cellsNum_y - 1;
+			neighbor[5] = cur + cellsNum_y + 1;
 		};
 	public:
 		// Dimensions
