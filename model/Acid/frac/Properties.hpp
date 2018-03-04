@@ -52,6 +52,7 @@ namespace acidfrac
 		//LiquidComponent acid;
 		//SolidComponent salt;
 		//LiquidComponent water;
+		double D_e;
 
 		Interpolate* kr;
 		inline adouble getKr(adouble sw, const Skeleton_Props* props) const

@@ -31,6 +31,7 @@
 #include <cmath>
 
 #define VIEW_MULTIPLIER 1
+#define FRAC_WIDTH_MULT 100.0
 
 using namespace std;
 
@@ -667,6 +668,7 @@ void VTKSnapshotter<acid1d::Acid1d>::dump_all(int i)
 void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 {
 	using namespace acidfrac;
+	const double& w2 = model->props_frac.w2;
 
 	// Grid
 	auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
@@ -679,7 +681,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + k * ny];
 			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
-			points->InsertNextPoint(-r_dim * xnebr.hx / 10.0, r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+			points->InsertNextPoint(-r_dim * xnebr.hx / 10.0, r_dim * (cell.y + cell.hy / 2.0) * FRAC_WIDTH_MULT, r_dim * (cell.z + cell.hz / 2.0));
 		}
 	}
 	for(int i = 0; i < nx - 1; i++)
@@ -688,7 +690,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			for (int j = 0; j < ny; j++)
 			{
 				FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
-				points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+				points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0) * FRAC_WIDTH_MULT, r_dim * (cell.z + cell.hz / 2.0));
 			}
 		}
 	for (int i = 0; i < nx - 1; i++)
@@ -702,10 +704,10 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				for (int j = 0; j < poro_grid->cellsNum + 1; j++)
 				{
 					PoroCell& cell = poro_grid->cells[j];
-					points->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
-					points->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
-					points->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
-					points->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (dy + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
+					points->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (dy + (FRAC_WIDTH_MULT - 1) * w2 + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
+					points->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (dy + (FRAC_WIDTH_MULT - 1) * w2 + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
+					points->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (dy + (FRAC_WIDTH_MULT - 1) * w2 + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
+					points->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (dy + (FRAC_WIDTH_MULT - 1) * w2 + cell.x + cell.hx / 2.0), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
 				}
 			}
 		}
