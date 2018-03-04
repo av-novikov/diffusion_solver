@@ -962,7 +962,7 @@ using namespace std;
 
 	return props;
 }*/
-/*wax_nit::Properties* getProps()
+wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
@@ -995,7 +995,7 @@ using namespace std;
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 180.625 * 1.0e+5;
 	tmp.t_init = 291.0;
-	tmp.p_sat = 180.625 * 1.0e+5;
+	tmp.p_sat = 170.625 * 1.0e+5;
 	tmp.t_sat = tmp.t_init;
 	tmp.sw_init = 0.02;	tmp.so_init = 0.9799;	tmp.sg_init = 0.0;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
@@ -1064,8 +1064,8 @@ using namespace std;
 	setDataFromFile(props->lp, "props/lpx05.txt");
 
 	return props;
-}*/
-acidfrac::Properties* getProps()
+}
+/*acidfrac::Properties* getProps()
 {
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
@@ -1123,7 +1123,7 @@ acidfrac::Properties* getProps()
 	props->props_g.co2 = acidfrac::getCO2();
 
 	return props;
-}
+}*/
 
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
@@ -1180,15 +1180,15 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*wax_nit::Properties* props = getProps();
+	wax_nit::Properties* props = getProps();
 	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
-	acidfrac::Properties* props = getProps();
+	scene.start();
+	/*acidfrac::Properties* props = getProps();
 	Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();
+	scene.start();*/
 	/*acid1d::Properties* props = getProps();
 	Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties> scene;
 	scene.load(*props);
