@@ -349,8 +349,8 @@ void WaxNIT::solve_eqRight(const Cell& cell)
 	h[1] = next.t - cell.props->t_init;
 	condassign(h[2], rightIsPres, next.p - (adouble)(cell.props->p_out), next.p - (adouble)(nebr.p));
 	h[3] = next.s_w - nebr.s_w;
-	adouble satur_gas = next.satur_gas;
-	adouble satur_wax = next.satur_gas;
+	adouble satur_gas = cell.u_next.satur_gas;
+	adouble satur_wax = cell.u_next.satur_wax;
 	condassign(h[4], satur_gas, next.s_o - nebr.s_o, next.p_bub - nebr.p_bub);
 	condassign(h[5], satur_wax, next.s_g - nebr.s_g, next.t_bub - nebr.t_bub);
 

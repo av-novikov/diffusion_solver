@@ -117,8 +117,8 @@ void WaxNITSolver::copySolution(const Vector& sol)
 		if (next.satur_gas && next.satur_wax)
 		{
 			next.s_o += sol[i * var_size + 4];
-			next.s_g += sol[i * var_size + 5];
 			next.p_bub = next.p;
+			next.s_g += sol[i * var_size + 5];
 			next.t_bub = next.t;
 		}
 		else if (next.satur_gas)
@@ -308,7 +308,6 @@ void WaxNITSolver::fill()
 {
 	int counter = 0;
 	int nebr_idx;
-
 	for (const auto& cell : model->cells)
 	{
 		model->setVariables(cell);
@@ -335,12 +334,10 @@ void WaxNITSolver::fill()
 
 				nebr_idx++;
 			}
-
 			rhs[str_idx] = -model->y[i];
 		}
 		mat_idx.clear();
 	}
-
 }
 
 /*void WaxNITSolver::construction_from_fz(int N, int n, int key)
