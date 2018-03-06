@@ -1,6 +1,7 @@
 #ifndef WAXNIT_PROPERTIES_HPP_
 #define WAXNIT_PROPERTIES_HPP_
 
+#include <cassert>
 #include "model/Basic2d/Properties.hpp"
 
 namespace wax_nit
@@ -129,11 +130,11 @@ namespace wax_nit
 		{
 			adouble tmp_lp = getlp(t, t_bub, satur_wax);
 			adouble tmp_rho = getRhoTilde(p, p_bub, satur_gas);
-			return tmp_lp * tmp_rho / ((1.0 - tmp_lp) * dens_wax_stc + tmp_lp * tmp_rho);
+			return tmp_lp * tmp_rho / (tmp_lp * tmp_rho + dens_wax_stc * (1.0 - tmp_lp));
 		};
 		inline adouble getRhoTilde(adouble p, adouble p_bub, adouble SATUR) const
 		{
-			return dens_stc + getRs(p, p_bub, SATUR) * dens_gas_stc / getB(p, p_bub, SATUR);
+			return (dens_stc + getRs(p, p_bub, SATUR) * dens_gas_stc) / getB(p, p_bub, SATUR);
 		};
 		inline adouble getRho(adouble p, adouble p_bub, adouble satur_gas, adouble t, adouble t_bub, adouble satur_wax) const
 		{
