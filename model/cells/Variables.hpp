@@ -141,8 +141,8 @@ struct VarWaxNIT
 			double t;
 			double p;
 			double s_w;
-			double s_o;
 			double s_g;
+			double s_o;
 			double p_bub;
 			double t_bub;
 		};
@@ -157,8 +157,8 @@ struct TapeVarWaxNIT
 	adouble t;
 	adouble p;
 	adouble s_w;
-	adouble s_o;
 	adouble s_g;
+	adouble s_o;
 	adouble p_bub;
 	adouble t_bub;
 	bool satur_gas, satur_wax;

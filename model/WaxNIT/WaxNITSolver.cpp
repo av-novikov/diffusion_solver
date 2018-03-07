@@ -116,30 +116,30 @@ void WaxNITSolver::copySolution(const Vector& sol)
 		
 		if (next.satur_gas && next.satur_wax)
 		{
-			next.s_o += sol[i * var_size + 4];
+			next.s_g += sol[i * var_size + 4];
 			next.p_bub = next.p;
-			next.s_g += sol[i * var_size + 5];
+			next.s_o += sol[i * var_size + 5];
 			next.t_bub = next.t;
 		}
 		else if (next.satur_gas)
 		{
-			next.s_o += sol[i * var_size + 4];
+			next.s_g += sol[i * var_size + 4];
 			next.p_bub = next.p;
-			next.s_g -= (sol[i * var_size + 3] + sol[i * var_size + 4]);
+			next.s_o -= (sol[i * var_size + 3] + sol[i * var_size + 4]);
 			next.t_bub += sol[i * var_size + 5];
 		}
 		else if (next.satur_wax)
 		{
-			next.s_o -= (sol[i * var_size + 3] + sol[i * var_size + 5]);
+			next.s_g = 0.0;
 			next.p_bub += sol[i * var_size + 4];
-			next.s_g += sol[i * var_size + 5];
+			next.s_o += sol[i * var_size + 5];
 			next.t_bub = next.t;
 		} 
 		else
 		{
-			next.s_o -= sol[i * var_size + 3] / 2.0;
+			next.s_g = 0.0;
 			next.p_bub += sol[i * var_size + 4];
-			next.s_g -= sol[i * var_size + 3] / 2.0;
+			next.s_o -= sol[i * var_size + 3];
 			next.t_bub += sol[i * var_size + 5];
 		}
 	}
@@ -158,11 +158,11 @@ void WaxNITSolver::checkStability()
 	{
 		if (next.satur_gas)
 		{
-			if (next.s_o + next.s_w + next.s_g > 1.0 + 1000.0 * EQUALITY_TOLERANCE)
+			if (next.s_g < -1000.0 * EQUALITY_TOLERANCE)
 			{
 				double qwe = next.s_o + next.s_w + next.s_g;
 				next.satur_gas = false;
-				next.s_o = 1.0 - next.s_w;
+				next.s_g = 0.0;
 				next.p_bub = 0.999 * cell.u_iter.p_bub;
 			}
 		}
@@ -171,7 +171,7 @@ void WaxNITSolver::checkStability()
 			if (next.p_bub > next.p + 100.0 * EQUALITY_TOLERANCE)
 			{
 				next.satur_gas = true;
-				next.s_o = 0.999 * cell.u_iter.s_o;
+				next.s_g = 100.0 * EQUALITY_TOLERANCE;
 				next.p_bub = next.p;
 			}
 		}

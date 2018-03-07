@@ -241,3 +241,4 @@ snaps/*
 *.vcxproj
 *.db
 *.filters
+*.tap

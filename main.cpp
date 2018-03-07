@@ -979,8 +979,8 @@ wax_nit::Properties* getProps()
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
 
-	props->ht = 0.1;
-	props->ht_min = 0.1;
+	props->ht = 10.0;
+	props->ht_min = 10.0;
 	props->ht_max = 500000.0;
 
 	props->alpha = 7200.0;

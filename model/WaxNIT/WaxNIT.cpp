@@ -188,8 +188,8 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 		var[i].t <<= x[i * Variable::size + 1];
 		var[i].p <<= x[i * Variable::size + 2];
 		var[i].s_w <<= x[i * Variable::size + 3];
-		var[i].s_o <<= x[i * Variable::size + 4];
-		var[i].s_g <<= x[i * Variable::size + 5];
+		var[i].s_g <<= x[i * Variable::size + 4];
+		var[i].s_o <<= x[i * Variable::size + 5];
 		var[i].p_bub <<= x[i * Variable::size + 6];
 		var[i].t_bub <<= x[i * Variable::size + 7];
 	}
@@ -207,14 +207,15 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 		prev.m * (prev.s_o * fp_prev * props_oil.dens_wax_stc + (1.0 - prev.s_w - prev.s_o - prev.s_g) * props_wax.getRho()) + dadt,
 		next.m * next.s_o * fp * props_oil.dens_wax_stc - prev.m * prev.s_o * fp_prev * props_oil.dens_wax_stc + dadt);
 	h[3] = next.m * next.s_w * props_wat.getRho(next.p) - prev.m * prev.s_w * props_wat.getRho(prev.p);
-	h[4] = next.m * next.s_o * (1.0 - fp) * props_oil.dens_stc / props_oil.getB(next.p, next.p_bub, satur_gas) -
+	condassign(h[4], satur_gas, next.m * (next.s_o * (1.0 - fp) * props_oil.getRs(next.p, next.p_bub, satur_gas) * props_oil.dens_gas_stc / props_oil.getB(next.p, next.p_bub, satur_gas) +
+		next.s_g * props_gas.getRho(next.p)) -
+		prev.m * (prev.s_o * (1.0 - fp_prev) * props_oil.getRs(prev.p, prev.p_bub, prev.satur_gas) * props_oil.dens_gas_stc / props_oil.getB(prev.p, prev.p_bub, prev.satur_gas) +
+			prev.s_g * props_gas.getRho(prev.p)),
+		next.m * next.s_o * (1.0 - fp) * props_oil.getRs(next.p, next.p_bub, satur_gas) * props_oil.dens_gas_stc / props_oil.getB(next.p, next.p_bub, satur_gas) -
+		prev.m * prev.s_o * (1.0 - fp_prev) * props_oil.getRs(prev.p, prev.p_bub, prev.satur_gas) * props_oil.dens_gas_stc / props_oil.getB(prev.p, prev.p_bub, prev.satur_gas));
+	h[5] = next.m * next.s_o * (1.0 - fp) * props_oil.dens_stc / props_oil.getB(next.p, next.p_bub, satur_gas) -
 		prev.m * prev.s_o * (1.0 - fp_prev) * props_oil.dens_stc / props_oil.getB(prev.p, prev.p_bub, prev.satur_gas);
-	condassign(h[5], satur_gas, next.m * (next.s_o * (1.0 - fp) * props_oil.getRs(next.p, next.p_bub, satur_gas) * props_oil.dens_gas_stc / props_oil.getB(next.p, next.p_bub, satur_gas) +
-									next.s_g * props_gas.getRho(next.p)) -
-								prev.m * (prev.s_o * (1.0 - fp_prev) * props_oil.getRs(prev.p, prev.p_bub, prev.satur_gas) * props_oil.dens_gas_stc / props_oil.getB(prev.p, prev.p_bub, prev.satur_gas) +
-									prev.s_g * props_gas.getRho(prev.p)),
-								next.m * next.s_o * (1.0 - fp) * props_oil.getRs(next.p, next.p_bub, satur_gas) * props_oil.dens_gas_stc / props_oil.getB(next.p, next.p_bub, satur_gas) - 
-								prev.m * prev.s_o * (1.0 - fp_prev) * props_oil.getRs(prev.p, prev.p_bub, prev.satur_gas) * props_oil.dens_gas_stc / props_oil.getB(prev.p, prev.p_bub, prev.satur_gas));
+
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
 	for (int i = 0; i < 4; i++)
@@ -238,17 +239,17 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 		h[3] += ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
 					props_wat.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_wat.getViscosity(upwd.p) *
 			getAverage(props_wat.getRho(next.p), cell, props_wat.getRho(nebr.p), beta);
-		h[4] += (1.0 - fp_avg) * tmp_o * props_oil.dens_stc /
-			getAverage(props_oil.getB(next.p, next.p_bub, satur_gas), cell, props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas), beta);
-		condassign(tmp, satur_gas, (1.0 - fp_avg) * tmp_o * props_oil.dens_gas_stc * 
-			getAverage(props_oil.getRs(next.p, next.p_bub, satur_gas) / props_oil.getB(next.p, next.p_bub, satur_gas), cell, 
-						props_oil.getRs(nebr.p, nebr.p_bub, beta.u_next.satur_gas) / props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas), beta) + 
-				ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) * getAverage(props_gas.getRho(next.p), cell, props_gas.getRho(nebr.p), beta) * 
+		condassign(tmp, satur_gas, (1.0 - fp_avg) * tmp_o * props_oil.dens_gas_stc *
+			getAverage(props_oil.getRs(next.p, next.p_bub, satur_gas) / props_oil.getB(next.p, next.p_bub, satur_gas), cell,
+				props_oil.getRs(nebr.p, nebr.p_bub, beta.u_next.satur_gas) / props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas), beta) +
+			ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) * getAverage(props_gas.getRho(next.p), cell, props_gas.getRho(nebr.p), beta) *
 			props_gas.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_gas.getViscosity(upwd.p),
-				(1.0 - fp_avg) * tmp_o * props_oil.dens_gas_stc *
+			(1.0 - fp_avg) * tmp_o * props_oil.dens_gas_stc *
 			getAverage(props_oil.getRs(next.p, next.p_bub, satur_gas) / props_oil.getB(next.p, next.p_bub, next.satur_gas), cell,
 				props_oil.getRs(nebr.p, nebr.p_bub, beta.u_next.satur_gas) / props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas), beta));
-		h[5] += tmp;
+		h[4] += tmp;
+		h[5] += (1.0 - fp_avg) * tmp_o * props_oil.dens_stc /
+			getAverage(props_oil.getB(next.p, next.p_bub, satur_gas), cell, props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas), beta);
 	}
 
 	for (int i = 0; i < var_size; i++)
@@ -268,8 +269,8 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 		var[i].t <<= x[i * Variable::size + 1];
 		var[i].p <<= x[i * Variable::size + 2];
 		var[i].s_w <<= x[i * Variable::size + 3];
-		var[i].s_o <<= x[i * Variable::size + 4];
-		var[i].s_g <<= x[i * Variable::size + 5];
+		var[i].s_g <<= x[i * Variable::size + 4];
+		var[i].s_o <<= x[i * Variable::size + 5];
 		var[i].p_bub <<= x[i * Variable::size + 6];
 		var[i].t_bub <<= x[i * Variable::size + 7];
 	}
@@ -312,10 +313,10 @@ void WaxNIT::solve_eqLeft(const Cell& cell)
 	adouble satur_gas = cell.u_next.satur_gas;
 	adouble satur_wax = cell.u_next.satur_wax;
 	condassign(h[4], satur_gas,
-		(next.s_o - nebr1.s_o) / (adouble)(cell.r - beta1.r) - (nebr1.s_o - nebr2.s_o) / (adouble)(beta1.r - beta2.r),
+		(next.s_g - nebr1.s_g) / (adouble)(cell.r - beta1.r) - (nebr1.s_g - nebr2.s_g) / (adouble)(beta1.r - beta2.r),
 		(next.p_bub - nebr1.p_bub) / (adouble)(cell.r - beta1.r) - (nebr1.p_bub - nebr2.p_bub) / (adouble)(beta1.r - beta2.r));
 	condassign(h[5], satur_wax,
-		(next.s_g - nebr1.s_g) / (adouble)(cell.r - beta1.r) - (nebr1.s_g - nebr2.s_g) / (adouble)(beta1.r - beta2.r),
+		(next.s_o - nebr1.s_o) / (adouble)(cell.r - beta1.r) - (nebr1.s_o - nebr2.s_o) / (adouble)(beta1.r - beta2.r),
 		(next.t_bub - nebr1.t_bub) / (adouble)(cell.r - beta1.r) - (nebr1.t_bub - nebr2.t_bub) / (adouble)(beta1.r - beta2.r));
 
 	for (int i = 0; i < var_size; i++)
@@ -336,8 +337,8 @@ void WaxNIT::solve_eqRight(const Cell& cell)
 		var[i].t <<= x[i * Variable::size + 1];
 		var[i].p <<= x[i * Variable::size + 2];
 		var[i].s_w <<= x[i * Variable::size + 3];
-		var[i].s_o <<= x[i * Variable::size + 4];
-		var[i].s_g <<= x[i * Variable::size + 5];
+		var[i].s_g <<= x[i * Variable::size + 4];
+		var[i].s_o <<= x[i * Variable::size + 5];
 		var[i].p_bub <<= x[i * Variable::size + 6];
 		var[i].t_bub <<= x[i * Variable::size + 7];
 	}
@@ -351,8 +352,8 @@ void WaxNIT::solve_eqRight(const Cell& cell)
 	h[3] = next.s_w - nebr.s_w;
 	adouble satur_gas = cell.u_next.satur_gas;
 	adouble satur_wax = cell.u_next.satur_wax;
-	condassign(h[4], satur_gas, next.s_o - nebr.s_o, next.p_bub - nebr.p_bub);
-	condassign(h[5], satur_wax, next.s_g - nebr.s_g, next.t_bub - nebr.t_bub);
+	condassign(h[4], satur_gas, next.s_g - nebr.s_g, next.p_bub - nebr.p_bub);
+	condassign(h[5], satur_wax, next.s_o - nebr.s_o, next.t_bub - nebr.t_bub);
 
 	for (int i = 0; i < var_size; i++)
 		h[i] /= P_dim;
@@ -371,8 +372,8 @@ void WaxNIT::solve_eqVertical(const Cell& cell)
 		var[i].t <<= x[i * Variable::size + 1];
 		var[i].p <<= x[i * Variable::size + 2];
 		var[i].s_w <<= x[i * Variable::size + 3];
-		var[i].s_o <<= x[i * Variable::size + 4];
-		var[i].s_g <<= x[i * Variable::size + 5];
+		var[i].s_g <<= x[i * Variable::size + 4];
+		var[i].s_o <<= x[i * Variable::size + 5];
 		var[i].p_bub <<= x[i * Variable::size + 6];
 		var[i].t_bub <<= x[i * Variable::size + 7];
 	}
@@ -385,8 +386,8 @@ void WaxNIT::solve_eqVertical(const Cell& cell)
 	h[1] = next.t - nebr.t;
 	h[2] = next.p - nebr.p;
 	h[3] = next.s_w - nebr.s_w;
-	condassign(h[4], satur_gas, next.s_o - nebr.s_o, next.p_bub - nebr.p_bub);
-	condassign(h[5], satur_wax, next.s_g - nebr.s_g, next.t_bub - nebr.t_bub);
+	condassign(h[4], satur_gas, next.s_g - nebr.s_g, next.p_bub - nebr.p_bub);
+	condassign(h[5], satur_wax, next.s_o - nebr.s_o, next.t_bub - nebr.t_bub);
 
 	for (int i = 0; i < var_size; i++)
 		h[i] /= P_dim;
