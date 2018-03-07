@@ -1993,7 +1993,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 		poro->InsertNextValue(cell.u_next.m);
 		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(cell.u_next.m).value() * r_dim * r_dim));
 		temp->InsertNextValue((cell.u_next.t - cell.props->t_init) * T_dim);
-		temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim + KELVIN_2_CELSIUS);
+		temp_sat->InsertNextValue((cell.u_next.t_bub - cell.props->t_init) * T_dim);
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 		p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 		satur_gas->InsertNextValue(cell.u_next.satur_gas);
@@ -2026,7 +2026,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 			poro->InsertNextValue(cell.u_next.m);
 			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(cell.u_next.m).value() * r_dim * r_dim));
 			temp->InsertNextValue((cell.u_next.t - cell.props->t_init) * T_dim);
-			temp_sat->InsertNextValue(cell.u_next.t_bub * T_dim + KELVIN_2_CELSIUS);
+			temp_sat->InsertNextValue((cell.u_next.t_bub - cell.props->t_init) * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
 			p_bub->InsertNextValue(cell.u_next.p_bub * P_dim / BAR_TO_PA);
 			satur_gas->InsertNextValue(cell.u_next.satur_gas);

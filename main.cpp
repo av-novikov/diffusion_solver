@@ -974,7 +974,7 @@ wax_nit::Properties* getProps()
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(140.625 * 1.0e+5);
+	props->pwf.push_back(100.625 * 1.0e+5);
 	//props->pwf.push_back(70.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
@@ -995,7 +995,7 @@ wax_nit::Properties* getProps()
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 180.625 * 1.0e+5;
 	tmp.t_init = 291.0;
-	tmp.p_sat = 170.625 * 1.0e+5;
+	tmp.p_sat = 150.625 * 1.0e+5;
 	tmp.t_sat = tmp.t_init;
 	tmp.sw_init = 0.02;	tmp.so_init = 0.9799;	tmp.sg_init = 0.0;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;

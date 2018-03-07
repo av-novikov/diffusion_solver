@@ -15,6 +15,7 @@ namespace wax_nit
 		//void MiddleAppr(int current, int MZ, int key);
 		//void LeftBoundAppr(int MZ, int key);
 		//void RightBoundAppr(int MZ, int key);
+		void setWaxTemperature();
 	protected:
 		void solveStep();
 		void writeData();

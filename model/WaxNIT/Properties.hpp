@@ -119,11 +119,11 @@ namespace wax_nit
 		Interpolate* lp;
 		inline adouble getlp(adouble t, adouble t_bub, adouble satur_wax) const
 		{
-			//adouble tmp;
-			//adouble decrease = (t <= t_prev) ? true : false;
-			//condassign(tmp, decrease, lp->Solve(t), );
+			assert(satur_wax.value());
 			adouble tmp;
-			condassign(tmp, satur_wax, lp->Solve(t), lp->Solve(t_bub));
+			adouble decrease = (t <= t_bub) ? true : false;
+			condassign(tmp, decrease, lp->Solve(t), lp->Solve(t_bub));
+			//condassign(tmp, satur_wax, lp->Solve(t), lp->Solve(t_bub));
 			return tmp;
 		};
 		inline adouble getfp(adouble p, adouble p_bub, adouble satur_gas, adouble t, adouble t_bub, adouble satur_wax) const

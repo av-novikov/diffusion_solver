@@ -119,28 +119,26 @@ void WaxNITSolver::copySolution(const Vector& sol)
 			next.s_g += sol[i * var_size + 4];
 			next.p_bub = next.p;
 			next.s_o += sol[i * var_size + 5];
-			next.t_bub = next.t;
 		}
 		else if (next.satur_gas)
 		{
 			next.s_g += sol[i * var_size + 4];
 			next.p_bub = next.p;
 			next.s_o -= (sol[i * var_size + 3] + sol[i * var_size + 4]);
-			next.t_bub += sol[i * var_size + 5];
+			//next.t_bub += sol[i * var_size + 5];
 		}
 		else if (next.satur_wax)
 		{
 			next.s_g = 0.0;
 			next.p_bub += sol[i * var_size + 4];
 			next.s_o += sol[i * var_size + 5];
-			next.t_bub = next.t;
 		} 
 		else
 		{
 			next.s_g = 0.0;
 			next.p_bub += sol[i * var_size + 4];
 			next.s_o -= sol[i * var_size + 3];
-			next.t_bub += sol[i * var_size + 5];
+			//next.t_bub += sol[i * var_size + 5];
 		}
 	}
 }
@@ -230,6 +228,15 @@ void WaxNITSolver::checkStability()
 		checkMaxResidual(next, iter);
 	}
 }
+void WaxNITSolver::setWaxTemperature()
+{
+	for (auto& cell : model->cells)
+	{
+		auto& next = cell.u_next;
+		if (next.t_bub > next.t)
+			next.t_bub = next.t;
+	}
+}
 void WaxNITSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -270,6 +277,7 @@ void WaxNITSolver::solveStep()
 		iterations++;
 	}
 
+	setWaxTemperature();
 	cout << "Newton Iterations = " << iterations << "\t cur_t = " << cur_t << endl;
 }
 
