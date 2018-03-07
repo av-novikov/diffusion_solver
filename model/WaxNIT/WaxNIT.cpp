@@ -152,10 +152,10 @@ adouble WaxNIT::phaseTrans(const Cell& cell)
 	const TapeVariable& next = var[0];
 	const Variable& prev = cell.u_prev;
 
+	adouble satur_gas = cell.u_next.satur_gas;
 	adouble fp = props_oil.getfp(next.p, next.p_bub, next.satur_gas, next.t, next.t_bub, next.satur_wax);
-	adouble H = (next.m * next.s_o * (1.0 - fp) * props_oil.getRhoTilde(next.p, next.p_bub, next.satur_gas) -
-					prev.m * prev.s_o * (1.0 - props_oil.getfp(prev.p, prev.p_bub, prev.satur_gas, prev.t, prev.t_bub, prev.satur_wax)) * 
-											props_oil.getRhoTilde(prev.p, prev.p_bub, prev.satur_gas)) / ht;
+	adouble H = (next.m * next.s_o * (1.0 - fp) * props_oil.getRs(next.p, next.p_bub, satur_gas) * props_oil.dens_gas_stc / props_oil.getB(next.p, next.p_bub, satur_gas) -
+					prev.m * prev.s_o * (1.0 - props_oil.getfp(prev.p, prev.p_bub, prev.satur_gas, prev.t, prev.t_bub, prev.satur_wax)) * props_oil.getRs(prev.p, prev.p_bub, prev.satur_gas) * props_oil.dens_gas_stc / props_oil.getB(prev.p, prev.p_bub, prev.satur_gas)) / ht;
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
 	for (int i = 0; i < 4; i++)
@@ -166,11 +166,11 @@ adouble WaxNIT::phaseTrans(const Cell& cell)
 		const TapeVariable& nebr = var[i + 1];
 		TapeVariable& upwd = var[upwd_idx];
 
-		adouble fp_nebr = props_oil.getfp(nebr.p, nebr.p_bub, nebr.satur_gas, nebr.t, nebr.t_bub, nebr.satur_wax);
+		adouble fp_nebr = props_oil.getfp(nebr.p, nebr.p_bub, beta.u_next.satur_gas, nebr.t, nebr.t_bub, nebr.satur_wax);
 		H += 1.0 / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
-			props_gas.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) * 
-			getAverage((1.0 - fp) * props_oil.getRhoTilde(next.p, next.p_bub, next.satur_gas) / props_oil.getViscosity(next.p), cell,
-						(1.0 - fp_nebr) * props_oil.getRhoTilde(nebr.p, nebr.p_bub, nebr.satur_gas) / props_oil.getViscosity(nebr.p), beta);
+			props_gas.getKr(upwd.s_w, upwd.s_o, upwd_cell.props) * props_oil.dens_gas_stc *
+			getAverage((1.0 - fp) * props_oil.getRs(next.p, next.p_bub, satur_gas) / props_oil.getB(next.p, next.p_bub, satur_gas) / props_oil.getViscosity(next.p), cell,
+				(1.0 - fp_nebr) * props_oil.getRs(nebr.p, nebr.p_bub, beta.u_next.satur_gas) / props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas) / props_oil.getViscosity(nebr.p), beta);
 	}
 	return -H;
 }
@@ -245,7 +245,7 @@ void WaxNIT::solve_eqMiddle(const Cell& cell)
 			ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) * getAverage(props_gas.getRho(next.p), cell, props_gas.getRho(nebr.p), beta) *
 			props_gas.getKr(upwd.s_w, upwd.s_o, cells[upwd_idx].props) / props_gas.getViscosity(upwd.p),
 			(1.0 - fp_avg) * tmp_o * props_oil.dens_gas_stc *
-			getAverage(props_oil.getRs(next.p, next.p_bub, satur_gas) / props_oil.getB(next.p, next.p_bub, next.satur_gas), cell,
+			getAverage(props_oil.getRs(next.p, next.p_bub, satur_gas) / props_oil.getB(next.p, next.p_bub, satur_gas), cell,
 				props_oil.getRs(nebr.p, nebr.p_bub, beta.u_next.satur_gas) / props_oil.getB(nebr.p, nebr.p_bub, beta.u_next.satur_gas), beta));
 		h[4] += tmp;
 		h[5] += (1.0 - fp_avg) * tmp_o * props_oil.dens_stc /
