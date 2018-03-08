@@ -67,7 +67,7 @@ namespace acidfrac
 		double Volume;
 		std::vector<int> cellsNum_y_1d;
 		std::vector<double> xe;
-		std::map<FracCell*, PoroGrid*> frac2poro;
+		std::map<int, int> frac2poro;
 		std::map<int, int> border_nebrs;
 		// Temporary properties
 		double ht, ht_min, ht_max;
@@ -88,6 +88,7 @@ namespace acidfrac
 
 		size_t getInitId2OutCell(const FracCell& cell);
 		void buildGrid();
+		void buildGridUniform();
 		void build1dGrid(const FracCell& cell, const int grid_id);
 		void setProps(Properties& props);
 		void makeDimLess();
@@ -136,12 +137,12 @@ namespace acidfrac
 		};
 		inline adouble getFlowLeak(const FracCell& cell)
 		{
-			const auto& grid = frac2poro[&cells_frac[getRowOuter(cell.num)]];
-			const auto& next = x_poro[grid->start_idx];
-			const auto& nebr = x_poro[grid->start_idx + 1];
-			return -grid->props_sk->getPermCoseni(next.m) * props_w.getKr(next.sw, grid->props_sk) /
+			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
+			const auto& next = x_poro[grid.start_idx];
+			const auto& nebr = x_poro[grid.start_idx + 1];
+			return -grid.props_sk->getPermCoseni(next.m) * props_w.getKr(next.sw, grid.props_sk) /
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
-				(nebr.p - next.p) / (grid->cells[1].x - grid->cells[0].x);
+				(nebr.p - next.p) / (grid.cells[1].x - grid.cells[0].x);
 		}
 		// Service functions
 		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
@@ -190,7 +191,7 @@ namespace acidfrac
 		{
 			setProps(props);
 			setSnapshotter("", this);
-			buildGrid();
+			buildGridUniform();
 			setPerforated();
 			setInitialState();
 
