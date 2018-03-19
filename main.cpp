@@ -1088,7 +1088,7 @@ acidfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 100;
+	props->cellsNum_x = 50;
 	props->cellsNum_y = 10;
 	props->cellsNum_z = 1;
 
@@ -1096,6 +1096,7 @@ acidfrac::Properties* getProps()
 	props->cellsNum_y_1d.push_back(50);
 	acidfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
+	props_sk.t_init = 300.0;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
 	props_sk.sw_init = 0.2;		props_sk.so_init = 0.8;
 	props_sk.xa_init = 0.0;		props_sk.xw_init = 1.0;

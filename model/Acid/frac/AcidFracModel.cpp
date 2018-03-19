@@ -75,6 +75,7 @@ void AcidFrac::setProps(Properties& props)
 }
 void AcidFrac::makeDimLess()
 {
+	T_dim = props_sk[0].t_init;
 	R_dim = props_frac.l2 * 10.0;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
@@ -94,6 +95,7 @@ void AcidFrac::makeDimLess()
 		sk.p_ref /= P_dim;
 		sk.hx /= R_dim;
 		sk.hz /= R_dim;
+		sk.t_init /= T_dim;
 
 		xe[i] /= R_dim;
 	}

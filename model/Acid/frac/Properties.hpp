@@ -25,6 +25,7 @@ namespace acidfrac
 
 		// Initial values
 		double p_init;
+		double t_init;
 		double sw_init;
 		double so_init;
 		double xa_init;
