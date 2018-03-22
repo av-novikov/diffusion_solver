@@ -571,14 +571,11 @@ FracTapeVariable AcidFrac::solveFracBorder(const FracCell& cell)
 	assert(cell.type == FracType::FRAC_BORDER);
 	const auto& next = x_frac[cell.num];
 	const auto& nebr = x_frac[border_nebrs[cell.num]];
-	//const auto& beta = cells_frac[border_nebrs[cell.num]];
-	//double a = sqrt((cell.x - beta.x) * (cell.x - beta.x) + (cell.y - beta.y) * (cell.y - beta.y) + (cell.z - beta.z) * (cell.z - beta.z));
-	//double b = sqrt(cell.hx * cell.hx / 4 + cell.hy * cell.hy / 4 + cell.hz * cell.hz / 4) + sqrt(beta.hx * beta.hx / 4 + beta.hy * beta.hy / 4 + beta.hz * beta.hz / 4);
-	//assert(a <= b);
 
 	FracTapeVariable res;
 	res.p = (next.p - nebr.p) / P_dim;
 	res.c = (next.c - nebr.c) / P_dim;
+
 	return res;
 }
 FracTapeVariable AcidFrac::solveFracOut(const FracCell& cell)
@@ -603,8 +600,8 @@ FracTapeVariable AcidFrac::solveFracOut(const FracCell& cell)
 	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));
 	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cells_frac[neighbor[0]].hx);
 	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[1]].hx);
-	adouble vz_minus = alpha * (next.p - nebr_z_minus.p) / (cell.hz + cells_frac[neighbor[4]].hz);
-	adouble vz_plus = alpha * (next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[5]].hz);
+	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cells_frac[neighbor[4]].hz) - props_w.dens_stc * grav / 2.0);
+	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[5]].hz) + props_w.dens_stc * grav / 2.0);
 	adouble vy_minus = vL * (1.5 * (y_minus / props_frac.w2) - 0.5 * y_minus * y_minus * y_minus / props_frac.w2 / props_frac.w2 / props_frac.w2);
 	adouble vy_plus = vL;
 
@@ -644,8 +641,8 @@ FracTapeVariable AcidFrac::solveFracMid(const FracCell& cell)
 	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));
 	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cells_frac[neighbor[0]].hx);
 	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[1]].hx);
-	adouble vz_minus = alpha * (next.p - nebr_z_minus.p) / (cell.hz + cells_frac[neighbor[4]].hz);
-	adouble vz_plus = alpha * (next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[5]].hz);
+	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cells_frac[neighbor[4]].hz) - props_w.dens_stc * grav / 2.0);
+	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[5]].hz) + props_w.dens_stc * grav / 2.0);
 	adouble vy_minus = vL * (1.5 * (y_minus / props_frac.w2) - 0.5 * y_minus * y_minus * y_minus / props_frac.w2 / props_frac.w2 / props_frac.w2);
 	adouble vy_plus = vL * (1.5 * (y_plus / props_frac.w2) - 0.5 * y_plus * y_plus * y_plus / props_frac.w2 / props_frac.w2 / props_frac.w2);
 

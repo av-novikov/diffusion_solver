@@ -123,9 +123,17 @@ namespace acidfrac
 		inline adouble getFracAverage(const adouble p1, const FracCell& cell1, const adouble p2, const FracCell& cell2) const
 		{
 			if (cell1.x - cell2.x > EQUALITY_TOLERANCE)
-				return (p1 * (adouble)cell2.hx + p2 * (adouble)cell1.hx) / (adouble)(cell1.hx + cell2.hx);
+			{
+				//return (p1 * (adouble)cell2.hx + p2 * (adouble)cell1.hx) / (adouble)(cell1.hx + cell2.hx);
+				if (cell1.x < cell2.x)
+					return p1;
+				else
+					return p2;
+			}
 			else if (cell1.y - cell2.y > EQUALITY_TOLERANCE)
+			{
 				return (p1 * (adouble)cell2.hy + p2 * (adouble)cell1.hy) / (adouble)(cell1.hy + cell2.hy);
+			}
 			else
 				return (p1 * (adouble)cell2.hz + p2 * (adouble)cell1.hz) / (adouble)(cell1.hz + cell2.hz);
 		};
