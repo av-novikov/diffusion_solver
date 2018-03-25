@@ -14,6 +14,7 @@ protected:
 	modelType* model;
 	static const std::string prefix;
 	std::string pattern;
+	std::string name;
 
 	double r_dim;
 	double t_dim;
@@ -24,6 +25,7 @@ protected:
 
 	std::string replace(std::string filename, std::string from, std::string to);
 	std::string getFileName(int i);
+	std::string getFileName(int i, const std::string name);
 public:
 	Snapshotter();
 	virtual ~Snapshotter();
