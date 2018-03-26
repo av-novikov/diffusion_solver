@@ -207,6 +207,12 @@ string Snapshotter<modelType>::getFileName(int i)
 	string filename = pattern;
 	return replace(filename, "%{STEP}", to_string(i));
 }
+template <class modelType>
+string Snapshotter<modelType>::getFileName(int i, const string name)
+{
+	string filename = pattern;
+	return replace(replace(filename, "%{STEP}", to_string(i)), "%{NAME}", name);
+}
 
 template class Snapshotter<gasOil_rz::GasOil_RZ>;
 template class Snapshotter<acid1d::Acid1d>;
