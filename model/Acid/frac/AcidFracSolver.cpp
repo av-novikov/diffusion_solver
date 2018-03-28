@@ -40,9 +40,12 @@ AcidFracSolver::AcidFracSolver(AcidFrac* _model) : AbstractSolver<AcidFrac>(_mod
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-	pvd.open("snaps/AcidFrac.pvd", std::ofstream::out);
-	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
-	pvd << "\t<Collection>\n";
+	pvd_frac.open("snaps/AcidFrac_frac.pvd", std::ofstream::out);
+	pvd_poro.open("snaps/AcidFrac_poro.pvd", std::ofstream::out);
+	pvd_frac << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
+	pvd_poro << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
+	pvd_frac << "\t<Collection>\n";
+	pvd_poro << "\t<Collection>\n";
 }
 AcidFracSolver::~AcidFracSolver()
 {
@@ -51,14 +54,20 @@ AcidFracSolver::~AcidFracSolver()
 	delete[] cols;
 	delete[] a, rhs;
 
-	pvd << "\t</Collection>\n";
-	pvd << "</VTKFile>\n";
-	pvd.close();
+	pvd_frac << "\t</Collection>\n";
+	pvd_frac << "</VTKFile>\n";
+	pvd_frac.close();
+
+	pvd_poro << "\t</Collection>\n";
+	pvd_poro << "</VTKFile>\n";
+	pvd_poro.close();
 }
 void AcidFracSolver::writeData()
 {
-	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) +
-		"0\" file=\"AcidFrac_" + to_string(step_idx) + ".vtu\"/>\n";
+	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) +
+		"0\" file=\"AcidFrac_frac_" + to_string(step_idx) + ".vtu\"/>\n";
+	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) +
+		"0\" file=\"AcidFrac_poro_" + to_string(step_idx) + ".vtu\"/>\n";
 }
 void AcidFracSolver::control()
 {
