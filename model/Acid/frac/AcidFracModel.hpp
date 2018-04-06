@@ -152,6 +152,17 @@ namespace acidfrac
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
 				(nebr.p - next.p) / (grid.cells[1].x - grid.cells[0].x);
 		}
+		inline adouble getFlowLeakNew(const FracCell& cell)
+		{
+			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
+			const auto& beta = cells_frac[grid.frac_nebr->num];
+			assert(beta.type == FracType::FRAC_OUT);
+			
+			const auto& next = x_poro[grid.start_idx];
+			const auto& nebr = x_frac[beta.num];
+			
+			return -props_frac.w2 * props_frac.w2 / 12.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
+		}
 		// Service functions
 		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
 		{
