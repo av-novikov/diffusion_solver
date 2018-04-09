@@ -161,7 +161,7 @@ namespace acidfrac
 			const auto& next = x_poro[grid.start_idx];
 			const auto& nebr = x_frac[beta.num];
 			
-			return -props_frac.w2 * props_frac.w2 / 12.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
+			return -props_frac.w2 * props_frac.w2 / 3.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
 		}
 		// Service functions
 		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
