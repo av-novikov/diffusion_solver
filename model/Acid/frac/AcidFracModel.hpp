@@ -163,6 +163,19 @@ namespace acidfrac
 			
 			return -props_frac.w2 * props_frac.w2 / 3.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
 		}
+		inline adouble getQuadAppr(const std::array<adouble, 3> p, const std::array<double, 3> x, const double cur_x) const
+		{
+			const double den = (x[0] - x[1]) * (x[0] - x[2]) * (x[1] - x[2]);
+			adouble a = (	p[2] * (x[0] - x[1]) +
+							p[0] * (x[1] - x[2]) + 
+							p[1] * (x[2] - x[0])				) / den;
+			adouble b = (	p[2] * (x[1] * x[1] - x[0] * x[0]) + 
+							p[0] * (x[2] * x[2] - x[1] * x[1]) + 
+							p[1] * (x[0] * x[0] - x[2] * x[2])	) / den;
+			adouble c = (	p[2] * x[0] * x[1] * (x[0] - x[1]) +
+							x[2] * (p[0] * x[1] * (x[1] - x[2]) + p[1] * x[0] * (x[2] - x[0]))) / den;
+			return a * cur_x * cur_x + b * cur_x + c;
+		};
 		// Service functions
 		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
 		{
