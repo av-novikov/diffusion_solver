@@ -197,6 +197,16 @@ namespace acidfrac
 			else
 				return cell.num;
 		};
+		template <>
+		inline int getUpwindIdx(const FracCell& cell, const FracCell& beta) const
+		{
+			if (fabs(cell.y - beta.y) > cell.hy * EQUALITY_TOLERANCE)
+				return (cell.y > beta.y) ? beta.num : cell.num;
+			if (cell.u_next.p < beta.u_next.p)
+				return beta.num;
+			else
+				return cell.num;
+		};
 		inline const int getRowOuter(const int idx) const
 		{
 			const int outer_idx = int(idx / (cellsNum_y + 1)) * (cellsNum_y + 1) + cellsNum_y;
