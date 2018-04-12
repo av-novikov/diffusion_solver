@@ -153,6 +153,7 @@ void AcidFrac::build1dGrid(const FracCell& cell, const int grid_id)
 	assert(cell.type == FracType::FRAC_OUT);
 	poro_grids.push_back(PoroGrid()); 
 	PoroGrid& grid = poro_grids.back();
+	grid.trans = 0.0;
 	grid.id = grid_id;
 	frac2poro[cell.num] = grid.id;
 	grid.frac_nebr = &cell;
@@ -440,6 +441,26 @@ void AcidFrac::setInitialState()
 	x_frac = new FracTapeVariable[cellsNum];
 	h = new adouble[ var_frac_size * cellsNum + var_poro_size * cellsPoroNum];
 }
+void AcidFrac::calculateTrans()
+{
+	double sum, k;
+	int i = 0;
+	for (auto& grid : poro_grids)
+	{
+		const double k0 = grid.props_sk->perm;
+		sum = 0.0;	i = 0;
+		do {
+			const auto& cell = grid.cells[i++];
+			k = grid.props_sk->getPermCoseni(cell.u_next.m).value();
+			sum += k * cell.hx;
+		} while (fabs(k - k0) > EQUALITY_TOLERANCE * k0);
+		if (fabs(grid.cells[i - 1].x - grid.cells[0].x) > 0.0)
+			grid.trans = sum / (k0 * fabs(grid.cells[i - 1].x - grid.cells[0].x));
+		else
+			grid.trans = 0.0;
+		double qwe = 123.0;
+	}
+}
 
 PoroTapeVariable AcidFrac::solvePoro(const PoroCell& cell)
 {
@@ -512,16 +533,19 @@ PoroTapeVariable AcidFrac::solvePoroLeft(const PoroCell& cell)
 
 	const auto& beta1 = cells_frac[grid.frac_nebr->num];
 	const auto& beta2 = cells_frac[grid.frac_nebr->num - 1];
-
+	//const auto& beta3 = cells_frac[grid.frac_nebr->num - 2];
 	const auto& nebr1 = x_frac[beta1.num];
 	const auto& nebr2 = x_frac[beta2.num];
-	const auto& next = x_poro[grid.start_idx + cell.num];
-	const auto& prev = cell.u_prev;
+	//const auto& nebr3 = x_frac[beta3.num];
 
+	const auto& next = x_poro[grid.start_idx];
+	const auto& prev = cell.u_prev;
+	
 	PoroTapeVariable res;
 	res.m = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
 	res.p = ((next.p - nebr1.p) / (cell.x - beta1.y) - (nebr1.p - nebr2.p) / (beta1.y - beta2.y)) / P_dim;
+	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
 	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
 	res.xw = ((next.xw - (1.0 - nebr1.c)) / (cell.x - beta1.y) - (nebr2.c - nebr1.c) / (beta1.y - beta2.y)) / P_dim;
 	res.xa = ((next.xa - nebr1.c) / (cell.x - beta1.y) - (nebr1.c - nebr2.c) / (beta1.y - beta2.y)) / P_dim;
@@ -606,8 +630,8 @@ FracTapeVariable AcidFrac::solveFracOut(const FracCell& cell)
 	const auto& nebr_z_minus = x_frac[neighbor[4]];
 	const auto& nebr_z_plus = x_frac[neighbor[5]];
 
-	adouble vL = getFlowLeak(cell);
 	const double y_minus = cell.y - cell.hy / 2.0;
+	adouble vL = getFlowLeak(cell);
 	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));
 	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cells_frac[neighbor[0]].hx);
 	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[1]].hx);

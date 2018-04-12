@@ -745,6 +745,8 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 	conc_co2_frac->SetName("CO2Concentration");
 	auto conc_s_frac = vtkSmartPointer<vtkDoubleArray>::New();
 	conc_s_frac->SetName("SaltConcentration");
+	auto trans = vtkSmartPointer<vtkDoubleArray>::New();
+	trans->SetName("Transmissibility");
 
 	int np = ny * (nz - 1);
 	int np_frac = np * nx;
@@ -754,6 +756,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 		for (int j = 0; j < ny - 1; j++)
 		{
 			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
+			const auto& grid0 = model->poro_grids[model->frac2poro[model->cells_frac[model->getRowOuter(cell.num + ny * nz)].num]];
 			const auto& props = model->props_sk[0];
 			const auto& next = cell.u_next;
 			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
@@ -766,6 +769,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			conc_w_frac->InsertNextValue(1.0 - next.c);
 			conc_s_frac->InsertNextValue(0.0);
 			conc_co2_frac->InsertNextValue(0.0);
+			trans->InsertNextValue(grid0.trans);
 
 			hex->GetPointIds()->SetId(0, j + k * ny);
 			hex->GetPointIds()->SetId(1, j + 1 + k * ny);
@@ -789,6 +793,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny + i * nz * ny];
 				const auto& next = cell.u_next;
 				const auto& props = model->props_sk[0];
+				const auto& grid = model->poro_grids[model->frac2poro[model->cells_frac[model->getRowOuter(cell.num)].num]];
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 				poro_frac->InsertNextValue(props.m_init);
 				perm_frac->InsertNextValue(M2toMilliDarcy(props.perm * r_dim * r_dim));
@@ -799,6 +804,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				conc_w_frac->InsertNextValue(1.0 - next.c);
 				conc_s_frac->InsertNextValue(0.0);
 				conc_co2_frac->InsertNextValue(0.0);
+				trans->InsertNextValue(grid.trans);
 
 				hex->GetPointIds()->SetId(0, j + k * ny + i * np);
 				hex->GetPointIds()->SetId(1, j + 1 + k * ny + i * np);
@@ -910,6 +916,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 	fd_frac->AddArray(conc_w_frac);
 	fd_frac->AddArray(conc_s_frac);
 	fd_frac->AddArray(conc_co2_frac);
+	fd_frac->AddArray(trans);
 
 	grid_poro->SetCells(VTK_HEXAHEDRON, hexs_poro);
 	vtkCellData* fd_poro = grid_poro->GetCellData();

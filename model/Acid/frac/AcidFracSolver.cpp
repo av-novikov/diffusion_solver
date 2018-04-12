@@ -116,6 +116,7 @@ void AcidFracSolver::start()
 void AcidFracSolver::doNextStep()
 {
 	solveStep();
+	model->calculateTrans();
 }
 void AcidFracSolver::copySolution(const paralution::LocalVector<double>& sol)
 {

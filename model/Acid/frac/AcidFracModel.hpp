@@ -33,6 +33,7 @@ namespace acidfrac
 		double hx, hz;
 		int cellsNum;
 		const FracCell* frac_nebr;
+		double trans;
 	};
 
 	typedef CalciteReaction CurrentReaction;
@@ -94,6 +95,7 @@ namespace acidfrac
 		void makeDimLess();
 		void setInitialState();
 		void setPerforated();
+		void calculateTrans();
 		// Schemes
 		PoroTapeVariable solvePoro(const PoroCell& cell);
 		PoroTapeVariable solvePoroMid(const PoroCell& cell);
