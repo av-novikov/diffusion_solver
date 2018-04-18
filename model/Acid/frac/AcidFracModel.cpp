@@ -153,7 +153,7 @@ void AcidFrac::build1dGrid(const FracCell& cell, const int grid_id)
 	assert(cell.type == FracType::FRAC_OUT);
 	poro_grids.push_back(PoroGrid()); 
 	PoroGrid& grid = poro_grids.back();
-	grid.trans = 0.0;
+	grid.trans = 1.0;
 	grid.id = grid_id;
 	frac2poro[cell.num] = grid.id;
 	grid.frac_nebr = &cell;
@@ -453,12 +453,11 @@ void AcidFrac::calculateTrans()
 			const auto& cell = grid.cells[i++];
 			k = grid.props_sk->getPermCoseni(cell.u_next.m).value();
 			sum += k * cell.hx;
-		} while (fabs(k - k0) > EQUALITY_TOLERANCE * k0);
+		} while (/*fabs(k - k0) > EQUALITY_TOLERANCE * k0*/ grid.cells[i].x < 1.0 / R_dim);
 		if (fabs(grid.cells[i - 1].x - grid.cells[0].x) > 0.0)
-			grid.trans = sum / (k0 * fabs(grid.cells[i - 1].x - grid.cells[0].x));
+			grid.trans = sum / (k0 * fabs(grid.cells[i - 1].x + grid.cells[i - 1].hx / 2.0 - grid.cells[0].x));
 		else
-			grid.trans = 0.0;
-		double qwe = 123.0;
+			grid.trans = 1.0;
 	}
 }
 
