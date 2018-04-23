@@ -962,25 +962,25 @@ using namespace std;
 
 	return props;
 }*/
-/*wax_nit::Properties* getProps()
+wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
 	props->cellsNum_r = 200;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(370.0 * 86400.0);
-	//props->timePeriods.push_back(40.0 * 86400.0);
+	props->timePeriods.push_back(500.0 * 3600.0);
+	props->timePeriods.push_back(1.0 * 370.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
+	props->pwf.push_back(160.625 * 1.0e+5);
 	props->pwf.push_back(100.625 * 1.0e+5);
-	//props->pwf.push_back(70.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
 
-	props->ht = 10.0;
-	props->ht_min = 10.0;
+	props->ht = 1.0;
+	props->ht_min = 1.0;
 	props->ht_max = 500000.0;
 
 	props->alpha = 7200.0;
@@ -1010,7 +1010,9 @@ using namespace std;
 	tmp.lambda_z = 5.0;
 	tmp.c = 1800.0;
 	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
 
+	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
 
 	props->props_sk.push_back(tmp);
@@ -1021,7 +1023,7 @@ using namespace std;
 	props->props_oil.dens_stc = 855.6;
 	props->props_oil.beta = 1.22 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
-	props->props_oil.gamma = 0.1;
+	props->props_oil.gamma = 0.5;
 
 	props->props_oil.jt = 1.0 * 1.e-7;
 	props->props_oil.ad = 1.0 * 1.e-7;
@@ -1047,7 +1049,7 @@ using namespace std;
 	props->props_gas.c = 3400.0;
 	props->props_gas.lambda = 0.06;
 
-	props->L = -300.0 * 1.e+3;
+	props->L = -150.0 * 1.e+3;
 
 	// Defining relative permeabilities
 	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
@@ -1055,17 +1057,17 @@ using namespace std;
 
 	// Defining volume factors
 	//props->byDefault.B_oil = true;
-	setDataFromFile(props->B_oil, "props/new/Boil200.txt");
+	setDataFromFile(props->B_oil, "props/new/Boil50.txt");
 	//props->byDefault.B_gas = false;
 	setDataFromFile(props->B_gas, "props/Bgas.txt");
 
 	//props->byDefault.Rs = true;
-	setDataFromFile(props->Rs, "props/new/Rs200.txt");
+	setDataFromFile(props->Rs, "props/new/Rs50.txt");
 	setDataFromFile(props->lp, "props/lpx05.txt");
 
 	return props;
-}*/
-acidfrac::Properties* getProps()
+}
+/*acidfrac::Properties* getProps()
 {
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
@@ -1086,13 +1088,13 @@ acidfrac::Properties* getProps()
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
-	props->props_frac.height = 10.0;
+	props->props_frac.height = 50.0;
 
-	props->cellsNum_x = 50;
-	props->cellsNum_y = 10;
+	props->cellsNum_x = 100;
+	props->cellsNum_y = 20;
 	props->cellsNum_z = 1;
 
-	props->xe.push_back(100.0);
+	props->xe.push_back(50.0);
 	props->cellsNum_y_1d.push_back(50);
 	acidfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
@@ -1117,14 +1119,14 @@ acidfrac::Properties* getProps()
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = props_sk.p_ref;
-	props->props_w.D_e = 1.E-8;
+	props->props_w.D_e = 1.E-4;
 
 	props->props_g.visc = 0.06;
 	props->props_g.dens_stc = 0.8;
 	props->props_g.co2 = acidfrac::getCO2();
 
 	return props;
-}
+}*/
 
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
@@ -1181,15 +1183,15 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*wax_nit::Properties* props = getProps();
+	wax_nit::Properties* props = getProps();
 	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
-	acidfrac::Properties* props = getProps();
+	scene.start();
+	/*acidfrac::Properties* props = getProps();
 	Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();
+	scene.start();*/
 	/*acid1d::Properties* props = getProps();
 	Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties> scene;
 	scene.load(*props);

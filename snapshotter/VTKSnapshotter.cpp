@@ -1993,6 +1993,8 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	poro->SetName("porosity");
 	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
 	perm->SetName("permeability");
+	auto perm_dim = vtkSmartPointer<vtkDoubleArray>::New();
+	perm_dim->SetName("permeability_dimless");
 	auto temp = vtkSmartPointer<vtkDoubleArray>::New();
 	temp->SetName("temperature");
 	auto temp_sat = vtkSmartPointer<vtkDoubleArray>::New();
@@ -2040,6 +2042,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 		poro->InsertNextValue(cell.u_next.m);
 		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(cell.u_next.m).value() * r_dim * r_dim));
+		perm_dim->InsertNextValue(cell.props->getPermCoseni_r(cell.u_next.m).value() / cell.props->getPermCoseni_r(cell.props->m_init).value());
 		temp->InsertNextValue((cell.u_next.t - cell.props->t_init) * T_dim);
 		temp_sat->InsertNextValue((cell.u_next.t_bub - cell.props->t_init) * T_dim);
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
@@ -2073,6 +2076,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 
 			poro->InsertNextValue(cell.u_next.m);
 			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(cell.u_next.m).value() * r_dim * r_dim));
+			perm_dim->InsertNextValue(cell.props->getPermCoseni_r(cell.u_next.m).value() / cell.props->getPermCoseni_r(cell.props->m_init).value());
 			temp->InsertNextValue((cell.u_next.t - cell.props->t_init) * T_dim);
 			temp_sat->InsertNextValue((cell.u_next.t_bub - cell.props->t_init) * T_dim);
 			pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
@@ -2103,6 +2107,7 @@ void VTKSnapshotter<wax_nit::WaxNIT>::dump_all(int snap_idx)
 	vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
 	fd->AddArray(perm);
+	fd->AddArray(perm_dim);
 	fd->AddArray(temp);
 	fd->AddArray(temp_sat);
 	fd->AddArray(pres);
