@@ -1,4 +1,4 @@
-#include "model/WaxNIT/WaxNITSolver.hpp"
+#include "model/WaxNIT/2d/WaxNITSolver.hpp"
 
 using namespace std;
 using namespace wax_nit;

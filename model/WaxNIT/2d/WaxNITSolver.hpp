@@ -2,7 +2,7 @@
 #define WAXNITSOLVER_HPP_
 
 #include "model/Basic2d/Basic2dSolver.hpp"
-#include "model/WaxNIT/WaxNIT.hpp"
+#include "model/WaxNIT/2d/WaxNIT.hpp"
 #include "method/ParalutionInterface.h" 
 
 namespace wax_nit

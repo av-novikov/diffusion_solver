@@ -1,4 +1,4 @@
-#include "model/WaxNIT/WaxNIT.hpp"
+#include "model/WaxNIT/2d/WaxNIT.hpp"
 
 #include "adolc/drivers/drivers.h"
 #include "adolc/adolc.h"

@@ -26,7 +26,7 @@
 #include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/OilNIT_Elliptic/OilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
-#include "model/WaxNIT/WaxNIT.hpp"
+#include "model/WaxNIT/2d/WaxNIT.hpp"
 
 #include <cmath>
 

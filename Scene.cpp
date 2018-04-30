@@ -38,8 +38,8 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/frac/AcidFracSolver.hpp"
 
-#include "model/WaxNIT/WaxNIT.hpp"
-#include "model/WaxNIT/WaxNITSolver.hpp"
+#include "model/WaxNIT/2d/WaxNIT.hpp"
+#include "model/WaxNIT/2d/WaxNITSolver.hpp"
 
 template <class modelType, class methodType, typename propsType>
 Scene<modelType, methodType, propsType>::Scene()

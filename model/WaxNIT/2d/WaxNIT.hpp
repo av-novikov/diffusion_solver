@@ -1,7 +1,7 @@
 #ifndef WAXNIT_HPP_
 #define WAXNIT_HPP_
 
-#include "model/WaxNIT/Properties.hpp"
+#include "model/WaxNIT/2d/Properties.hpp"
 #include "model/cells/Variables.hpp"
 #include "model/cells/CylCell2D.h"
 #include "model/Basic2d/Basic2d.hpp"

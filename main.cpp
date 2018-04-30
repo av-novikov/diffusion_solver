@@ -43,8 +43,8 @@
 
 #include "model/Acid/frac/AcidFracModel.hpp"
 
-#include "model/WaxNIT/WaxNIT.hpp"
-#include "model/WaxNIT/WaxNITSolver.hpp"
+#include "model/WaxNIT/2d/WaxNIT.hpp"
+#include "model/WaxNIT/2d/WaxNITSolver.hpp"
 
 using namespace std;
 

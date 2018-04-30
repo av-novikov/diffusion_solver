@@ -12,7 +12,7 @@
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/frac/AcidFracModel.hpp"
-#include "model/WaxNIT/WaxNIT.hpp"
+#include "model/WaxNIT/2d/WaxNIT.hpp"
 
 #include <iomanip>
 
