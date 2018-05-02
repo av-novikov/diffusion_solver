@@ -174,7 +174,7 @@ struct VarWaxNIT1d
 		{
 			double m;
 			double p;
-			double s_o;
+			double s_p;
 		};
 	};
 };
@@ -184,7 +184,7 @@ struct TapeVarWaxNIT1d
 
 	adouble m;
 	adouble p;
-	adouble s_o;
+	adouble s_p;
 };
 
 template <typename DataType>

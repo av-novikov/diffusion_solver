@@ -37,7 +37,7 @@ namespace wax_nit1d
 		inline adouble getOilVelocity(const Cell& cell) const
 		{
 			const TapeVariable& next = var[0];
-			return -cell.props->getPermCoseni(next.m) * props_oil.getKr(next.s_o, cell.props) / props_oil.getViscosity(next.p) * 
+			return -cell.props->getPermCoseni(next.m) * props_oil.getKr(1.0 - next.s_p, cell.props) / props_oil.getViscosity(next.p) * 
 				(var[2].p - var[1].p) / (cells[cell.num + 1].x - cells[cell.num - 1].x);
 		};
 		// Just for snapshotter
@@ -46,7 +46,7 @@ namespace wax_nit1d
 			const auto& next = cell.u_next;
 			const Cell& cell1 = cells[cell.num - 1];
 			const Cell& cell2 = cells[cell.num + 1];
-			return -cell.props->getPermCoseni(next.m).value() * props_oil.getKr(next.s_o, cell.props).value() /
+			return -cell.props->getPermCoseni(next.m).value() * props_oil.getKr(1.0 - next.s_p, cell.props).value() /
 					props_oil.getViscosity(next.p).value() * (cell2.u_next.p - cell1.u_next.p) / (cell2.x - cell1.x);
 		};
 
@@ -85,7 +85,7 @@ namespace wax_nit1d
 		WaxNIT1d();
 		~WaxNIT1d();
 
-		double getRate(int cur) const;
+		double getRate(int cur_idx, int beta_idx) const;
 
 		double* x;
 		double* y;

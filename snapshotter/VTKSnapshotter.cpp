@@ -2191,8 +2191,8 @@ void VTKSnapshotter<wax_nit1d::WaxNIT1d>::dump_all(int i)
 	perm->InsertNextValue(M2toMilliDarcy(props.getPermCoseni(next.m).value() * r_dim * r_dim));
 	perm_dim->InsertNextValue(props.getPermCoseni(next.m).value() / props.getPermCoseni(props.m_init).value());
 	pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
-	sat_oil->InsertNextValue(next.s_o);
-	sat_wax->InsertNextValue(1.0 - next.s_o);
+	sat_oil->InsertNextValue(1.0 - next.s_p);
+	sat_wax->InsertNextValue(next.s_p);
 	vel[0] = 0.0;	vel[1] = 0.0;	vel[2] = 0.0;
 	vel_oil->InsertNextTuple(vel);
 
@@ -2214,8 +2214,8 @@ void VTKSnapshotter<wax_nit1d::WaxNIT1d>::dump_all(int i)
 		perm->InsertNextValue(M2toMilliDarcy(props.getPermCoseni(cell.u_next.m).value() * r_dim * r_dim));
 		perm_dim->InsertNextValue(props.getPermCoseni(cell.u_next.m).value() / props.getPermCoseni(props.m_init).value());
 		pres->InsertNextValue(cell.u_next.p * P_dim / BAR_TO_PA);
-		sat_oil->InsertNextValue(cell.u_next.s_o);
-		sat_wax->InsertNextValue(1.0 - next.s_o);
+		sat_oil->InsertNextValue(1.0 - next.s_p);
+		sat_wax->InsertNextValue(next.s_p);
 		vel[0] = r_dim / t_dim * model->getOilVel(cell);
 		vel[1] = 0.0;
 		vel[2] = 0.0;

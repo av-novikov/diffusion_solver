@@ -43,7 +43,7 @@ WaxNIT1dSolver::~WaxNIT1dSolver()
 }
 void WaxNIT1dSolver::writeData()
 {
-	double p = 0.0, s_o = 0.0, m = 0.0;
+	double p = 0.0, s_p = 0.0, m = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
 
@@ -53,11 +53,13 @@ void WaxNIT1dSolver::writeData()
 		const auto& cell = model->cells[it->first];
 		m += cell.u_next.m;
 		p += cell.u_next.p * model->P_dim;
-		s_o += cell.u_next.s_o;
+		s_p += cell.u_next.s_p;
 		if (model->leftBoundIsRate)
-			qcells << "\t" << it->second * model->Q_dim * 86400.0;
+			qcells << "\t" << it->second * model->Q_dim * 86400.0 << "\t" <<
+			model->getRate(model->cellsNum_x, model->cellsNum_x + 1) * model->Q_dim * 86400.0;
 		else
-			qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			qcells << "\t" << model->getRate(it->first, it->first + 1) * model->Q_dim * 86400.0 << "\t" << 
+			model->getRate(model->cellsNum_x, model->cellsNum_x + 1) * model->Q_dim * 86400.0;
 	}
 
 	poro << cur_t * t_dim / 3600.0 <<
@@ -65,8 +67,8 @@ void WaxNIT1dSolver::writeData()
 	P << cur_t * t_dim / 3600.0 << 
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 	S << cur_t * t_dim / 3600.0 << 
-		"\t" << s_o / (double)(model->Qcell.size()) <<
-		"\t" << (1.0 - s_o) / (double)(model->Qcell.size()) << endl;
+		"\t" << (1.0 - s_p) / (double)(model->Qcell.size()) <<
+		"\t" << s_p / (double)(model->Qcell.size()) << endl;
 
 	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) + 
 			"0\" file=\"WaxNIT1d_" + to_string(step_idx) + ".vtp\"/>\n";
@@ -102,12 +104,12 @@ void WaxNIT1dSolver::copySolution(const Vector& sol)
 		Variable& next = model->cells[i].u_next;
 		next.m += sol[i * var_size];
 		next.p += sol[i * var_size + 1];
-		next.s_o += sol[i * var_size + 2];
+		next.s_p += sol[i * var_size + 2];
 	}
 }
 void WaxNIT1dSolver::checkStability()
 {
-	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
+/*	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
 	{
 		return s_crit + fabs(s_cur - s_crit) * CHOP_MULT;
 	};
@@ -137,7 +139,7 @@ void WaxNIT1dSolver::checkStability()
 
 		checkCritPoints(next, iter, props);
 		checkMaxResidual(next, iter);
-	}
+	}*/
 }
 void WaxNIT1dSolver::solveStep()
 {
@@ -168,14 +170,13 @@ void WaxNIT1dSolver::solveStep()
 		//Solve(model->cellsNum_r + 1, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		//construction_from_fz(model->cellsNum_r + 2, WaxNIT::var_size * (model->cellsNum_z + 2), PRES);
 		
-		checkStability();
+		//checkStability();
 		err_newton = convergance(cellIdx, varIdx);
 		
 		averValue(averVal);
 		for (int i = 0; i < var_size; i++)
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
-		//model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 

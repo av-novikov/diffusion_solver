@@ -67,7 +67,7 @@ void WaxNIT1d::setInitialState()
 	{
 		it->u_prev.m = it->u_iter.m = it->u_next.m = props_sk.m_init;
 		it->u_prev.p = it->u_iter.p = it->u_next.p = props_sk.p_init;
-		it->u_prev.s_o = it->u_iter.s_o = it->u_next.s_o = props_sk.so_init;
+		it->u_prev.s_p = it->u_iter.s_p = it->u_next.s_p = 1.0 - props_sk.so_init;
 		
 		it->props = &props_sk;
 	}
@@ -75,15 +75,15 @@ void WaxNIT1d::setInitialState()
 	var = new TapeVariable[stencil];
 	h = new adouble[var_size];
 }
-double WaxNIT1d::getRate(int cur) const
+double WaxNIT1d::getRate(int cur_idx, int beta_idx) const
 {
-	const Cell& cell = cells[cur];
-	const Cell& beta = cells[cur + 1];
+	const Cell& cell = cells[cur_idx];
+	const Cell& beta = cells[beta_idx];
 	const Variable& next = cell.u_next;
 	const Variable& nebr = beta.u_next;
-	const Variable& upwd = cells[getUpwindIdx(cur, cur + 1)].u_next;
+	const Variable& upwd = cells[getUpwindIdx(cur_idx, beta_idx)].u_next;
 
-	return getTrans(cell, next.m, beta, nebr.m).value() * props_oil.getKr(upwd.s_o, cell.props).value() /	
+	return getTrans(cell, next.m, beta, nebr.m).value() * props_oil.getKr(1.0 - upwd.s_p, cell.props).value() /	
 		props_oil.getB(next.p).value() / props_oil.getViscosity(next.p).value() * (nebr.p - next.p);
 }
 
@@ -99,15 +99,15 @@ void WaxNIT1d::solve_eqMiddle(const Cell& cell)
 	{
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
-		var[i].s_o <<= x[i * Variable::size + 2];
+		var[i].s_p <<= x[i * Variable::size + 2];
 	}
 	const TapeVariable& next = var[0];
 
-	adouble dadt = props_oil.gamma * (1.0 - next.s_o) * props_wax.getRho() * getOilVelocityAbs(cell);
+	adouble dadt = props_oil.gamma * next.s_p * props_wax.getRho() * getOilVelocityAbs(cell);
 	h[0] = props.dens_stc * ((1.0 - next.m) - (1.0 - prev.m)) - dadt;
-	h[1] = next.m * ((1.0 - next.s_o) * props_wax.getRho()) -
-		prev.m * ((1.0 - prev.s_o) * props_wax.getRho()) + dadt;
-	h[2] = next.m * next.s_o * props_oil.getRho(next.p) - prev.m * prev.s_o * props_oil.getRho(prev.p);
+	h[1] = next.m * (next.s_p * props_wax.getRho()) -
+		prev.m * (prev.s_p * props_wax.getRho()) + dadt;
+	h[2] = next.m * (1.0 - next.s_p) * props_oil.getRho(next.p) - prev.m * (1.0 - next.s_p) * props_oil.getRho(prev.p);
 
 	int neighbor[2];
 	getNeighborIdx(cell.num, neighbor);
@@ -120,8 +120,8 @@ void WaxNIT1d::solve_eqMiddle(const Cell& cell)
 		TapeVariable& upwd = var[upwd_idx];
 
 		tmp_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
-			props_oil.getKr(upwd.s_o, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p);
-		h[1] += (props_wax.getRho() *  (1.0 - upwd.s_o) / upwd.s_o) * tmp_o;
+			props_oil.getKr(1.0 - upwd.s_p, cells[upwd_idx].props) / props_oil.getViscosity(upwd.p);
+		h[1] += (props_wax.getRho() *  upwd.s_p / (1.0 - upwd.s_p)) * tmp_o;
 		h[2] += tmp_o * getAverage(props_oil.getRho(next.p), cell, props_oil.getRho(nebr.p), beta);
 	}
 
@@ -140,7 +140,7 @@ void WaxNIT1d::solve_eqLeft(const Cell& cell)
 	{
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
-		var[i].s_o <<= x[i * Variable::size + 2];
+		var[i].s_p <<= x[i * Variable::size + 2];
 	}
 
 	adouble leftIsRate = leftBoundIsRate;
@@ -154,9 +154,9 @@ void WaxNIT1d::solve_eqLeft(const Cell& cell)
 
 	h[0] = (next.m - nebr1.m) / (adouble)(cell.x - beta1.x) - (nebr1.m - nebr2.m) / (adouble)(beta1.x - beta2.x);
 	condassign(h[1], leftIsRate, props_oil.getRho(next.p) * getTrans(cell, next.m, beta1, nebr1.m) * 
-		props_oil.getKr(next.s_o, cell.props) / props_oil.getViscosity(next.p) * (nebr1.p - next.p) + props_oil.dens_stc * rate,
+		props_oil.getKr(1.0 - next.s_p, cell.props) / props_oil.getViscosity(next.p) * (nebr1.p - next.p) + props_oil.dens_stc * rate,
 		next.p - Pwf);
-	h[2] = next.s_o - (0.97 - props.s_oc);
+	h[2] = next.s_p - 0.03;
 	
 	for (int i = 0; i < var_size; i++)
 		h[i] /= P_dim;
@@ -174,7 +174,7 @@ void WaxNIT1d::solve_eqRight(const Cell& cell)
 	{
 		var[i].m <<= x[i * Variable::size];
 		var[i].p <<= x[i * Variable::size + 1];
-		var[i].s_o <<= x[i * Variable::size + 2];
+		var[i].s_p <<= x[i * Variable::size + 2];
 	}
 
 	const Cell& beta1 = cells[cell.num - 1];
@@ -185,7 +185,7 @@ void WaxNIT1d::solve_eqRight(const Cell& cell)
 
 	h[0] = next.m - cell.props->m_init;
 	condassign(h[1], rightIsPres, next.p - (adouble)(cell.props->p_out), next.p - (adouble)(nebr1.p));
-	h[2] = (next.s_o - nebr1.s_o) / (adouble)(cell.x - beta1.x) - (nebr1.s_o - nebr2.s_o) / (adouble)(beta1.x - beta2.x);
+	h[2] = (next.s_p - nebr1.s_p) / (adouble)(cell.x - beta1.x) - (nebr1.s_p - nebr2.s_p) / (adouble)(beta1.x - beta2.x);
 	
 	for (int i = 0; i < var_size; i++)
 		h[i] /= P_dim;

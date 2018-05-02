@@ -1074,12 +1074,12 @@ wax_nit1d::Properties* getProps()
 {
 	wax_nit1d::Properties* props = new wax_nit1d::Properties();
 
-	props->cellsNum_x = 200;
+	props->cellsNum_x = 100;
 	props->timePeriods.push_back(1.0 * 370.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(150.725 * 1.0e+5);
+	props->pwf.push_back(160.625 * 1.0e+5);
 
 	props->ht = 1.0;
 	props->ht_min = 1.0;
@@ -1094,7 +1094,7 @@ wax_nit1d::Properties* getProps()
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = 150.625 * 1.0e+5;
 	tmp.p_sat = 150.625 * 1.0e+5;
-	tmp.so_init = 1.0;
+	tmp.so_init = 0.99999;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 0.1;
@@ -1111,7 +1111,7 @@ wax_nit1d::Properties* getProps()
 	props->props_oil.dens_stc = 855.6;
 	props->props_oil.beta = 1.22 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
-	props->props_oil.gamma = 0.0;
+	props->props_oil.gamma = 0.5;
 
 	props->props_oil.dens_gas_stc = 1.45;
 	props->props_oil.dens_wax_stc = props->props_wax.dens_stc = 900.0;
