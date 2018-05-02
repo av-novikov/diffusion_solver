@@ -14,6 +14,7 @@
 #include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
 #include "model/BlackOil_RZ/BlackOil_RZ.hpp"
 #include "model/WaxNIT/2d/WaxNIT.hpp"
+#include "model/WaxNIT/1d/WaxNIT1d.hpp"
 
 using namespace std;
 
@@ -133,7 +134,6 @@ void Snapshotter<acid2dnit::Acid2dNIT>::setModel(acid2dnit::Acid2dNIT* _model)
 {
 	model = _model;
 
-	T_dim = model->T_dim;
 	t_dim = model->t_dim;
 	r_dim = model->R_dim;
 	T_dim = model->T_dim;
@@ -189,6 +189,18 @@ void Snapshotter<wax_nit::WaxNIT>::setModel(wax_nit::WaxNIT* _model)
 	nx = model->cellsNum_r + 2;
 	ny = model->cellsNum_z + 2;
 }
+void Snapshotter<wax_nit1d::WaxNIT1d>::setModel(wax_nit1d::WaxNIT1d* _model)
+{
+	model = _model;
+
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_x + 2;
+	ny = 3;
+}
 template <class modelType>
 string Snapshotter<modelType>::replace(string filename, string from, string to)
 {
@@ -226,3 +238,4 @@ template class Snapshotter<oilnit_elliptic::OilNIT_Elliptic>;
 template class Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>;
 template class Snapshotter<blackoil_rz::BlackOil_RZ>;
 template class Snapshotter<wax_nit::WaxNIT>;
+template class Snapshotter<wax_nit1d::WaxNIT1d>;

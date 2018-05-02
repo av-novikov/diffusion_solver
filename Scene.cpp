@@ -38,6 +38,9 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/frac/AcidFracSolver.hpp"
 
+#include "model/WaxNIT/1d/WaxNIT1d.hpp"
+#include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
+
 #include "model/WaxNIT/2d/WaxNIT.hpp"
 #include "model/WaxNIT/2d/WaxNITSolver.hpp"
 
@@ -74,6 +77,13 @@ Scene<acidfrac::AcidFrac, acidfrac::AcidFrac, acidfrac::Properties>::~Scene()
 	delete method;
 }
 Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	delete method;
+}
+Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>::~Scene()
 {
 	paralution::stop_paralution();
 
@@ -129,6 +139,12 @@ void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wa
 	model->load(props);
 	paralution::init_paralution();
 	method = new wax_nit::WaxNITSolver(model);
+}
+void Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>::load(wax_nit1d::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	method = new wax_nit1d::WaxNIT1dSolver(model);
 }
 void Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<ParSolver>, oilnit_elliptic::Properties>::load(oilnit_elliptic::Properties& props)
 {
@@ -206,3 +222,4 @@ template class Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit
 template class Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties>;
 template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
+template class Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>;

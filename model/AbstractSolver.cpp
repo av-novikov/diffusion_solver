@@ -12,6 +12,7 @@
 #include "model/Acid/2d/Acid2d.hpp"
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/frac/AcidFracModel.hpp"
+#include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/2d/WaxNIT.hpp"
 
 #include <iomanip>
@@ -766,4 +767,5 @@ template class AbstractSolver<acid2d::Acid2d>;
 template class AbstractSolver<acid2dnit::Acid2dNIT>;
 template class AbstractSolver<acid1d::Acid1d>;
 template class AbstractSolver<acidfrac::AcidFrac>;
+template class AbstractSolver<wax_nit1d::WaxNIT1d>;
 template class AbstractSolver<wax_nit::WaxNIT>;

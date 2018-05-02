@@ -87,7 +87,7 @@ namespace wax_nit
 				(var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z));
 			return tmp;
 		};
-
+		// Just for snapshotter
 		inline double getOilVel(const Cell& cell, const int axis) const
 		{
 			double tmp;

@@ -78,7 +78,7 @@ namespace basic1d
 		void makeBasicDimLess()
 		{
 			// Main units
-			R_dim = r_e / 100.0;
+			R_dim = r_e / 1.0;
 			t_dim = 3600.0;
 			P_dim = props_sk.p_init;
 

@@ -164,6 +164,31 @@ struct TapeVarWaxNIT
 	bool satur_gas, satur_wax;
 };
 
+struct VarWaxNIT1d
+{
+	static const int size = 4;
+
+	union {
+		double values[4];
+		struct
+		{
+			double m;
+			double p;
+			double s_w;
+			double s_o;
+		};
+	};
+};
+struct TapeVarWaxNIT1d
+{
+	static const int size = 4;
+
+	adouble m;
+	adouble p;
+	adouble s_w;
+	adouble s_o;
+};
+
 template <typename DataType>
 struct VarSimpleVPP
 {

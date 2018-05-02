@@ -43,6 +43,9 @@
 
 #include "model/Acid/frac/AcidFracModel.hpp"
 
+#include "model/WaxNIT/1d/WaxNIT1d.hpp"
+#include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
+
 #include "model/WaxNIT/2d/WaxNIT.hpp"
 #include "model/WaxNIT/2d/WaxNITSolver.hpp"
 
@@ -962,7 +965,7 @@ using namespace std;
 
 	return props;
 }*/
-wax_nit::Properties* getProps()
+/*wax_nit::Properties* getProps()
 {
 	wax_nit::Properties* props = new wax_nit::Properties();
 
@@ -1024,6 +1027,95 @@ wax_nit::Properties* getProps()
 	props->props_oil.beta = 1.22 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
 	props->props_oil.gamma = 0.5;
+
+	props->props_oil.jt = 1.0 * 1.e-7;
+	props->props_oil.ad = 1.0 * 1.e-7;
+	props->props_oil.c = 1233.0;
+	props->props_oil.lambda = 0.16;
+
+	props->props_wat.visc = 4.0;
+	props->props_wat.dens_stc = 1000.0;
+	props->props_wat.beta = 1.0 * 1.e-9;
+	props->props_wat.p_ref = tmp.p_ref;
+
+	props->props_wat.jt = 2.0 * 1.e-7;
+	props->props_wat.ad = 2.0 * 1.e-7;
+	props->props_wat.c = 1880.0;
+	props->props_wat.lambda = 0.16;
+
+	props->props_gas.visc = 0.03;
+	props->props_oil.dens_gas_stc = props->props_gas.dens_stc = 1.45;
+	props->props_oil.dens_wax_stc = props->props_wax.dens_stc = 900.0;
+
+	props->props_gas.jt = -1.7 * 1.e-6;
+	props->props_gas.ad = 3.6 * 1.e-6;
+	props->props_gas.c = 3400.0;
+	props->props_gas.lambda = 0.06;
+
+	props->L = -150.0 * 1.e+3;
+
+	// Defining relative permeabilities
+	//setDataFromFile(props->kr_oil, "props/koil_tempest.txt");
+	//setDataFromFile(props->kr_gas, "props/kgas_tempest.txt");
+
+	// Defining volume factors
+	//props->byDefault.B_oil = true;
+	setDataFromFile(props->B_oil, "props/new/Boil50.txt");
+	//props->byDefault.B_gas = false;
+	setDataFromFile(props->B_gas, "props/Bgas.txt");
+
+	//props->byDefault.Rs = true;
+	setDataFromFile(props->Rs, "props/new/Rs50.txt");
+	setDataFromFile(props->lp, "props/lpx05.txt");
+
+	return props;
+}*/
+wax_nit1d::Properties* getProps()
+{
+	wax_nit1d::Properties* props = new wax_nit1d::Properties();
+
+	props->cellsNum_x = 20;
+	props->timePeriods.push_back(1.0 * 370.0 * 86400.0);
+
+	props->leftBoundIsRate = false;
+	props->rightBoundIsPres = true;
+	props->pwf.push_back(160.625 * 1.0e+5);
+
+	props->ht = 1.0;
+	props->ht_min = 1.0;
+	props->ht_max = 500000.0;
+
+	props->alpha = 7200.0;
+
+	props->r_w = 0.1;
+	props->r_e = 1.0;
+
+	auto& tmp = props->props_sk;
+	tmp.m_init = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_ref = 150.725 * 1.0e+5;
+	tmp.t_init = 291.0;
+	tmp.p_sat = 150.625 * 1.0e+5;
+	tmp.t_sat = tmp.t_init;
+	tmp.sw_init = 0.02;	tmp.so_init = 0.98;	tmp.sg_init = 0.0;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
+	tmp.h1 = 0.0;
+	tmp.h2 = 0.1;
+	tmp.height = 0.1;
+	tmp.perm = 450.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.lambda = 5.0;
+	tmp.c = 1800.0;
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+
+	props->depth_point = 0.0;
+
+	props->props_oil.visc = 8.36;
+	props->props_oil.dens_stc = 855.6;
+	props->props_oil.beta = 1.22 * 1.e-9;
+	props->props_oil.p_ref = tmp.p_ref;
+	props->props_oil.gamma = 0.01;
 
 	props->props_oil.jt = 1.0 * 1.e-7;
 	props->props_oil.ad = 1.0 * 1.e-7;
@@ -1183,8 +1275,8 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	wax_nit::Properties* props = getProps();
-	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
+	wax_nit1d::Properties* props = getProps();
+	Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();

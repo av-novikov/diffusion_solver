@@ -8,7 +8,7 @@
 
 namespace acid1d
 {
-	class Acid1dSolver : public basic1d::Basic1dSolver<acid1d::Acid1d>
+	class Acid1dSolver : public basic1d::Basic1dSolver<Acid1d>
 	{
 	private:
 		void MiddleAppr(int current, int MZ, int key);
