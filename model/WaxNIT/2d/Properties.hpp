@@ -52,7 +52,7 @@ namespace wax_nit
 		{
 			//adouble tmp;
 			//condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
-			return exp((adouble)beta * (p - p_ref));
+			return exp(-(adouble)beta * (p - p_ref));
 		};
 		inline adouble getViscosity(adouble p) const
 		{

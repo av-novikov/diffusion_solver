@@ -166,26 +166,24 @@ struct TapeVarWaxNIT
 
 struct VarWaxNIT1d
 {
-	static const int size = 4;
+	static const int size = 3;
 
 	union {
-		double values[4];
+		double values[3];
 		struct
 		{
 			double m;
 			double p;
-			double s_w;
 			double s_o;
 		};
 	};
 };
 struct TapeVarWaxNIT1d
 {
-	static const int size = 4;
+	static const int size = 3;
 
 	adouble m;
 	adouble p;
-	adouble s_w;
 	adouble s_o;
 };
 

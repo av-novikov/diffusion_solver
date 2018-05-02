@@ -26,11 +26,8 @@ namespace wax_nit1d
 		template<typename> friend class basic1d::Basic1dSolver;
 		friend class WaxNIT1dSolver;
 	protected:
-		Water_Props props_wat;
 		Oil_Props props_oil;
-		Gas_Props props_gas;
 		Wax_Props props_wax;
-		double L;
 
 		void setProps(Properties& props);
 		void makeDimLess();
@@ -40,13 +37,7 @@ namespace wax_nit1d
 		inline adouble getOilVelocity(const Cell& cell) const
 		{
 			const TapeVariable& next = var[0];
-			return -cell.props->getPermCoseni(next.m) * props_oil.getKr(next.s_w, next.s_o, cell.props) / props_oil.getViscosity(next.p) * 
-				(var[2].p - var[1].p) / (cells[cell.num + 1].x - cells[cell.num - 1].x);
-		};
-		inline adouble getWatVelocity(const Cell& cell) const
-		{
-			const TapeVariable& next = var[0];
-			return -cell.props->getPermCoseni(next.m) * props_wat.getKr(next.s_w, next.s_o, cell.props) / props_wat.getViscosity(next.p) *
+			return -cell.props->getPermCoseni(next.m) * props_oil.getKr(next.s_o, cell.props) / props_oil.getViscosity(next.p) * 
 				(var[2].p - var[1].p) / (cells[cell.num + 1].x - cells[cell.num - 1].x);
 		};
 		// Just for snapshotter
@@ -55,16 +46,8 @@ namespace wax_nit1d
 			const auto& next = cell.u_next;
 			const Cell& cell1 = cells[cell.num - 1];
 			const Cell& cell2 = cells[cell.num + 1];
-			return -cell.props->getPermCoseni(next.m).value() * props_oil.getKr(next.s_w, next.s_o, cell.props).value() /
+			return -cell.props->getPermCoseni(next.m).value() * props_oil.getKr(next.s_o, cell.props).value() /
 					props_oil.getViscosity(next.p).value() * (cell2.u_next.p - cell1.u_next.p) / (cell2.x - cell1.x);
-		};
-		inline double getWatVel(const Cell& cell) const
-		{
-			const auto& next = cell.u_next;
-			const Cell& cell1 = cells[cell.num - 1];
-			const Cell& cell2 = cells[cell.num + 1];
-			return -cell.props->getPermCoseni(next.m).value() * props_wat.getKr(next.s_w, next.s_o, cell.props).value() /
-					props_wat.getViscosity(next.p).value() * (cell2.u_next.p - cell1.u_next.p) / (cell2.x - cell1.x);
 		};
 
 		inline adouble getOilVelocityAbs(const Cell& cell) const 

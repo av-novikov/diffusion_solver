@@ -17,10 +17,6 @@ namespace wax_nit1d
 		double p_init;
 		double p_sat;
 		double so_init;
-		double sw_init;
-		double sg_init;
-		double t_init;
-		double t_sat;
 		double m_init;
 		double a_init;
 
@@ -30,50 +26,6 @@ namespace wax_nit1d
 			return perm * (m * m * m / (1 - m) / (1 - m)) /
 				(m_init * m_init * m_init / (1 - m_init) / (1 - m_init));
 		};
-
-		// Mass heat capacity [J/kg/K]
-		double c;
-		// Thermal conductivity coefficient [W/m/K]
-		double lambda;
-	};
-	struct Water_Props : public basic1d::Liquid_Props
-	{
-		// Fluid volume factor
-		Interpolate* b;
-		inline adouble getB(adouble p) const
-		{
-			//adouble tmp;
-			//condassign(tmp, SATUR, b->Solve(p), b->Solve(p_bub));
-			return exp((adouble)beta * (p - p_ref));
-		};
-		inline adouble getViscosity(adouble p) const
-		{
-			return (adouble)(visc);
-		};
-		// Relative fluid permeability
-		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
-		{
-			adouble isAboveZero = (s_w - props->s_wc > 0.0) ? true : false;
-			adouble isAboveCritical = (s_w > 1.0 - props->s_oc - props->s_gc) ? true : false;
-			adouble tmp;
-			condassign(tmp, isAboveZero, pow((s_w - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
-			condassign(tmp, isAboveCritical, (adouble)1.0);
-			return tmp;
-			//return kr->Solve(s_w);
-		};
-		inline adouble getRho(adouble p) const
-		{
-			return dens_stc / getB(p);
-		};
-		// Mass heat capacity [J/kg/K]
-		double c;
-		// Thermal conductivity coefficient [W/m/K]
-		double lambda;
-		// Joule-thompson coefficient [K/Pa]
-		double jt;
-		// Adiabatic coefficient [K/Pa]
-		double ad;
 	};
 	struct Oil_Props : public basic1d::Liquid_Props
 	{
@@ -89,14 +41,14 @@ namespace wax_nit1d
 		};
 		// Relative fluid permeability
 		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
+		inline adouble getKr(adouble s_o, const Skeleton_Props* props) const
 		{
 			adouble isAboveZero = (s_o - props->s_oc > 0.0) ? true : false;
-			adouble isAboveCritical = (s_o > 1.0 - props->s_wc - props->s_gc) ? true : false;
+			adouble isAboveCritical = (s_o > 1.0 - props->s_wc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, pow((s_o - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
-			condassign(tmp, isAboveCritical, (adouble)1.0);
-			return tmp;
+			//condassign(tmp, isAboveZero, pow((s_o - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
+			//condassign(tmp, isAboveCritical, (adouble)1.0);
+			return s_o;
 			//return kr->Solve(s_w);
 		};
 		// Density of gas in STC [kg/m3]
@@ -111,49 +63,10 @@ namespace wax_nit1d
 		{
 			return dens_stc / getB(p);
 		};
-		inline adouble getRho(adouble p, adouble t) const
+		inline adouble getRho(adouble p) const
 		{
 			return getRhoTilde(p);
 		};
-		// Mass heat capacity [J/kg/K]
-		double c;
-		// Thermal conductivity coefficient [W/m/K]
-		double lambda;
-		// Joule-thompson coefficient [K/Pa]
-		double jt;
-		// Adiabatic coefficient [K/Pa]
-		double ad;
-	};
-	struct Gas_Props : public basic1d::Gas_Props
-	{
-		inline adouble getViscosity(const adouble p) const
-		{
-			return (adouble)(visc);
-		};
-		// Relative fluid permeability
-		Interpolate* kr;
-		inline adouble getKr(adouble s_w, adouble s_o, const Skeleton_Props* props) const
-		{
-			adouble isAboveZero = (1.0 - s_o - s_w - props->s_gc > 0.0) ? true : false;
-			adouble isAboveCritical = (1.0 - s_o - s_w > 1.0 - props->s_wc - props->s_oc) ? true : false;
-			adouble tmp;
-			condassign(tmp, isAboveZero, 1.0 * pow(((adouble)(1.0 - props->s_gc) - s_w - s_o) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 2.0), (adouble)0.0);
-			condassign(tmp, isAboveCritical, (adouble)1.0);
-			return tmp;
-			//return kr->Solve(s_w);
-		};
-		inline adouble getRho(adouble p) const
-		{
-			return dens_stc / getB(p);
-		};
-		// Mass heat capacity [J/kg/K]
-		double c;
-		// Thermal conductivity coefficient [W/m/K]
-		double lambda;
-		// Joule-thompson coefficient [K/Pa]
-		double jt;
-		// Adiabatic coefficient [K/Pa]
-		double ad;
 	};
 	struct Wax_Props
 	{
@@ -169,8 +82,6 @@ namespace wax_nit1d
 	{
 		Skeleton_Props props_sk;
 		Oil_Props props_oil;
-		Water_Props props_wat;
-		Gas_Props props_gas;
 		Wax_Props props_wax;
 		double L;
 

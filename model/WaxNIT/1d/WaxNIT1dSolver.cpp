@@ -43,7 +43,7 @@ WaxNIT1dSolver::~WaxNIT1dSolver()
 }
 void WaxNIT1dSolver::writeData()
 {
-	double p = 0.0, s_w = 0.0, s_o = 0.0, m = 0.0;
+	double p = 0.0, s_o = 0.0, m = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
 
@@ -53,7 +53,6 @@ void WaxNIT1dSolver::writeData()
 		const auto& cell = model->cells[it->first];
 		m += cell.u_next.m;
 		p += cell.u_next.p * model->P_dim;
-		s_w += cell.u_next.s_w;
 		s_o += cell.u_next.s_o;
 		if (model->leftBoundIsRate)
 			qcells << "\t" << it->second * model->Q_dim * 86400.0;
@@ -66,9 +65,8 @@ void WaxNIT1dSolver::writeData()
 	P << cur_t * t_dim / 3600.0 << 
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 	S << cur_t * t_dim / 3600.0 << 
-		"\t" << s_w / (double)(model->Qcell.size()) << 
 		"\t" << s_o / (double)(model->Qcell.size()) <<
-		"\t" << (1.0 - s_w - s_o) / (double)(model->Qcell.size()) << endl;
+		"\t" << (1.0 - s_o) / (double)(model->Qcell.size()) << endl;
 
 	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) + 
 			"0\" file=\"WaxNIT1d_" + to_string(step_idx) + ".vtp\"/>\n";
@@ -104,8 +102,7 @@ void WaxNIT1dSolver::copySolution(const Vector& sol)
 		Variable& next = model->cells[i].u_next;
 		next.m += sol[i * var_size];
 		next.p += sol[i * var_size + 1];
-		next.s_w += sol[i * var_size + 2];
-		next.s_o += sol[i * var_size + 3];
+		next.s_o += sol[i * var_size + 2];
 	}
 }
 void WaxNIT1dSolver::checkStability()
@@ -123,18 +120,11 @@ void WaxNIT1dSolver::checkStability()
 		// Oil
 		if ((next.s_o - props.s_oc) * (iter.s_o - props.s_oc) < 0.0)
 			next.s_o = barelyMobilLeft(next.s_o, props.s_oc);
-		if ((next.s_o - (1.0 - props.s_wc - props.s_gc)) * (iter.s_o - (1.0 - props.s_wc - props.s_gc)) < 0.0)
-			next.s_o = barelyMobilRight(next.s_o, 1.0 - props.s_wc - props.s_gc);
-		// Water
-		if ((next.s_w - props.s_wc) * (iter.s_w - props.s_wc) < 0.0)
-			next.s_w = barelyMobilLeft(next.s_w, props.s_wc);
-		if ((next.s_w - (1.0 - props.s_oc - props.s_gc)) * (iter.s_w - (1.0 - props.s_oc - props.s_gc)) < 0.0)
-			next.s_w = barelyMobilRight(next.s_w, 1.0 - props.s_oc - props.s_gc);
+		if ((next.s_o - 1.0) * (iter.s_o - 1.0) < 0.0)
+			next.s_o = barelyMobilRight(next.s_o, 1.0);
 	};
 	auto checkMaxResidual = [=, this](auto& next, auto& iter)
 	{
-		if (fabs(next.s_w - iter.s_w) > MAX_SAT_CHANGE)
-			next.s_w = iter.s_w + sign(next.s_w - iter.s_w) * MAX_SAT_CHANGE;
 		if (fabs(next.s_o - iter.s_o) > MAX_SAT_CHANGE)
 			next.s_o = iter.s_o + sign(next.s_o - iter.s_o) * MAX_SAT_CHANGE;
 	};
@@ -185,7 +175,7 @@ void WaxNIT1dSolver::solveStep()
 		for (int i = 0; i < var_size; i++)
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
-		model->snapshot_all(iterations + 1);
+		//model->snapshot_all(iterations + 1);
 		iterations++;
 	}
 
@@ -241,7 +231,6 @@ void WaxNIT1dSolver::fill()
 				a[counter++] = model->jac[i][size * nebr_idx];
 				a[counter++] = model->jac[i][size * nebr_idx + 1];
 				a[counter++] = model->jac[i][size * nebr_idx + 2];
-				a[counter++] = model->jac[i][size * nebr_idx + 3];
 
 				nebr_idx++;
 			}
