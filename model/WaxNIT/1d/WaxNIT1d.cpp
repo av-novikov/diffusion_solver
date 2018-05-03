@@ -83,10 +83,8 @@ double WaxNIT1d::getRate(int cur_idx, int beta_idx) const
 	const Variable& nebr = beta.u_next;
 	const Variable& upwd = cells[getUpwindIdx(cur_idx, beta_idx)].u_next;
 
-	return getTrans(cell, next.m, beta, nebr.m).value() * props_oil.getKr(1.0 - upwd.s_p, cell.props).value() /	
-		props_oil.getB(next.p).value() / props_oil.getViscosity(next.p).value() * (nebr.p - next.p);
+	return getTrans(cell, next.m, beta, nebr.m).value() / props_oil.getViscosity(next.p).value() * (nebr.p - next.p);
 }
-
 void WaxNIT1d::solve_eqMiddle(const Cell& cell)
 {
 	const Skeleton_Props& props = *cell.props;
@@ -156,7 +154,7 @@ void WaxNIT1d::solve_eqLeft(const Cell& cell)
 	condassign(h[1], leftIsRate, props_oil.getRho(next.p) * getTrans(cell, next.m, beta1, nebr1.m) * 
 		props_oil.getKr(1.0 - next.s_p, cell.props) / props_oil.getViscosity(next.p) * (nebr1.p - next.p) + props_oil.dens_stc * rate,
 		next.p - Pwf);
-	h[2] = next.s_p - 0.03;
+	h[2] = next.s_p - 0.00;
 	
 	for (int i = 0; i < var_size; i++)
 		h[i] /= P_dim;
