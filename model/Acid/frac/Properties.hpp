@@ -141,6 +141,7 @@ namespace acidfrac
 		std::vector<double> xe;
 
 		std::vector<double> cs;
+		std::vector<bool> LeftBoundIsRate;
 		std::vector< std::pair<double, double> > rho_co2;
 	};
 };

@@ -76,7 +76,9 @@ namespace acidfrac
 		double Q_sum, Pwf, c, height_perf;
 		std::map<int, double> Qcell;
 		std::vector<double> period, rate, pwf, cs;
-		bool leftBoundIsRate, rightBoundIsPres;
+		std::vector<bool> LeftBoundIsRate;
+		bool leftBoundIsRate;
+		bool rightBoundIsPres;
 		// Scheme
 		/*TapeVariable* var;
 		adouble* h;
@@ -256,6 +258,7 @@ namespace acidfrac
 		FracTapeVariable* x_frac;
 
 		int getCellsNum() { return cellsNum + cellsPoroNum; };
+		double getRate(int cur) const;
 	};
 };
 

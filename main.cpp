@@ -1070,7 +1070,7 @@ using namespace std;
 
 	return props;
 }*/
-wax_nit1d::Properties* getProps()
+/*wax_nit1d::Properties* getProps()
 {
 	wax_nit1d::Properties* props = new wax_nit1d::Properties();
 
@@ -1131,8 +1131,8 @@ wax_nit1d::Properties* getProps()
 	setDataFromFile(props->lp, "props/lpx05.txt");
 
 	return props;
-}
-/*acidfrac::Properties* getProps()
+}*/
+acidfrac::Properties* getProps()
 {
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
@@ -1142,11 +1142,16 @@ wax_nit1d::Properties* getProps()
 	props->ht_max = 10000.0;
 
 	props->timePeriods.push_back(5.0 * 3600.0);
-	props->leftBoundIsRate = false;
+	//props->timePeriods.push_back(10.0 * 3600.0);
+	//props->leftBoundIsRate = false;
+	props->LeftBoundIsRate.push_back(true);
+	//props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	//props->rates.push_back(0.0);
-	props->pwf.push_back(210.0 * 1.0e+5);
+	//props->pwf.push_back(210.0 * 1.0e+5);
+	props->rates.push_back(-5.0);
+	//props->pwf.push_back(210.0 * 1.0e+5);
 	props->cs.push_back(0.15);
+	//props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 50.0;
 	props->props_frac.w2 = 0.01;
@@ -1155,7 +1160,7 @@ wax_nit1d::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 50.0;
 
-	props->cellsNum_x = 100;
+	props->cellsNum_x = 50;
 	props->cellsNum_y = 20;
 	props->cellsNum_z = 1;
 
@@ -1191,7 +1196,7 @@ wax_nit1d::Properties* getProps()
 	props->props_g.co2 = acidfrac::getCO2();
 
 	return props;
-}*/
+}
 
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
@@ -1248,15 +1253,15 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	wax_nit1d::Properties* props = getProps();
+	/*wax_nit1d::Properties* props = getProps();
 	Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
-	/*acidfrac::Properties* props = getProps();
+	scene.start();*/
+	acidfrac::Properties* props = getProps();
 	Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();*/
+	scene.start();
 	/*acid1d::Properties* props = getProps();
 	Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties> scene;
 	scene.load(*props);

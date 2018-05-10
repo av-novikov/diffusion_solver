@@ -22,7 +22,6 @@ void AcidFrac::setProps(Properties& props)
 	props_sk = props.props_sk;
 	skeletonsNum = props.props_sk.size();
 
-	leftBoundIsRate = props.leftBoundIsRate;
 	rightBoundIsPres = props.rightBoundIsPres;
 
 	// Setting grid properties
@@ -40,14 +39,24 @@ void AcidFrac::setProps(Properties& props)
 	}
 
 	periodsNum = props.timePeriods.size();
+	rate.resize(periodsNum);
+	pwf.resize(periodsNum);
+	int rate_idx = 0, pres_idx = 0;
 	for (int i = 0; i < periodsNum; i++)
 	{
+		LeftBoundIsRate.push_back(props.LeftBoundIsRate[i]);
 		cs.push_back(props.cs[i]);
 		period.push_back(props.timePeriods[i]);
-		if (leftBoundIsRate)
-			rate.push_back(props.rates[i] / 86400.0);
+		if (LeftBoundIsRate.back())
+		{
+			rate[i] = props.rates[rate_idx++] / 86400.0;
+			pwf[i] = 0.0;
+		}
 		else
-			pwf.push_back(props.pwf[i]);
+		{
+			pwf[i] = props.pwf[pres_idx++];
+			rate[i] = 0.0;
+		}
 	}
 
 	// Temporal properties
@@ -104,10 +113,8 @@ void AcidFrac::makeDimLess()
 	for (int i = 0; i < periodsNum; i++)
 	{
 		period[i] /= t_dim;
-		if (leftBoundIsRate)
-			rate[i] /= Q_dim;
-		else
-			pwf[i] /= P_dim;
+		rate[i] /= Q_dim;
+		pwf[i] /= P_dim;
 	}
 
 	grav /= (R_dim / t_dim / t_dim);
@@ -390,6 +397,7 @@ void AcidFrac::setPerforated()
 };
 void AcidFrac::setPeriod(int period)
 {
+	leftBoundIsRate = LeftBoundIsRate[period];
 	if (leftBoundIsRate)
 	{
 		Q_sum = rate[period];
@@ -460,6 +468,17 @@ void AcidFrac::calculateTrans()
 			grid.trans = 1.0;
 	}
 }
+double AcidFrac::getRate(int cur) const
+{
+	const FracCell& cell = cells_frac[cur];
+	assert(cell.type == FracType::FRAC_IN);
+	const FracCell& beta = cells_frac[cur + (cellsNum_z + 2) * (cellsNum_y + 1)];
+	const FracVariable& next = cell.u_next;
+	const FracVariable& nebr = beta.u_next;
+
+	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));
+	return alpha * cell.hy * cell.hz * (next.p - nebr.p) / (cell.hx + beta.hx);
+};
 
 PoroTapeVariable AcidFrac::solvePoro(const PoroCell& cell)
 {
@@ -585,9 +604,15 @@ FracTapeVariable AcidFrac::solveFrac(const FracCell& cell)
 FracTapeVariable AcidFrac::solveFracIn(const FracCell& cell)
 {
 	assert(cell.type == FracType::FRAC_IN);
+	const auto& beta = cells_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y + 1)];
 	const auto& next = x_frac[cell.num];
+	const auto& nebr = x_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y + 1)];
+	const adouble leftIsRate = leftBoundIsRate;
 	FracTapeVariable res;
 	res.p = (next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim;
+	condassign(res.p, leftIsRate, -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) *
+						cell.hy * cell.hz * (next.p - nebr.p) / (cell.hx + beta.hx) - Qcell[cell.num],
+						(next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim);
 	res.c = (next.c - c) / P_dim;
 	return res;
 }
