@@ -1141,30 +1141,32 @@ acidfrac::Properties* getProps()
 	props->ht_min = 0.1;
 	props->ht_max = 10000.0;
 
+	props->timePeriods.push_back(0.003 * 3600.0);
 	props->timePeriods.push_back(5.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
+	props->LeftBoundIsRate.push_back(false);
 	props->LeftBoundIsRate.push_back(true);
 	//props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	//props->pwf.push_back(210.0 * 1.0e+5);
-	props->rates.push_back(-5.0);
-	//props->pwf.push_back(210.0 * 1.0e+5);
+	props->pwf.push_back(210.0 * 1.0e+5);
+	//props->pwf.push_back(200.0 * 1.0e+5);
+	props->rates.push_back(-50.0);
 	props->cs.push_back(0.15);
-	//props->cs.push_back(0.0);
+	props->cs.push_back(0.0);
 
-	props->props_frac.l2 = 50.0;
+	props->props_frac.l2 = 20.0;
 	props->props_frac.w2 = 0.01;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
-	props->props_frac.height = 50.0;
+	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 50;
-	props->cellsNum_y = 20;
+	props->cellsNum_x = 5;
+	props->cellsNum_y = 5;
 	props->cellsNum_z = 1;
 
-	props->xe.push_back(50.0);
+	props->xe.push_back(200.0);
 	props->cellsNum_y_1d.push_back(50);
 	acidfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;

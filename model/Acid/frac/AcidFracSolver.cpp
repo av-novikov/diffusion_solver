@@ -8,6 +8,8 @@
 
 using std::endl;
 using std::setprecision;
+using std::map;
+using std::ofstream;
 using namespace acidfrac;
 
 AcidFracSolver::AcidFracSolver(AcidFrac* _model) : AbstractSolver<AcidFrac>(_model)
@@ -40,6 +42,8 @@ AcidFracSolver::AcidFracSolver(AcidFrac* _model) : AbstractSolver<AcidFrac>(_mod
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
+	P.open("snaps/P.dat", ofstream::out);
+	qcells.open("snaps/q_cells.dat", ofstream::out);
 	pvd_frac.open("snaps/AcidFrac_frac.pvd", std::ofstream::out);
 	pvd_poro.open("snaps/AcidFrac_poro.pvd", std::ofstream::out);
 	pvd_frac << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
@@ -53,6 +57,9 @@ AcidFracSolver::~AcidFracSolver()
 	delete[] ind_i, ind_j, ind_rhs;
 	delete[] cols;
 	delete[] a, rhs;
+
+	P.close();
+	qcells.close();
 
 	pvd_frac << "\t</Collection>\n";
 	pvd_frac << "</VTKFile>\n";
@@ -68,6 +75,24 @@ void AcidFracSolver::writeData()
 		"0\" file=\"AcidFrac_frac_" + to_string(step_idx) + ".vtu\"/>\n";
 	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) +
 		"0\" file=\"AcidFrac_poro_" + to_string(step_idx) + ".vtu\"/>\n";
+
+	double p = 0.0;
+	qcells << cur_t * t_dim / 3600.0;
+
+	map<int, double>::iterator it;
+	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
+	{
+		p += model->cells_frac[it->first].u_next.p * model->P_dim;
+		if (model->leftBoundIsRate)
+			qcells << "\t" << it->second * model->Q_dim * 86400.0;
+		else
+			qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+	}
+
+	P << cur_t * t_dim / 3600.0 <<
+		"\t" << p / (double)(model->Qcell.size()) << endl;
+
+	qcells << endl;
 }
 void AcidFracSolver::control()
 {

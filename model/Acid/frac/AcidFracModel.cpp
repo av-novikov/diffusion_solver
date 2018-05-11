@@ -391,7 +391,7 @@ void AcidFrac::setPerforated()
 		if (cell.type == FracType::FRAC_IN)
 		{
 			Qcell[cell.num] = 0.0;
-			height_perf += cell.hz;
+			height_perf += cell.hz * cell.hy;
 		}
 	}
 };
@@ -405,7 +405,7 @@ void AcidFrac::setPeriod(int period)
 		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) {
 			std::map<int, double>::iterator it;
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)
-				it->second = Q_sum * cells_frac[it->first].hz / height_perf;
+				it->second = Q_sum;// *cells_frac[it->first].hz * cells_frac[it->first].hy / height_perf;
 		}
 		else {
 			std::map<int, double>::iterator it;
@@ -609,9 +609,8 @@ FracTapeVariable AcidFrac::solveFracIn(const FracCell& cell)
 	const auto& nebr = x_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y + 1)];
 	const adouble leftIsRate = leftBoundIsRate;
 	FracTapeVariable res;
-	res.p = (next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim;
-	condassign(res.p, leftIsRate, -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) *
-						cell.hy * cell.hz * (next.p - nebr.p) / (cell.hx + beta.hx) - Qcell[cell.num],
+	condassign(res.p, leftIsRate, (-props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) *
+						cell.hy * cell.hz * (next.p - nebr.p) / (cell.hx + beta.hx) - Qcell[cell.num]) / P_dim / 10,
 						(next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim);
 	res.c = (next.c - c) / P_dim;
 	return res;
