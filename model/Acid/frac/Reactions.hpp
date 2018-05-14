@@ -126,7 +126,7 @@ namespace acidfrac
 			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
 
 			activation_energy = 13.0 * KKAL_2_J;
-			reaction_const = 1.51 * 1.e+5;
+			reaction_const = 1.51 * 1.e+5 * 100.0;
 			surf_init = 0.175;
 			alpha = 1.0;
 		};

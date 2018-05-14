@@ -5,6 +5,7 @@
 #include <utility>
 #include <iostream>
 #include <valarray>
+#include <random>
 
 #include "util/utils.h"
 #include "method/mcmath.h"
@@ -1137,11 +1138,11 @@ acidfrac::Properties* getProps()
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.1;
-	props->ht_min = 0.1;
+	props->ht = 0.01;
+	props->ht_min = 0.01;
 	props->ht_max = 10000.0;
 
-	props->timePeriods.push_back(0.003 * 3600.0);
+	props->timePeriods.push_back(3600.0 / 3);
 	props->timePeriods.push_back(5.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
@@ -1149,9 +1150,8 @@ acidfrac::Properties* getProps()
 	props->LeftBoundIsRate.push_back(true);
 	//props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(210.0 * 1.0e+5);
-	//props->pwf.push_back(200.0 * 1.0e+5);
-	props->rates.push_back(-50.0);
+	props->pwf.push_back(300.0 * 1.0e+5);
+	props->rates.push_back(0.0);
 	props->cs.push_back(0.15);
 	props->cs.push_back(0.0);
 
@@ -1162,12 +1162,10 @@ acidfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 5;
-	props->cellsNum_y = 5;
+	props->cellsNum_x = 200;
+	props->cellsNum_y = 20;
 	props->cellsNum_z = 1;
 
-	props->xe.push_back(200.0);
-	props->cellsNum_y_1d.push_back(50);
 	acidfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
 	props_sk.t_init = 300.0;
@@ -1180,7 +1178,16 @@ acidfrac::Properties* getProps()
 	props_sk.dens_stc = 2000.0;
 	props_sk.beta = 4.35113e-10;
 	props_sk.height = props->props_frac.height;
-	props->props_sk.push_back(props_sk);
+
+	default_random_engine generator;
+	normal_distribution<double> distribution(100.0, 30.0);
+	for (int i = 0; i < props->cellsNum_x; i++)
+	{
+		props->xe.push_back(200.0);
+		props->cellsNum_y_1d.push_back(50);
+		props->props_sk.push_back(props_sk);
+		props->props_sk.back().perm = distribution(generator);
+	}
 
 	props->props_o.visc = 1.0;
 	props->props_o.dens_stc = 887.261;

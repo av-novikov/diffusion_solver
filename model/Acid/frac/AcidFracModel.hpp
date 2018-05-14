@@ -238,6 +238,7 @@ namespace acidfrac
 			setProps(props);
 			setSnapshotter("", this);
 			buildGridUniform();
+			//buildGrid();
 			setPerforated();
 			setInitialState();
 
