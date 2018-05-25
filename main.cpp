@@ -1162,7 +1162,7 @@ acidfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 200;
+	props->cellsNum_x = 50;
 	props->cellsNum_y = 20;
 	props->cellsNum_z = 1;
 
@@ -1186,7 +1186,7 @@ acidfrac::Properties* getProps()
 		props->xe.push_back(200.0);
 		props->cellsNum_y_1d.push_back(50);
 		props->props_sk.push_back(props_sk);
-		props->props_sk.back().perm = distribution(generator);
+		props->props_sk.back().perm = 100.0;// distribution(generator);
 	}
 
 	props->props_o.visc = 1.0;
@@ -1198,7 +1198,7 @@ acidfrac::Properties* getProps()
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = props_sk.p_ref;
-	props->props_w.D_e = 1.E-4;
+	props->props_w.D_e = 1.E-8;
 
 	props->props_g.visc = 0.06;
 	props->props_g.dens_stc = 0.8;

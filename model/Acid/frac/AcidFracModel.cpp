@@ -460,7 +460,7 @@ void AcidFrac::calculateTrans()
 		sum = 0.0;	i = 0;
 		do {
 			const auto& cell = grid.cells[i++];
-			k = grid.props_sk->getPermCoseni(cell.u_next.m).value();
+			k = grid.props_sk->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
 			sum += k * cell.hx;
 		} while (/*fabs(k - k0) > EQUALITY_TOLERANCE * k0*/ grid.cells[i].x < 1.0 / R_dim);
 		if (fabs(grid.cells[i - 1].x - grid.cells[0].x) > 0.0)
@@ -500,23 +500,25 @@ PoroTapeVariable AcidFrac::solvePoroMid(const PoroCell& cell)
 	adouble rate = getReactionRate(next, props);
 
 	PoroTapeVariable res;
-	res.m = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
+	adouble m = props.getPoro(next.m, next.p);
+	adouble m_prev = props.getPoro(prev.m, prev.p);
+	res.m = (1.0 - m) * props.getDensity(next.p) - (1.0 - m_prev) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * rate;
-	res.p = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) -
-		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) -
+	res.p = m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) -
+		m_prev * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) -
 		ht * (reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight +
 			reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight +
 			reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight) * rate;
-	res.sw = next.m * (1.0 - next.sw) * props_o.getDensity(next.p) -
-		prev.m * (1.0 - prev.sw) * props_o.getDensity(prev.p);
-	res.xw = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xw -
-		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xw) * prev.xw -
+	res.sw = m * (1.0 - next.sw) * props_o.getDensity(next.p) -
+		m_prev * (1.0 - prev.sw) * props_o.getDensity(prev.p);
+	res.xw = m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xw -
+		m_prev * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xw) * prev.xw -
 		ht * reac.indices[REACTS::WATER] * reac.comps[REACTS::WATER].mol_weight * rate;
-	res.xa = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xa -
-		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xa -
+	res.xa = m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xa -
+		m_prev * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xa -
 		ht * reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight * rate;
-	res.xs = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xs -
-		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xs -
+	res.xs = m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xs -
+		m_prev * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xs -
 		ht * reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight * rate;
 
 	int neighbor[2];
@@ -531,9 +533,9 @@ PoroTapeVariable AcidFrac::solvePoroMid(const PoroCell& cell)
 			props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), beta);
 		adouble dens_o = getPoroAverage(props_o.getDensity(next.p), cell,
 			props_o.getDensity(nebr.p), beta);
-		adouble buf_w = ht / cell.V * getPoroTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
 			dens_w * props_w.getKr(upwd.sw, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
-		adouble buf_o = ht / cell.V * getPoroTrans(cell, next.m, beta, nebr.m) * (next.p - nebr.p) *
+		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
 			dens_o * props_o.getKr(upwd.sw, &props) / props_o.getViscosity(upwd.p);
 
 		res.p += buf_w;
@@ -577,7 +579,7 @@ PoroTapeVariable AcidFrac::solvePoroLeft(const PoroCell& cell)
 	const auto& prev = cell.u_prev;
 	
 	PoroTapeVariable res;
-	res.m = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
+	res.m = (1.0 - props.getPoro(next.m, next.p)) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) * (cell.x - beta1.y) / (beta1.y - beta2.y)) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
@@ -599,7 +601,7 @@ PoroTapeVariable AcidFrac::solvePoroRight(const PoroCell& cell)
 
 	adouble rightIsPres = rightBoundIsPres;
 	PoroTapeVariable res;
-	res.m = (next.m - nebr.m) / P_dim;
+	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
 	condassign(res.p, rightIsPres, (next.p - props.p_out + grav * props_w.dens_stc * frac_cell.z) / P_dim, (next.p - nebr.p) / P_dim);
 	res.sw = (next.sw - nebr.sw) / P_dim;
 	res.xw = (next.xw - nebr.xw) / P_dim;

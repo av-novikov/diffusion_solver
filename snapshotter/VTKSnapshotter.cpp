@@ -858,7 +858,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			/*const PoroCell& cell = poro_grid.cells[0];
 			const auto& next = cell.u_next;
 			poro_poro->InsertNextValue(next.m);
-			perm_poro->InsertNextValue(M2toMilliDarcy(poro_grid.props_sk->getPermCoseni(next.m).value() * r_dim * r_dim));
+			perm_poro->InsertNextValue(M2toMilliDarcy(poro_grid.props_sk->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 			pres_poro->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w_poro->InsertNextValue(next.sw);
 			sat_o_poro->InsertNextValue(1.0 - next.sw);
@@ -884,7 +884,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				const PoroCell& cell = poro_grid.cells[j];
 				const auto& next = cell.u_next;
 				poro_poro->InsertNextValue(next.m);
-				perm_poro->InsertNextValue(M2toMilliDarcy(poro_grid.props_sk->getPermCoseni(next.m).value() * r_dim * r_dim));
+				perm_poro->InsertNextValue(M2toMilliDarcy(poro_grid.props_sk->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 				pres_poro->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 				sat_w_poro->InsertNextValue(next.sw);
 				sat_o_poro->InsertNextValue(1.0 - next.sw);

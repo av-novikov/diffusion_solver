@@ -109,12 +109,12 @@ namespace acidfrac
 		FracTapeVariable solveFracBorder(const FracCell& cell);
 		FracTapeVariable solveFracOut(const FracCell& cell);
 		// Service calculations
-		inline adouble getPoroTrans(const PoroCell& cell, adouble m_cell, const PoroCell& beta, adouble m_beta) const
+		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next, const PoroCell& beta, const PoroTapeVariable& nebr) const
 		{
 			adouble k1, k2, S;
 			const auto& props = *cell.props->props_sk;
-			k1 = props.getPermCoseni(m_cell);
-			k2 = props.getPermCoseni(m_beta);
+			k1 = props.getPermCoseni(next.m, next.p);
+			k2 = props.getPermCoseni(nebr.m, nebr.p);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 			S = cell.props->hz * cell.props->hx;
@@ -143,16 +143,17 @@ namespace acidfrac
 		};
 		inline adouble getReactionRate(const PoroTapeVariable& var, const Skeleton_Props& props) const
 		{
+			adouble m = props.getPoro(var.m, var.p);
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw, var.xs) *
 				(var.xa - props.xa_eqbm) *
-				reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
+				reac.getReactionRate(props.m_init, m) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getFlowLeak(const FracCell& cell)
 		{
 			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
 			const auto& next = x_poro[grid.start_idx];
 			const auto& nebr = x_poro[grid.start_idx + 1];
-			return -grid.props_sk->getPermCoseni(next.m) * props_w.getKr(next.sw, grid.props_sk) /
+			return -grid.props_sk->getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, grid.props_sk) /
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
 				(nebr.p - next.p) / (grid.cells[1].x - grid.cells[0].x);
 		}
