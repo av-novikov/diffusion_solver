@@ -1138,9 +1138,9 @@ acidfrac::Properties* getProps()
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.1;
-	props->ht_min = 0.1;
-	props->ht_max = 400.0;
+	props->ht = 0.01;
+	props->ht_min = 0.01;
+	props->ht_max = 1000.0;
 
 	props->timePeriods.push_back(3600.0 / 3);
 	props->timePeriods.push_back(5.0 * 3600.0);
@@ -1184,7 +1184,7 @@ acidfrac::Properties* getProps()
 	for (int i = 0; i < props->cellsNum_x; i++)
 	{
 		props->xe.push_back(200.0);
-		props->cellsNum_y_1d.push_back(50);
+		props->cellsNum_y_1d.push_back(100);
 		props->props_sk.push_back(props_sk);
 		props->props_sk.back().perm = 100.0;// distribution(generator);
 	}

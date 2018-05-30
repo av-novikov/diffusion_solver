@@ -534,9 +534,9 @@ PoroTapeVariable AcidFrac::solvePoroMid(const PoroCell& cell)
 		adouble dens_o = getPoroAverage(props_o.getDensity(next.p), cell,
 			props_o.getDensity(nebr.p), beta);
 		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
-			dens_w * props_w.getKr(upwd.sw, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
+			dens_w * props_w.getKr(upwd.sw, upwd.m, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
 		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
-			dens_o * props_o.getKr(upwd.sw, &props) / props_o.getViscosity(upwd.p);
+			dens_o * props_o.getKr(upwd.sw, upwd.m, &props) / props_o.getViscosity(upwd.p);
 
 		res.p += buf_w;
 		res.sw += buf_o;

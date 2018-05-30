@@ -153,7 +153,7 @@ namespace acidfrac
 			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
 			const auto& next = x_poro[grid.start_idx];
 			const auto& nebr = x_poro[grid.start_idx + 1];
-			return -grid.props_sk->getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, grid.props_sk) /
+			return -grid.props_sk->getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, grid.props_sk) /
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
 				(nebr.p - next.p) / (grid.cells[1].x - grid.cells[0].x);
 		}
