@@ -32,7 +32,7 @@
 #include <cmath>
 
 #define VIEW_MULTIPLIER 1
-#define FRAC_WIDTH_MULT 100.0
+#define FRAC_WIDTH_MULT 20.0
 
 using namespace std;
 
@@ -680,6 +680,9 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 	auto grid_poro = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
 	// Points
+	const double PORO_MULT_Y = 10;
+	const double MULT_X = 0.1;
+
 	auto points_frac = vtkSmartPointer<vtkPoints>::New();
 	auto points_poro = vtkSmartPointer<vtkPoints>::New();
 	for (int k = 0; k < nz - 1; k++)
@@ -688,7 +691,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + k * ny];
 			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
-			points_frac->InsertNextPoint(-r_dim * xnebr.hx / 10.0, r_dim * (cell.y + cell.hy / 2.0) * FRAC_WIDTH_MULT, r_dim * (cell.z + cell.hz / 2.0));
+			points_frac->InsertNextPoint(-MULT_X * r_dim * xnebr.hx / 10.0, r_dim * (cell.y + cell.hy / 2.0) * FRAC_WIDTH_MULT, r_dim * (cell.z + cell.hz / 2.0));
 		}
 	}
 	for(int i = 0; i < nx - 1; i++)
@@ -697,12 +700,12 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			for (int j = 0; j < ny; j++)
 			{
 				FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
-				points_frac->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0) * FRAC_WIDTH_MULT, r_dim * (cell.z + cell.hz / 2.0));
+				points_frac->InsertNextPoint(MULT_X * r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0) * FRAC_WIDTH_MULT, r_dim * (cell.z + cell.hz / 2.0));
 			}
 		}
 	grid_frac->SetPoints(points_frac);
 
-	const double PORO_MULT = 0.1;
+	const int stop_idx = model->poro_grids[0].cellsNum / 3;
 	// Poro points
 	for (int i = 0; i < nx - 1; i++)
 		for (int k = 0; k < nz - 1; k++)
@@ -712,20 +715,20 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				auto& frac_cell = model->cells_frac[ny - 1 + k * ny + i * ny * nz];
 				const auto& poro_grid = model->poro_grids[model->frac2poro[frac_cell.num]];
 
-				points_poro->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
-				points_poro->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
-				points_poro->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
-				points_poro->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
+				points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
+				points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
+				points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
+				points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * ((FRAC_WIDTH_MULT) * w2), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
 
-				double width = poro_grid.cells[1].hx / 10.0 * PORO_MULT;
-				for (int j = 0; j < poro_grid.cellsNum + 1; j++)
+				double width = poro_grid.cells[1].hx / 10.0 * PORO_MULT_Y;
+				for (int j = 0; j < stop_idx + 1; j++)
 				{
 					const PoroCell& cell = poro_grid.cells[j];
-					points_poro->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT * cell.hx), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
-					points_poro->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT * cell.hx), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
-					points_poro->InsertNextPoint(r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT * cell.hx), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
-					points_poro->InsertNextPoint(r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT * cell.hx), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
-					width += PORO_MULT * cell.hx;
+					points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT_Y * cell.hx), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
+					points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT_Y * cell.hx), r_dim * (frac_cell.z - frac_cell.hz / 2.0));
+					points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x + frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT_Y * cell.hx), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
+					points_poro->InsertNextPoint(MULT_X * r_dim * (frac_cell.x - frac_cell.hx / 2.0), r_dim * (width + (FRAC_WIDTH_MULT) * w2 + PORO_MULT_Y * cell.hx), r_dim * (frac_cell.z + frac_cell.hz / 2.0));
+					width += PORO_MULT_Y * cell.hx;
 				}
 			}
 		}
@@ -856,6 +859,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			FracCell& frac_cell = model->cells_frac[ny - 1 + (k + 1) * ny + i * nz * ny];
 			assert(frac_cell.type == FracType::FRAC_OUT);
 			const auto& poro_grid = model->poro_grids[model->frac2poro[frac_cell.num]];
+			
 			/*const PoroCell& cell = poro_grid.cells[0];
 			const auto& next = cell.u_next;
 			poro_poro->InsertNextValue(next.m);
@@ -880,9 +884,9 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 			hex->GetPointIds()->SetId(7, ny - 1 + (k + 1) * ny + (i + 1) * np);
 			hexs_poro->InsertNextCell(hex);*/
 
-			for (int j = 1; j < poro_grid.cellsNum + 2; j++)
+			for (int j = 1; j < stop_idx + 1; j++)
 			{
-				const PoroCell& cell = poro_grid.cells[j];
+				const PoroCell& cell = poro_grid.cells[j-1];
 				const auto& next = cell.u_next;
 				poro_poro->InsertNextValue(next.m);
 				perm_poro->InsertNextValue(M2toMilliDarcy(poro_grid.props_sk->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
@@ -907,7 +911,7 @@ void VTKSnapshotter<acidfrac::AcidFrac>::dump_all(int i)
 				hexs_poro->InsertNextCell(hex);
 			}
 
-			counter += 4 * (poro_grid.cellsNum + 2);
+			counter += 4 * (stop_idx + 2);
 		}
 	}
 
