@@ -1138,9 +1138,9 @@ acidfrac::Properties* getProps()
 	typedef acidfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.01;
-	props->ht_min = 0.01;
-	props->ht_max = 10000.0;
+	props->ht = 0.1;
+	props->ht_min = 0.1;
+	props->ht_max = 400.0;
 
 	props->timePeriods.push_back(3600.0 / 3);
 	props->timePeriods.push_back(5.0 * 3600.0);
@@ -1171,9 +1171,9 @@ acidfrac::Properties* getProps()
 	props_sk.t_init = 300.0;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
 	props_sk.sw_init = 0.2;		props_sk.so_init = 0.8;
-	props_sk.xa_init = 0.0;		props_sk.xw_init = 1.0;
-	props_sk.s_wc = 0.0;		props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
 	props_sk.xa_eqbm = 0.0;
+	props_sk.xa_init = 0.0;	props_sk.xw_init = 1.0;
+	props_sk.s_wc = 0.0;		props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
 	props_sk.perm = 100.0;
 	props_sk.dens_stc = 2000.0;
 	props_sk.beta = 4.35113e-10;

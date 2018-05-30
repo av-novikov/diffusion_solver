@@ -459,10 +459,10 @@ void AcidFrac::calculateTrans()
 		const double k0 = grid.props_sk->perm;
 		sum = 0.0;	i = 0;
 		do {
-			const auto& cell = grid.cells[i++];
+			const auto& cell = grid.cells[i];
 			k = grid.props_sk->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
 			sum += k * cell.hx;
-		} while (/*fabs(k - k0) > EQUALITY_TOLERANCE * k0*/ grid.cells[i].x < 1.0 / R_dim);
+		} while (/*fabs(k - k0) > EQUALITY_TOLERANCE * k0*/ grid.cells[i++].x < 1.0 / R_dim);
 		if (fabs(grid.cells[i - 1].x - grid.cells[0].x) > 0.0)
 			grid.trans = sum / (k0 * fabs(grid.cells[i - 1].x + grid.cells[i - 1].hx / 2.0 - grid.cells[0].x));
 		else

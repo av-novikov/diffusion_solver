@@ -106,6 +106,7 @@ namespace acidfrac
 		double surf_init;
 		double activation_energy;
 		double reaction_const;
+		double order;
 		inline adouble getReactionRate(double m0, adouble m) const
 		{
 			return reaction_const * surf_init * (1.0 - m) / (1 - m0) *
@@ -126,9 +127,10 @@ namespace acidfrac
 			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
 
 			activation_energy = 13.0 * KKAL_2_J;
-			reaction_const = 1.51 * 1.e+5 * 100.0;
+			reaction_const = 7.29 * 1.e+7;
 			surf_init = 0.175;
 			alpha = 1.0;
+			order = 0.63;
 		};
 	};
 	static const int dolomite_components_num = 5;
