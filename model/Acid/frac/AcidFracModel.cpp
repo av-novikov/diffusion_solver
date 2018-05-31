@@ -452,21 +452,41 @@ void AcidFrac::setInitialState()
 }
 void AcidFrac::calculateTrans()
 {
-	double sum, k;
-	int i = 0;
+	double sum, k, k0, x0;
+	double width = 0.0, cur_width;
 	for (auto& grid : poro_grids)
 	{
-		const double k0 = grid.props_sk->perm;
-		sum = 0.0;	i = 0;
-		do {
-			const auto& cell = grid.cells[i];
+		k0 = grid.props_sk->perm;
+		cur_width = 0.0;
+		for (const auto& cell : grid.cells)
+		{
 			k = grid.props_sk->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
-			sum += k * cell.hx;
-		} while (/*fabs(k - k0) > EQUALITY_TOLERANCE * k0*/ grid.cells[i++].x < 1.0 / R_dim);
-		if (fabs(grid.cells[i - 1].x - grid.cells[0].x) > 0.0)
-			grid.trans = sum / (k0 * fabs(grid.cells[i - 1].x + grid.cells[i - 1].hx / 2.0 - grid.cells[0].x));
-		else
-			grid.trans = 1.0;
+			if (fabs(k - k0) / k0 < 10.0)
+				break;
+			else
+				cur_width += cell.hx;
+		}
+
+		if (cur_width > width)
+			width = cur_width;
+	}
+	std::cout << "width = " << width * R_dim << std::endl;
+	for (auto& grid : poro_grids)
+	{
+		grid.width = width;
+		k0 = grid.props_sk->perm;
+		x0 = grid.cells[0].x;
+		sum = 0.0;
+		for (const auto& cell : grid.cells)
+		{
+			k = grid.props_sk->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			if (cell.x - x0 > width)
+				break;
+			else
+				sum += k * cell.hx;
+		}
+
+		grid.trans = (sum > 0.0) ? sum / (k0 * width) : 1.0;
 	}
 }
 double AcidFrac::getRate(int cur) const

@@ -1162,7 +1162,7 @@ acidfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 50;
+	props->cellsNum_x = 20;
 	props->cellsNum_y = 20;
 	props->cellsNum_z = 1;
 
@@ -1179,14 +1179,26 @@ acidfrac::Properties* getProps()
 	props_sk.beta = 4.35113e-10;
 	props_sk.height = props->props_frac.height;
 
-	default_random_engine generator;
-	normal_distribution<double> distribution(100.0, 30.0);
+	//default_random_engine generator;
+	//normal_distribution<double> distribution(100.0, 30.0);
+	/*vector<double> perms;
+	ifstream file;
+	file.open("props/perm.txt", ifstream::in);
+	double temp1;
+	while (!file.eof())
+	{
+		file >> temp1;
+		perms.push_back(temp1);
+		if (file.eof())
+			break;
+	}
+	file.close();*/
 	for (int i = 0; i < props->cellsNum_x; i++)
 	{
 		props->xe.push_back(200.0);
 		props->cellsNum_y_1d.push_back(100);
 		props->props_sk.push_back(props_sk);
-		props->props_sk.back().perm = 100.0;// distribution(generator);
+		props->props_sk.back().perm = 100.0;// perms[i];// distribution(generator);
 	}
 
 	props->props_o.visc = 1.0;

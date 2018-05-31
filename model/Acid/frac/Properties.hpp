@@ -67,6 +67,7 @@ namespace acidfrac
 			adouble isAboveCritical = (sw > 1.0 - props->s_oc) ? true : false;
 			adouble tmp;
 			condassign(tmp, isAboveZero, ((1.0 - m) * pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc)) / (1.0 - props->m_init), (adouble)0.0);
+			//condassign(tmp, isAboveZero, pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
@@ -100,6 +101,7 @@ namespace acidfrac
 			adouble isAboveCritical = (1 - sw > 1.0 - props->s_wc) ? true : false;
 			adouble tmp;
 			condassign(tmp, isAboveZero, ((1.0 - m) * pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc)) / (1.0 - props->m_init), (adouble)0.0);
+			//condassign(tmp, isAboveZero, pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};

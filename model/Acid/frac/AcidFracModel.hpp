@@ -33,7 +33,7 @@ namespace acidfrac
 		double hx, hz;
 		int cellsNum;
 		const FracCell* frac_nebr;
-		double trans;
+		double width, trans;
 	};
 
 	typedef CalciteReaction CurrentReaction;
