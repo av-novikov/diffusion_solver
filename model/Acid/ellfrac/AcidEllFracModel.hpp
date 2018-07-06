@@ -1,16 +1,22 @@
-#ifndef ACIDFRACMODEL_HPP_
-#define ACIDFRACMODEL_HPP_
+#ifndef ACIDELLFRACMODEL_HPP_
+#define ACIDELLFRACMODEL_HPP_
 
 #include <map>
-#include "model/Acid/frac/Properties.hpp"
+#include "model/Acid/ellfrac/Properties.hpp"
 #include "model/cells/AcidVariables.hpp"
-#include "model/cells/LinearCell.hpp"
+#include "model/cells/EllipticCell.hpp"
 #include "model/cells/HexCell.hpp"
 #include "model/Basic1d/Basic1d.hpp"
 #include "util/Interpolate.h"
 
-namespace acidfrac
+namespace acidellfrac
 {
+	class AcidEllFracSolver
+	{
+	public:
+		void start() {};
+	};
+
 	typedef JustAcid PoroVariable;
 	typedef TapeJustAcid PoroTapeVariable;
 	typedef JustAcid PoroVariable;
@@ -18,23 +24,23 @@ namespace acidfrac
 	typedef VarFrac FracVariable;
 	typedef TapeVarFrac FracTapeVariable;
 
-	struct PoroGrid;
-	template <typename TVariable> using TCell = LinearCell<TVariable, Skeleton_Props>;
-	typedef LinearCell<PoroVariable, PoroGrid> PoroCell;
+	//struct PoroGrid;
+	/*struct PoroGrid
+	{
+	int id, start_idx;
+	std::vector<PoroCell> cells;
+	double Volume;
+	const Skeleton_Props* props_sk;
+	double hx, hz;
+	int cellsNum;
+	const FracCell* frac_nebr;
+	double width, trans;
+	};*/
+	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
+	typedef EllipticCell<PoroVariable> PoroCell;
 	typedef HexCell<FracVariable> FracCell;
 	typedef PoroCell::Type PoroType;
 	typedef FracCell::Type FracType;
-	struct PoroGrid
-	{
-		int id, start_idx;
-		std::vector<PoroCell> cells;
-		double Volume;
-		const Skeleton_Props* props_sk;
-		double hx, hz;
-		int cellsNum;
-		const FracCell* frac_nebr;
-		double width, trans;
-	};
 
 	typedef CalciteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
@@ -42,12 +48,12 @@ namespace acidfrac
 	static const int var_poro_size = PoroVariable::size;
 	static const int var_frac_size = FracVariable::size;
 
-	class AcidFrac
+	class AcidEllFrac
 	{
 		template<typename> friend class Snapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractSolver;
-		friend class AcidFracSolver; 
+		friend class AcidEllFracSolver; 
 	public:
 		static const int var_size = var_poro_size;
 	protected:
@@ -61,15 +67,17 @@ namespace acidfrac
 		Water_Props props_w;
 		Oil_Props props_o;
 		Gas_Props props_g;
+		
 		// Grids
-		std::vector<PoroGrid> poro_grids;
-		std::vector<FracCell> cells_frac;
 		int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z, cellsPoroNum;
 		double Volume;
+		//std::vector<PoroGrid> poro_grids;
+		std::vector<FracCell> cells_frac;
 		std::vector<int> cellsNum_y_1d;
 		std::vector<double> xe;
 		std::map<int, int> frac2poro;
 		std::map<int, int> border_nebrs;
+		
 		// Temporary properties
 		double ht, ht_min, ht_max;
 		int periodsNum;
@@ -87,7 +95,7 @@ namespace acidfrac
 		double** jac;*/
 		// Snapshotter
 		bool isWriteSnaps;
-		Snapshotter<AcidFrac>* snapshotter;
+		Snapshotter<AcidEllFrac>* snapshotter;
 
 		size_t getInitId2OutCell(const FracCell& cell);
 		void buildGrid();
@@ -99,7 +107,7 @@ namespace acidfrac
 		void setPerforated();
 		void calculateTrans();
 		// Schemes
-		PoroTapeVariable solvePoro(const PoroCell& cell);
+		/*PoroTapeVariable solvePoro(const PoroCell& cell);
 		PoroTapeVariable solvePoroMid(const PoroCell& cell);
 		PoroTapeVariable solvePoroLeft(const PoroCell& cell);
 		PoroTapeVariable solvePoroRight(const PoroCell& cell);
@@ -111,7 +119,7 @@ namespace acidfrac
 		// Service calculations
 		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next, const PoroCell& beta, const PoroTapeVariable& nebr) const
 		{
-			adouble k1, k2, S;
+			/*adouble k1, k2, S;
 			const auto& props = *cell.props->props_sk;
 			k1 = props.getPermCoseni(next.m, next.p);
 			k2 = props.getPermCoseni(nebr.m, nebr.p);
@@ -119,8 +127,8 @@ namespace acidfrac
 				return 0.0;
 			S = cell.props->hz * cell.props->hx;
 			return 2.0 * k1 * k2 * S / (k1 * beta.hx + k2 * cell.hx);
-		};
-		inline adouble getPoroAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const
+		};*/
+		/*inline adouble getPoroAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const
 		{
 			return (p1 * (adouble)cell2.hx + p2 * (adouble)cell1.hx) / (adouble)(cell1.hx + cell2.hx);
 		};
@@ -140,7 +148,7 @@ namespace acidfrac
 			}
 			else
 				return (p1 * (adouble)cell2.hz + p2 * (adouble)cell1.hz) / (adouble)(cell1.hz + cell2.hz);
-		};
+		};*/
 		inline adouble getReactionRate(const PoroTapeVariable& var, const Skeleton_Props& props) const
 		{
 			adouble m = props.getPoro(var.m, var.p);
@@ -148,7 +156,7 @@ namespace acidfrac
 				(var.xa - props.xa_eqbm) *
 				reac.getReactionRate(props.m_init, m) / reac.comps[REACTS::ACID].mol_weight;
 		};
-		inline adouble getFlowLeak(const FracCell& cell)
+		/*inline adouble getFlowLeak(const FracCell& cell)
 		{
 			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
 			const auto& next = x_poro[grid.start_idx];
@@ -167,7 +175,7 @@ namespace acidfrac
 			const auto& nebr = x_frac[beta.num];
 			
 			return -props_frac.w2 * props_frac.w2 / 3.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
-		}
+		}*/
 		inline adouble getQuadAppr(const std::array<adouble, 3> p, const std::array<double, 3> x, const double cur_x) const
 		{
 			const double den = (x[0] - x[1]) * (x[0] - x[2]) * (x[1] - x[2]);
@@ -182,7 +190,7 @@ namespace acidfrac
 			return a * cur_x * cur_x + b * cur_x + c;
 		};
 		// Service functions
-		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
+		/*inline void getPoroNeighborIdx(const int cur, int* const neighbor)
 		{
 			neighbor[0] = cur - 1;
 			neighbor[1] = cur + 1;
@@ -226,13 +234,13 @@ namespace acidfrac
 			neighbor[3] = cur + 1;
 			neighbor[4] = cur - cellsNum_y - 1;
 			neighbor[5] = cur + cellsNum_y + 1;
-		};
+		};*/
 	public:
 		// Dimensions
 		double t_dim, R_dim, P_dim, T_dim, Q_dim, grav;
 
-		AcidFrac();
-		~AcidFrac();
+		AcidEllFrac();
+		~AcidEllFrac();
 
 		void load(Properties& props)
 		{
@@ -242,11 +250,13 @@ namespace acidfrac
 			//buildGrid();
 			setPerforated();
 			setInitialState();
+
+			snapshotter->dump_all(0);
 		};
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
-		void setSnapshotter(std::string type, AcidFrac* model)
+		void setSnapshotter(std::string type, AcidEllFrac* model)
 		{
-			snapshotter = new VTKSnapshotter<AcidFrac>();
+			snapshotter = new VTKSnapshotter<AcidEllFrac>();
 			snapshotter->setModel(model);
 			isWriteSnaps = true;
 		};
@@ -262,4 +272,4 @@ namespace acidfrac
 	};
 };
 
-#endif /* ACIDFRACMODEL_HPP_ */
+#endif /* ACIDELLFRACMODEL_HPP_ */

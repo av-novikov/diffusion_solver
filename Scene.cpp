@@ -38,6 +38,9 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/frac/AcidFracSolver.hpp"
 
+#include "model/Acid/ellfrac/AcidEllFracModel.hpp"
+//#include "model/Acid/ellfrac/AcidEllFracSolver.hpp"
+
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
 
@@ -69,12 +72,19 @@ Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties>::
 	delete model;
 	delete method;
 }
-Scene<acidfrac::AcidFrac, acidfrac::AcidFrac, acidfrac::Properties>::~Scene()
+Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>::~Scene()
 {
 	paralution::stop_paralution();
 
 	delete model;
 	delete method;
+}
+Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	//delete method;
 }
 Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::~Scene()
 {
@@ -133,6 +143,12 @@ void Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>::
 	model->load(props);
 	paralution::init_paralution();
 	method = new acidfrac::AcidFracSolver(model);
+}
+void Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>::load(acidellfrac::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	//method = new acidfrac::AcidFracSolver(model);
 }
 void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wax_nit::Properties& props)
 {
@@ -221,5 +237,6 @@ template class Scene<acid2d::Acid2d, acid2d::Acid2dSolver, acid2d::Properties>;
 template class Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties>;
 template class Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties>;
 template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>;
+template class Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
 template class Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>;
