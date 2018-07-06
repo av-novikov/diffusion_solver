@@ -56,8 +56,8 @@ void Snapshotter<acidellfrac::AcidEllFrac>::setModel(acidellfrac::AcidEllFrac* _
 	T_dim = model->T_dim;
 	P_dim = model->P_dim;
 
-	nx = model->cellsNum_x + 2;
-	ny = model->cellsNum_y + 1;
+	nx = model->cellsNum_mu_frac + 1;
+	ny = model->cellsNum_nu + 2;
 	nz = model->cellsNum_z + 2;
 }
 template <class modelType>
@@ -118,8 +118,8 @@ void Snapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::setModel(blackoiln
 	T_dim = model->T_dim;
 	P_dim = model->P_dim;
 
-	nx = model->cellsNum_mu + 2;
-	ny = model->cellsNum_nu;
+	nx = model->cellsNum_nu + 2; 
+	ny = model->cellsNum_mu + 1;
 	nz = model->cellsNum_z + 2;
 }
 void Snapshotter<acid2d::Acid2d>::setModel(acid2d::Acid2d* _model)

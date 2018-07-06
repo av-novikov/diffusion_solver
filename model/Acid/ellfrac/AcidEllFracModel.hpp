@@ -38,9 +38,10 @@ namespace acidellfrac
 	};*/
 	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
 	typedef EllipticCell<PoroVariable> PoroCell;
-	typedef HexCell<FracVariable> FracCell;
+	typedef EllipticCell<FracVariable> FracCell;
 	typedef PoroCell::Type PoroType;
 	typedef FracCell::Type FracType;
+	typedef FracCell::Point Point;
 
 	typedef CalciteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
@@ -69,12 +70,12 @@ namespace acidellfrac
 		Gas_Props props_g;
 		
 		// Grids
-		int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z, cellsPoroNum;
-		double Volume;
+		size_t cellsNum_frac, cellsNum_poro, cellsNum_mu_frac, cellsNum_mu_poro, cellsNum_nu, cellsNum_z;
+		double Volume_frac, Volume_poro;
 		//std::vector<PoroGrid> poro_grids;
+		std::vector<PoroCell> cells_poro;
 		std::vector<FracCell> cells_frac;
-		std::vector<int> cellsNum_y_1d;
-		std::vector<double> xe;
+		double re;
 		std::map<int, int> frac2poro;
 		std::map<int, int> border_nebrs;
 		
@@ -100,7 +101,7 @@ namespace acidellfrac
 		size_t getInitId2OutCell(const FracCell& cell);
 		void buildGrid();
 		void buildGridUniform();
-		void build1dGrid(const FracCell& cell, const int grid_id);
+		void buildPoroGrid();
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState();
@@ -267,7 +268,7 @@ namespace acidellfrac
 		PoroTapeVariable* x_poro;
 		FracTapeVariable* x_frac;
 
-		int getCellsNum() { return cellsNum + cellsPoroNum; };
+		int getCellsNum() { return cellsNum_frac + cellsNum_poro; };
 		double getRate(int cur) const;
 	};
 };

@@ -121,7 +121,7 @@ namespace basic1d
 		double r_e;
 
 		// Number of cells in radial direction
-		int cellsNum_x;
+		size_t cellsNum_x;
 		double depth_point;
 
 		std::vector< std::pair<double, double> > kr_wat;

@@ -143,9 +143,9 @@ namespace acidellfrac
 		Oil_Props props_o;
 		Gas_Props props_g;
 
-		int cellsNum_y, cellsNum_z;
-		std::vector<int> cellsNum_y_1d;
-		std::vector<double> xe;
+		size_t cellsNum_mu_frac, cellsNum_z;
+		size_t cellsNum_mu_poro;
+		double re;
 
 		std::vector<double> cs;
 		std::vector<bool> LeftBoundIsRate;
