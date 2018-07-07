@@ -15,7 +15,7 @@ template <typename varType>
 class AbstractCell
 {
 public: 
-	enum Type {MIDDLE, MIDDLE_SIDE, RIGHT, TOP, BOTTOM, WELL_LAT, WELL_TOP, WELL_BOT, WELL_SIDE, FRAC_IN, FRAC_OUT, FRAC_MID, FRAC_BORDER, NOTYPE};
+	enum Type {MIDDLE, MIDDLE_SIDE, RIGHT, TOP, BOTTOM, WELL_LAT, WELL_TOP, WELL_BOT, WELL_SIDE, FRAC_IN, FRAC_OUT, FRAC_MID, FRAC_BORDER, SIDE_LEFT, SIDE_RIGHT, NOTYPE};
 	public:		
 		const int num;
 		static const int varNum = varType::size;

@@ -960,17 +960,11 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 {
 	using namespace acidellfrac;
 	const double& w2 = model->props_frac.w2;
-
 	// Grid
 	auto grid_frac = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	auto grid_poro = vtkSmartPointer<vtkUnstructuredGrid>::New();
-
-	// Points
-	//const double PORO_MULT_Y = 1;
-	//const double MULT_X = 1.0;
-
+	// Frac points
 	auto points_frac = vtkSmartPointer<vtkPoints>::New();
-	//auto points_poro = vtkSmartPointer<vtkPoints>::New();
 	for (int k = 0; k < nz - 1; k++)
 	{
 		for (int j = 0; j < ny; j++)
@@ -992,9 +986,24 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 			}
 		}
 	grid_frac->SetPoints(points_frac);
-
-	//const int stop_idx = model->poro_grids[0].cellsNum / 3;
 	// Poro points
+	auto points_poro = vtkSmartPointer<vtkPoints>::New();
+	const size_t ny_poro = model->cellsNum_mu_poro + 2;
+	Point point;
+	for (int i = 0; i < nx - 1; i++)
+		for (int k = 0; k < nz - 1; k++)
+		{
+			for (int j = 0; j < ny_poro; j++)
+			{
+				PoroCell& cell = model->cells_poro[j + k * ny_poro + i * ny_poro * nz];
+				if (j != 1)
+					point = getCartesian<FracCell>(cell.mu - cell.hmu / 2.0, cell.nu - cell.hnu / 2.0, cell.z + cell.hz / 2.0);
+				else
+					point = getCartesian<FracCell>(cell.mu - 2.0 * cell.hmu / 5.0, cell.nu - cell.hnu / 2.0, cell.z + cell.hz / 2.0);
+				points_poro->InsertNextPoint(r_dim * point[0], r_dim * point[1], r_dim * point[2]);
+			}
+		}
+	grid_poro->SetPoints(points_poro);
 	/*for (int i = 0; i < nx - 1; i++)
 		for (int k = 0; k < nz - 1; k++)
 		{
@@ -1019,8 +1028,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 					width += PORO_MULT_Y * cell.hx;
 				}
 			}
-		}
-	grid_poro->SetPoints(points_poro);*/
+		}*/
 
 	// Data
 	auto hexs_frac = vtkSmartPointer<vtkCellArray>::New();
@@ -1046,7 +1054,6 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 	//trans->SetName("Transmissibility");
 
 	int np = ny * (nz - 1);
-	int np_frac = np * nx;
 	double vel[3];
 	for (int k = 0; k < nz - 2; k++)
 	{
@@ -1054,7 +1061,6 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
 			assert(cell.type == FracType::FRAC_IN);
-			//const auto& grid0 = model->poro_grids[model->frac2poro[model->cells_frac[model->getRowOuter(cell.num + ny * nz)].num]];
 			const auto& props = model->props_sk[0];
 			const auto& next = cell.u_next;
 			vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
@@ -1092,7 +1098,6 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 				assert(cell.type == FracType::FRAC_MID || cell.type == FracType::FRAC_OUT);
 				const auto& next = cell.u_next;
 				const auto& props = model->props_sk[0];
-				//const auto& grid = model->poro_grids[model->frac2poro[model->cells_frac[model->getRowOuter(cell.num)].num]];
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 				poro_frac->InsertNextValue(props.m_init);
 				perm_frac->InsertNextValue(M2toMilliDarcy(props.perm * r_dim * r_dim));
@@ -1121,7 +1126,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 	}
 
 	// Data
-	/*auto hexs_poro = vtkSmartPointer<vtkCellArray>::New();
+	auto hexs_poro = vtkSmartPointer<vtkCellArray>::New();
 	auto poro_poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro_poro->SetName("porosity");
 	auto perm_poro = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1139,23 +1144,23 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 	auto conc_co2_poro = vtkSmartPointer<vtkDoubleArray>::New();
 	conc_co2_poro->SetName("CO2Concentration");
 	auto conc_s_poro = vtkSmartPointer<vtkDoubleArray>::New();
-	conc_s_poro->SetName("SaltConcentration");*/
+	conc_s_poro->SetName("SaltConcentration");
 
-	/*int counter = 0;
-	for (int i = 1; i < nx - 1; i++)
+	int np_poro = ny_poro * (nz - 1);
+	const auto& props_sk = model->props_sk[0];
+	for (int i = 0; i < nx - 2; i++)
 	{
 		for (int k = 0; k < nz - 2; k++)
 		{
-			FracCell& frac_cell = model->cells_frac[ny - 1 + (k + 1) * ny + i * nz * ny];
-			assert(frac_cell.type == FracType::FRAC_OUT);
-			const auto& poro_grid = model->poro_grids[model->frac2poro[frac_cell.num]];
-
-			for (int j = 1; j < stop_idx + 1; j++)
+			for (int j = 0; j < ny_poro - 1; j++)
 			{
-				const PoroCell& cell = poro_grid.cells[j - 1];
+				const PoroCell& cell = model->cells_poro[j + (k + 1) * ny_poro + (i + 1) * nz * ny_poro];
+				assert(cell.type == PoroType::MIDDLE || (cell.type == PoroType::WELL_LAT && j == 0));
 				const auto& next = cell.u_next;
+				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+
 				poro_poro->InsertNextValue(next.m);
-				perm_poro->InsertNextValue(M2toMilliDarcy(poro_grid.props_sk->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
+				perm_poro->InsertNextValue(M2toMilliDarcy(props_sk.getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 				pres_poro->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 				sat_w_poro->InsertNextValue(next.sw);
 				sat_o_poro->InsertNextValue(1.0 - next.sw);
@@ -1164,22 +1169,20 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 				conc_s_poro->InsertNextValue(next.xs);
 				conc_co2_poro->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
 
-				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
-				hex->GetPointIds()->SetId(0, counter + 4 * (j - 1));
-				hex->GetPointIds()->SetId(1, counter + 4 * (j - 1) + 1);
-				hex->GetPointIds()->SetId(2, counter + 4 * j + 1);
-				hex->GetPointIds()->SetId(3, counter + 4 * j);
+				hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
+				hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
+				hex->GetPointIds()->SetId(2, j + 1 + k * ny_poro + (i + 1) * np_poro);
+				hex->GetPointIds()->SetId(3, j + k * ny_poro + (i + 1) * np_poro);
 
-				hex->GetPointIds()->SetId(4, counter + 4 * (j - 1) + 3);
-				hex->GetPointIds()->SetId(5, counter + 4 * (j - 1) + 2);
-				hex->GetPointIds()->SetId(6, counter + 4 * j + 2);
-				hex->GetPointIds()->SetId(7, counter + 4 * j + 3);
+				hex->GetPointIds()->SetId(4, j + (k + 1) * ny_poro + i * np_poro);
+				hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny_poro + i * np_poro);
+				hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny_poro + (i + 1) * np_poro);
+				hex->GetPointIds()->SetId(7, j + (k + 1) * ny_poro + (i + 1) * np_poro);
+
 				hexs_poro->InsertNextCell(hex);
 			}
-
-			counter += 4 * (stop_idx + 2);
 		}
-	}*/
+	}
 
 	grid_frac->SetCells(VTK_HEXAHEDRON, hexs_frac);
 	vtkCellData* fd_frac = grid_frac->GetCellData();
@@ -1194,7 +1197,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 	fd_frac->AddArray(conc_co2_frac);
 	//fd_frac->AddArray(trans);
 
-	/*grid_poro->SetCells(VTK_HEXAHEDRON, hexs_poro);
+	grid_poro->SetCells(VTK_HEXAHEDRON, hexs_poro);
 	vtkCellData* fd_poro = grid_poro->GetCellData();
 	fd_poro->AddArray(poro_poro);
 	fd_poro->AddArray(perm_poro);
@@ -1204,17 +1207,16 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 	fd_poro->AddArray(conc_a_poro);
 	fd_poro->AddArray(conc_w_poro);
 	fd_poro->AddArray(conc_s_poro);
-	fd_poro->AddArray(conc_co2_poro);*/
+	fd_poro->AddArray(conc_co2_poro);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 	writer->SetFileName(getFileName(i, "frac").c_str());
 	writer->SetInputData(grid_frac);
 	writer->Write();
-
-	//writer->SetFileName(getFileName(i, "poro").c_str());
-	//writer->SetInputData(grid_poro);
-	//writer->Write();
+	writer->SetFileName(getFileName(i, "poro").c_str());
+	writer->SetInputData(grid_poro);
+	writer->Write();
 }
 void VTKSnapshotter<vpp2d::VPP2d>::dump_all(int i)
 {
