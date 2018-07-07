@@ -1243,15 +1243,15 @@ acidellfrac::Properties* getProps()
 	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 20.0;
-	props->props_frac.w2 = 1.0;
+	props->props_frac.w2 = 10.0;
 	props->re = props->props_frac.l2;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 1;
-	props->cellsNum_mu_frac = 4;
+	props->cellsNum_x = 5;
+	props->cellsNum_mu_frac = 10;
 	props->cellsNum_mu_poro = 10;
 	props->cellsNum_z = 1;
 

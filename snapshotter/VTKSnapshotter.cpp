@@ -977,7 +977,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + k * ny];
 			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
-			Point point = getCartesian<FracCell>(cell.mu + cell.mu / 2.0, cell.nu - xnebr.hnu / 10.0, cell.z + cell.hz / 2.0);
+			Point point = getCartesian<FracCell>(cell.mu + cell.hmu / 2.0, cell.nu + xnebr.hnu / 20.0, cell.z + cell.hz / 2.0);
 			points_frac->InsertNextPoint(r_dim * point[0], r_dim * point[1], r_dim * point[2]);
 		}
 	}
@@ -987,7 +987,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 			for (int j = 0; j < ny; j++)
 			{
 				FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
-				Point point = getCartesian<FracCell>(cell.mu + cell.mu / 2.0, cell.nu + cell.hnu, cell.z + cell.hz / 2.0);
+				Point point = getCartesian<FracCell>(cell.mu + cell.hmu / 2.0, cell.nu - cell.hnu / 2.0, cell.z + cell.hz / 2.0);
 				points_frac->InsertNextPoint(r_dim * point[0], r_dim * point[1], r_dim * point[2]);
 			}
 		}
@@ -1053,6 +1053,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 		for (int j = 0; j < ny - 1; j++)
 		{
 			const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny];
+			assert(cell.type == FracType::FRAC_IN);
 			//const auto& grid0 = model->poro_grids[model->frac2poro[model->cells_frac[model->getRowOuter(cell.num + ny * nz)].num]];
 			const auto& props = model->props_sk[0];
 			const auto& next = cell.u_next;
@@ -1088,6 +1089,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 			for (int j = 0; j < ny - 1; j++)
 			{
 				const FracCell& cell = model->cells_frac[j + 1 + (k + 1) * ny + i * nz * ny];
+				assert(cell.type == FracType::FRAC_MID || cell.type == FracType::FRAC_OUT);
 				const auto& next = cell.u_next;
 				const auto& props = model->props_sk[0];
 				//const auto& grid = model->poro_grids[model->frac2poro[model->cells_frac[model->getRowOuter(cell.num)].num]];

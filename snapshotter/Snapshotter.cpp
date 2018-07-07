@@ -56,8 +56,8 @@ void Snapshotter<acidellfrac::AcidEllFrac>::setModel(acidellfrac::AcidEllFrac* _
 	T_dim = model->T_dim;
 	P_dim = model->P_dim;
 
-	nx = model->cellsNum_mu_frac + 1;
-	ny = model->cellsNum_nu + 2;
+	nx = model->cellsNum_nu + 2;
+	ny = model->cellsNum_mu_frac + 1;
 	nz = model->cellsNum_z + 2;
 }
 template <class modelType>

@@ -323,7 +323,7 @@ void AcidEllFrac::buildGridUniform()
 		else
 		{
 			hz = props_frac.height / cellsNum_z;
-			cmu = ((double)k - 0.5) * hz;
+			cz = ((double)k - 0.5) * hz;
 		}
 
 		for (int i = 0; i < cellsNum_mu_frac + 1; i++)
@@ -337,25 +337,25 @@ void AcidEllFrac::buildGridUniform()
 			}
 			else
 			{
-				hmu = props_frac.w2 / (double)cellsNum_mu_frac;
+				hmu = mu_w / (double)cellsNum_mu_frac;
 				cmu = ((double)i - 0.5) * hmu;
 			}
 
 			cells_frac.push_back( FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type) );
 
-			if (i == 0)
+			/*if (i == 0)
 				cmu += mu_w / cellsNum_mu_frac / 2.0;
 			else
-				cmu += cmu;
+				cmu += cmu;*/
 		}
 
-		if (k == 0 || k == cellsNum_z)
+		/*if (k == 0 || k == cellsNum_z)
 			cz += props_frac.height / cellsNum_z / 2.0;
 		else
-			cz += hz;
+			cz += hz;*/
 	}
 	// Middle border
-	hnu = M_PI_2 / cellsNum_nu;	 cnu = M_PI_2 - hnu / 2;
+	hnu = M_PI_2 / (cellsNum_nu + 1);	 cnu = M_PI_2 - hnu / 2;
 	for (int j = 0; j < cellsNum_nu; j++)
 	{
 		for (int k = 0; k < cellsNum_z + 2; k++)
@@ -370,7 +370,7 @@ void AcidEllFrac::buildGridUniform()
 			else
 			{
 				hz = props_frac.height / cellsNum_z;
-				cmu = ((double)k - 0.5) * hz;
+				cz = ((double)k - 0.5) * hz;
 			}
 
 			for (int i = 0; i < cellsNum_mu_frac + 1; i++)
@@ -384,33 +384,38 @@ void AcidEllFrac::buildGridUniform()
 				}
 				else
 				{
-					hmu = props_frac.w2 / (double)cellsNum_mu_frac;
+					hmu = mu_w / (double)cellsNum_mu_frac;
 					cmu = ((double)i - 0.5) * hmu;
 				}
 
 				if (i == cellsNum_mu_frac)
 					cur_type = FracType::FRAC_OUT;
+				else if (i == 0)
+					cur_type = FracType::FRAC_BORDER;
 				else
 					cur_type = FracType::FRAC_MID;
 
+				if(k == 0 || k == cellsNum_z + 1)
+					cur_type = FracType::FRAC_BORDER;
+
 				cells_frac.push_back(FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
 
-				if (i == 0)
+				/*if (i == 0)
 					cmu += mu_w / cellsNum_mu_frac / 2.0;
 				else
-					cmu += cmu;
+					cmu += cmu;*/
 			}
 
-			if (k == 0 || k == cellsNum_z)
+			/*if (k == 0 || k == cellsNum_z)
 				cz += props_frac.height / cellsNum_z / 2.0;
 			else
-				cz += hz;
+				cz += hz;*/
 		}
 		cnu -= hnu;
 	}
 	// Right cells
 	cur_type = FracType::FRAC_BORDER;
-	hnu = 0.0;	 cnu = 0.0;
+	cnu = hnu;	 hnu = 0.0;
 	for (int k = 0; k < cellsNum_z + 2; k++)
 	{
 		if (k == 0)
@@ -423,7 +428,7 @@ void AcidEllFrac::buildGridUniform()
 		else
 		{
 			hz = props_frac.height / cellsNum_z;
-			cmu = ((double)k - 0.5) * hz;
+			cz = ((double)k - 0.5) * hz;
 		}
 
 		for (int i = 0; i < cellsNum_mu_frac + 1; i++)
@@ -437,22 +442,22 @@ void AcidEllFrac::buildGridUniform()
 			}
 			else
 			{
-				hmu = props_frac.w2 / (double)cellsNum_mu_frac;
+				hmu = mu_w / (double)cellsNum_mu_frac;
 				cmu = ((double)i - 0.5) * hmu;
 			}
 
 			cells_frac.push_back(FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
 
-			if (i == 0)
+			/*if (i == 0)
 				cmu += mu_w / cellsNum_mu_frac / 2.0;
 			else
-				cmu += cmu;
+				cmu += cmu;*/
 		}
 
-		if (k == 0 || k == cellsNum_z)
+		/*if (k == 0 || k == cellsNum_z)
 			cz += props_frac.height / cellsNum_z / 2.0;
 		else
-			cz += hz;
+			cz += hz;*/
 	}
 }
 void AcidEllFrac::setPerforated()
