@@ -47,23 +47,25 @@ namespace new_cell
 
 		//static double a;
 		Point c, h;
-		std::array<size_t, NEBRS_NUM> nebrs;
+		std::array<int, NEBRS_NUM> nebrs;
 		std::array<double, NEBRS_NUM> faces_dist;
 		bool isUsed;
 
-		EllipticCell() : isUsed(true) {};
+		EllipticCell() : isUsed(true) { nebrs.fill(-1); };
 		EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz, const Type _type) : AbstractCell<varType>(_num, _type), 
 			c(_mu, _nu, _z), h(_hmu, _hnu, _hz)
 		{
 			const auto g = c.getMetric();
 			V = g[0] * g[1] * g[2] * h.mu * h.nu * h.z;
 			isUsed = true;
+			nebrs.fill(-1);
 		};
 		EllipticCell(int _num, const Point& _c, const Point& _h, const Type _type) : AbstractCell<varType>(_num, _type), c(_c), h(_h)
 		{
 			const auto g = c.getMetric();
 			V = g[0] * g[1] * g[2] * h.mu * h.nu * h.z;
 			isUsed = true;
+			nebrs.fill(-1);
 		};
 		~EllipticCell() {};
 

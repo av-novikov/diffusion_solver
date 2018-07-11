@@ -243,6 +243,7 @@ namespace acidellfrac
 			setSnapshotter("", this);
 			buildGridUniform();
 			//buildGrid();
+			processGeometry();
 			setPerforated();
 			setInitialState();
 

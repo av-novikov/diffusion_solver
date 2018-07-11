@@ -350,17 +350,17 @@ void AcidEllFrac::buildGridUniform()
 						cell.nebrs[1] = j * (cellsNum_mu_poro + 2) * (cellsNum_z + 2) + k * (cellsNum_mu_poro + 2);
 					cell.nebrs[2] = cell.num - (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 					cell.nebrs[3] = cell.num + (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
-					cell.nebrs[4] = cell.num - (cellsNum_z + 2);
-					cell.nebrs[5] = cell.num + (cellsNum_z + 2);
+					cell.nebrs[4] = cell.num - (cellsNum_mu_frac + 1);
+					cell.nebrs[5] = cell.num + (cellsNum_mu_frac + 1);
 				}
 				else
 				{
 					if (i == 0)
 						cell.nebrs[0] = cell.num + 1;
 					if (k == 0)
-						cell.nebrs[0] = cell.num + (cellsNum_z + 2);
+						cell.nebrs[0] = cell.num + (cellsNum_mu_frac + 1);
 					else if (k == cellsNum_z + 1)
-						cell.nebrs[0] = cell.num - (cellsNum_z + 2);
+						cell.nebrs[0] = cell.num - (cellsNum_mu_frac + 1);
 				}
 			}
 		}
@@ -460,7 +460,7 @@ void AcidEllFrac::buildPoroGrid()
 
 			cells_poro.push_back(PoroCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
 			auto& cell = cells_poro.back();
-			cell.nebrs[0] = cell.num + (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
+			cell.nebrs[0] = cell.num + (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
 		}
 	}
 	// Middle border
@@ -522,10 +522,10 @@ void AcidEllFrac::buildPoroGrid()
 				{
 					cell.nebrs[0] = cell.num - 1;
 					cell.nebrs[1] = cell.num + 1;
-					cell.nebrs[2] = cell.num - (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
-					cell.nebrs[3] = cell.num + (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
-					cell.nebrs[4] = cell.num - (cellsNum_z + 2);
-					cell.nebrs[5] = cell.num + (cellsNum_z + 2);
+					cell.nebrs[2] = cell.num - (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
+					cell.nebrs[3] = cell.num + (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
+					cell.nebrs[4] = cell.num - (cellsNum_mu_poro + 2);
+					cell.nebrs[5] = cell.num + (cellsNum_mu_poro + 2);
 				}
 				else if (cell.type == PoroType::WELL_LAT)
 				{
@@ -533,9 +533,11 @@ void AcidEllFrac::buildPoroGrid()
 					cell.nebrs[1] = cell.num + 1;
 				}
 				else if (cell.type == PoroType::BOTTOM)
-					cell.nebrs[0] = cell.num + (cellsNum_mu_frac + 2);
+					cell.nebrs[0] = cell.num + (cellsNum_mu_poro + 2);
 				else if (cell.type == PoroType::TOP)
-					cell.nebrs[0] = cell.num - (cellsNum_mu_frac + 2);
+					cell.nebrs[0] = cell.num - (cellsNum_mu_poro + 2);
+				else if (cell.type == PoroType::RIGHT)
+					cell.nebrs[0] = cell.num - 1;
 			}
 		}
 		cnu -= hnu;
@@ -581,13 +583,40 @@ void AcidEllFrac::buildPoroGrid()
 
 			cells_poro.push_back(PoroCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
 			auto& cell = cells_poro.back();
-			cell.nebrs[0] = cell.num - (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
+			cell.nebrs[0] = cell.num - (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
 		}
 	}
 
 }
 void AcidEllFrac::processGeometry()
 {
+	// Neighbours check
+	/*for (const auto& cell : cells_frac)
+	{
+		for(size_t i = 0; i < 6; i++)
+			if (cell.nebrs[i] > 0 && cell.type != FracType::FRAC_OUT && cell.type != FracType::FRAC_IN && cell.type != FracType::FRAC_BORDER)
+			{
+				const auto& nebr_cell = cells_frac[cell.nebrs[i]];
+				const auto& nebrs = nebr_cell.nebrs;
+				const auto it = std::find(nebrs.begin(), nebrs.end(), cell.num);
+				if (it == nebrs.end())
+					exit(-1);
+			}
+	}
+	for (const auto& cell : cells_poro)
+	{
+		for (size_t i = 0; i < 6; i++)
+			if (cell.nebrs[i] > 0 && cell.type != PoroType::WELL_LAT && 
+				cell.type != PoroType::SIDE_LEFT && cell.type != PoroType::SIDE_RIGHT && 
+				cell.type != PoroType::TOP && cell.type != PoroType::BOTTOM)
+			{
+				const auto& nebr_cell = cells_poro[cell.nebrs[i]];
+				const auto& nebrs = nebr_cell.nebrs;
+				const auto it = std::find(nebrs.begin(), nebrs.end(), cell.num);
+				if (it == nebrs.end())
+					exit(-1);
+			}
+	}*/
 }
 void AcidEllFrac::setPerforated()
 {
