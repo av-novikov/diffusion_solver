@@ -4,7 +4,7 @@
 #include <map>
 #include "model/Acid/ellfrac/Properties.hpp"
 #include "model/cells/AcidVariables.hpp"
-#include "model/cells/EllipticCell.hpp"
+#include "model/cells/NewEllipticCell.hpp"
 #include "model/cells/HexCell.hpp"
 #include "model/Basic1d/Basic1d.hpp"
 #include "util/Interpolate.h"
@@ -36,9 +36,9 @@ namespace acidellfrac
 	const FracCell* frac_nebr;
 	double width, trans;
 	};*/
-	template <typename TVariable> using TCell = EllipticCell<TVariable, Skeleton_Props>;
-	typedef EllipticCell<PoroVariable> PoroCell;
-	typedef EllipticCell<FracVariable> FracCell;
+	template <typename TVariable> using TCell = new_cell::EllipticCell<TVariable, Skeleton_Props>;
+	typedef new_cell::EllipticCell<PoroVariable> PoroCell;
+	typedef new_cell::EllipticCell<FracVariable> FracCell;
 	typedef PoroCell::Type PoroType;
 	typedef FracCell::Type FracType;
 	typedef FracCell::Point Point;
@@ -102,11 +102,13 @@ namespace acidellfrac
 		void buildGrid();
 		void buildGridUniform();
 		void buildPoroGrid();
+		void processGeometry();
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState();
 		void setPerforated();
 		void calculateTrans();
+		// Service functions
 		// Schemes
 		/*PoroTapeVariable solvePoro(const PoroCell& cell);
 		PoroTapeVariable solvePoroMid(const PoroCell& cell);
@@ -118,6 +120,7 @@ namespace acidellfrac
 		FracTapeVariable solveFracBorder(const FracCell& cell);
 		FracTapeVariable solveFracOut(const FracCell& cell);
 		// Service calculations
+
 		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next, const PoroCell& beta, const PoroTapeVariable& nebr) const
 		{
 			/*adouble k1, k2, S;
@@ -226,15 +229,6 @@ namespace acidellfrac
 			const int outer_idx = int(idx / (cellsNum_y + 1)) * (cellsNum_y + 1) + cellsNum_y;
 			assert(cells_frac[outer_idx].type == FracType::FRAC_OUT);
 			return outer_idx;
-		};
-		inline void getNeighborIdx(int cur, int* const neighbor)
-		{
-			neighbor[0] = cur - (cellsNum_y + 1) * (cellsNum_z + 2);
-			neighbor[1] = cur + (cellsNum_y + 1) * (cellsNum_z + 2);
-			neighbor[2] = cur - 1;
-			neighbor[3] = cur + 1;
-			neighbor[4] = cur - cellsNum_y - 1;
-			neighbor[5] = cur + cellsNum_y + 1;
 		};*/
 	public:
 		// Dimensions

@@ -46,11 +46,13 @@ public:
 	{
 		return a * sqrt(sinh(mu) * sinh(mu) + sin(nu) * sin(nu));
 	};
-
 	bool operator==(const EllipticCell& rhs) const
 	{
 		return (mu == rhs.mu && nu == rhs.nu && z == rhs.z);
 	}
+
+	std::array<size_t, 6> nebrs;
+	std::array<double, 6> faces_dist;
 };
 
 template <typename varType, typename PropsType>

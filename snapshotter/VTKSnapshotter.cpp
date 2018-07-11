@@ -971,8 +971,8 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + k * ny];
 			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
-			Point point = getCartesian<FracCell>(cell.mu + cell.hmu / 2.0, cell.nu + xnebr.hnu / 20.0, cell.z + cell.hz / 2.0);
-			points_frac->InsertNextPoint(r_dim * point[0], r_dim * point[1], r_dim * point[2]);
+			const auto cart_point = point::getCartesianFromElliptic(cell.c.mu + cell.h.mu / 2.0, cell.c.nu + xnebr.h.nu / 20.0, cell.c.z + cell.h.z / 2.0);
+			points_frac->InsertNextPoint(r_dim * cart_point.x, r_dim * cart_point.y, r_dim * cart_point.z);
 		}
 	}
 	for (int i = 0; i < nx - 1; i++)
@@ -981,15 +981,15 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 			for (int j = 0; j < ny; j++)
 			{
 				FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
-				Point point = getCartesian<FracCell>(cell.mu + cell.hmu / 2.0, cell.nu - cell.hnu / 2.0, cell.z + cell.hz / 2.0);
-				points_frac->InsertNextPoint(r_dim * point[0], r_dim * point[1], r_dim * point[2]);
+				const auto cart_point = point::getCartesianFromElliptic(cell.c.mu + cell.h.mu / 2.0, cell.c.nu - cell.h.nu / 2.0, cell.c.z + cell.h.z / 2.0);
+				points_frac->InsertNextPoint(r_dim * cart_point.x, r_dim * cart_point.y, r_dim * cart_point.z);
 			}
 		}
 	grid_frac->SetPoints(points_frac);
 	// Poro points
 	auto points_poro = vtkSmartPointer<vtkPoints>::New();
 	const size_t ny_poro = model->cellsNum_mu_poro + 2;
-	Point point;
+	point::CartesianPoint3d point;
 	for (int i = 0; i < nx - 1; i++)
 		for (int k = 0; k < nz - 1; k++)
 		{
@@ -997,10 +997,10 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 			{
 				PoroCell& cell = model->cells_poro[j + k * ny_poro + i * ny_poro * nz];
 				if (j != 1)
-					point = getCartesian<FracCell>(cell.mu - cell.hmu / 2.0, cell.nu - cell.hnu / 2.0, cell.z + cell.hz / 2.0);
+					point = point::getCartesianFromElliptic(cell.c.mu - cell.h.mu / 2.0, cell.c.nu - cell.h.nu / 2.0, cell.c.z + cell.h.z / 2.0);
 				else
-					point = getCartesian<FracCell>(cell.mu - 2.0 * cell.hmu / 5.0, cell.nu - cell.hnu / 2.0, cell.z + cell.hz / 2.0);
-				points_poro->InsertNextPoint(r_dim * point[0], r_dim * point[1], r_dim * point[2]);
+					point = point::getCartesianFromElliptic(cell.c.mu - 2.0 * cell.h.mu / 5.0, cell.c.nu - cell.h.nu / 2.0, cell.c.z + cell.h.z / 2.0);
+				points_poro->InsertNextPoint(r_dim * point.x, r_dim * point.y, r_dim * point.z);
 			}
 		}
 	grid_poro->SetPoints(points_poro);

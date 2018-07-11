@@ -5,6 +5,8 @@ using namespace acidellfrac;
 double acidellfrac::Component::R = 8.3144598;
 double acidellfrac::Component::p_std = 101325.0;
 
+double Point::a;
+
 AcidEllFrac::AcidEllFrac()
 {
 	grav = 9.8;
@@ -79,7 +81,7 @@ void AcidEllFrac::setProps(Properties& props)
 
 	makeDimLess();
 
-	PoroCell::a = FracCell::a = props_frac.l2;
+	PoroCell::Point::a = FracCell::Point::a = props_frac.l2;
 
 	props_o.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
 	props_o.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
@@ -293,6 +295,8 @@ void AcidEllFrac::buildGridUniform()
 			}
 
 			cells_frac.push_back( FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type) );
+			auto& cell = cells_frac.back();
+			cell.nebrs[0] = cell.num + (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 		}
 	}
 	// Middle border
@@ -336,6 +340,28 @@ void AcidEllFrac::buildGridUniform()
 
 				cells_frac.push_back(FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
 				Volume_frac += cells_frac.back().V;
+				auto& cell = cells_frac.back();
+				if (cell.type != FracType::FRAC_BORDER)
+				{
+					cell.nebrs[0] = cell.num - 1;
+					if(cell.type == FracType::FRAC_MID)
+						cell.nebrs[1] = cell.num + 1;
+					else if (cell.type == FracType::FRAC_OUT)
+						cell.nebrs[1] = j * (cellsNum_mu_poro + 2) * (cellsNum_z + 2) + k * (cellsNum_mu_poro + 2);
+					cell.nebrs[2] = cell.num - (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
+					cell.nebrs[3] = cell.num + (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
+					cell.nebrs[4] = cell.num - (cellsNum_z + 2);
+					cell.nebrs[5] = cell.num + (cellsNum_z + 2);
+				}
+				else
+				{
+					if (i == 0)
+						cell.nebrs[0] = cell.num + 1;
+					if (k == 0)
+						cell.nebrs[0] = cell.num + (cellsNum_z + 2);
+					else if (k == cellsNum_z + 1)
+						cell.nebrs[0] = cell.num - (cellsNum_z + 2);
+				}
 			}
 		}
 		cnu -= hnu;
@@ -368,7 +394,9 @@ void AcidEllFrac::buildGridUniform()
 				cmu = ((double)i - 0.5) * hmu;
 			}
 
+			auto& cell = cells_frac.back();
 			cells_frac.push_back(FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
+			cell.nebrs[0] = cell.num - (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 		}
 	}
 
@@ -431,6 +459,8 @@ void AcidEllFrac::buildPoroGrid()
 			}
 
 			cells_poro.push_back(PoroCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
+			auto& cell = cells_poro.back();
+			cell.nebrs[0] = cell.num + (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
 		}
 	}
 	// Middle border
@@ -487,6 +517,25 @@ void AcidEllFrac::buildPoroGrid()
 
 				cells_poro.push_back(PoroCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
 				Volume_poro += cells_poro.back().V;
+				auto& cell = cells_poro.back();
+				if (cell.type == PoroType::MIDDLE)
+				{
+					cell.nebrs[0] = cell.num - 1;
+					cell.nebrs[1] = cell.num + 1;
+					cell.nebrs[2] = cell.num - (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
+					cell.nebrs[3] = cell.num + (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
+					cell.nebrs[4] = cell.num - (cellsNum_z + 2);
+					cell.nebrs[5] = cell.num + (cellsNum_z + 2);
+				}
+				else if (cell.type == PoroType::WELL_LAT)
+				{
+					cell.nebrs[0] = j * (cellsNum_mu_frac + 1) * (cellsNum_z + 2) + k * (cellsNum_mu_frac + 1) + cellsNum_mu_frac;
+					cell.nebrs[1] = cell.num + 1;
+				}
+				else if (cell.type == PoroType::BOTTOM)
+					cell.nebrs[0] = cell.num + (cellsNum_mu_frac + 2);
+				else if (cell.type == PoroType::TOP)
+					cell.nebrs[0] = cell.num - (cellsNum_mu_frac + 2);
 			}
 		}
 		cnu -= hnu;
@@ -531,9 +580,14 @@ void AcidEllFrac::buildPoroGrid()
 			}
 
 			cells_poro.push_back(PoroCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
+			auto& cell = cells_poro.back();
+			cell.nebrs[0] = cell.num - (cellsNum_mu_poro + 1) * (cellsNum_z + 2);
 		}
 	}
 
+}
+void AcidEllFrac::processGeometry()
+{
 }
 void AcidEllFrac::setPerforated()
 {

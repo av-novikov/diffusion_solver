@@ -43,7 +43,6 @@ namespace acidfrac
 		int options[4];
 		int repeat;
 
-
 		void checkStability();
 		void computeJac();
 		void fill();
