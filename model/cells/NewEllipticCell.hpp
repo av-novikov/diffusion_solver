@@ -14,21 +14,21 @@ namespace new_cell
 	template <class TPoint>
 	struct Face
 	{
-		size_t id;
 		TPoint c;
 		double S;
 	};
-	struct AdjancedCellIdx : std::pair<size_t, size_t>
+	struct AdjancedCellIdx
 	{
+		int first;
+		int second;
 		bool operator==(const AdjancedCellIdx& rhs) const
 		{
 			return (first == rhs.first && second == rhs.second) || (second == rhs.first && first == rhs.second);
 		};
-		AdjancedCellIdx(const std::pair<size_t, size_t>& par) : std::pair<size_t, size_t>(par) {};
 	};
 	struct IdxHasher
 	{
-		static const size_t SIZE = 65536;
+		static const int SIZE = 65536;
 		size_t operator() (const AdjancedCellIdx& idx) const
 		{
 			//return hash<size_t>()(idx.first) + hash<size_t>()(idx.second);
@@ -48,24 +48,25 @@ namespace new_cell
 		//static double a;
 		Point c, h;
 		std::array<int, NEBRS_NUM> nebrs;
+		std::array<char, NEBRS_NUM> nebrs_idx;
 		std::array<double, NEBRS_NUM> faces_dist;
 		bool isUsed;
 
-		EllipticCell() : isUsed(true) { nebrs.fill(-1); };
+		EllipticCell() : isUsed(true) { nebrs.fill(-1);	nebrs_idx.fill(-1);	};
 		EllipticCell(int _num, double _mu, double _nu, double _z, double _hmu, double _hnu, double _hz, const Type _type) : AbstractCell<varType>(_num, _type), 
 			c(_mu, _nu, _z), h(_hmu, _hnu, _hz)
 		{
 			const auto g = c.getMetric();
-			V = g[0] * g[1] * g[2] * h.mu * h.nu * h.z;
+			V = sqrt(g[0] * g[1] * g[2]) * h.mu * h.nu * h.z;
 			isUsed = true;
-			nebrs.fill(-1);
+			nebrs.fill(-1);	nebrs_idx.fill(-1);
 		};
 		EllipticCell(int _num, const Point& _c, const Point& _h, const Type _type) : AbstractCell<varType>(_num, _type), c(_c), h(_h)
 		{
 			const auto g = c.getMetric();
-			V = g[0] * g[1] * g[2] * h.mu * h.nu * h.z;
+			V = sqrt(g[0] * g[1] * g[2]) * h.mu * h.nu * h.z;
 			isUsed = true;
-			nebrs.fill(-1);
+			nebrs.fill(-1);	nebrs_idx.fill(-1);
 		};
 		~EllipticCell() {};
 

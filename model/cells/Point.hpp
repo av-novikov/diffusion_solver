@@ -105,15 +105,23 @@ namespace point
 			mu -= rhs.mu;	nu -= rhs.nu;	z -= rhs.z;
 		};
 
+		inline double getH() const
+		{
+			return a * sqrt(sinh(mu) * sinh(mu) + sin(nu) * sin(nu));
+		};
 		inline std::array<double, 3> getMetric() const
 		{
-			const double h = a * a * (sinh(mu) * sinh(mu) + sin(nu) * sin(nu));
-			return{h, h, 1.0};
+			const double h = getH();
+			return{h * h, h * h, 1.0};
 		};
+		inline double dist() const
+		{
+			return sqrt(mu * mu + nu * nu + z * z);
+		}
 		inline double norm() const
 		{ 
-			const auto h = getMetric();
-			return sqrt( h[0] * mu * mu + h[1] * nu * nu + h[2] * z * z ); 
+			const auto g = getMetric();
+			return sqrt( g[0] * mu * mu + g[1] * nu * nu + g[2] * z * z ); 
 		};
 		inline CartesianPoint3d getCartesian() const
 		{
@@ -122,8 +130,8 @@ namespace point
 		inline CartesianPoint3d getVectorCartesian(double u_mu, double u_nu, double u_z) const
 		{
 			const auto g = getMetric();
-			const double u_x = a * (sinh(mu) * cos(nu) * u_mu - cosh(mu) * sin(nu) * u_nu) / g[0];
-			const double u_y = a * (cosh(mu) * sin(nu) * u_mu - sinh(mu) * cos(nu) * u_nu) / g[1];
+			const double u_x = a * (sinh(mu) * cos(nu) * u_mu - cosh(mu) * sin(nu) * u_nu) / sqrt(g[0]);
+			const double u_y = a * (cosh(mu) * sin(nu) * u_mu - sinh(mu) * cos(nu) * u_nu) / sqrt(g[1]);
 			return{ u_x, u_y, u_z };
 		};
 	};
@@ -141,7 +149,7 @@ namespace point
 		os << a.coords[0] << " " << a.coords[1] << " " << a.coords[2] << std::endl;
 		return os;
 	}
-	template <typename Point>
+	/*template <typename Point>
 	inline bool operator==(const Point& a1, const Point& a2)
 	{
 		if ((fabs(a2.coords[0] - a1.coords[0]) > EQUALITY_TOLERANCE) ||
@@ -150,7 +158,7 @@ namespace point
 			return false;
 		else
 			return true;
-	};
+	};*/
 	template <typename Point>
 	inline Point operator-(const Point& rhs)
 	{

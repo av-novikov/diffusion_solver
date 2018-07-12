@@ -24,18 +24,6 @@ namespace acidellfrac
 	typedef VarFrac FracVariable;
 	typedef TapeVarFrac FracTapeVariable;
 
-	//struct PoroGrid;
-	/*struct PoroGrid
-	{
-	int id, start_idx;
-	std::vector<PoroCell> cells;
-	double Volume;
-	const Skeleton_Props* props_sk;
-	double hx, hz;
-	int cellsNum;
-	const FracCell* frac_nebr;
-	double width, trans;
-	};*/
 	template <typename TVariable> using TCell = new_cell::EllipticCell<TVariable, Skeleton_Props>;
 	typedef new_cell::EllipticCell<PoroVariable> PoroCell;
 	typedef new_cell::EllipticCell<FracVariable> FracCell;
@@ -48,6 +36,10 @@ namespace acidellfrac
 
 	static const int var_poro_size = PoroVariable::size;
 	static const int var_frac_size = FracVariable::size;
+	typedef FracCell::Face Face;
+	//typedef new_cell::AdjancedCellIdx CellIdx;
+	typedef std::unordered_map<new_cell::AdjancedCellIdx,Face,new_cell::IdxHasher> FaceMap;
+	const size_t NEBRS_NUM = new_cell::NEBRS_NUM;
 
 	class AcidEllFrac
 	{
@@ -76,6 +68,7 @@ namespace acidellfrac
 		std::vector<PoroCell> cells_poro;
 		std::vector<FracCell> cells_frac;
 		double re;
+		FaceMap fmap_frac, fmap_poro, fmap_inter;
 		std::map<int, int> frac2poro;
 		std::map<int, int> border_nebrs;
 		
@@ -98,9 +91,7 @@ namespace acidellfrac
 		bool isWriteSnaps;
 		Snapshotter<AcidEllFrac>* snapshotter;
 
-		size_t getInitId2OutCell(const FracCell& cell);
-		void buildGrid();
-		void buildGridUniform();
+		void buildFracGrid();
 		void buildPoroGrid();
 		void processGeometry();
 		void setProps(Properties& props);
@@ -110,28 +101,50 @@ namespace acidellfrac
 		void calculateTrans();
 		// Service functions
 		// Schemes
-		/*PoroTapeVariable solvePoro(const PoroCell& cell);
+		PoroTapeVariable solvePoro(const PoroCell& cell);
 		PoroTapeVariable solvePoroMid(const PoroCell& cell);
 		PoroTapeVariable solvePoroLeft(const PoroCell& cell);
 		PoroTapeVariable solvePoroRight(const PoroCell& cell);
-		FracTapeVariable solveFrac(const FracCell& cell);
-		FracTapeVariable solveFracIn(const FracCell& cell);
-		FracTapeVariable solveFracMid(const FracCell& cell);
-		FracTapeVariable solveFracBorder(const FracCell& cell);
-		FracTapeVariable solveFracOut(const FracCell& cell);
+		//FracTapeVariable solveFrac(const FracCell& cell);
+		//FracTapeVariable solveFracIn(const FracCell& cell);
+		//FracTapeVariable solveFracMid(const FracCell& cell);
+		//FracTapeVariable solveFracBorder(const FracCell& cell);
+		//FracTapeVariable solveFracOut(const FracCell& cell);
 		// Service calculations
-
-		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next, const PoroCell& beta, const PoroTapeVariable& nebr) const
+		template <class TCell>
+		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
 		{
-			/*adouble k1, k2, S;
-			const auto& props = *cell.props->props_sk;
+			if (cell.u_next.p < beta.u_next.p)
+				return beta.num;
+			else
+				return cell.num;
+		};
+		template <>
+		inline int getUpwindIdx(const FracCell& cell, const FracCell& beta) const
+		{
+			if (fabs(cell.c.mu - beta.c.mu) > cell.h.mu * EQUALITY_TOLERANCE)
+				return (cell.c.mu > beta.c.mu) ? beta.num : cell.num;
+			if (cell.u_next.p < beta.u_next.p)
+				return beta.num;
+			else
+				return cell.num;
+		};
+		inline adouble getPoroAverage(adouble p1, const double l1, adouble p2, const double l2) const
+		{
+			return (p1 * (adouble)l2 + p2 * (adouble)l1) / (adouble)(l1 + l2);
+		};
+		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next, const char idx,
+									const PoroCell& beta, const PoroTapeVariable& nebr) const
+		{
+			adouble k1, k2, S;
+			const auto& props = props_sk.back();
 			k1 = props.getPermCoseni(next.m, next.p);
 			k2 = props.getPermCoseni(nebr.m, nebr.p);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
-			S = cell.props->hz * cell.props->hx;
-			return 2.0 * k1 * k2 * S / (k1 * beta.hx + k2 * cell.hx);
-		};*/
+			S = fmap_poro.at({cell.num, beta.num}).S;
+			return 2.0 * k1 * k2 * S / (k1 * cell.faces_dist[idx] + k2 * beta.faces_dist[cell.nebrs_idx[idx]]);
+		};
 		/*inline adouble getPoroAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const
 		{
 			return (p1 * (adouble)cell2.hx + p2 * (adouble)cell1.hx) / (adouble)(cell1.hx + cell2.hx);
@@ -206,24 +219,6 @@ namespace acidellfrac
 			else
 				return 1.0;
 		};
-		template <class TCell>
-		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
-		{
-			if (cell.u_next.p < beta.u_next.p)
-				return beta.num;
-			else
-				return cell.num;
-		};
-		template <>
-		inline int getUpwindIdx(const FracCell& cell, const FracCell& beta) const
-		{
-			if (fabs(cell.y - beta.y) > cell.hy * EQUALITY_TOLERANCE)
-				return (cell.y > beta.y) ? beta.num : cell.num;
-			if (cell.u_next.p < beta.u_next.p)
-				return beta.num;
-			else
-				return cell.num;
-		};
 		inline const int getRowOuter(const int idx) const
 		{
 			const int outer_idx = int(idx / (cellsNum_y + 1)) * (cellsNum_y + 1) + cellsNum_y;
@@ -241,8 +236,8 @@ namespace acidellfrac
 		{
 			setProps(props);
 			setSnapshotter("", this);
-			buildGridUniform();
-			//buildGrid();
+			buildFracGrid();
+			buildPoroGrid();
 			processGeometry();
 			setPerforated();
 			setInitialState();
