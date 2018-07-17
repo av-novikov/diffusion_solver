@@ -811,16 +811,36 @@ PoroTapeVariable AcidEllFrac::solvePoroLeft(const PoroCell& cell)
 PoroTapeVariable AcidEllFrac::solvePoroRight(const PoroCell& cell)
 {
 	assert(cell.type == PoroType::RIGHT);
-	const auto& beta = cells_poro[cell.num - 1];
+	const auto& beta = cells_poro[cell.nebrs[0]];
 	const auto& props = props_sk.back();
 
 	const auto& next = x_poro[cell.num];
-	const auto& nebr = x_poro[cell.num - 1];
+	const auto& nebr = x_poro[beta.num];
 
 	adouble rightIsPres = rightBoundIsPres;
 	PoroTapeVariable res;
 	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
 	condassign(res.p, rightIsPres, (next.p - props.p_out + grav * props_w.dens_stc * cell.c.z) / P_dim, (next.p - nebr.p) / P_dim);
+	res.sw = (next.sw - nebr.sw) / P_dim;
+	res.xw = (next.xw - nebr.xw) / P_dim;
+	res.xa = (next.xa - nebr.xa) / P_dim;
+	res.xs = (next.xs - nebr.xs) / P_dim;
+	return res;
+}
+PoroTapeVariable AcidEllFrac::solvePoroBorder(const PoroCell& cell)
+{
+	assert(cell.type == PoroType::SIDE_LEFT || cell.type == PoroType::SIDE_RIGHT || 
+			cell.type == PoroType::TOP || cell.type == PoroType::BOTTOM);
+	const auto& beta = cells_poro[cell.nebrs[0]];
+	const auto& props = props_sk.back();
+
+	const auto& next = x_poro[cell.num];
+	const auto& nebr = x_poro[beta.num];
+
+	adouble rightIsPres = rightBoundIsPres;
+	PoroTapeVariable res;
+	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
+	res.p = (next.p - nebr.p + grav * props_w.dens_stc * cell.c.z) / P_dim;
 	res.sw = (next.sw - nebr.sw) / P_dim;
 	res.xw = (next.xw - nebr.xw) / P_dim;
 	res.xa = (next.xa - nebr.xa) / P_dim;

@@ -11,12 +11,6 @@
 
 namespace acidellfrac
 {
-	class AcidEllFracSolver
-	{
-	public:
-		void start() {};
-	};
-
 	typedef JustAcid PoroVariable;
 	typedef TapeJustAcid PoroTapeVariable;
 	typedef JustAcid PoroVariable;
@@ -105,6 +99,7 @@ namespace acidellfrac
 		PoroTapeVariable solvePoroMid(const PoroCell& cell);
 		PoroTapeVariable solvePoroLeft(const PoroCell& cell);
 		PoroTapeVariable solvePoroRight(const PoroCell& cell);
+		PoroTapeVariable solvePoroBorder(const PoroCell& cell);
 		//FracTapeVariable solveFrac(const FracCell& cell);
 		//FracTapeVariable solveFracIn(const FracCell& cell);
 		//FracTapeVariable solveFracMid(const FracCell& cell);

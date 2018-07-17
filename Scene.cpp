@@ -39,7 +39,7 @@
 #include "model/Acid/frac/AcidFracSolver.hpp"
 
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
-//#include "model/Acid/ellfrac/AcidEllFracSolver.hpp"
+#include "model/Acid/ellfrac/AcidEllFracSolver.hpp"
 
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
