@@ -215,7 +215,7 @@ void AcidEllFracSolver::solveStep()
 	};
 	while (continueIterations())
 	{
-/*		copyIterLayer();
+		copyIterLayer();
 
 		computeJac();
 		fill();
@@ -231,7 +231,7 @@ void AcidEllFracSolver::solveStep()
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
 
-		iterations++;*/
+		iterations++;
 	}
 
 	cout << "Newton Iterations = " << iterations << endl;
@@ -239,18 +239,19 @@ void AcidEllFracSolver::solveStep()
 void AcidEllFracSolver::computeJac()
 {
 	trace_on(0);
+	const int start_idx = model->cellsNum_frac * var_frac_size;
 
-	for (int i = 0; i < model->cellsNum_frac; i++)
+	for (const auto& cell : model->cells_frac)
 	{
-		model->x_frac[i].p <<= model->cells_frac[i].u_next.p;
-		model->x_frac[i].c <<= model->cells_frac[i].u_next.c;
+		auto& cur_x = model->x_frac[cell.num];
+		cur_x.p <<= cell.u_next.p;
+		cur_x.c <<= cell.u_next.c;
 
-		x[i * var_frac_size] = model->cells_frac[i].u_next.p;
-		x[i * var_frac_size + 1] = model->cells_frac[i].u_next.c;
+		x[cell.num * var_frac_size] = cell.u_next.p;
+		x[cell.num * var_frac_size + 1] = cell.u_next.c;
 	}
-	for (int i = 0; i < model->cellsNum_poro; i++)
+	for (const auto& cell : model->cells_poro)
 	{
-		const auto& cell = model->cells_poro[i];
 		auto& cur_x = model->x_poro[cell.num];
 		cur_x.m <<= cell.u_next.m;
 		cur_x.p <<= cell.u_next.p;
@@ -259,7 +260,6 @@ void AcidEllFracSolver::computeJac()
 		cur_x.xa <<= cell.u_next.xa;
 		cur_x.xs <<= cell.u_next.xs;
 
-		const int start_idx = model->cellsNum_frac * var_frac_size;
 		x[start_idx + cell.num * var_poro_size] = cell.u_next.m;
 		x[start_idx + cell.num * var_poro_size + 1] = cell.u_next.p;
 		x[start_idx + cell.num * var_poro_size + 2] = cell.u_next.sw;
@@ -267,29 +267,24 @@ void AcidEllFracSolver::computeJac()
 		x[start_idx + cell.num * var_poro_size + 4] = cell.u_next.xa;
 		x[start_idx + cell.num * var_poro_size + 5] = cell.u_next.xs;
 	}
-
 	// Fracture
-	/*for (const auto cell : model->cells_frac)
+	for (const auto& cell : model->cells_frac)
 	{
 		const auto res = model->solveFrac(cell);
 		model->h[cell.num * var_frac_size] = res.p;
 		model->h[cell.num * var_frac_size + 1] = res.c;
 	}
 	// Porous medium
-	for (const auto& grid : model->poro_grids)
+	for (const auto& cell : model->cells_poro)
 	{
-		const int start_idx = model->cellsNum * var_frac_size + grid.start_idx * var_poro_size;
-		for (const auto cell : grid.cells)
-		{
-			const auto res = model->solvePoro(cell);
-			model->h[start_idx + cell.num * var_poro_size] = res.m;
-			model->h[start_idx + cell.num * var_poro_size + 1] = res.p;
-			model->h[start_idx + cell.num * var_poro_size + 2] = res.sw;
-			model->h[start_idx + cell.num * var_poro_size + 3] = res.xw;
-			model->h[start_idx + cell.num * var_poro_size + 4] = res.xa;
-			model->h[start_idx + cell.num * var_poro_size + 5] = res.xs;
-		}
-	}*/
+		const auto res = model->solvePoro(cell);
+		model->h[start_idx + cell.num * var_poro_size] = res.m;
+		model->h[start_idx + cell.num * var_poro_size + 1] = res.p;
+		model->h[start_idx + cell.num * var_poro_size + 2] = res.sw;
+		model->h[start_idx + cell.num * var_poro_size + 3] = res.xw;
+		model->h[start_idx + cell.num * var_poro_size + 4] = res.xa;
+		model->h[start_idx + cell.num * var_poro_size + 5] = res.xs;
+	}
 
 	for (int i = 0; i < strNum; i++)
 		model->h[i] >>= y[i];

@@ -63,8 +63,6 @@ namespace acidellfrac
 		std::vector<FracCell> cells_frac;
 		double re;
 		FaceMap fmap_frac, fmap_poro, fmap_inter;
-		std::map<int, int> frac2poro;
-		std::map<int, int> border_nebrs;
 		
 		// Temporary properties
 		double ht, ht_min, ht_max;
@@ -75,12 +73,6 @@ namespace acidellfrac
 		std::vector<bool> LeftBoundIsRate;
 		bool leftBoundIsRate;
 		bool rightBoundIsPres;
-		// Scheme
-		/*TapeVariable* var;
-		adouble* h;
-		double* x;
-		double* y;
-		double** jac;*/
 		// Snapshotter
 		bool isWriteSnaps;
 		Snapshotter<AcidEllFrac>* snapshotter;
@@ -100,11 +92,11 @@ namespace acidellfrac
 		PoroTapeVariable solvePoroLeft(const PoroCell& cell);
 		PoroTapeVariable solvePoroRight(const PoroCell& cell);
 		PoroTapeVariable solvePoroBorder(const PoroCell& cell);
-		//FracTapeVariable solveFrac(const FracCell& cell);
-		//FracTapeVariable solveFracIn(const FracCell& cell);
-		//FracTapeVariable solveFracMid(const FracCell& cell);
-		//FracTapeVariable solveFracBorder(const FracCell& cell);
-		//FracTapeVariable solveFracOut(const FracCell& cell);
+		FracTapeVariable solveFrac(const FracCell& cell);
+		FracTapeVariable solveFracIn(const FracCell& cell);
+		FracTapeVariable solveFracMid(const FracCell& cell);
+		FracTapeVariable solveFracBorder(const FracCell& cell);
+		FracTapeVariable solveFracOut(const FracCell& cell);
 		// Service calculations
 		template <class TCell>
 		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
@@ -138,7 +130,7 @@ namespace acidellfrac
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 			S = fmap_poro.at({cell.num, beta.num}).S;
-			return 2.0 * k1 * k2 * S / (k1 * cell.faces_dist[idx] + k2 * beta.faces_dist[cell.nebrs_idx[idx]]);
+			return k1 * k2 * S / (k1 * cell.faces_dist[idx] + k2 * beta.faces_dist[cell.nebrs_idx[idx]]);
 		};
 		/*inline adouble getPoroAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const
 		{

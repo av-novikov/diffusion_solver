@@ -79,12 +79,6 @@ namespace acidfrac
 		std::vector<bool> LeftBoundIsRate;
 		bool leftBoundIsRate;
 		bool rightBoundIsPres;
-		// Scheme
-		/*TapeVariable* var;
-		adouble* h;
-		double* x;
-		double* y;
-		double** jac;*/
 		// Snapshotter
 		bool isWriteSnaps;
 		Snapshotter<AcidFrac>* snapshotter;
