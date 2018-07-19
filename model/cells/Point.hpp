@@ -130,17 +130,23 @@ namespace point
 		inline CartesianPoint3d getVectorCartesian(double u_mu, double u_nu, double u_z) const
 		{
 			const auto g = getMetric();
-			const double u_x = a * (sinh(mu) * cos(nu) * u_mu - cosh(mu) * sin(nu) * u_nu) / sqrt(g[0]);
-			const double u_y = a * (cosh(mu) * sin(nu) * u_mu - sinh(mu) * cos(nu) * u_nu) / sqrt(g[1]);
+			const double u_x = a * (sinh(mu) * cos(nu) / sqrt(g[0]) * u_mu - cosh(mu) * sin(nu) / sqrt(g[1]) * u_nu);
+			const double u_y = a * (cosh(mu) * sin(nu) / sqrt(g[0]) * u_mu + sinh(mu) * cos(nu) / sqrt(g[1]) * u_nu);
 			return{ u_x, u_y, u_z };
 		};
 	};
 
+	inline double getX(const double mu, const double nu)
+	{
+		return EllipticPoint3d::a * cosh(mu) * cos(nu);
+	};
+	inline double getY(const double mu, const double nu)
+	{
+		return EllipticPoint3d::a * sinh(mu) * sin(nu);
+	};
 	inline CartesianPoint3d getCartesianFromElliptic(const double mu, const double nu, const double z)
 	{
-		return{ EllipticPoint3d::a * cosh(mu) * cos(nu), 
-				EllipticPoint3d::a * sinh(mu) * sin(nu), 
-				z };
+		return{ getX(mu, nu), getY(mu, nu), z };
 	};
 
 	template <typename Point>

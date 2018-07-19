@@ -712,6 +712,8 @@ PoroTapeVariable AcidEllFrac::solvePoro(const PoroCell& cell)
 		return solvePoroLeft(cell);
 	else if (cell.type == PoroType::RIGHT)
 		return solvePoroRight(cell);
+	else
+		return solvePoroBorder(cell);
 }
 PoroTapeVariable AcidEllFrac::solvePoroMid(const PoroCell& cell)
 {
@@ -791,7 +793,7 @@ PoroTapeVariable AcidEllFrac::solvePoroLeft(const PoroCell& cell)
 
 	const auto& beta1 = cells_frac[cell.nebrs[0]];
 	const auto& beta2 = cells_frac[beta1.num - 1];
-	//const auto& beta3 = cells_frac[grid.frac_nebr->num - 2];
+	//const auto& beta3 = cells_frac[beta1.num - 2];
 	const auto& nebr1 = x_frac[beta1.num];
 	const auto& nebr2 = x_frac[beta2.num];
 	//const auto& nebr3 = x_frac[beta3.num];
@@ -842,7 +844,7 @@ PoroTapeVariable AcidEllFrac::solvePoroBorder(const PoroCell& cell)
 	adouble rightIsPres = rightBoundIsPres;
 	PoroTapeVariable res;
 	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
-	res.p = (next.p - nebr.p + grav * props_w.dens_stc * cell.c.z) / P_dim;
+	res.p = (next.p - nebr.p + grav * props_w.dens_stc * (cell.c.z - beta.c.z)) / P_dim;
 	res.sw = (next.sw - nebr.sw) / P_dim;
 	res.xw = (next.xw - nebr.xw) / P_dim;
 	res.xa = (next.xa - nebr.xa) / P_dim;
@@ -946,14 +948,12 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 	const auto& next = x_frac[cell.num];
 
 	FracTapeVariable res;
-/*	int neighbor[6];
-	getNeighborIdx(cell.num, neighbor);
-	const auto& nebr_x_minus = x_frac[neighbor[0]];
-	const auto& nebr_x_plus = x_frac[neighbor[1]];
-	const auto& nebr_y_minus = x_frac[neighbor[2]];
-	const auto& nebr_y_plus = x_frac[neighbor[3]];
-	const auto& nebr_z_minus = x_frac[neighbor[4]];
-	const auto& nebr_z_plus = x_frac[neighbor[5]];
+/*	const auto& nebr_mu_minus = x_frac[cell.nebrs[0]];
+	const auto& nebr_mu_plus = x_frac[cell.nebrs[1]];
+	const auto& nebr_nu_minus = x_frac[cell.nebrs[2]];
+	const auto& nebr_nu_plus = x_frac[cell.nebrs[3]];
+	const auto& nebr_z_minus = x_frac[cell.nebrs[4]];
+	const auto& nebr_z_plus = x_frac[cell.nebrs[5]];
 
 	double y_plus = cell.y + cell.hy / 2.0;
 	double y_minus = cell.y - cell.hy / 2.0;

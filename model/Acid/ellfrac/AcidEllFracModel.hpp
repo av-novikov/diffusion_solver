@@ -160,16 +160,27 @@ namespace acidellfrac
 				(var.xa - props.xa_eqbm) *
 				reac.getReactionRate(props.m_init, m) / reac.comps[REACTS::ACID].mol_weight;
 		};
-		/*inline adouble getFlowLeak(const FracCell& cell)
+		inline const size_t getFirstMuPoro(const size_t idx) const
 		{
-			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
-			const auto& next = x_poro[grid.start_idx];
-			const auto& nebr = x_poro[grid.start_idx + 1];
-			return -grid.props_sk->getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, grid.props_sk) /
+			const size_t outer_idx = int(idx / (cellsNum_mu_frac + 1)) * (cellsNum_mu_frac + 1) + cellsNum_mu_frac;
+			const auto& out_cell = cells_frac[outer_idx];
+			assert(out_cell.type == FracType::FRAC_OUT);
+			return out_cell.nebrs[1];
+		};
+		inline adouble getFlowLeak(const FracCell& cell)
+		{
+			const size_t idx = getFirstMuPoro(cell.num);
+			const auto& poro_cell = cells_poro[idx];
+			assert(poro_cell.type == PoroType::WELL_LAT);
+			const auto& poro_beta = cells_poro[idx + 1];
+			const auto& next = x_poro[idx];
+			const auto& nebr = x_poro[idx + 1];
+			const auto& props = props_sk.back();
+			return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
-				(nebr.p - next.p) / (grid.cells[1].x - grid.cells[0].x);
-		}
-		inline adouble getFlowLeakNew(const FracCell& cell)
+				(nebr.p - next.p) / (poro_cell.faces_dist[1] + poro_cell.faces_dist[0]);
+		};
+		/*inline adouble getFlowLeakNew(const FracCell& cell)
 		{
 			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
 			const auto& beta = cells_frac[grid.frac_nebr->num];
@@ -179,7 +190,7 @@ namespace acidellfrac
 			const auto& nebr = x_frac[beta.num];
 			
 			return -props_frac.w2 * props_frac.w2 / 3.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
-		}*/
+		}
 		inline adouble getQuadAppr(const std::array<adouble, 3> p, const std::array<double, 3> x, const double cur_x) const
 		{
 			const double den = (x[0] - x[1]) * (x[0] - x[2]) * (x[1] - x[2]);
@@ -193,8 +204,7 @@ namespace acidellfrac
 							x[2] * (p[0] * x[1] * (x[1] - x[2]) + p[1] * x[0] * (x[2] - x[0]))) / den;
 			return a * cur_x * cur_x + b * cur_x + c;
 		};
-		// Service functions
-		/*inline void getPoroNeighborIdx(const int cur, int* const neighbor)
+		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
 		{
 			neighbor[0] = cur - 1;
 			neighbor[1] = cur + 1;
@@ -205,12 +215,6 @@ namespace acidellfrac
 				return 0.0;
 			else
 				return 1.0;
-		};
-		inline const int getRowOuter(const int idx) const
-		{
-			const int outer_idx = int(idx / (cellsNum_y + 1)) * (cellsNum_y + 1) + cellsNum_y;
-			assert(cells_frac[outer_idx].type == FracType::FRAC_OUT);
-			return outer_idx;
 		};*/
 	public:
 		// Dimensions

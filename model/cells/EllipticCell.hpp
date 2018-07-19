@@ -29,7 +29,7 @@ public:
 	inline std::array<double, 3> getVectorCartesian(double u_mu, double u_nu, double u_z) const
 	{
 		const double u_x = a * (sinh(mu) * cos(nu) * u_mu - cosh(mu) * sin(nu) * u_nu) / getH(mu, nu);
-		const double u_y = a * (cosh(mu) * sin(nu) * u_mu - sinh(mu) * cos(nu) * u_nu) / getH(mu, nu);
+		const double u_y = a * (cosh(mu) * sin(nu) * u_mu + sinh(mu) * cos(nu) * u_nu) / getH(mu, nu);
 		return{ u_x, u_y, u_z };
 	};
 
