@@ -134,6 +134,20 @@ namespace point
 			const double u_y = a * (cosh(mu) * sin(nu) / sqrt(g[0]) * u_mu + sinh(mu) * cos(nu) / sqrt(g[1]) * u_nu);
 			return{ u_x, u_y, u_z };
 		};
+		inline std::array<adouble, 2> getEllipticalVector(adouble u_x, adouble u_y) const
+		{
+			const auto g = getMetric();
+			const adouble u_mu = a * (sinh(mu) * cos(nu) / g[0] * u_x + cosh(mu) * sin(nu) / g[1] * u_y);
+			const adouble u_nu = a * (-cosh(mu) * sin(nu) / g[0] * u_x + sinh(mu) * cos(nu) / g[1] * u_y);
+			return{ u_mu, u_nu };
+		};
+		/*inline std::array<adouble, 3> getAVectorCartesian(adouble u_mu, adouble u_nu, adouble u_z) const
+		{
+			const auto g = getMetric();
+			adouble u_x = a * (sinh(mu) * cos(nu) / sqrt(g[0]) * u_mu - cosh(mu) * sin(nu) / sqrt(g[1]) * u_nu);
+			adouble u_y = a * (cosh(mu) * sin(nu) / sqrt(g[0]) * u_mu + sinh(mu) * cos(nu) / sqrt(g[1]) * u_nu);
+			return{ u_x, u_y, u_z };
+		};*/
 	};
 
 	inline double getX(const double mu, const double nu)
@@ -221,6 +235,11 @@ namespace point
 		const auto g = in.getMetric();
 		return g[0] * a1.coords[0] * a2.coords[0] + g[1] * a1.coords[1] * a2.coords[1] + g[2] * a1.coords[2] * a2.coords[2];
 	};
+	template <typename Point>
+	inline double distance(const Point& a1, const Point& a2, const Point& in)
+	{
+		return sqrt(dot_product(a2 - a1, a2 - a1, in));
+	};
 
 	/*template <typename Point>
 	inline Point vector_product(const Point& a1, const Point& a2)
@@ -228,11 +247,6 @@ namespace point
 		return{ a1.y * a2.z - a1.z * a2.y,
 			a1.z * a2.x - a1.x * a2.z,
 			a1.x * a2.y - a1.y * a2.x };
-	};
-	template <typename Point>
-	inline double distance(const Point& a1, const Point& a2)
-	{
-		return sqrt(dot_product(a2 - a1, a2 - a1));
 	};
 	template <typename Point>
 	inline double square(const Point& a1, const Point& a2, const Point& a3)
