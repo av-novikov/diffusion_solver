@@ -148,7 +148,7 @@ void Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac
 {
 	model->load(props);
 	paralution::init_paralution();
-	//method = new acidfrac::AcidFracSolver(model);
+	method = new acidellfrac::AcidEllFracSolver(model);
 }
 void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wax_nit::Properties& props)
 {

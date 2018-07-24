@@ -22,7 +22,7 @@ public:
 		
 		double V;
 
-		const Type type;
+		Type type;
 		
 		varType u_next;
 		varType u_iter;

@@ -168,8 +168,10 @@ namespace acidellfrac
 		inline const size_t getFirstMuPoro(const size_t idx) const
 		{
 			const auto& out_cell = cells_frac[getFracOut(idx)];
-			assert(out_cell.type == FracType::FRAC_OUT);
-			return out_cell.nebrs[1];
+			//assert(out_cell.type == FracType::FRAC_OUT);
+			const int nebr_idx = int(idx / (cellsNum_mu_frac + 1)) * (cellsNum_mu_poro + 2);
+			assert(out_cell.nebrs[1] < 0 || out_cell.nebrs[1] == nebr_idx);
+			return nebr_idx;
 		};
 		inline adouble getFlowLeak(const FracCell& cell) const 
 		{

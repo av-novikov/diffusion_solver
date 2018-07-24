@@ -201,7 +201,7 @@ void AcidEllFrac::buildFracGrid()
 			cell.nebrs[0] = cell.num + (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 		}
 	}
-	// Middle border
+	// Middle
 	hnu = M_PI_2 / (cellsNum_nu + 1);	 cnu = M_PI_2 - hnu / 2;
 	for (int j = 0; j < cellsNum_nu; j++)
 	{
@@ -241,15 +241,15 @@ void AcidEllFrac::buildFracGrid()
 					cur_type = FracType::FRAC_BORDER;
 
 				cells_frac.push_back(FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
-				Volume_frac += cells_frac.back().V;
 				auto& cell = cells_frac.back();
+				Volume_frac += cell.V;
 				if (cell.type != FracType::FRAC_BORDER)
 				{
 					cell.nebrs[0] = cell.num - 1;
 					if(cell.type == FracType::FRAC_MID)
 						cell.nebrs[1] = cell.num + 1;
 					else if (cell.type == FracType::FRAC_OUT)
-						cell.nebrs[1] = j * (cellsNum_mu_poro + 2) * (cellsNum_z + 2) + k * (cellsNum_mu_poro + 2);
+						cell.nebrs[1] = (j + 1) * (cellsNum_mu_poro + 2) * (cellsNum_z + 2) + k * (cellsNum_mu_poro + 2);
 					cell.nebrs[2] = cell.num - (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 					cell.nebrs[3] = cell.num + (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 					cell.nebrs[4] = cell.num - (cellsNum_mu_frac + 1);
@@ -296,8 +296,8 @@ void AcidEllFrac::buildFracGrid()
 				cmu = ((double)i - 0.5) * hmu;
 			}
 
-			auto& cell = cells_frac.back();
 			cells_frac.push_back(FracCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
+			auto& cell = cells_frac.back();
 			cell.nebrs[0] = cell.num - (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
 		}
 	}
@@ -416,8 +416,8 @@ void AcidEllFrac::buildPoroGrid()
 					cur_type = PoroType::TOP;
 
 				cells_poro.push_back(PoroCell(counter++, cmu, cnu, cz, hmu, hnu, hz, cur_type));
-				Volume_poro += cells_poro.back().V;
 				auto& cell = cells_poro.back();
+				Volume_poro += cell.V;
 				if (cell.type == PoroType::MIDDLE)
 				{
 					cell.nebrs[0] = cell.num - 1;
@@ -490,6 +490,11 @@ void AcidEllFrac::buildPoroGrid()
 }
 void AcidEllFrac::processGeometry()
 {
+	// Change FRAC_IN type among zero-volume cells
+	for (auto& cell : cells_frac)
+		if (cell.type == FracType::FRAC_IN)
+			if (cell.h.mu * cell.h.z == 0.0)
+				cell.type = FracType::FRAC_BORDER;
 	// Neighbours check & set indices
 	for (auto& cell : cells_frac)
 	{
@@ -874,7 +879,7 @@ FracTapeVariable AcidEllFrac::solveFracIn(const FracCell& cell)
 	const auto& out_cell = cells_poro[getFirstMuPoro(cell.num)];
 	condassign(res.p, leftIsRate, ((next.p - beta.u_prev.p) + 
 		2.0 * Qcell[cell.num] / (1.0 - (sinh(cell.c.mu) / sinh(out_cell.c.mu)) * (sinh(cell.c.mu) / sinh(out_cell.c.mu))) / props_frac.w2_avg / props_frac.w2_avg * props_w.visc
-						/ fmap_poro.at({ cell.num, beta.num }).S * (cell.faces_dist[0] + beta.faces_dist[cell.nebrs_idx[0]])) / P_dim,
+						/ fmap_frac.at({ cell.num, beta.num }).S * (cell.faces_dist[0] + beta.faces_dist[cell.nebrs_idx[0]])) / P_dim,
 						(next.p - Pwf + grav * props_w.dens_stc * cell.c.z) / P_dim);
 	condassign(res.c, leftIsRate, (next.c - nebr.c) / P_dim, (next.c - c) / P_dim);
 	res.c = (next.c - c) / P_dim;
