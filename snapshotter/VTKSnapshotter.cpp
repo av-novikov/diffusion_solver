@@ -988,7 +988,7 @@ void VTKSnapshotter<acidellfrac::AcidEllFrac>::dump_all(int i)
 	grid_frac->SetPoints(points_frac);
 	// Poro points
 	auto points_poro = vtkSmartPointer<vtkPoints>::New();
-	const size_t ny_poro = model->cellsNum_mu_poro + 2;
+	const int ny_poro = model->cellsNum_mu_poro + 2;
 	point::CartesianPoint3d point;
 	for (int i = 0; i < nx - 1; i++)
 		for (int k = 0; k < nz - 1; k++)

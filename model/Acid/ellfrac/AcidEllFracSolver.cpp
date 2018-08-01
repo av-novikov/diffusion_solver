@@ -152,7 +152,7 @@ void AcidEllFracSolver::copySolution(const paralution::LocalVector<double>& sol)
 			cell.u_next.values[j] += sol[i * var_frac_size + j];
 	}
 
-	const size_t startIdx = var_frac_size * model->cellsNum_frac;
+	const int startIdx = var_frac_size * model->cellsNum_frac;
 	for (int i = 0; i < model->cellsNum_poro; i++)
 	{
 		auto& cell = model->cells_poro[i];
@@ -230,7 +230,7 @@ void AcidEllFracSolver::solveStep()
 		for (int i = 0; i < AcidEllFrac::var_size; i++)
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
-
+		model->snapshotter->dump_all(iterations + 1);
 		iterations++;
 	}
 

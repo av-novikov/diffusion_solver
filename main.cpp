@@ -1250,10 +1250,10 @@ acidellfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 20;
-	props->cellsNum_mu_frac = 10;
-	props->cellsNum_mu_poro = 10;
-	props->cellsNum_z = 10;
+	props->cellsNum_x = 10;
+	props->cellsNum_mu_frac = 5;
+	props->cellsNum_mu_poro = 50;
+	props->cellsNum_z = 1;
 
 	acidellfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
@@ -1381,6 +1381,6 @@ int main(int argc, char* argv[])
 	acidellfrac::Properties* props = getProps();
 	Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties> scene;
 	scene.load(*props);
-	//scene.start();
+	scene.start();
 	return 0;
 }

@@ -23,7 +23,7 @@ namespace acidellfrac
 	typedef new_cell::EllipticCell<FracVariable> FracCell;
 	typedef PoroCell::Type PoroType;
 	typedef FracCell::Type FracType;
-	typedef FracCell::Point Point;
+	typedef point::EllipticPoint3d Point;
 
 	typedef CalciteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
@@ -33,7 +33,7 @@ namespace acidellfrac
 	typedef FracCell::Face Face;
 	//typedef new_cell::AdjancedCellIdx CellIdx;
 	typedef std::unordered_map<new_cell::AdjancedCellIdx,Face,new_cell::IdxHasher> FaceMap;
-	const size_t NEBRS_NUM = new_cell::NEBRS_NUM;
+	const int NEBRS_NUM = new_cell::NEBRS_NUM;
 
 	class AcidEllFrac
 	{
@@ -56,7 +56,7 @@ namespace acidellfrac
 		Gas_Props props_g;
 		
 		// Grids
-		size_t cellsNum_frac, cellsNum_poro, cellsNum_mu_frac, cellsNum_mu_poro, cellsNum_nu, cellsNum_z;
+		int cellsNum_frac, cellsNum_poro, cellsNum_mu_frac, cellsNum_mu_poro, cellsNum_nu, cellsNum_z;
 		double Volume_frac, Volume_poro;
 		//std::vector<PoroGrid> poro_grids;
 		std::vector<PoroCell> cells_poro;
@@ -161,11 +161,11 @@ namespace acidellfrac
 				(var.xa - props.xa_eqbm) *
 				reac.getReactionRate(props.m_init, m) / reac.comps[REACTS::ACID].mol_weight;
 		};
-		inline const size_t getFracOut(const size_t idx) const
+		inline const int getFracOut(const int idx) const
 		{
 			return int(idx / (cellsNum_mu_frac + 1)) * (cellsNum_mu_frac + 1) + cellsNum_mu_frac;
 		};
-		inline const size_t getFirstMuPoro(const size_t idx) const
+		inline const int getFirstMuPoro(const int idx) const
 		{
 			const auto& out_cell = cells_frac[getFracOut(idx)];
 			//assert(out_cell.type == FracType::FRAC_OUT);
@@ -175,7 +175,7 @@ namespace acidellfrac
 		};
 		inline adouble getFlowLeak(const FracCell& cell) const 
 		{
-			const size_t idx = getFirstMuPoro(cell.num);
+			const int idx = getFirstMuPoro(cell.num);
 			const auto& poro_cell = cells_poro[idx];
 			assert(poro_cell.type == PoroType::WELL_LAT);
 			const auto& poro_beta = cells_poro[idx + 1];
@@ -186,11 +186,38 @@ namespace acidellfrac
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
 				(nebr.p - next.p) / (poro_cell.faces_dist[1] + poro_beta.faces_dist[0]);
 		};
-		inline double getFracDistance(const size_t idx1, const size_t idx2) const
+		inline double getFracDistance(const int idx1, const int idx2) const
 		{
 			const auto& cell1 = cells_frac[idx1];
 			const auto& cell2 = cells_frac[idx2];
 			return point::distance(cell1.c, cell2.c, (cell1.c + cell2.c) / 2.0);
+		};
+		inline adouble getVelocity(const FracCell& cell, const PoroCell& beta) const
+		{
+			std::array<adouble, 2> res;
+			const auto pt = (cell.c + beta.c) / 2.0;
+			const double h = pt.getH();
+
+			const auto& out_cell = beta;
+			const double rat_cell = sinh(cell.c.mu) / sinh(out_cell.c.mu);
+			const double rat_cur = sinh(pt.mu) / sinh(out_cell.c.mu);
+			double alpha = -props_frac.w2_avg * props_frac.w2_avg / 2.0 / props_w.visc * (1.0 - rat_cell * rat_cell);
+			adouble vel_y = getFlowLeak(cell) * (1.5 * rat_cur - 0.5 * rat_cur * rat_cur * rat_cur);
+
+			res[0] = -(x_frac[cell.num].p - x_poro[beta.num].p) / point::distance(cell.c, beta.c, cell.c);
+			const auto& pt_plus1 = cells_frac[cell.nebrs[3]].c;
+			const auto& pt_plus2 = cells_poro[beta.nebrs[3]].c;
+			const auto pt_plus = (pt_plus1 + pt_plus2) / 2.0;
+			adouble p_plus = getAverage(x_frac[cell.nebrs[3]].p, point::distance(pt_plus1, pt_plus, pt_plus),
+				x_poro[beta.nebrs[3]].p, point::distance(pt_plus2, pt_plus, pt_plus));
+			const auto& pt_minus1 = cells_frac[cell.nebrs[2]].c;
+			const auto& pt_minus2 = cells_poro[beta.nebrs[2]].c;
+			const auto pt_minus = (pt_minus1 + pt_minus2) / 2.0;
+			adouble p_minus = getAverage(x_frac[cell.nebrs[2]].p, point::distance(pt_minus1, pt_minus, pt_minus),
+				x_poro[beta.nebrs[2]].p, point::distance(pt_minus2, pt_minus, pt_minus));
+			res[1] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
+			adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
+			return pt.getEllipticalVector(vel_x, vel_y)[0];
 		};
 		inline adouble getVelocity(const FracCell& cell, const FracCell& beta) const
 		{
@@ -209,14 +236,14 @@ namespace acidellfrac
 				res[0] = (x_frac[cell.num].p - x_frac[beta.num].p) / getFracDistance(cell.num, beta.num);
 				res[0] = cell.num > beta.num ? res[0] : -res[0];
 
-				const auto& pt_plus1 = cells_frac[cell.nebrs[3]].c;
-				const auto& pt_plus2 = cells_frac[cell.nebrs[3] + (beta.num - cell.num)].c;
-				const auto pt_plus = (pt_plus1 + pt_plus2) / 2.0;
+				const Point& pt_plus1 = cells_frac[cell.nebrs[3]].c;
+				const Point& pt_plus2 = cells_frac[cell.nebrs[3] + (beta.num - cell.num)].c;
+				const Point pt_plus = (pt_plus1 + pt_plus2) / 2.0;
 				adouble p_plus = getAverage(x_frac[cell.nebrs[3]].p,							point::distance(pt_plus1, pt_plus, pt_plus),
 											x_frac[cell.nebrs[3] + (beta.num - cell.num)].p, point::distance(pt_plus2, pt_plus, pt_plus));
-				const auto& pt_minus1 = cells_frac[cell.nebrs[2]].c;
-				const auto& pt_minus2 = cells_frac[cell.nebrs[2] + (beta.num - cell.num)].c;
-				const auto pt_minus = (pt_minus1 + pt_minus2) / 2.0;
+				const Point& pt_minus1 = cells_frac[cell.nebrs[2]].c;
+				const Point& pt_minus2 = cells_frac[cell.nebrs[2] + (beta.num - cell.num)].c;
+				const Point pt_minus = (pt_minus1 + pt_minus2) / 2.0;
 				adouble p_minus = getAverage(x_frac[cell.nebrs[2]].p, point::distance(pt_minus1, pt_minus, pt_minus),
 											x_frac[cell.nebrs[2] + (beta.num - cell.num)].p, point::distance(pt_minus2, pt_minus, pt_minus));
 				res[1] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
@@ -226,16 +253,20 @@ namespace acidellfrac
 			if (fabs(cell.c.nu - beta.c.nu) > EQUALITY_TOLERANCE)
 			{
 				res[1] = (x_frac[cell.num].p - x_frac[beta.num].p) / getFracDistance(cell.num, beta.num);
-				res[1] = cell.num > beta.num ? res[1] : -res[1];
+				res[1] = cell.num > beta.num ? -res[1] : res[1];
 
-				const auto& pt_plus1 = cells_frac[cell.nebrs[1]].c;
-				const auto& pt_plus2 = cells_frac[cell.nebrs[1] + (beta.num - cell.num)].c;
-				const auto pt_plus = (pt_plus1 + pt_plus2) / 2.0;
-				adouble p_plus = getAverage(x_frac[cell.nebrs[1]].p, point::distance(pt_plus1, pt_plus, pt_plus),
-					x_frac[cell.nebrs[1] + (beta.num - cell.num)].p, point::distance(pt_plus2, pt_plus, pt_plus));
-				const auto& pt_minus1 = cells_frac[cell.nebrs[0]].c;
-				const auto& pt_minus2 = cells_frac[cell.nebrs[0] + (beta.num - cell.num)].c;
-				const auto pt_minus = (pt_minus1 + pt_minus2) / 2.0;
+				const int idx = cell.nebrs[1] + (beta.num - cell.num) / (cellsNum_mu_frac + 1) * (cellsNum_mu_poro + 2);
+				const Point& pt_plus1 = (cell.type != FracType::FRAC_OUT ? cells_frac[cell.nebrs[1]].c : cells_poro[cell.nebrs[1]].c);
+				const Point& pt_plus2 = (cell.type != FracType::FRAC_OUT ? cells_frac[cell.nebrs[1] + (beta.num - cell.num)].c :
+										cells_poro[idx].c);
+				const Point pt_plus = (pt_plus1 + pt_plus2) / 2.0;
+				const auto& x1 = (cell.type != FracType::FRAC_OUT ? x_frac[cell.nebrs[1]].p : x_poro[cell.nebrs[1]].p);
+				const auto& x2 = (cell.type != FracType::FRAC_OUT ? x_frac[cell.nebrs[1] + (beta.num - cell.num)].p :
+										x_poro[idx].p);
+				adouble p_plus = getAverage(x1, point::distance(pt_plus1, pt_plus, pt_plus), x2, point::distance(pt_plus2, pt_plus, pt_plus));
+				const Point& pt_minus1 = cells_frac[cell.nebrs[0]].c;
+				const Point& pt_minus2 = cells_frac[cell.nebrs[0] + (beta.num - cell.num)].c;
+				const Point pt_minus = (pt_minus1 + pt_minus2) / 2.0;
 				adouble p_minus = getAverage(x_frac[cell.nebrs[0]].p, point::distance(pt_minus1, pt_minus, pt_minus),
 					x_frac[cell.nebrs[0] + (beta.num - cell.num)].p, point::distance(pt_minus2, pt_minus, pt_minus));
 				res[0] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
@@ -243,7 +274,6 @@ namespace acidellfrac
 				return pt.getEllipticalVector(vel_x, vel_y)[1];
 			}
 		};
-
 		/*inline adouble getFlowLeakNew(const FracCell& cell)
 		{
 			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];

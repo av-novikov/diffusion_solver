@@ -29,14 +29,14 @@ namespace new_cell
 	struct IdxHasher
 	{
 		static const int SIZE = 65536;
-		size_t operator() (const AdjancedCellIdx& idx) const
+		int operator() (const AdjancedCellIdx& idx) const
 		{
 			//return hash<size_t>()(idx.first) + hash<size_t>()(idx.second);
 			return SIZE * std::min(idx.first, idx.second) + std::max(idx.first, idx.second);
 		};
 	};
 
-	const size_t NEBRS_NUM = 6;
+	const int NEBRS_NUM = 6;
 
 	template <typename varType, typename PropsType = EmptyStruct>
 	class EllipticCell : public AbstractCell<varType>
