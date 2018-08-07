@@ -96,7 +96,6 @@ namespace acidellfrac
 		FracTapeVariable solveFracIn(const FracCell& cell);
 		FracTapeVariable solveFracMid(const FracCell& cell);
 		FracTapeVariable solveFracBorder(const FracCell& cell);
-		FracTapeVariable solveFracOut(const FracCell& cell);
 		// Service calculations
 		template <class TCell>
 		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
@@ -217,7 +216,7 @@ namespace acidellfrac
 				x_poro[beta.nebrs[2]].p, point::distance(pt_minus2, pt_minus, pt_minus));
 			res[1] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
 			adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
-			return pt.getEllipticalVector(vel_x, vel_y)[0];
+			return h * pt.getEllipticalVector(vel_x, vel_y)[0];
 		};
 		inline adouble getVelocity(const FracCell& cell, const FracCell& beta) const
 		{
@@ -248,7 +247,7 @@ namespace acidellfrac
 											x_frac[cell.nebrs[2] + (beta.num - cell.num)].p, point::distance(pt_minus2, pt_minus, pt_minus));
 				res[1] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
 				adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
-				return pt.getEllipticalVector(vel_x, vel_y)[0];
+				return h * pt.getEllipticalVector(vel_x, vel_y)[0];
 			}
 			if (fabs(cell.c.nu - beta.c.nu) > EQUALITY_TOLERANCE)
 			{
@@ -271,7 +270,7 @@ namespace acidellfrac
 					x_frac[cell.nebrs[0] + (beta.num - cell.num)].p, point::distance(pt_minus2, pt_minus, pt_minus));
 				res[0] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
 				adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
-				return pt.getEllipticalVector(vel_x, vel_y)[1];
+				return h * pt.getEllipticalVector(vel_x, vel_y)[1];
 			}
 		};
 		/*inline adouble getFlowLeakNew(const FracCell& cell)

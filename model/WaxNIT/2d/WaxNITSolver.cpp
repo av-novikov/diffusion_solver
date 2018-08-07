@@ -77,7 +77,7 @@ void WaxNITSolver::writeData()
 		"\t" << s_g / (double)(model->Qcell.size()) <<
 		"\t" << (1.0 - s_w - s_o - s_g) / (double)(model->Qcell.size()) << endl;
 
-	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t) + 
+	pvd << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t) + 
 			"0\" file=\"WaxNIT_" + to_string(step_idx) + ".vtp\"/>\n";
 	qcells << endl;
 }

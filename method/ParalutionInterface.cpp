@@ -12,8 +12,8 @@ ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
 {
 	isAssembled = false;
 	isPrecondBuilt = false;
-	gmres.Init(1.E-17, 1.E-12, 1E+12, 500);
-	bicgstab.Init(1.E-17, 1.E-12, 1E+12, 500);
+	gmres.Init(1.E-15, 1.E-10, 1E+12, 500);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+12, 500);
 }
 ParSolver::~ParSolver()
 {
@@ -64,13 +64,13 @@ void ParSolver::Solve(const PRECOND key)
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
-	//p_ilut.Set(1.E-25, 300);
-	p.Set(3);
-	bicgstab.SetPreconditioner(p);
+	p_ilut.Set(1.E-25, 300);
+	//p.Set(3);
+	bicgstab.SetPreconditioner(p_ilut);
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-40, 1.E-30, 1E+12, 500);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+12, 500);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
@@ -78,7 +78,7 @@ void ParSolver::SolveBiCGStab()
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
-	writeSystem();
+	//writeSystem();
 
 	//getResiduals();
 	//cout << "Initial residual: " << initRes << endl;
@@ -96,7 +96,7 @@ void ParSolver::SolveBiCGStab_Simple()
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-30, 1.E-20, 1E+12, 500);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+12, 500);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();

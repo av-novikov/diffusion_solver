@@ -975,12 +975,12 @@ using namespace std;
 	props->cellsNum_r = 200;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(500.0 * 3600.0);
+	props->timePeriods.push_back(120.0 * 3600.0);
 	props->timePeriods.push_back(1.0 * 370.0 * 86400.0);
 
 	props->leftBoundIsRate = false;
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(160.625 * 1.0e+5);
+	props->pwf.push_back(150.725 * 1.0e+5);
 	props->pwf.push_back(100.625 * 1.0e+5);
 	//props->rates.push_back(0.1);
 	//props->rates.push_back(0.0);
@@ -1029,7 +1029,7 @@ using namespace std;
 	props->props_oil.dens_stc = 855.6;
 	props->props_oil.beta = 1.22 * 1.e-9;
 	props->props_oil.p_ref = tmp.p_ref;
-	props->props_oil.gamma = 0.5;
+	props->props_oil.gamma = 0.25;
 
 	props->props_oil.jt = 1.0 * 1.e-7;
 	props->props_oil.ad = 1.0 * 1.e-7;
@@ -1063,12 +1063,12 @@ using namespace std;
 
 	// Defining volume factors
 	//props->byDefault.B_oil = true;
-	setDataFromFile(props->B_oil, "props/new/Boil50.txt");
+	setDataFromFile(props->B_oil, "props/new/Boil150.txt");
 	//props->byDefault.B_gas = false;
 	setDataFromFile(props->B_gas, "props/Bgas.txt");
 
 	//props->byDefault.Rs = true;
-	setDataFromFile(props->Rs, "props/new/Rs50.txt");
+	setDataFromFile(props->Rs, "props/new/Rs150.txt");
 	setDataFromFile(props->lp, "props/lpx05.txt");
 
 	return props;
@@ -1243,7 +1243,7 @@ acidellfrac::Properties* getProps()
 	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 20.0;
-	props->props_frac.w2 = 2;
+	props->props_frac.w2 = 1;
 	props->re = props->props_frac.l2;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
@@ -1251,8 +1251,8 @@ acidellfrac::Properties* getProps()
 	props->props_frac.height = 10.0;
 
 	props->cellsNum_x = 10;
-	props->cellsNum_mu_frac = 5;
-	props->cellsNum_mu_poro = 50;
+	props->cellsNum_mu_frac = 20;
+	props->cellsNum_mu_poro = 20;
 	props->cellsNum_z = 1;
 
 	acidellfrac::Skeleton_Props props_sk;
@@ -1364,8 +1364,8 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*wax_nit1d::Properties* props = getProps();
-	Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties> scene;
+	/*wax_nit::Properties* props = getProps();
+	Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
