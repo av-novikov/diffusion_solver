@@ -114,15 +114,6 @@ namespace point
 			const double h = getH();
 			return{h * h, h * h, 1.0};
 		};
-		inline double dist() const
-		{
-			return sqrt(mu * mu + nu * nu + z * z);
-		}
-		inline double norm() const
-		{ 
-			const auto g = getMetric();
-			return sqrt( g[0] * mu * mu + g[1] * nu * nu + g[2] * z * z ); 
-		};
 		inline CartesianPoint3d getCartesian() const
 		{
 			return CartesianPoint3d(id, a * cosh(mu) * cos(nu), a * sinh(mu) * sin(nu), z);

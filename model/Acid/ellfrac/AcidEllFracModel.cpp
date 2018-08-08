@@ -566,18 +566,19 @@ void AcidEllFrac::processGeometry()
 				if (cell.type == FracType::FRAC_OUT && i == 1)
 				{
 					const auto& nebr = cells_poro[cell.nebrs[i]];
-					cell.faces_dist[i] = (cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0).norm();
-					const Point p_mid = cell.c + cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0;
-					double S = (cell.V + nebr.V) / (2.0 * (nebr.c - cell.c).norm());
-					fmap_inter[{cell.num, nebr.num}] = Face{ p_mid, S };
+					const Point p_mid = (cell.c + nebr.c) / 2.0;
+					cell.faces_dist[i] = point::distance(cell.c, p_mid, cell.c);//(cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0).norm();
+					double S = (cell.V + nebr.V) / (2.0 * point::distance(cell.c, nebr.c, p_mid));
+					fmap_inter[{cell.num, nebr.num}] = Face{ S };
 				}
 				else
 				{
 					const auto& nebr = cells_frac[cell.nebrs[i]];
-					cell.faces_dist[i] = (cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0).norm();
-					const Point p_mid = cell.c + cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0;
-					double S = (cell.V + nebr.V) / (2.0 * (nebr.c - cell.c).norm());
-					fmap_frac[{cell.num, nebr.num}] = Face{ p_mid, S };
+					const Point p_mid = (cell.c + nebr.c) / 2.0;
+					cell.faces_dist[i] = point::distance(cell.c, p_mid, cell.c);
+					double tmp = point::distance(cell.c, nebr.c, p_mid);
+					double S = (cell.V + nebr.V) / (2.0 * tmp);
+					fmap_frac[{cell.num, nebr.num}] = Face{ S };
 				}
 			}
 	for (auto& cell : cells_poro)
@@ -586,19 +587,16 @@ void AcidEllFrac::processGeometry()
 			{
 				if (cell.type == PoroType::WELL_LAT && i == 0)
 				{
-					const auto& nebr = cells_poro[cell.nebrs[i]];
-					cell.faces_dist[i] = (cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0).norm();
-					const Point p_mid = cell.c + cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0;
-					double S = (cell.V + nebr.V) / (2.0 * (nebr.c - cell.c).norm());
-					fmap_inter[{cell.num, nebr.num}] = Face{ p_mid, S };
+					const auto& nebr = cells_frac[cell.nebrs[i]];
+					cell.faces_dist[i] = 0.0;
 				}
 				else
 				{
 					const auto& nebr = cells_poro[cell.nebrs[i]];
-					cell.faces_dist[i] = (cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0).norm();
-					const Point p_mid = cell.c + cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0;
-					double S = (cell.V + nebr.V) / (2.0 * (nebr.c - cell.c).norm());
-					fmap_poro[{cell.num, nebr.num}] = Face{ p_mid, S };
+					const Point p_mid = (cell.c + nebr.c) / 2.0;
+					cell.faces_dist[i] = point::distance(cell.c, p_mid, cell.c);
+					double S = (cell.V + nebr.V) / (2.0 * point::distance(cell.c, nebr.c, p_mid));
+					fmap_poro[{cell.num, nebr.num}] = Face{ S };
 				}
 			}
 }
@@ -946,7 +944,7 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 	for (int i = 0; i < 4; i++)
 	{
 		if (cell.type == FracType::FRAC_OUT && i == 1)
-		{
+		{ 
 			const auto& beta = cells_poro[cell.nebrs[i]];
 			assert(beta.type == PoroType::WELL_LAT);
 			const auto& nebr = x_poro[beta.num];

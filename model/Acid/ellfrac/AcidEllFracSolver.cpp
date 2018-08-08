@@ -224,7 +224,8 @@ void AcidEllFracSolver::solveStep()
 		copySolution(solver.getSolution());
 
 		checkStability();
-		err_newton = convergance(cellIdx, varIdx);
+		auto err = convergance();
+		err_newton = fmax(err[0].err, err[1].err);
 
 		averValue(averVal);
 		for (int i = 0; i < AcidEllFrac::var_size; i++)

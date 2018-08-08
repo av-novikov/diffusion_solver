@@ -581,7 +581,12 @@ double AbstractSolver<acidfrac::AcidFrac>::convergance(int& ind, int& varInd)
 }
 double AbstractSolver<acidellfrac::AcidEllFrac>::convergance(int& ind, int& varInd)
 {
-	double relErr = 0.0;
+	return 1.0;
+}
+std::array<ErrInfo, 2> AbstractSolver<acidellfrac::AcidEllFrac>::convergance() const
+{
+	std::array<ErrInfo, 2> err;
+	err[0].err = err[1].err = 0.0;
 	double cur_relErr = 0.0;
 
 	double var_next, var_iter;
@@ -594,16 +599,17 @@ double AbstractSolver<acidellfrac::AcidEllFrac>::convergance(int& ind, int& varI
 			if (fabs(var_next) > EQUALITY_TOLERANCE)
 			{
 				cur_relErr = fabs((var_next - var_iter) / var_next);
-				if (cur_relErr > relErr)
+				if (cur_relErr > err[0].err)
 				{
-					relErr = cur_relErr;
-					ind = cell.num;
-					varInd = i;
+					err[0].err = cur_relErr;
+					err[0].cell_idx = cell.num;
+					err[0].var_idx = i;
 				}
 			}
 		}
 	}
 
+	cur_relErr = 0.0;
 	for (int i = 0; i < acidfrac::var_poro_size; i++)
 	{
 			for (const auto& cell : model->cells_poro)
@@ -612,17 +618,17 @@ double AbstractSolver<acidellfrac::AcidEllFrac>::convergance(int& ind, int& varI
 				if (fabs(var_next) > EQUALITY_TOLERANCE)
 				{
 					cur_relErr = fabs((var_next - var_iter) / var_next);
-					if (cur_relErr > relErr)
+					if (cur_relErr > err[1].err)
 					{
-						relErr = cur_relErr;
-						ind = model->cellsNum_frac + cell.num;
-						varInd = i;
+						err[1].err = cur_relErr;
+						err[1].cell_idx = cell.num;
+						err[1].var_idx = i;
 					}
 				}
 			}
 	}
 
-	return relErr;
+	return err;
 }
 
 template <class modelType>

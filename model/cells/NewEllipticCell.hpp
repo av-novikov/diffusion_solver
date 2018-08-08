@@ -14,7 +14,7 @@ namespace new_cell
 	template <class TPoint>
 	struct Face
 	{
-		TPoint c;
+		//TPoint c;
 		double S;
 	};
 	struct AdjancedCellIdx

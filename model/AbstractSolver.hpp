@@ -6,6 +6,13 @@
 #include <iostream>
 #include <array>
 
+struct ErrInfo
+{
+	double err;
+	int cell_idx;
+	int var_idx;
+};
+
 template <class modelType>
 class AbstractSolver {
 	protected:
@@ -28,6 +35,7 @@ class AbstractSolver {
 		void copyTimeLayer();
 		
 		double convergance(int& ind, int& varInd);
+		std::array<ErrInfo, 2> convergance() const;
 		double averValue(int varInd);
 		void averValue(std::array<double, modelType::var_size>& aver);
 		
@@ -42,7 +50,6 @@ class AbstractSolver {
 		double CONV_W2, CONV_VAR;
 		int MAX_ITER;
 
-		
 		virtual void checkStability();
 
 	public:

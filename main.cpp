@@ -1239,11 +1239,11 @@ acidellfrac::Properties* getProps()
 	props->rightBoundIsPres = true;
 	props->pwf.push_back(300.0 * 1.0e+5);
 	props->rates.push_back(0.0);
-	props->cs.push_back(0.15);
+	props->cs.push_back(0.0);
 	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 20.0;
-	props->props_frac.w2 = 1;
+	props->props_frac.w2 = 0.01;
 	props->re = props->props_frac.l2;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
@@ -1252,7 +1252,7 @@ acidellfrac::Properties* getProps()
 
 	props->cellsNum_x = 10;
 	props->cellsNum_mu_frac = 20;
-	props->cellsNum_mu_poro = 20;
+	props->cellsNum_mu_poro = 50;
 	props->cellsNum_z = 1;
 
 	acidellfrac::Skeleton_Props props_sk;
