@@ -71,10 +71,18 @@ AcidEllFracSolver::~AcidEllFracSolver()
 }
 void AcidEllFracSolver::writeData()
 {
-	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t * t_dim / 3600.0) +
-		"0\" file=\"AcidFrac_frac_" + std::to_string(step_idx) + ".vtu\"/>\n";
-	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t * t_dim / 3600.0) +
-		"0\" file=\"AcidFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
+	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"";
+	if (cur_t == 0.0)
+		pvd_frac << std::to_string(0.0);
+	else
+		pvd_frac << cur_t * t_dim / 3600.0;
+	pvd_frac << "0\" file=\"AcidEllFrac_frac_" + std::to_string(step_idx) + ".vtu\"/>\n";
+	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"";
+	if (cur_t == 0.0)
+		pvd_poro << std::to_string(0.0);
+	else
+		pvd_poro << cur_t * t_dim / 3600.0;
+	pvd_poro << "0\" file=\"AcidEllFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
 	double p = 0.0;
 	qcells << cur_t * t_dim / 3600.0;

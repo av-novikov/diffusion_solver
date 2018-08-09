@@ -1229,8 +1229,8 @@ acidellfrac::Properties* getProps()
 	props->ht_min = 1.0;
 	props->ht_max = 500.0;
 
-	props->timePeriods.push_back(3600.0 / 3);
-	props->timePeriods.push_back(5.0 * 3600.0);
+	props->timePeriods.push_back(3600.0 / 3.0);
+	props->timePeriods.push_back(3.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);

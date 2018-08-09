@@ -84,7 +84,7 @@ Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Pro
 	paralution::stop_paralution();
 
 	delete model;
-	//delete method;
+	delete method;
 }
 Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::~Scene()
 {
