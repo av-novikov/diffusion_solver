@@ -71,10 +71,10 @@ AcidFracSolver::~AcidFracSolver()
 }
 void AcidFracSolver::writeData()
 {
-	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t * t_dim / 3600.0) +
-		"0\" file=\"AcidFrac_frac_" + to_string(step_idx) + ".vtu\"/>\n";
-	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t * t_dim / 3600.0) +
-		"0\" file=\"AcidFrac_poro_" + to_string(step_idx) + ".vtu\"/>\n";
+	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t * t_dim / 3600.0) +
+		"0\" file=\"AcidFrac_frac_" + std::to_string(step_idx) + ".vtu\"/>\n";
+	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t * t_dim / 3600.0) +
+		"0\" file=\"AcidFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
 	double p = 0.0;
 	qcells << cur_t * t_dim / 3600.0;

@@ -71,10 +71,10 @@ AcidEllFracSolver::~AcidEllFracSolver()
 }
 void AcidEllFracSolver::writeData()
 {
-	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t * t_dim / 3600.0) +
-		"0\" file=\"AcidFrac_frac_" + to_string(step_idx) + ".vtu\"/>\n";
-	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + to_string(cur_t * t_dim / 3600.0) +
-		"0\" file=\"AcidFrac_poro_" + to_string(step_idx) + ".vtu\"/>\n";
+	pvd_frac << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t * t_dim / 3600.0) +
+		"0\" file=\"AcidFrac_frac_" + std::to_string(step_idx) + ".vtu\"/>\n";
+	pvd_poro << "\t\t<DataSet part=\"0\" timestep=\"" + std::to_string(cur_t * t_dim / 3600.0) +
+		"0\" file=\"AcidFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
 	double p = 0.0;
 	qcells << cur_t * t_dim / 3600.0;
@@ -105,9 +105,9 @@ void AcidEllFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max && iterations < 6)
-		model->ht = model->ht * 1.5;
-	else if (iterations > 6 && model->ht > model->ht_min)
+	if (model->ht <= model->ht_max && iterations < 5)
+		model->ht = model->ht * 1.3;
+	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
 
 	if (cur_t + model->ht > model->period[curTimePeriod])
@@ -231,7 +231,7 @@ void AcidEllFracSolver::solveStep()
 		for (int i = 0; i < AcidEllFrac::var_size; i++)
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
-		model->snapshotter->dump_all(iterations + 1);
+		//model->snapshotter->dump_all(iterations + 1);
 		iterations++;
 	}
 

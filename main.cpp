@@ -1225,9 +1225,9 @@ acidellfrac::Properties* getProps()
 	typedef acidellfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.01;
-	props->ht_min = 0.01;
-	props->ht_max = 1000.0;
+	props->ht = 0.0001;
+	props->ht_min = 1.0;
+	props->ht_max = 500.0;
 
 	props->timePeriods.push_back(3600.0 / 3);
 	props->timePeriods.push_back(5.0 * 3600.0);
@@ -1239,7 +1239,7 @@ acidellfrac::Properties* getProps()
 	props->rightBoundIsPres = true;
 	props->pwf.push_back(300.0 * 1.0e+5);
 	props->rates.push_back(0.0);
-	props->cs.push_back(0.0);
+	props->cs.push_back(0.15);
 	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 20.0;
@@ -1252,7 +1252,7 @@ acidellfrac::Properties* getProps()
 
 	props->cellsNum_x = 10;
 	props->cellsNum_mu_frac = 20;
-	props->cellsNum_mu_poro = 50;
+	props->cellsNum_mu_poro = 30;
 	props->cellsNum_z = 1;
 
 	acidellfrac::Skeleton_Props props_sk;

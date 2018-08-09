@@ -105,17 +105,17 @@ namespace acidellfrac
 			else
 				return cell.num;
 		};
-		template <>
+		/*template <>
 		inline int getUpwindIdx(const FracCell& cell, const FracCell& beta) const
 		{
-			/*if (fabs(cell.c.mu - beta.c.mu) > cell.h.mu * EQUALITY_TOLERANCE)
+			if (fabs(cell.c.mu - beta.c.mu) > cell.h.mu * EQUALITY_TOLERANCE)
 				return (cell.c.mu > beta.c.mu) ? beta.num : cell.num;
 			if (cell.u_next.p < beta.u_next.p)
 				return beta.num;
 			else
-				return cell.num;*/
+				return cell.num;
 			return -1;
-		};
+		};*/
 		inline adouble getAverage(adouble p1, const double l1, adouble p2, const double l2) const
 		{
 			return (p1 * (adouble)l2 + p2 * (adouble)l1) / (adouble)(l1 + l2);
@@ -203,7 +203,7 @@ namespace acidellfrac
 			double alpha = -props_frac.w2_avg * props_frac.w2_avg / 2.0 / props_w.visc * (1.0 - rat_cell * rat_cell);
 			adouble vel_y = getFlowLeak(cell) * (1.5 * rat_cur - 0.5 * rat_cur * rat_cur * rat_cur);
 
-			res[0] = -(x_frac[cell.num].p - x_poro[beta.num].p) / point::distance(cell.c, beta.c, cell.c);
+			res[0] = (x_poro[beta.num].p - x_frac[cell.num].p) / point::distance(cell.c, beta.c, cell.c);
 			const auto& pt_plus1 = cells_frac[cell.nebrs[3]].c;
 			const auto& pt_plus2 = cells_poro[beta.nebrs[3]].c;
 			const auto pt_plus = (pt_plus1 + pt_plus2) / 2.0;
@@ -216,7 +216,7 @@ namespace acidellfrac
 				x_poro[beta.nebrs[2]].p, point::distance(pt_minus2, pt_minus, pt_minus));
 			res[1] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
 			adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
-			return h * pt.getEllipticalVector(vel_x, vel_y)[0];
+			return pt.getEllipticalVector(vel_x, vel_y)[0];
 		};
 		inline adouble getVelocity(const FracCell& cell, const FracCell& beta) const
 		{
@@ -247,7 +247,7 @@ namespace acidellfrac
 											x_frac[cell.nebrs[2] + (beta.num - cell.num)].p, point::distance(pt_minus2, pt_minus, pt_minus));
 				res[1] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
 				adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
-				return h * pt.getEllipticalVector(vel_x, vel_y)[0];
+				return pt.getEllipticalVector(vel_x, vel_y)[0];
 			}
 			if (fabs(cell.c.nu - beta.c.nu) > EQUALITY_TOLERANCE)
 			{
@@ -270,7 +270,7 @@ namespace acidellfrac
 					x_frac[cell.nebrs[0] + (beta.num - cell.num)].p, point::distance(pt_minus2, pt_minus, pt_minus));
 				res[0] = (p_plus - p_minus) / point::distance(pt_plus, pt_minus, (pt_plus + pt_minus) / 2.0);
 				adouble vel_x = alpha * Point::a * (sinh(pt.mu) * cos(pt.nu) * res[0] - cosh(pt.mu) * sin(pt.nu) * res[1]) / h / h;
-				return h * pt.getEllipticalVector(vel_x, vel_y)[1];
+				return pt.getEllipticalVector(vel_x, vel_y)[1];
 			}
 		};
 
@@ -290,7 +290,7 @@ namespace acidellfrac
 			adouble dpdmu = signA(cell.num - beta.num) * (x_frac[cell.num].p - x_poro[beta.num].p) / point::distance(cell.c, beta.c, beta.c);
 			adouble dpdnu = (x_frac[cell.nebrs[2]].p - x_frac[cell.nebrs[3]].p) / getFracDistance(cell.nebrs[2], cell.nebrs[3]);
 			adouble vel_x = alpha * Point::a / h / h * (sinh(pt.mu) * cos(pt.nu) * dpdmu - cosh(pt.mu) * sin(pt.nu) * dpdnu);
-			return h * pt.getEllipticalVector(vel_x, vel_y)[0];
+			return pt.getEllipticalVector(vel_x, vel_y)[0];
 		};
 		inline adouble getVelocity0(const FracCell& cell, const FracCell& beta) const 
 		{
@@ -310,7 +310,7 @@ namespace acidellfrac
 				adouble dpdmu = signA(cell.num - beta.num) * (x_frac[cell.num].p - x_frac[beta.num].p) / getFracDistance(cell.num, beta.num);
 				adouble dpdnu = (x_frac[cell.nebrs[2]].p - x_frac[cell.nebrs[3]].p) / getFracDistance(cell.nebrs[2], cell.nebrs[3]);
 				adouble vel_x = alpha * Point::a / h / h * (sinh(pt.mu) * cos(pt.nu) * dpdmu - cosh(pt.mu) * sin(pt.nu) * dpdnu);
-				return h * pt.getEllipticalVector(vel_x, vel_y)[0];
+				return pt.getEllipticalVector(vel_x, vel_y)[0];
 			}
 			if (fabs(cell.c.nu - beta.c.nu) > EQUALITY_TOLERANCE)
 			{
@@ -319,7 +319,7 @@ namespace acidellfrac
 				const auto& pt_plus = (cell.type != FracType::FRAC_OUT ? cells_frac[cell.nebrs[1]].c : cells_poro[cell.nebrs[1]].c);
 				adouble dpdmu = (x_plus - x_frac[cell.nebrs[0]].p) / point::distance(cells_frac[cell.nebrs[0]].c, pt_plus, cell.c);
 				adouble vel_x = alpha * Point::a / h / h * (sinh(pt.mu) * cos(pt.nu) * dpdmu - cosh(pt.mu) * sin(pt.nu) * dpdnu);
-				return h * pt.getEllipticalVector(vel_x, vel_y)[1];
+				return pt.getEllipticalVector(vel_x, vel_y)[1];
 			}
 		};
 

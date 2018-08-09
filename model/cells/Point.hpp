@@ -128,8 +128,8 @@ namespace point
 		inline std::array<adouble, 2> getEllipticalVector(adouble u_x, adouble u_y) const
 		{
 			const auto g = getMetric();
-			const adouble u_mu = a * (sinh(mu) * cos(nu) / g[0] * u_x + cosh(mu) * sin(nu) / g[1] * u_y);
-			const adouble u_nu = a * (-cosh(mu) * sin(nu) / g[0] * u_x + sinh(mu) * cos(nu) / g[1] * u_y);
+			const adouble u_mu = a * (sinh(mu) * cos(nu) / sqrt(g[0]) * u_x + cosh(mu) * sin(nu) / sqrt(g[1]) * u_y);
+			const adouble u_nu = a * (-cosh(mu) * sin(nu) / sqrt(g[0]) * u_x + sinh(mu) * cos(nu) / sqrt(g[1]) * u_y);
 			return{ u_mu, u_nu };
 		};
 		/*inline std::array<adouble, 3> getAVectorCartesian(adouble u_mu, adouble u_nu, adouble u_z) const

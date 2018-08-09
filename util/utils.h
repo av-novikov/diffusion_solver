@@ -106,13 +106,13 @@ inline double PaSec2cP(double visc)
 	return visc * 1000.0;
 };
 
-template <typename T>
+/*template <typename T>
 inline std::string to_string(T value)
 {
 	std::ostringstream os ;
 	os << value;
 	return os.str();
-};
+};*/
 
 struct sort_pair_first {
     bool operator() (const std::pair<double,double> &left, const std::pair<double,double> &right) 

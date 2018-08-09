@@ -815,8 +815,8 @@ PoroTapeVariable AcidEllFrac::solvePoroLeft(const PoroCell& cell)
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
 	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
-	res.xw = ((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
-	res.xa = ((next.xa - nebr1.c) - (nebr1.c - nebr2.c) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
+	res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim;//((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
+	res.xa = (next.xa - nebr1.c) / P_dim;//((next.xa - nebr1.c) - (nebr1.c - nebr2.c) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
 	res.xs = next.xs / P_dim;
 	return res;
 }
@@ -893,21 +893,9 @@ FracTapeVariable AcidEllFrac::solveFracBorder(const FracCell& cell)
 	const auto& nebr = x_frac[beta.num];
 
 	FracTapeVariable res;
-	//if (cell.h.z == 0.0 && cell.h.x > 0.0 && cell.hy > 0.0)
-	//{
-	const auto res1 = next.p.value();
-	const auto res2 = nebr.p.value();
-	const auto res3 = res1 - res2;
-	const auto res4 = cell.c.z - beta.c.z;
+
 	res.p = ((next.p - nebr.p) + (cell.c.z - beta.c.z) * grav * props_w.dens_stc) / P_dim;
-	const auto res5 = res.p.value();
 	res.c = (next.c - nebr.c) / P_dim;
-	/*}
-	else
-	{
-		res.p = (next.p - nebr.p) / P_dim;
-		res.c = (next.c - nebr.c) / P_dim;
-	}*/
 
 	return res;
 }
@@ -941,6 +929,7 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 	const double rat_cell = sinh(cell.c.mu) / sinh(out_cell.c.mu);
 	const double alpha = -props_frac.w2_avg * props_frac.w2_avg / 2.0 / props_w.visc * (1.0 - rat_cell * rat_cell);
 
+	adouble tmp, isFromHere;
 	for (int i = 0; i < 4; i++)
 	{
 		if (cell.type == FracType::FRAC_OUT && i == 1)
@@ -952,6 +941,9 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 			const auto pt = (cell.c + beta.c) / 2.0;
 			const adouble vel = getVelocity(cell, beta);
 			res.p += pow(-1, (double)i) * s * vel * cell.V;
+			isFromHere = (cell.u_next.p < beta.u_next.p) ? false : true;
+			condassign(tmp, isFromHere, x_frac[cell.num].c, x_poro[beta.num].xa);
+			res.c -= pow(-1, (double)i) * ht * s * tmp * vel;
 		}
 		else
 		{
@@ -962,6 +954,9 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 			const double rat_cur = sinh(pt.mu) / sinh(out_cell.c.mu);
 			const adouble vel = getVelocity(cell, beta);
 			res.p += pow(-1, (double)i) * s * vel * cell.V;
+			isFromHere = (cell.u_next.p < beta.u_next.p) ? false : true;
+			condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta.num].c);
+			res.c -= pow(-1, (double)i) * ht * s * tmp * vel;
 		}
 	}
 
@@ -975,18 +970,14 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 	const double& sz_plus = fmap_frac.at({ cell.num, beta_z_plus.num }).S;
 
 	res.p += (sz_minus * vz_minus + sz_plus * vz_plus) * cell.V;
-	res.c += 0.0;// ht * (sz_minus * x_frac[getUpwindIdx(cell, beta_z_minus)].c * vz_minus +
-	//				sz_plus * x_frac[getUpwindIdx(cell, beta_z_plus)].c * vz_plus);
-	/*const double sx = cell.hy * cell.hz, sy = cell.hx * cell.hz, sz = cell.hx * cell.hy;
-	res.p =	((sx * (vx_minus + vx_plus) + sz * (vz_minus + vz_plus) - sy * (vy_plus - vy_minus)) / alpha / sx * (cell.hx + cells_frac[neighbor[0]].hx));
-	res.p *= cell.V;
-	res.c = ((next.c - cell.u_prev.c) * cell.V - ht *
-		(sx * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[0]])].c * vx_minus +
-				x_frac[getUpwindIdx(cell, cells_frac[neighbor[1]])].c * vx_plus) +
-		sy * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[2]])].c * vy_minus -
-				x_frac[getUpwindIdx(cell, cells_frac[neighbor[3]])].c * vy_plus - diff_plus - diff_minus) +
-		sz * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[4]])].c * vz_minus +
-				x_frac[getUpwindIdx(cell, cells_frac[neighbor[5]])].c * vz_plus)));*/
-
+	
+	isFromHere = (cell.u_next.p < beta_z_minus.u_next.p) ? false : true;
+	condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta_z_minus.num].c);
+	res.c -= ht * tmp * sz_minus * vz_minus;
+	
+	isFromHere = (cell.u_next.p < beta_z_plus.u_next.p) ? false : true;
+	condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta_z_plus.num].c);
+	res.c -= ht * tmp * sz_plus * vz_plus;
+	
 	return res;
 }
