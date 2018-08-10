@@ -113,8 +113,8 @@ void AcidEllFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max && iterations < 5)
-		model->ht = model->ht * 1.3;
+	if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.5)
+		model->ht = model->ht * 1.5;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
 
@@ -234,12 +234,13 @@ void AcidEllFracSolver::solveStep()
 		checkStability();
 		auto err = convergance();
 		err_newton = fmax(err[0].err, err[1].err);
+		if (iterations == 0)
+			err_newton_first = err_newton;
 
 		averValue(averVal);
 		for (int i = 0; i < AcidEllFrac::var_size; i++)
 			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
 		averValPrev = averVal;
-		//model->snapshotter->dump_all(iterations + 1);
 		iterations++;
 	}
 

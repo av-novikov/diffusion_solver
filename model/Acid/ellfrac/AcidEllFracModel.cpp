@@ -202,7 +202,8 @@ void AcidEllFrac::buildFracGrid()
 		}
 	}
 	// Middle
-	hnu = M_PI_2 / (cellsNum_nu + 1);	 cnu = M_PI_2 - hnu / 2;
+	int left_nu_pieces = cellsNum_nu / 3;
+	hnu = M_PI_2 / (cellsNum_nu + left_nu_pieces);	 cnu = M_PI_2 - hnu / 2;
 	for (int j = 0; j < cellsNum_nu; j++)
 	{
 		for (int k = 0; k < cellsNum_z + 2; k++)
@@ -364,7 +365,8 @@ void AcidEllFrac::buildPoroGrid()
 		}
 	}
 	// Middle border
-	hnu = M_PI_2 / (cellsNum_nu + 1);	 cnu = M_PI_2 - hnu / 2;
+	int left_nu_pieces = cellsNum_nu / 3;
+	hnu = M_PI_2 / (cellsNum_nu + left_nu_pieces);	 cnu = M_PI_2 - hnu / 2;
 	for (int j = 0; j < cellsNum_nu; j++)
 	{
 		for (int k = 0; k < cellsNum_z + 2; k++)
@@ -643,8 +645,10 @@ void AcidEllFrac::setInitialState()
 	const auto& props = props_sk.back();
 	for (auto& cell : cells_frac)
 	{
-		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = props_frac.p_init - grav * props_w.dens_stc * cell.c.z;
+		const auto pt = cell.c.getCartesian();
+		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = props_frac.p_init - grav * props_w.dens_stc * (cell.c.z + pt.x + pt.y);
 		cell.u_prev.c = cell.u_iter.c = cell.u_next.c = props_frac.c_init;
+
 	}
 	for (auto& cell : cells_poro)
 	{
@@ -812,11 +816,14 @@ PoroTapeVariable AcidEllFrac::solvePoroLeft(const PoroCell& cell)
 	PoroTapeVariable res;
 	res.m = (1.0 - props.getPoro(next.m, next.p)) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
-	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
+	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) * 
+		(cell.faces_dist[0] + beta1.faces_dist[cell.nebrs_idx[0]]) / (beta1.faces_dist[0] + beta2.faces_dist[beta1.nebrs_idx[0]])) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
 	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
-	res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim;//((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
-	res.xa = (next.xa - nebr1.c) / P_dim;//((next.xa - nebr1.c) - (nebr1.c - nebr2.c) * (cell.c.mu - beta1.c.mu) / (beta1.c.mu - beta2.c.mu)) / P_dim;
+	res.xw = /*(next.xw - (1.0 - nebr1.c)) / P_dim;*/((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) * 
+		(cell.faces_dist[0] + beta1.faces_dist[cell.nebrs_idx[0]]) / (beta1.faces_dist[0] + beta2.faces_dist[beta1.nebrs_idx[0]])) / P_dim;
+	res.xa = /*(next.xa - nebr1.c) / P_dim;*/((next.xa - nebr1.c) - (nebr1.c - nebr2.c) * 
+		(cell.faces_dist[0] + beta1.faces_dist[cell.nebrs_idx[0]]) / (beta1.faces_dist[0] + beta2.faces_dist[beta1.nebrs_idx[0]])) / P_dim;
 	res.xs = next.xs / P_dim;
 	return res;
 }
@@ -905,23 +912,6 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 	const auto& next = x_frac[cell.num];
 	const auto& out_cell = cells_poro[getFirstMuPoro(cell.num)];
 
-	/*const double rat_cur = sinh(cell.c.mu) / sinh(out_cell.c.mu);
-	const double rat_y_plus = sinh(cell.c.mu + cell.h.mu / 2.0) / sinh(out_cell.c.mu);
-	const double rat_y_minus = sinh(cell.c.mu - cell.h.mu / 2.0) / sinh(out_cell.c.mu);
-
-	adouble vL = getFlowLeak(cell);
-	double alpha = -props_frac.w2_avg * props_frac.w2_avg / 2.0 / props_w.visc * (1.0 - rat_cur * rat_cur);
-	adouble vmu_minus = alpha * getDp(cell, beta_mu_minus);
-	adouble vmu_plus = alpha * getDp(cell, beta_mu_plus);
-	adouble vnu_minus = vL * (1.5 * rat_y_minus - 0.5 * y_minus * y_minus * y_minus / props_frac.w2 / props_frac.w2 / props_frac.w2);
-	adouble vnu_plus = vL * (1.5 * (y_plus / props_frac.w2) - 0.5 * y_plus * y_plus * y_plus / props_frac.w2 / props_frac.w2 / props_frac.w2);
-	
-	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.h.z / 2.0 + beta_z_minus.h.z / 2.0) - grav * props_w.dens_stc / 2.0);
-	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.h.z / 2.0 + beta_z_plus.h.z / 2.0) + grav * props_w.dens_stc / 2.0);
-
-	adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[2]].hy);
-	adouble diff_plus = 2.0 * props_w.D_e * (next.c - nebr_y_plus.c) / (cell.hy + cells_frac[neighbor[3]].hy);*/
-
 	FracTapeVariable res;
 	res.p = 0.0;	
 	res.c = (next.c - cell.u_prev.c) * cell.V;
@@ -940,10 +930,14 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 			const double& s = fmap_inter.at({ cell.num, beta.num }).S;
 			const auto pt = (cell.c + beta.c) / 2.0;
 			const adouble vel = getVelocity(cell, beta);
+			const double vel_val = vel.value();
+			assert(vel_val * ((double)i-1.5) < 0.0);
 			res.p += pow(-1, (double)i) * s * vel * cell.V;
 			isFromHere = (cell.u_next.p < beta.u_next.p) ? false : true;
 			condassign(tmp, isFromHere, x_frac[cell.num].c, x_poro[beta.num].xa);
 			res.c -= pow(-1, (double)i) * ht * s * tmp * vel;
+			adouble diff = props_w.D_e * (next.c - nebr.xa) / (cell.faces_dist[i] + beta.faces_dist[cell.nebrs_idx[i]]);
+			res.c += ht * s * diff;
 		}
 		else
 		{
@@ -953,10 +947,17 @@ FracTapeVariable AcidEllFrac::solveFracMid(const FracCell& cell)
 			const auto pt = (cell.c + beta.c) / 2.0;
 			const double rat_cur = sinh(pt.mu) / sinh(out_cell.c.mu);
 			const adouble vel = getVelocity(cell, beta);
+			const double vel_val = vel.value();
+			assert(vel_val * ((double)i-1.5) < 0.0);
 			res.p += pow(-1, (double)i) * s * vel * cell.V;
 			isFromHere = (cell.u_next.p < beta.u_next.p) ? false : true;
 			condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta.num].c);
 			res.c -= pow(-1, (double)i) * ht * s * tmp * vel;
+			if (i < 2)
+			{
+				adouble diff = props_w.D_e * (next.c - nebr.c) / (cell.faces_dist[i] + beta.faces_dist[cell.nebrs_idx[i]]);	
+				res.c += ht * s * diff;
+			}
 		}
 	}
 

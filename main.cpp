@@ -1226,7 +1226,7 @@ acidellfrac::Properties* getProps()
 	Properties* props = new Properties;
 
 	props->ht = 0.0001;
-	props->ht_min = 1.0;
+	props->ht_min = 0.1;
 	props->ht_max = 500.0;
 
 	props->timePeriods.push_back(3600.0 / 3.0);
@@ -1252,7 +1252,7 @@ acidellfrac::Properties* getProps()
 
 	props->cellsNum_x = 10;
 	props->cellsNum_mu_frac = 20;
-	props->cellsNum_mu_poro = 30;
+	props->cellsNum_mu_poro = 50;
 	props->cellsNum_z = 1;
 
 	acidellfrac::Skeleton_Props props_sk;
@@ -1299,7 +1299,7 @@ acidellfrac::Properties* getProps()
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = props_sk.p_ref;
-	props->props_w.D_e = 1.E-8;
+	props->props_w.D_e = 0.0;// 1.E-8;
 
 	props->props_g.visc = 0.06;
 	props->props_g.dens_stc = 0.8;

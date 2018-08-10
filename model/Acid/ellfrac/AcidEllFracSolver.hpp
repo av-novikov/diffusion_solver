@@ -25,7 +25,7 @@ namespace acidellfrac
 		double* x;
 
 		std::array<double, var_poro_size> averVal, averValPrev, dAverVal;
-		double err_newton;
+		double err_newton_first, err_newton;
 		int step_idx;
 
 		std::ofstream S, P, qcells, pvd_frac, pvd_poro;
