@@ -8,6 +8,7 @@
 #include "model/Acid/1d/Acid1d.hpp"
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
+#include "model/Acid/recfrac/AcidRecFracModel.hpp"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/GasOil_Elliptic/GasOil_Elliptic.hpp"
@@ -58,6 +59,21 @@ void Snapshotter<acidellfrac::AcidEllFrac>::setModel(acidellfrac::AcidEllFrac* _
 
 	nx = model->cellsNum_nu + 2;
 	ny = model->cellsNum_mu_frac + 1;
+	nz = model->cellsNum_z + 2;
+}
+template<>
+void Snapshotter<acidrecfrac::AcidRecFrac>::setModel(acidrecfrac::AcidRecFrac* _model)
+{
+	model = _model;
+
+	T_dim = model->T_dim;
+	t_dim = model->t_dim;
+	r_dim = model->R_dim;
+	T_dim = model->T_dim;
+	P_dim = model->P_dim;
+
+	nx = model->cellsNum_x + 2;
+	ny = model->cellsNum_y_frac + 1;
 	nz = model->cellsNum_z + 2;
 }
 template <class modelType>
@@ -248,6 +264,7 @@ template class Snapshotter<acid2d::Acid2d>;
 template class Snapshotter<acid2dnit::Acid2dNIT>;
 template class Snapshotter<acidfrac::AcidFrac>;
 template class Snapshotter<acidellfrac::AcidEllFrac>;
+template class Snapshotter<acidrecfrac::AcidRecFrac>;
 template class Snapshotter<vpp2d::VPP2d>;
 template class Snapshotter<bing1d::Bingham1d>;
 template class Snapshotter<gasOil_elliptic::GasOil_Elliptic>;

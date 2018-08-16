@@ -41,6 +41,9 @@
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracSolver.hpp"
 
+#include "model/Acid/recfrac/AcidRecFracModel.hpp"
+//#include "model/Acid/recfrac/AcidRecFracSolver.hpp"
+
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
 
@@ -80,6 +83,13 @@ Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>::~Scen
 	delete method;
 }
 Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	delete method;
+}
+Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>::~Scene()
 {
 	paralution::stop_paralution();
 
@@ -150,6 +160,13 @@ void Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac
 	paralution::init_paralution();
 	method = new acidellfrac::AcidEllFracSolver(model);
 }
+void Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>::load(acidrecfrac::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	model->snapshot_all(0);
+	//method = new acidrecfrac::AcidRecFracSolver(model);
+}
 void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wax_nit::Properties& props)
 {
 	model->load(props);
@@ -214,7 +231,7 @@ void Scene<modelType, methodType, propsType>::setSnapshotterType(std::string typ
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::start()
 {
-	method->start();
+	//method->start();
 }
 template <class modelType, class methodType, typename propsType>
 modelType* Scene<modelType, methodType, propsType>::getModel() const
@@ -238,5 +255,6 @@ template class Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit
 template class Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties>;
 template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>;
 template class Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>;
+template class Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
 template class Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>;

@@ -43,8 +43,8 @@
 #include "model/Acid/2dnit/Acid2dNITSolver.hpp"
 
 #include "model/Acid/frac/AcidFracModel.hpp"
-
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
+#include "model/Acid/recfrac/AcidRecFracModel.hpp"
 
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
@@ -1220,7 +1220,7 @@ using namespace std;
 
 	return props;
 }*/
-acidellfrac::Properties* getProps()
+/*acidellfrac::Properties* getProps()
 {
 	typedef acidellfrac::Properties Properties;
 	Properties* props = new Properties;
@@ -1250,12 +1250,99 @@ acidellfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 10;
-	props->cellsNum_mu_frac = 20;
-	props->cellsNum_mu_poro = 50;
+	props->cellsNum_x = 5;
+	props->cellsNum_mu_frac = 10;
+	props->cellsNum_mu_poro = 20;
 	props->cellsNum_z = 1;
 
 	acidellfrac::Skeleton_Props props_sk;
+	props_sk.m_init = 0.1;
+	props_sk.t_init = 300.0;
+	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
+	props_sk.sw_init = 0.2;		props_sk.so_init = 0.8;
+	props_sk.xa_eqbm = 0.0;
+	props_sk.xa_init = 0.0;	props_sk.xw_init = 1.0;
+	props_sk.s_wc = 0.0;		props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
+	props_sk.perm = 100.0;
+	props_sk.dens_stc = 2000.0;
+	props_sk.beta = 4.35113e-10;
+	props_sk.height = props->props_frac.height;
+	props->props_sk.push_back(props_sk);
+	//default_random_engine generator;
+	//normal_distribution<double> distribution(100.0, 30.0);
+	/*vector<double> perms;
+	ifstream file;
+	file.open("props/perm.txt", ifstream::in);
+	double temp1;
+	while (!file.eof())
+	{
+	file >> temp1;
+	perms.push_back(temp1);
+	if (file.eof())
+	break;
+	}
+	file.close();
+	for (int i = 0; i < props->cellsNum_x; i++)
+	{
+	props->xe.push_back(200.0);
+	props->cellsNum_y_1d.push_back(100);
+	props->props_sk.push_back(props_sk);
+	props->props_sk.back().perm = 100.0;// perms[i];// distribution(generator);
+	}
+
+	props->props_o.visc = 1.0;
+	props->props_o.dens_stc = 887.261;
+	props->props_o.beta = 1.0 * 1.e-9;
+	props->props_o.p_ref = props_sk.p_ref;
+
+	props->props_w.visc = 1.0;
+	props->props_w.dens_stc = 1000.0;
+	props->props_w.beta = 1.0 * 1.e-9;
+	props->props_w.p_ref = props_sk.p_ref;
+	props->props_w.D_e = 1.E-8;
+
+	props->props_g.visc = 0.06;
+	props->props_g.dens_stc = 0.8;
+	props->props_g.co2 = acidellfrac::getCO2();
+
+	return props;
+}*/
+acidrecfrac::Properties* getProps()
+{
+	typedef acidrecfrac::Properties Properties;
+	Properties* props = new Properties;
+
+	props->ht = 0.0001;
+	props->ht_min = 0.1;
+	props->ht_max = 500.0;
+
+	props->timePeriods.push_back(3600.0 / 3.0);
+	props->timePeriods.push_back(3.0 * 3600.0);
+	//props->timePeriods.push_back(10.0 * 3600.0);
+	//props->leftBoundIsRate = false;
+	props->LeftBoundIsRate.push_back(false);
+	props->LeftBoundIsRate.push_back(true);
+	//props->LeftBoundIsRate.push_back(true);
+	props->rightBoundIsPres = true;
+	props->pwf.push_back(300.0 * 1.0e+5);
+	props->rates.push_back(0.0);
+	props->cs.push_back(0.15);
+	props->cs.push_back(0.0);
+
+	props->props_frac.l2 = 20.0;
+	props->props_frac.w2 = 0.5;
+	props->re = 100.0;
+
+	props->props_frac.p_init = 200.0 * BAR_TO_PA;
+	props->props_frac.c_init = 0.0;
+	props->props_frac.height = 10.0;
+
+	props->cellsNum_x = 5;
+	props->cellsNum_y_frac = 10;
+	props->cellsNum_y_poro = 20;
+	props->cellsNum_z = 1;
+
+	acidrecfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.1;
 	props_sk.t_init = 300.0;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
@@ -1299,11 +1386,11 @@ acidellfrac::Properties* getProps()
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = props_sk.p_ref;
-	props->props_w.D_e = 0.0;// 1.E-8;
+	props->props_w.D_e = 1.E-8;
 
 	props->props_g.visc = 0.06;
 	props->props_g.dens_stc = 0.8;
-	props->props_g.co2 = acidellfrac::getCO2();
+	props->props_g.co2 = acidrecfrac::getCO2();
 
 	return props;
 }
@@ -1313,6 +1400,7 @@ double acid2d::Component::T = 300.0;
 double acid2dnit::Component::T = 300.0;
 double acidfrac::Component::T = 300.0;
 double acidellfrac::Component::T = 300.0;
+double acidrecfrac::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
 double blackoilnit_elliptic::Oil_Props::dens_stc = 887.261;
 double blackoilnit_elliptic::Gas_Props::dens_stc = 0.8;
@@ -1378,9 +1466,9 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	acidellfrac::Properties* props = getProps();
-	Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties> scene;
+	acidrecfrac::Properties* props = getProps();
+	Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();
+	//scene.start();
 	return 0;
 }
