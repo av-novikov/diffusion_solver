@@ -16,7 +16,7 @@ AcidEllFrac::AcidEllFrac()
 AcidEllFrac::~AcidEllFrac()
 {
 	delete snapshotter;
-	//delete[] x_frac, x_poro, h;
+	delete[] x_frac, x_poro, h;
 }
 void AcidEllFrac::setProps(Properties& props)
 {

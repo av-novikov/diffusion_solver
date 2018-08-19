@@ -14,7 +14,7 @@ AcidRecFrac::AcidRecFrac()
 AcidRecFrac::~AcidRecFrac()
 {
 	delete snapshotter;
-	//delete[] x_frac, x_poro, h;
+	delete[] x_frac, x_poro, h;
 }
 void AcidRecFrac::setProps(Properties& props)
 {
@@ -79,7 +79,6 @@ void AcidRecFrac::setProps(Properties& props)
 		comp.mol_weight = gramToKg(comp.mol_weight);
 
 	makeDimLess();
-	props_frac.w2_avg = props_frac.w2 * M_PI / 4.0;
 
 	props_o.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
 	props_o.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
@@ -192,7 +191,6 @@ void AcidRecFrac::buildFracGrid()
 
 			cells_frac.push_back( FracCell(counter++, cx, cy, cz, hx, hy, hz, cur_type) );
 			auto& cell = cells_frac.back();
-			//cell.nebrs[0] = cell.num + (cellsNum_y_frac + 1) * (cellsNum_z + 2);
 		}
 	}
 	// Middle
@@ -237,27 +235,6 @@ void AcidRecFrac::buildFracGrid()
 				cells_frac.push_back(FracCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
 				auto& cell = cells_frac.back();
 				Volume_frac += cell.V;
-				/*if (cell.type != FracType::FRAC_BORDER)
-				{
-					cell.nebrs[0] = cell.num - 1;
-					if(cell.type == FracType::FRAC_MID)
-						cell.nebrs[1] = cell.num + 1;
-					else if (cell.type == FracType::FRAC_OUT)
-						cell.nebrs[1] = (j + 1) * (cellsNum_mu_poro + 2) * (cellsNum_z + 2) + k * (cellsNum_mu_poro + 2);
-					cell.nebrs[2] = cell.num - (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
-					cell.nebrs[3] = cell.num + (cellsNum_mu_frac + 1) * (cellsNum_z + 2);
-					cell.nebrs[4] = cell.num - (cellsNum_mu_frac + 1);
-					cell.nebrs[5] = cell.num + (cellsNum_mu_frac + 1);
-				}
-				else
-				{
-					if (i == 0)
-						cell.nebrs[0] = cell.num + 1;
-					if (k == 0)
-						cell.nebrs[0] = cell.num + (cellsNum_mu_frac + 1);
-					else if (k == cellsNum_z + 1)
-						cell.nebrs[0] = cell.num - (cellsNum_mu_frac + 1);
-				}*/
 			}
 		}
 		cx += hx;
@@ -342,8 +319,6 @@ void AcidRecFrac::buildPoroGrid()
 			}
 			else
 			{
-				//hmu = (mu_e - mu_w) / (double)cellsNum_mu_poro;
-				//cmu = mu_w + ((double)i - 0.5) * hmu;
 				cy = r_prev * (exp(logStep) + 1.0) / 2.0;
 				hy = r_prev * (exp(logStep) - 1.0);
 				r_prev *= exp(logStep);
@@ -351,7 +326,6 @@ void AcidRecFrac::buildPoroGrid()
 
 			cells_poro.push_back(PoroCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
 			auto& cell = cells_poro.back();
-			//cell.nebrs[0] = cell.num + (cellsNum_y_poro + 2) * (cellsNum_z + 2);
 		}
 	}
 	// Middle
@@ -387,8 +361,6 @@ void AcidRecFrac::buildPoroGrid()
 				}
 				else
 				{
-					//hmu = (mu_e - mu_w) / (double)cellsNum_mu_poro;
-					//cmu = mu_w + ((double)i - 0.5) * hmu;
 					cy = r_prev * (exp(logStep) + 1.0) / 2.0;
 					hy = r_prev * (exp(logStep) - 1.0);
 					r_prev *= exp(logStep);
@@ -409,30 +381,6 @@ void AcidRecFrac::buildPoroGrid()
 				cells_poro.push_back(PoroCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
 				auto& cell = cells_poro.back();
 				Volume_poro += cell.V;
-				/*if (cell.type == PoroType::MIDDLE)
-				{
-					cell.nebrs[0] = cell.num - 1;
-					cell.nebrs[1] = cell.num + 1;
-					cell.nebrs[2] = cell.num - (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
-					cell.nebrs[3] = cell.num + (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
-					cell.nebrs[4] = cell.num - (cellsNum_mu_poro + 2);
-					cell.nebrs[5] = cell.num + (cellsNum_mu_poro + 2);
-				}
-				else if (cell.type == PoroType::WELL_LAT)
-				{
-					cell.nebrs[0] = (j + 1) * (cellsNum_mu_frac + 1) * (cellsNum_z + 2) + k * (cellsNum_mu_frac + 1) + cellsNum_mu_frac;
-					cell.nebrs[1] = cell.num + 1;
-					cell.nebrs[2] = cell.num - (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
-					cell.nebrs[3] = cell.num + (cellsNum_mu_poro + 2) * (cellsNum_z + 2);
-					cell.nebrs[4] = cell.num - (cellsNum_mu_poro + 2);
-					cell.nebrs[5] = cell.num + (cellsNum_mu_poro + 2);
-				}
-				else if (cell.type == PoroType::BOTTOM)
-					cell.nebrs[0] = cell.num + (cellsNum_mu_poro + 2);
-				else if (cell.type == PoroType::TOP)
-					cell.nebrs[0] = cell.num - (cellsNum_mu_poro + 2);
-				else if (cell.type == PoroType::RIGHT)
-					cell.nebrs[0] = cell.num - 1;*/
 			}
 		}
 		cx += hx;
@@ -469,8 +417,6 @@ void AcidRecFrac::buildPoroGrid()
 			}
 			else
 			{
-				//hmu = (mu_e - mu_w) / (double)cellsNum_mu_poro;
-				//cmu = mu_w + ((double)i - 0.5) * hmu;
 				cy = r_prev * (exp(logStep) + 1.0) / 2.0;
 				hy = r_prev * (exp(logStep) - 1.0);
 				r_prev *= exp(logStep);
@@ -478,118 +424,12 @@ void AcidRecFrac::buildPoroGrid()
 
 			cells_poro.push_back(PoroCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
 			auto& cell = cells_poro.back();
-			//cell.nebrs[0] = cell.num - (cellsNum_y_poro + 2) * (cellsNum_z + 2);
 		}
 	}
 
 }
 void AcidRecFrac::processGeometry()
 {
-/*	// Change FRAC_IN type among zero-volume cells
-	for (auto& cell : cells_frac)
-		if (cell.type == FracType::FRAC_IN)
-			if (cell.h.mu * cell.h.z == 0.0)
-				cell.type = FracType::FRAC_BORDER;
-	// Neighbours check & set indices
-	for (auto& cell : cells_frac)
-	{
-		for(size_t i = 0; i < NEBRS_NUM; i++)
-			if (cell.nebrs[i] >= 0)
-			{
-				if (cell.type == FracType::FRAC_OUT && i == 1)
-				{
-					const auto& nebr_cell = cells_poro[cell.nebrs[i]];
-					const auto& nebrs = nebr_cell.nebrs;
-					const ptrdiff_t idx = std::find(nebrs.begin(), nebrs.end(), cell.num) - nebrs.begin();
-					if (idx >= 0 && idx < nebrs.size())
-					{
-						cell.nebrs_idx[i] = idx;
-						assert(nebrs[idx] == cell.num);
-					}
-				}
-				else
-				{
-					const auto& nebr_cell = cells_frac[cell.nebrs[i]];
-					const auto& nebrs = nebr_cell.nebrs;
-					const ptrdiff_t idx = std::find(nebrs.begin(), nebrs.end(), cell.num) - nebrs.begin();
-					if (idx >= 0 && idx < nebrs.size())
-					{
-						cell.nebrs_idx[i] = idx;
-						assert(nebrs[idx] == cell.num);
-					}
-				}
-			}
-	}
-	for (auto& cell : cells_poro)
-	{
-		for (size_t i = 0; i < NEBRS_NUM; i++)
-			if (cell.nebrs[i] >= 0)
-			{
-				if (cell.type == PoroType::WELL_LAT && i == 0)
-				{
-					const auto& nebr_cell = cells_frac[cell.nebrs[i]];
-					const auto& nebrs = nebr_cell.nebrs;
-					const ptrdiff_t idx = std::find(nebrs.begin(), nebrs.end(), cell.num) - nebrs.begin();
-					if (idx >= 0 && idx < nebrs.size())
-					{
-						cell.nebrs_idx[i] = idx;
-						assert(nebrs[idx] == cell.num);
-					}
-				}
-				else
-				{
-					const auto& nebr_cell = cells_poro[cell.nebrs[i]];
-					const auto& nebrs = nebr_cell.nebrs;
-					const ptrdiff_t idx = std::find(nebrs.begin(), nebrs.end(), cell.num) - nebrs.begin();
-					if (idx >= 0 && idx < nebrs.size())
-					{
-						cell.nebrs_idx[i] = idx;
-						assert(nebrs[idx] == cell.num);
-					}
-				}
-			}
-	}
-	// Set lengths & faces
-	for (auto& cell : cells_frac)
-		for (size_t i = 0; i < NEBRS_NUM; i++)
-			if (cell.nebrs[i] != -1)
-			{
-				if (cell.type == FracType::FRAC_OUT && i == 1)
-				{
-					const auto& nebr = cells_poro[cell.nebrs[i]];
-					const Point p_mid = (cell.c + nebr.c) / 2.0;
-					cell.faces_dist[i] = point::distance(cell.c, p_mid, cell.c);//(cell.h * (nebr.c - cell.c) / (nebr.c - cell.c).dist() / 2.0).norm();
-					double S = (cell.V + nebr.V) / (2.0 * point::distance(cell.c, nebr.c, p_mid));
-					fmap_inter[{cell.num, nebr.num}] = Face{ S };
-				}
-				else
-				{
-					const auto& nebr = cells_frac[cell.nebrs[i]];
-					const Point p_mid = (cell.c + nebr.c) / 2.0;
-					cell.faces_dist[i] = point::distance(cell.c, p_mid, cell.c);
-					double tmp = point::distance(cell.c, nebr.c, p_mid);
-					double S = (cell.V + nebr.V) / (2.0 * tmp);
-					fmap_frac[{cell.num, nebr.num}] = Face{ S };
-				}
-			}
-	for (auto& cell : cells_poro)
-		for (size_t i = 0; i < NEBRS_NUM; i++)
-			if (cell.nebrs[i] != -1)
-			{
-				if (cell.type == PoroType::WELL_LAT && i == 0)
-				{
-					const auto& nebr = cells_frac[cell.nebrs[i]];
-					cell.faces_dist[i] = 0.0;
-				}
-				else
-				{
-					const auto& nebr = cells_poro[cell.nebrs[i]];
-					const Point p_mid = (cell.c + nebr.c) / 2.0;
-					cell.faces_dist[i] = point::distance(cell.c, p_mid, cell.c);
-					double S = (cell.V + nebr.V) / (2.0 * point::distance(cell.c, nebr.c, p_mid));
-					fmap_poro[{cell.num, nebr.num}] = Face{ S };
-				}
-			}*/
 }
 void AcidRecFrac::setPerforated()
 {
@@ -723,7 +563,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 	adouble rate = getReactionRate(next, props);
 
 	PoroTapeVariable res;
-	/*adouble m = props.getPoro(next.m, next.p);
+	adouble m = props.getPoro(next.m, next.p);
 	adouble m_prev = props.getPoro(prev.m, prev.p);
 	res.m = (1.0 - m) * props.getDensity(next.p) - (1.0 - m_prev) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * rate;
@@ -748,20 +588,34 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 
 	int neighbor[NEBRS_NUM];
 	getPoroNeighborIdx(cell.num, neighbor);
+	double dist1, dist2;
 	for (size_t i = 0; i < NEBRS_NUM; i++)
 	{
 		const PoroCell& beta = cells_poro[neighbor[i]];
 		const auto& nebr = x_poro[beta.num];
+		if (i < 2)
+		{
+			dist1 = cell.hy / 2.0;
+			dist2 = beta.hy / 2.0;
+		}
+		else if (i < 4)
+		{
+			dist1 = cell.hz / 2.0;
+			dist2 = beta.hz / 2.0;
+		}
+		else
+		{
+			dist1 = cell.hx / 2.0;
+			dist2 = beta.hx / 2.0;
+		}
 		upwd_idx = getUpwindIdx(cell, beta);
 		const auto& upwd = x_poro[upwd_idx];
 
-		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), cell.faces_dist[i],
-										props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), beta.faces_dist[cell.nebrs_idx[i]]);
-		adouble dens_o = getAverage(props_o.getDensity(next.p), cell.faces_dist[i],
-										props_o.getDensity(nebr.p), beta.faces_dist[cell.nebrs_idx[i]]);
-		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, i, beta, nebr) * (next.p - nebr.p) *
+		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), dist1, props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), dist2);
+		adouble dens_o = getAverage(props_o.getDensity(next.p), dist1, props_o.getDensity(nebr.p), dist2);
+		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
 			dens_w * props_w.getKr(upwd.sw, upwd.m, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
-		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, i, beta, nebr) * (next.p - nebr.p) *
+		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
 			dens_o * props_o.getKr(upwd.sw, upwd.m, &props) / props_o.getViscosity(upwd.p);
 
 		res.p += buf_w;
@@ -784,7 +638,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 		res.xw *= sqrt(cell.V);
 		res.xa *= sqrt(cell.V);
 		res.xs *= sqrt(cell.V);
-	}*/
+	}
 
 	return res;
 }
@@ -793,67 +647,80 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell)
 	assert(cell.type == PoroType::WELL_LAT);
 	const auto& props = props_sk.back();
 
-	//const auto& beta1 = cells_frac[cell.nebrs[0]];
-	//const auto& beta2 = cells_frac[beta1.num - 1];
-	//const auto& beta3 = cells_frac[beta1.num - 2];
-	//const auto& nebr1 = x_frac[beta1.num];
-	//const auto& nebr2 = x_frac[beta2.num];
-	//const auto& nebr3 = x_frac[beta3.num];
+	const auto& beta1 = cells_frac[getFracNebr(cell.num)];
+	const auto& beta2 = cells_frac[beta1.num - 1];
+	const auto& beta3 = cells_frac[beta1.num - 2];
+	const auto& nebr1 = x_frac[beta1.num];
+	const auto& nebr2 = x_frac[beta2.num];
+	const auto& nebr3 = x_frac[beta3.num];
 
 	const auto& next = x_poro[cell.num];
 	const auto& prev = cell.u_prev;
 	
+	const double dist0 = cell.hy / 2.0;
+	const double dist1 = beta1.hy / 2.0;
+	const double dist2 = beta2.hy / 2.0;
+
 	PoroTapeVariable res;
-	/*res.m = (1.0 - props.getPoro(next.m, next.p)) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
+	res.m = (1.0 - props.getPoro(next.m, next.p)) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) * 
-		(cell.faces_dist[0] + beta1.faces_dist[cell.nebrs_idx[0]]) / (beta1.faces_dist[0] + beta2.faces_dist[beta1.nebrs_idx[0]])) / P_dim;
+		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
 	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
 	res.xw = ((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) * 
-		(cell.faces_dist[0] + beta1.faces_dist[cell.nebrs_idx[0]]) / (beta1.faces_dist[0] + beta2.faces_dist[beta1.nebrs_idx[0]])) / P_dim;
+		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
 	res.xa = ((next.xa - nebr1.c) - (nebr1.c - nebr2.c) * 
-		(cell.faces_dist[0] + beta1.faces_dist[cell.nebrs_idx[0]]) / (beta1.faces_dist[0] + beta2.faces_dist[beta1.nebrs_idx[0]])) / P_dim;
-	res.xs = next.xs / P_dim;*/
+		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
+	res.xs = next.xs / P_dim;
 	return res;
 }
 PoroTapeVariable AcidRecFrac::solvePoroRight(const PoroCell& cell)
 {
 	assert(cell.type == PoroType::RIGHT);
-	//const auto& beta = cells_poro[cell.nebrs[0]];
+	const auto& beta = cells_poro[cell.num - 1];
 	const auto& props = props_sk.back();
 
 	const auto& next = x_poro[cell.num];
-	//const auto& nebr = x_poro[beta.num];
+	const auto& nebr = x_poro[beta.num];
 
 	adouble rightIsPres = rightBoundIsPres;
 	PoroTapeVariable res;
-	/*res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
-	condassign(res.p, rightIsPres, (next.p - props.p_out + grav * props_w.dens_stc * cell.c.z) / P_dim, (next.p - nebr.p) / P_dim);
+	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
+	condassign(res.p, rightIsPres, (next.p - props.p_out + grav * props_w.dens_stc * cell.z) / P_dim, (next.p - nebr.p) / P_dim);
 	res.sw = (next.sw - nebr.sw) / P_dim;
 	res.xw = (next.xw - nebr.xw) / P_dim;
 	res.xa = (next.xa - nebr.xa) / P_dim;
-	res.xs = (next.xs - nebr.xs) / P_dim;*/
+	res.xs = (next.xs - nebr.xs) / P_dim;
 	return res;
 }
 PoroTapeVariable AcidRecFrac::solvePoroBorder(const PoroCell& cell)
 {
 	assert(cell.type == PoroType::SIDE_LEFT || cell.type == PoroType::SIDE_RIGHT || 
 			cell.type == PoroType::TOP || cell.type == PoroType::BOTTOM);
-	//const auto& beta = cells_poro[cell.nebrs[0]];
+	int beta_idx = -1;
+	if (cell.type == PoroType::SIDE_LEFT)
+		beta_idx = cell.num + (cellsNum_z + 2) * (cellsNum_y_poro + 2);
+	else if (cell.type == PoroType::SIDE_RIGHT)
+		beta_idx = cell.num - (cellsNum_z + 2) * (cellsNum_y_poro + 2);
+	else if (cell.type == PoroType::BOTTOM)
+		beta_idx = cell.num + (cellsNum_y_poro + 2);
+	else if (cell.type == PoroType::TOP)
+		beta_idx = cell.num - (cellsNum_y_poro + 2);
+	const auto& beta = cells_poro[beta_idx];
 	const auto& props = props_sk.back();
 
 	const auto& next = x_poro[cell.num];
-	//const auto& nebr = x_poro[beta.num];
+	const auto& nebr = x_poro[beta.num];
 
 	adouble rightIsPres = rightBoundIsPres;
 	PoroTapeVariable res;
-	/*res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
-	res.p = (next.p - nebr.p + grav * props_w.dens_stc * (cell.c.z - beta.c.z)) / P_dim;
+	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
+	res.p = (next.p - nebr.p + grav * props_w.dens_stc * (cell.z - beta.z)) / P_dim;
 	res.sw = (next.sw - nebr.sw) / P_dim;
 	res.xw = (next.xw - nebr.xw) / P_dim;
 	res.xa = (next.xa - nebr.xa) / P_dim;
-	res.xs = (next.xs - nebr.xs) / P_dim;*/
+	res.xs = (next.xs - nebr.xs) / P_dim;
 	return res;
 }
 FracTapeVariable AcidRecFrac::solveFrac(const FracCell& cell)
@@ -868,108 +735,83 @@ FracTapeVariable AcidRecFrac::solveFrac(const FracCell& cell)
 FracTapeVariable AcidRecFrac::solveFracIn(const FracCell& cell)
 {
 	assert(cell.type == FracType::FRAC_IN);
-	//const auto& beta = cells_frac[cell.nebrs[0]];
+	const auto& beta = cells_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y_frac + 1)];
 	const auto& next = x_frac[cell.num];
-	//const auto& nebr = x_frac[beta.num];
+	const auto& nebr = x_frac[beta.num];
 	const adouble leftIsRate = leftBoundIsRate;
 	FracTapeVariable res;
-	/*const auto& out_cell = cells_poro[getFirstMuPoro(cell.num)];
 	condassign(res.p, leftIsRate, ((next.p - beta.u_prev.p) + 
-		2.0 * Qcell[cell.num] / (1.0 - (sinh(cell.c.mu) / sinh(out_cell.c.mu)) * (sinh(cell.c.mu) / sinh(out_cell.c.mu))) / props_frac.w2_avg / props_frac.w2_avg * props_w.visc
-						/ fmap_frac.at({ cell.num, beta.num }).S * (cell.faces_dist[0] + beta.faces_dist[cell.nebrs_idx[0]])) / P_dim,
-						(next.p - Pwf + grav * props_w.dens_stc * cell.c.z) / P_dim);
+		2.0 * Qcell[cell.num] / (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) / props_frac.w2 / props_frac.w2 * props_w.visc
+						/ (cell.hy * cell.hz) * beta.hx / 2.0) / P_dim,
+						(next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim);
 	condassign(res.c, leftIsRate, (next.c - nebr.c) / P_dim, (next.c - c) / P_dim);
-	res.c = (next.c - c) / P_dim;*/
+	res.c = (next.c - c) / P_dim;
 	return res;
 }
 FracTapeVariable AcidRecFrac::solveFracBorder(const FracCell& cell)
 {
 	assert(cell.type == FracType::FRAC_BORDER);
 	const auto& next = x_frac[cell.num];
-	//const auto& beta = cells_frac[cell.nebrs[0]];
-	//const auto& nebr = x_frac[beta.num];
+	int beta_idx = -1;
+	if (cell.hx == 0.0)
+		beta_idx = cell.num - (cellsNum_z + 2) * (cellsNum_y_frac + 1);
+	else if (cell.hy == 0.0)
+		beta_idx = cell.num + 1;
+	else
+		beta_idx = (cell.z == 0.0) ? cell.num + 1 : cell.num - 1;
+	const auto& beta = cells_frac[beta_idx];
+	const auto& nebr = x_frac[beta.num];
 
 	FracTapeVariable res;
 
-	//res.p = ((next.p - nebr.p) + (cell.c.z - beta.c.z) * grav * props_w.dens_stc) / P_dim;
-	//res.c = (next.c - nebr.c) / P_dim;
+	res.p = ((next.p - nebr.p) + (cell.z - beta.z) * grav * props_w.dens_stc) / P_dim;
+	res.c = (next.c - nebr.c) / P_dim;
 
 	return res;
 }
 FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell)
 {
 	assert(cell.type == FracType::FRAC_MID || FracType::FRAC_OUT);
+	assert(cell.type == FracType::FRAC_MID);
 	const auto& next = x_frac[cell.num];
-	const auto& out_cell = cells_poro[getFirstMuPoro(cell.num)];
 
 	FracTapeVariable res;
-	/*res.p = 0.0;	
-	res.c = (next.c - cell.u_prev.c) * cell.V;
+	int neighbor[6];
+	getFracNeighborIdx(cell.num, neighbor);
+	const auto& nebr_y_minus = x_frac[neighbor[0]];
+	//const auto& nebr_y_plus = (cell.type == FracType::FRAC_OUT) ? x_poro[neighbor[1]] : x_frac[y_plus_idx];
+	const auto& nebr_x_minus = x_frac[neighbor[2]];
+	const auto& nebr_x_plus = x_frac[neighbor[3]];
+	const auto& nebr_z_minus = x_frac[neighbor[4]];
+	const auto& nebr_z_plus = x_frac[neighbor[5]];
 
-	const double rat_cell = sinh(cell.c.mu) / sinh(out_cell.c.mu);
-	const double alpha = -props_frac.w2_avg * props_frac.w2_avg / 2.0 / props_w.visc * (1.0 - rat_cell * rat_cell);
+	double y_plus = cell.y + cell.hy / 2.0;
+	double y_minus = cell.y - cell.hy / 2.0;
+	adouble vL = getFlowLeak(cell);
+	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));	
+	adouble vy_minus = vL * (1.5 * (y_minus / props_frac.w2) - 0.5 * y_minus * y_minus * y_minus / props_frac.w2 / props_frac.w2 / props_frac.w2);
+	adouble vy_plus = vL * (1.5 * (y_plus / props_frac.w2) - 0.5 * y_plus * y_plus * y_plus / props_frac.w2 / props_frac.w2 / props_frac.w2);
+	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cells_frac[neighbor[4]].hz) - grav * props_w.dens_stc / 2.0);
+	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[5]].hz) + grav * props_w.dens_stc / 2.0);
+	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cells_frac[neighbor[0]].hx);
+	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[1]].hx);
 
-	adouble tmp, isFromHere;
-	for (int i = 0; i < 4; i++)
-	{
-		if (cell.type == FracType::FRAC_OUT && i == 1)
-		{ 
-			const auto& beta = cells_poro[cell.nebrs[i]];
-			assert(beta.type == PoroType::WELL_LAT);
-			const auto& nebr = x_poro[beta.num];
-			const double& s = fmap_inter.at({ cell.num, beta.num }).S;
-			const auto pt = (cell.c + beta.c) / 2.0;
-			const adouble vel = getVelocity(cell, beta);
-			//const double vel_val = vel.value();
-			//assert(vel_val * ((double)i-1.5) < 0.0);
-			res.p += pow(-1, (double)i) * s * vel * cell.V;
-			isFromHere = (cell.u_next.p < beta.u_next.p) ? false : true;
-			condassign(tmp, isFromHere, x_frac[cell.num].c, x_poro[beta.num].xa);
-			res.c -= pow(-1, (double)i) * ht * s * tmp * vel;
-			adouble diff = props_w.D_e * (next.c - nebr.xa) / (cell.faces_dist[i] + beta.faces_dist[cell.nebrs_idx[i]]);
-			res.c += ht * s * diff;
-		}
-		else
-		{
-			const auto& beta = cells_frac[cell.nebrs[i]];
-			const auto& nebr = x_frac[beta.num];
-			const double& s = fmap_frac.at({ cell.num, beta.num }).S;
-			const auto pt = (cell.c + beta.c) / 2.0;
-			const double rat_cur = sinh(pt.mu) / sinh(out_cell.c.mu);
-			const adouble vel = getVelocity(cell, beta);
-			const double vel_val = vel.value();
-			//const double vel_val = vel.value();
-			//assert(vel_val * ((double)i-1.5) < 0.0);
-			res.p += pow(-1, (double)i) * s * vel * cell.V;
-			isFromHere = (cell.u_next.p < beta.u_next.p) ? false : true;
-			condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta.num].c);
-			res.c -= pow(-1, (double)i) * ht * s * tmp * vel;
-			if (i < 2)
-			{
-				adouble diff = props_w.D_e * (next.c - nebr.c) / (cell.faces_dist[i] + beta.faces_dist[cell.nebrs_idx[i]]);	
-				res.c += ht * s * diff;
-			}
-		}
-	}
+	adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[2]].hy);
+	adouble diff_plus;
+	if(cell.type == FracType::FRAC_OUT)
+		diff_plus = 2.0 * props_w.D_e * (next.c - x_poro[neighbor[1]].xa) / cell.hy;
+	else
+		diff_plus = 2.0 * props_w.D_e * (next.c - x_frac[neighbor[1]].c) / (cell.hy + cells_frac[neighbor[3]].hy);
 
-	const auto& beta_z_minus = cells_frac[cell.nebrs[4]];
-	const auto& beta_z_plus = cells_frac[cell.nebrs[5]];
-	const auto& nebr_z_minus = x_frac[beta_z_minus.num];
-	const auto& nebr_z_plus = x_frac[beta_z_plus.num];
-	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.h.z / 2.0 + beta_z_minus.h.z / 2.0) - grav * props_w.dens_stc);
-	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.h.z / 2.0 + beta_z_plus.h.z / 2.0) + grav * props_w.dens_stc);
-	const double& sz_minus = fmap_frac.at({ cell.num, beta_z_minus.num }).S;
-	const double& sz_plus = fmap_frac.at({ cell.num, beta_z_plus.num }).S;
-
-	res.p += (sz_minus * vz_minus + sz_plus * vz_plus) * cell.V;
-	
-	isFromHere = (cell.u_next.p < beta_z_minus.u_next.p) ? false : true;
-	condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta_z_minus.num].c);
-	res.c -= ht * tmp * sz_minus * vz_minus;
-	
-	isFromHere = (cell.u_next.p < beta_z_plus.u_next.p) ? false : true;
-	condassign(tmp, isFromHere, x_frac[cell.num].c, x_frac[beta_z_plus.num].c);
-	res.c -= ht * tmp * sz_plus * vz_plus;*/
-	
+	const double sx = cell.hy * cell.hz, sy = cell.hx * cell.hz, sz = cell.hx * cell.hy;
+	res.p = ((sx * (vx_minus + vx_plus) + sz * (vz_minus + vz_plus) - sy * (vy_plus - vy_minus)) / alpha / sx * (cell.hx + cells_frac[neighbor[0]].hx));
+	res.p *= cell.V;
+	res.c = ((next.c - cell.u_prev.c) * cell.V - ht *
+		(sx * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[0]])].c * vx_minus +
+			x_frac[getUpwindIdx(cell, cells_frac[neighbor[1]])].c * vx_plus) +
+			sy * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[2]])].c * vy_minus -
+				x_frac[getUpwindIdx(cell, cells_frac[neighbor[3]])].c * vy_plus - diff_plus - diff_minus) +
+			sz * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[4]])].c * vz_minus +
+				x_frac[getUpwindIdx(cell, cells_frac[neighbor[5]])].c * vz_plus)));
 	return res;
 }

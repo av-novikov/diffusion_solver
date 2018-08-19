@@ -130,7 +130,7 @@ namespace acidellfrac
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 			S = fmap_poro.at({cell.num, beta.num}).S;
-			return k1 * k2 * S / (k1 * cell.faces_dist[idx] + k2 * beta.faces_dist[cell.nebrs_idx[idx]]);
+			return k1 * k2 * S / (k2 * cell.faces_dist[idx] + k1 * beta.faces_dist[cell.nebrs_idx[idx]]);
 		};
 		/*inline adouble getPoroAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const
 		{

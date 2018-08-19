@@ -15,7 +15,7 @@ namespace acidrecfrac
 
 	struct FracProperties
 	{
-		double w2, w2_avg, l2, height;
+		double w2, l2, height;
 		double p_init, c_init;
 	};
 	struct Skeleton_Props : public basic1d::Skeleton_Props
