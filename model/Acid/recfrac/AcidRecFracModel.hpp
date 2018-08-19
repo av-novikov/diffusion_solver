@@ -156,7 +156,6 @@ namespace acidrecfrac
 			const auto& props = props_sk.back();
 			double tmp1 = nebr.p.value();
 			double tmp2 = next.p.value();
-			assert(tmp1 - tmp2 <= 0);
 			return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
 				(nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);

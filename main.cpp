@@ -1312,8 +1312,8 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.0001;
-	props->ht_min = 0.1;
+	props->ht = 0.01;
+	props->ht_min = 0.01;
 	props->ht_max = 500.0;
 
 	props->timePeriods.push_back(3600.0 / 3.0);
@@ -1330,16 +1330,16 @@ acidrecfrac::Properties* getProps()
 	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 20.0;
-	props->props_frac.w2 = 0.5;
+	props->props_frac.w2 = 0.01;
 	props->re = 100.0;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 5;
+	props->cellsNum_x = 20;
 	props->cellsNum_y_frac = 10;
-	props->cellsNum_y_poro = 20;
+	props->cellsNum_y_poro = 50;
 	props->cellsNum_z = 1;
 
 	acidrecfrac::Skeleton_Props props_sk;
@@ -1469,6 +1469,6 @@ int main(int argc, char* argv[])
 	acidrecfrac::Properties* props = getProps();
 	Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties> scene;
 	scene.load(*props);
-	//scene.start();
+	scene.start();
 	return 0;
 }

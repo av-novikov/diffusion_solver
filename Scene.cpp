@@ -42,7 +42,7 @@
 #include "model/Acid/ellfrac/AcidEllFracSolver.hpp"
 
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
-//#include "model/Acid/recfrac/AcidRecFracSolver.hpp"
+#include "model/Acid/recfrac/AcidRecFracSolver.hpp"
 
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
@@ -164,8 +164,7 @@ void Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac
 {
 	model->load(props);
 	paralution::init_paralution();
-	model->snapshot_all(0);
-	//method = new acidrecfrac::AcidRecFracSolver(model);
+	method = new acidrecfrac::AcidRecFracSolver(model);
 }
 void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wax_nit::Properties& props)
 {
@@ -231,7 +230,7 @@ void Scene<modelType, methodType, propsType>::setSnapshotterType(std::string typ
 template <class modelType, class methodType, typename propsType>
 void Scene<modelType, methodType, propsType>::start()
 {
-	//method->start();
+	method->start();
 }
 template <class modelType, class methodType, typename propsType>
 modelType* Scene<modelType, methodType, propsType>::getModel() const

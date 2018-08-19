@@ -13,6 +13,7 @@
 #include "model/Acid/2dnit/Acid2dNIT.hpp"
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
+#include "model/Acid/recfrac/AcidRecFracModel.hpp"
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/2d/WaxNIT.hpp"
 
@@ -134,6 +135,14 @@ void AbstractSolver<acidellfrac::AcidEllFrac>::copyIterLayer()
 	for (auto& cell : model->cells_poro)
 		cell.u_iter = cell.u_next;
 }
+void AbstractSolver<acidrecfrac::AcidRecFrac>::copyIterLayer()
+{
+	for (auto& cell : model->cells_frac)
+		cell.u_iter = cell.u_next;
+
+	for (auto& cell : model->cells_poro)
+		cell.u_iter = cell.u_next;
+}
 
 template <class modelType>
 void AbstractSolver<modelType>::revertIterLayer()
@@ -151,6 +160,14 @@ void AbstractSolver<acidfrac::AcidFrac>::revertIterLayer()
 			cell.u_next = cell.u_iter;
 }
 void AbstractSolver<acidellfrac::AcidEllFrac>::revertIterLayer()
+{
+	for (auto& cell : model->cells_frac)
+		cell.u_next = cell.u_iter;
+
+	for (auto& cell : model->cells_poro)
+		cell.u_next = cell.u_iter;
+}
+void AbstractSolver<acidrecfrac::AcidRecFrac>::revertIterLayer()
 {
 	for (auto& cell : model->cells_frac)
 		cell.u_next = cell.u_iter;
@@ -198,6 +215,14 @@ void AbstractSolver<acidfrac::AcidFrac>::copyTimeLayer()
 			cell.u_prev = cell.u_iter = cell.u_next;
 }
 void AbstractSolver<acidellfrac::AcidEllFrac>::copyTimeLayer()
+{
+	for (auto& cell : model->cells_frac)
+		cell.u_prev = cell.u_iter = cell.u_next;
+
+	for (auto& cell : model->cells_poro)
+		cell.u_prev = cell.u_iter = cell.u_next;
+}
+void AbstractSolver<acidrecfrac::AcidRecFrac>::copyTimeLayer()
 {
 	for (auto& cell : model->cells_frac)
 		cell.u_prev = cell.u_iter = cell.u_next;
@@ -583,6 +608,10 @@ double AbstractSolver<acidellfrac::AcidEllFrac>::convergance(int& ind, int& varI
 {
 	return 1.0;
 }
+double AbstractSolver<acidrecfrac::AcidRecFrac>::convergance(int& ind, int& varInd)
+{
+	return 1.0;
+}
 std::array<ErrInfo, 2> AbstractSolver<acidellfrac::AcidEllFrac>::convergance() const
 {
 	std::array<ErrInfo, 2> err;
@@ -630,6 +659,53 @@ std::array<ErrInfo, 2> AbstractSolver<acidellfrac::AcidEllFrac>::convergance() c
 
 	return err;
 }
+std::array<ErrInfo, 2> AbstractSolver<acidrecfrac::AcidRecFrac>::convergance() const
+{
+	std::array<ErrInfo, 2> err;
+	err[0].err = err[1].err = 0.0;
+	double cur_relErr = 0.0;
+
+	double var_next, var_iter;
+
+	for (int i = 0; i < acidfrac::var_frac_size; i++)
+	{
+		for (const auto& cell : model->cells_frac)
+		{
+			var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > err[0].err)
+				{
+					err[0].err = cur_relErr;
+					err[0].cell_idx = cell.num;
+					err[0].var_idx = i;
+				}
+			}
+		}
+	}
+
+	cur_relErr = 0.0;
+	for (int i = 0; i < acidfrac::var_poro_size; i++)
+	{
+		for (const auto& cell : model->cells_poro)
+		{
+			var_next = cell.u_next.values[i];	var_iter = cell.u_iter.values[i];
+			if (fabs(var_next) > EQUALITY_TOLERANCE)
+			{
+				cur_relErr = fabs((var_next - var_iter) / var_next);
+				if (cur_relErr > err[1].err)
+				{
+					err[1].err = cur_relErr;
+					err[1].cell_idx = cell.num;
+					err[1].var_idx = i;
+				}
+			}
+		}
+	}
+
+	return err;
+}
 
 template <class modelType>
 double AbstractSolver<modelType>::averValue(const int varInd)
@@ -648,6 +724,10 @@ double AbstractSolver<acidfrac::AcidFrac>::averValue(const int varInd)
 	return 0.0;
 }
 double AbstractSolver<acidellfrac::AcidEllFrac>::averValue(const int varInd)
+{
+	return 0.0;
+}
+double AbstractSolver<acidrecfrac::AcidRecFrac>::averValue(const int varInd)
 {
 	return 0.0;
 }
@@ -730,6 +810,26 @@ void AbstractSolver<acidfrac::AcidFrac>::averValue(std::array<double, acidfrac::
 		aver[i] = (aver[i] * model->Volume + aver_poro[i] * poro_vol) / (model->Volume + poro_vol);
 }
 void AbstractSolver<acidellfrac::AcidEllFrac>::averValue(std::array<double, acidellfrac::AcidEllFrac::var_size>& aver)
+{
+	std::array<double, acidellfrac::AcidEllFrac::var_size> aver_poro;
+	std::fill(aver_poro.begin(), aver_poro.end(), 0.0);
+	std::fill(aver.begin(), aver.end(), 0.0);
+
+	for (const auto& cell : model->cells_frac)
+	{
+		aver[1] += cell.u_next.values[0] * cell.V;
+		aver[4] += cell.u_next.values[1] * cell.V;
+	}
+	aver[1] /= model->Volume_frac;	aver[4] /= model->Volume_frac;
+
+	for (const auto& cell : model->cells_poro)
+		for (int i = 0; i < acidfrac::var_poro_size; i++)
+			aver_poro[i] += cell.u_next.values[i] * cell.V / model->Volume_poro;
+
+	for (int i = 0; i < acidfrac::AcidFrac::var_size; i++)
+		aver[i] = (aver[i] * model->Volume_frac + aver_poro[i] * model->Volume_poro) / (model->Volume_frac + model->Volume_poro);
+}
+void AbstractSolver<acidrecfrac::AcidRecFrac>::averValue(std::array<double, acidellfrac::AcidEllFrac::var_size>& aver)
 {
 	std::array<double, acidellfrac::AcidEllFrac::var_size> aver_poro;
 	std::fill(aver_poro.begin(), aver_poro.end(), 0.0);
@@ -868,5 +968,6 @@ template class AbstractSolver<acid2dnit::Acid2dNIT>;
 template class AbstractSolver<acid1d::Acid1d>;
 template class AbstractSolver<acidfrac::AcidFrac>;
 template class AbstractSolver<acidellfrac::AcidEllFrac>;
+template class AbstractSolver<acidrecfrac::AcidRecFrac>;
 template class AbstractSolver<wax_nit1d::WaxNIT1d>;
 template class AbstractSolver<wax_nit::WaxNIT>;
