@@ -889,7 +889,6 @@ FracTapeVariable AcidEllFrac::solveFracIn(const FracCell& cell)
 						/ fmap_frac.at({ cell.num, beta.num }).S * (cell.faces_dist[0] + beta.faces_dist[cell.nebrs_idx[0]])) / P_dim,
 						(next.p - Pwf + grav * props_w.dens_stc * cell.c.z) / P_dim);
 	condassign(res.c, leftIsRate, (next.c - nebr.c) / P_dim, (next.c - c) / P_dim);
-	res.c = (next.c - c) / P_dim;
 	return res;
 }
 FracTapeVariable AcidEllFrac::solveFracBorder(const FracCell& cell)

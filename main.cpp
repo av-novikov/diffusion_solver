@@ -1313,8 +1313,8 @@ acidrecfrac::Properties* getProps()
 	Properties* props = new Properties;
 
 	props->ht = 0.01;
-	props->ht_min = 0.01;
-	props->ht_max = 500.0;
+	props->ht_min = 1.0;
+	props->ht_max = 1000.0;
 
 	props->timePeriods.push_back(3600.0 / 3.0);
 	props->timePeriods.push_back(3.0 * 3600.0);
@@ -1337,7 +1337,7 @@ acidrecfrac::Properties* getProps()
 	props->props_frac.c_init = 0.0;
 	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 20;
+	props->cellsNum_x = 10;
 	props->cellsNum_y_frac = 10;
 	props->cellsNum_y_poro = 50;
 	props->cellsNum_z = 1;
