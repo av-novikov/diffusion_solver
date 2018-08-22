@@ -1251,7 +1251,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + k * ny];
 			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
-			points_frac->InsertNextPoint(r_dim * (cell.x - xnebr.hx / 10.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+			points_frac->InsertNextPoint(r_dim * (cell.x - xnebr.hx / 30.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 		}
 	}
 	for (int i = 0; i < nx - 1; i++)
@@ -1300,8 +1300,10 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	conc_co2_frac->SetName("CO2Concentration");
 	auto conc_s_frac = vtkSmartPointer<vtkDoubleArray>::New();
 	conc_s_frac->SetName("SaltConcentration");
-	//auto trans = vtkSmartPointer<vtkDoubleArray>::New();
-	//trans->SetName("Transmissibility");
+	auto trans = vtkSmartPointer<vtkDoubleArray>::New();
+	trans->SetName("Transmissibility");
+	auto v_leak = vtkSmartPointer<vtkDoubleArray>::New();
+	v_leak->SetName("Leakoff_Velocity");
 	auto type = vtkSmartPointer<vtkDoubleArray>::New();
 	type->SetName("Type");
 
@@ -1325,7 +1327,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			conc_w_frac->InsertNextValue(1.0 - next.c);
 			conc_s_frac->InsertNextValue(0.0);
 			conc_co2_frac->InsertNextValue(0.0);
-			//trans->InsertNextValue(grid0.trans);
+			trans->InsertNextValue(1.0);
+			v_leak->InsertNextValue(0.0);
 			type->InsertNextValue(cell.type);
 
 			hex->GetPointIds()->SetId(0, j + k * ny);
@@ -1361,7 +1364,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 				conc_w_frac->InsertNextValue(1.0 - next.c);
 				conc_s_frac->InsertNextValue(0.0);
 				conc_co2_frac->InsertNextValue(0.0);
-				//trans->InsertNextValue(grid.trans);
+				trans->InsertNextValue(model->trans[k + (i - 1) * model->cellsNum_z]);
+				v_leak->InsertNextValue(model->getFlowLeak(cell).value() * r_dim / t_dim);
 				type->InsertNextValue(cell.type);
 
 				hex->GetPointIds()->SetId(0, j + k * ny + i * np);
@@ -1447,7 +1451,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	fd_frac->AddArray(conc_w_frac);
 	fd_frac->AddArray(conc_s_frac);
 	fd_frac->AddArray(conc_co2_frac);
-	//fd_frac->AddArray(trans);
+	fd_frac->AddArray(trans);
+	fd_frac->AddArray(v_leak);
 	fd_frac->AddArray(type);
 
 	grid_poro->SetCells(VTK_HEXAHEDRON, hexs_poro);

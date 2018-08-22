@@ -73,6 +73,7 @@ namespace acidrecfrac
 		// Snapshotter
 		bool isWriteSnaps;
 		Snapshotter<AcidRecFrac>* snapshotter;
+		std::vector<double> trans;
 
 		void buildFracGrid();
 		void buildPoroGrid();

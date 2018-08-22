@@ -492,45 +492,44 @@ void AcidRecFrac::setInitialState()
 	x_frac = new FracTapeVariable[cellsNum_frac];
 	x_poro = new PoroTapeVariable[cellsNum_poro];
 	h = new adouble[ var_frac_size * cellsNum_frac + var_poro_size * cellsNum_poro ];
+	trans.resize(cellsNum_x * cellsNum_z, 1.0);
 }
 void AcidRecFrac::calculateTrans()
 {
-	/*double sum, k, k0, x0;
-	double width = 0.0, cur_width;
-	for (auto& grid : poro_grids)
+	double sum, k, k0 = props_sk[0].perm, y0;
+	double width = 0.0;
+	for (const auto& cell : cells_poro)
 	{
-		k0 = grid.props_sk->perm;
-		cur_width = 0.0;
-		for (const auto& cell : grid.cells)
+		if (cell.hx != 0.0 && cell.hz != 0.0)
 		{
-			k = grid.props_sk->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			k = props_sk[0].getPermCoseni(cell.u_next.m, cell.u_next.p).value();
 			if (fabs(k - k0) / k0 < 10.0)
-				break;
+				continue;
 			else
-				cur_width += cell.hx;
+				width += cell.hy;
 		}
-
-		if (cur_width > width)
-			width = cur_width;
 	}
-	std::cout << "width = " << width * R_dim << std::endl;
-	for (auto& grid : poro_grids)
+
+	width /= (cellsNum_z * cellsNum_x);
+	std::cout << std::endl << "width = " << width * R_dim << std::endl << std::endl;
+	int i_ind, k_ind;
+	for (int tr_idx = 0; tr_idx < trans.size(); tr_idx++)
 	{
-		grid.width = width;
-		k0 = grid.props_sk->perm;
-		x0 = grid.cells[0].x;
+		k_ind = int(tr_idx % cellsNum_z) + 1;
+		i_ind = int(tr_idx / cellsNum_z) + 1;
 		sum = 0.0;
-		for (const auto& cell : grid.cells)
+		for (int j = 0; j < cellsNum_y_poro + 2; j++)
 		{
-			k = grid.props_sk->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
-			if (cell.x - x0 > width)
+			const auto& pcell = cells_poro[j + (cellsNum_y_poro + 2) * (k_ind + (cellsNum_z + 2) * i_ind)];
+			assert(pcell.type == PoroType::WELL_LAT || pcell.type == PoroType::MIDDLE);
+			k = props_sk[0].getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
+			if (pcell.y - props_frac.w2 > width - EQUALITY_TOLERANCE)
 				break;
 			else
-				sum += k * cell.hx;
+				sum += k * pcell.hx;
 		}
-
-		grid.trans = (sum > 0.0) ? sum / (k0 * width) : 1.0;
-	}*/
+		trans[tr_idx] = (sum > 0.0) ? sum / (k0 * width) : 1.0;
+	}
 }
 double AcidRecFrac::getRate(int cur) const
 {
