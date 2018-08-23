@@ -1240,6 +1240,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 {
 	using namespace acidrecfrac;
 	const double& w2 = model->props_frac.w2;
+	const double Y_MULT = 100.0;
 	// Grid
 	auto grid_frac = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	auto grid_poro = vtkSmartPointer<vtkUnstructuredGrid>::New();
@@ -1251,7 +1252,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 		{
 			const FracCell& cell = model->cells_frac[j + k * ny];
 			const FracCell& xnebr = model->cells_frac[j + k * ny + ny * nz];
-			points_frac->InsertNextPoint(r_dim * (cell.x - xnebr.hx / 30.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+			points_frac->InsertNextPoint(r_dim * (cell.x - xnebr.hx / 30.0), Y_MULT * r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 		}
 	}
 	for (int i = 0; i < nx - 1; i++)
@@ -1260,7 +1261,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			for (int j = 0; j < ny; j++)
 			{
 				const FracCell& cell = model->cells_frac[j + k * ny + i * ny * nz];
-				points_frac->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+				points_frac->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 			}
 		}
 	grid_frac->SetPoints(points_frac);
@@ -1274,9 +1275,9 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			{
 				const PoroCell& cell = model->cells_poro[j + k * ny_poro + i * ny_poro * nz];
 				if (j != 1)
-					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y - cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y - cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 				else
-					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y - 2.0 * cell.hy / 5.0), r_dim * (cell.z + cell.hz / 2.0));
+					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y - 2.0 * cell.hy / 5.0), r_dim * (cell.z + cell.hz / 2.0));
 			}
 		}
 	grid_poro->SetPoints(points_poro);
@@ -1412,30 +1413,33 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			for (int j = 0; j < ny_poro - 1; j++)
 			{
 				const PoroCell& cell = model->cells_poro[j + (k + 1) * ny_poro + (i + 1) * nz * ny_poro];
-				assert(cell.type == PoroType::MIDDLE || (cell.type == PoroType::WELL_LAT && j == 0));
-				const auto& next = cell.u_next;
-				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+				if (cell.y * r_dim < 1.0)
+				{
+					assert(cell.type == PoroType::MIDDLE || (cell.type == PoroType::WELL_LAT && j == 0));
+					const auto& next = cell.u_next;
+					vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-				poro_poro->InsertNextValue(next.m);
-				perm_poro->InsertNextValue(M2toMilliDarcy(props_sk.getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
-				pres_poro->InsertNextValue(next.p * P_dim / BAR_TO_PA);
-				sat_w_poro->InsertNextValue(next.sw);
-				sat_o_poro->InsertNextValue(1.0 - next.sw);
-				conc_a_poro->InsertNextValue(next.xa);
-				conc_w_poro->InsertNextValue(next.xw);
-				conc_s_poro->InsertNextValue(next.xs);
-				conc_co2_poro->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
+					poro_poro->InsertNextValue(next.m);
+					perm_poro->InsertNextValue(M2toMilliDarcy(props_sk.getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
+					pres_poro->InsertNextValue(next.p * P_dim / BAR_TO_PA);
+					sat_w_poro->InsertNextValue(next.sw);
+					sat_o_poro->InsertNextValue(1.0 - next.sw);
+					conc_a_poro->InsertNextValue(next.xa);
+					conc_w_poro->InsertNextValue(next.xw);
+					conc_s_poro->InsertNextValue(next.xs);
+					conc_co2_poro->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
 
-				hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
-				hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
-				hex->GetPointIds()->SetId(2, j + 1 + k * ny_poro + (i + 1) * np_poro);
-				hex->GetPointIds()->SetId(3, j + k * ny_poro + (i + 1) * np_poro);
+					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
+					hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
+					hex->GetPointIds()->SetId(2, j + 1 + k * ny_poro + (i + 1) * np_poro);
+					hex->GetPointIds()->SetId(3, j + k * ny_poro + (i + 1) * np_poro);
 
-				hex->GetPointIds()->SetId(4, j + (k + 1) * ny_poro + i * np_poro);
-				hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny_poro + i * np_poro);
-				hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny_poro + (i + 1) * np_poro);
-				hex->GetPointIds()->SetId(7, j + (k + 1) * ny_poro + (i + 1) * np_poro);
-				hexs_poro->InsertNextCell(hex);
+					hex->GetPointIds()->SetId(4, j + (k + 1) * ny_poro + i * np_poro);
+					hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny_poro + i * np_poro);
+					hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny_poro + (i + 1) * np_poro);
+					hex->GetPointIds()->SetId(7, j + (k + 1) * ny_poro + (i + 1) * np_poro);
+					hexs_poro->InsertNextCell(hex);
+				}
 			}
 		}
 	 }

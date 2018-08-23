@@ -649,15 +649,17 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell)
 	const auto& props = props_sk.back();
 
 	const auto& beta1 = cells_frac[getFracNebr(cell.num)];
+	const auto& beta_poro = cells_poro[cell.num + 1];
 	const auto& beta2 = cells_frac[beta1.num - 1];
-	const auto& beta3 = cells_frac[beta1.num - 2];
+	//const auto& beta3 = cells_frac[beta1.num - 2];
 	const auto& nebr1 = x_frac[beta1.num];
+	const auto& nebr_poro = x_poro[cell.num + 1];
 	const auto& nebr2 = x_frac[beta2.num];
-	const auto& nebr3 = x_frac[beta3.num];
+	//const auto& nebr3 = x_frac[beta3.num];
 
 	const auto& next = x_poro[cell.num];
 	const auto& prev = cell.u_prev;
-	
+
 	const double dist0 = cell.hy / 2.0;
 	const double dist1 = beta1.hy / 2.0;
 	const double dist2 = beta2.hy / 2.0;
@@ -665,15 +667,37 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell)
 	PoroTapeVariable res;
 	res.m = (1.0 - props.getPoro(next.m, next.p)) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
-	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) * 
+	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
 		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
-	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
-	res.xw = ((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) * 
-		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
-	res.xa = ((next.xa - nebr1.c) - (nebr1.c - nebr2.c) * 
-		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
-	res.xs = next.xs / P_dim;
+	//res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
+	//res.xw = ((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) *
+	//	(dist0 + dist1) / (dist1 + dist2)) / P_dim;
+	//res.xa = ((next.xa - nebr1.c) - (nebr1.c - nebr2.c) *
+	//	(dist0 + dist1) / (dist1 + dist2)) / P_dim;
+	//res.xs = next.xs / P_dim;
+
+	if (beta1.u_next.p >= cell.u_next.p)
+	{
+		res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
+		res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim;
+		res.xa = (next.xa - nebr1.c) / P_dim;
+		res.xs = next.xs / P_dim;
+	}
+	else if (beta_poro.u_next.p > cell.u_next.p)
+	{
+		res.sw = (next.sw - nebr_poro.sw) / P_dim;
+		res.xw = (next.xw - nebr_poro.xw) / P_dim;
+		res.xa = (next.xa - nebr_poro.xa) / P_dim;
+		res.xs = (next.xs - nebr_poro.xs) / P_dim;
+	}
+	else
+	{
+		res.sw = (next.sw - prev.sw) / P_dim;
+		res.xw = (next.xw - prev.xw) / P_dim;
+		res.xa = (next.xa - prev.xa) / P_dim;
+		res.xs = (next.xs - prev.xs) / P_dim;
+	}
 	return res;
 }
 PoroTapeVariable AcidRecFrac::solvePoroRight(const PoroCell& cell)

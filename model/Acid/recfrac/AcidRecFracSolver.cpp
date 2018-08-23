@@ -113,7 +113,7 @@ void AcidRecFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max && iterations < 5 /*&& err_newton_first < 1.5*/)
+	if (model->ht <= model->ht_max && iterations < 5 && (curTimePeriod == 0 || err_newton_first < 1.5))
 		model->ht = model->ht * 1.5;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;

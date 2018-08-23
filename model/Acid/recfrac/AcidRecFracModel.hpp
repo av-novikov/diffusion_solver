@@ -4,7 +4,6 @@
 #include <map>
 #include "model/Acid/recfrac/Properties.hpp"
 #include "model/cells/AcidVariables.hpp"
-#include "model/cells/NewEllipticCell.hpp"
 #include "model/cells/HexCell.hpp"
 #include "model/Basic1d/Basic1d.hpp"
 #include "util/Interpolate.h"
