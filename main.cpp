@@ -1312,7 +1312,7 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.001;
+	props->ht = 0.003;
 	props->ht_min = 1.0;
 	props->ht_max = 1000.0;
 

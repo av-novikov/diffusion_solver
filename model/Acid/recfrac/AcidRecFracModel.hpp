@@ -10,6 +10,8 @@
 
 namespace acidrecfrac
 {
+	enum Regime {INJECTION, STOP};
+
 	typedef JustAcid PoroVariable;
 	typedef TapeJustAcid PoroTapeVariable;
 	typedef JustAcid PoroVariable;
@@ -84,14 +86,14 @@ namespace acidrecfrac
 		void calculateTrans();
 		// Service functions
 		// Schemes
-		PoroTapeVariable solvePoro(const PoroCell& cell);
+		PoroTapeVariable solvePoro(const PoroCell& cell, const Regime reg);
 		PoroTapeVariable solvePoroMid(const PoroCell& cell);
-		PoroTapeVariable solvePoroLeft(const PoroCell& cell);
+		PoroTapeVariable solvePoroLeft(const PoroCell& cell, const Regime reg);
 		PoroTapeVariable solvePoroRight(const PoroCell& cell);
 		PoroTapeVariable solvePoroBorder(const PoroCell& cell);
-		FracTapeVariable solveFrac(const FracCell& cell);
+		FracTapeVariable solveFrac(const FracCell& cell, const Regime reg);
 		FracTapeVariable solveFracIn(const FracCell& cell);
-		FracTapeVariable solveFracMid(const FracCell& cell);
+		FracTapeVariable solveFracMid(const FracCell& cell, const Regime reg);
 		FracTapeVariable solveFracBorder(const FracCell& cell);
 		// Service calculations
 		template <class TCell>

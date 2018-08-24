@@ -544,12 +544,12 @@ double AcidRecFrac::getRate(int cur) const
 	return 0;
 };
 
-PoroTapeVariable AcidRecFrac::solvePoro(const PoroCell& cell)
+PoroTapeVariable AcidRecFrac::solvePoro(const PoroCell& cell, const Regime reg)
 {
 	if (cell.type == PoroType::MIDDLE)
 		return solvePoroMid(cell);
 	else if (cell.type == PoroType::WELL_LAT)
-		return solvePoroLeft(cell);
+		return solvePoroLeft(cell, reg);
 	else if (cell.type == PoroType::RIGHT)
 		return solvePoroRight(cell);
 	else
@@ -643,7 +643,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 
 	return res;
 }
-PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell)
+PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime reg)
 {
 	assert(cell.type == PoroType::WELL_LAT);
 	const auto& props = props_sk.back();
@@ -677,7 +677,7 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell)
 	//	(dist0 + dist1) / (dist1 + dist2)) / P_dim;
 	//res.xs = next.xs / P_dim;
 
-	if (beta1.u_next.p >= cell.u_next.p)
+	if (reg == INJECTION)
 	{
 		res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
 		res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim;
@@ -748,10 +748,10 @@ PoroTapeVariable AcidRecFrac::solvePoroBorder(const PoroCell& cell)
 	res.xs = (next.xs - nebr.xs) / P_dim;
 	return res;
 }
-FracTapeVariable AcidRecFrac::solveFrac(const FracCell& cell)
+FracTapeVariable AcidRecFrac::solveFrac(const FracCell& cell, const Regime reg)
 {
 	if (cell.type == FracType::FRAC_MID || cell.type == FracType::FRAC_OUT)
-		return solveFracMid(cell);
+		return solveFracMid(cell, reg);
 	else if (cell.type == FracType::FRAC_BORDER)
 		return solveFracBorder(cell);
 	else if (cell.type == FracType::FRAC_IN)
@@ -803,7 +803,7 @@ FracTapeVariable AcidRecFrac::solveFracBorder(const FracCell& cell)
 
 	return res;
 }
-FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell)
+FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime reg)
 {
 	assert(cell.type == FracType::FRAC_MID || FracType::FRAC_OUT);
 	const auto& next = x_frac[cell.num];
@@ -829,17 +829,18 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell)
 	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[5]].hx);
 
 	adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[0]].hy);
-	adouble diff_plus, c_y_plus;
+	adouble diff_plus, c_y_plus, c_y_minus;
 	if (cell.type == FracType::FRAC_OUT)
 	{
 		diff_plus = 2.0 * props_w.D_e * (next.c - x_poro[neighbor[1]].xa) / cell.hy;
-		c_y_plus = (cell.u_next.p < cells_poro[neighbor[1]].u_next.p) ? x_poro[neighbor[1]].xa : next.c;
+		c_y_plus = (reg == INJECTION) ? next.c : x_poro[neighbor[1]].xa;
 	}
 	else
 	{
 		diff_plus = 2.0 * props_w.D_e * (next.c - x_frac[neighbor[1]].c) / (cell.hy + cells_frac[neighbor[1]].hy);
-		c_y_plus = x_frac[getUpwindIdx(cell, cells_frac[neighbor[1]])].c;
+		c_y_plus = (reg == INJECTION) ? next.c : x_frac[neighbor[1]].c;
 	}
+	c_y_minus = (reg == INJECTION) ? next.c : x_frac[neighbor[0]].c;
 
 	const double sx = cell.hy * cell.hz, sy = cell.hx * cell.hz, sz = cell.hx * cell.hy;
 	res.p = ((sx * (vx_minus + vx_plus) + sz * (vz_minus + vz_plus) - sy * (vy_plus - vy_minus)) / alpha / sx * (cell.hx + cells_frac[neighbor[4]].hx));
@@ -847,8 +848,7 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell)
 	res.c = ((next.c - cell.u_prev.c) * cell.V - ht *
 		(sx * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[4]])].c * vx_minus +
 			x_frac[getUpwindIdx(cell, cells_frac[neighbor[5]])].c * vx_plus) +
-			sy * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[0]])].c * vy_minus -
-				c_y_plus * vy_plus - diff_plus - diff_minus) +
+			sy * (c_y_minus * vy_minus - c_y_plus * vy_plus - diff_plus - diff_minus) +
 			sz * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[2]])].c * vz_minus +
 				x_frac[getUpwindIdx(cell, cells_frac[neighbor[3]])].c * vz_plus)));
 	return res;

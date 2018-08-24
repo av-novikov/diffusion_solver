@@ -248,6 +248,7 @@ void AcidRecFracSolver::solveStep()
 }
 void AcidRecFracSolver::computeJac()
 {
+	const Regime reg = (curTimePeriod == 0) ? INJECTION : STOP;
 	trace_on(0);
 	const int start_idx = model->cellsNum_frac * var_frac_size;
 
@@ -280,14 +281,14 @@ void AcidRecFracSolver::computeJac()
 	// Fracture
 	for (const auto& cell : model->cells_frac)
 	{
-		const auto res = model->solveFrac(cell);
+		const auto res = model->solveFrac(cell, reg);
 		model->h[cell.num * var_frac_size] = res.p;
 		model->h[cell.num * var_frac_size + 1] = res.c;
 	}
 	// Porous medium
 	for (const auto& cell : model->cells_poro)
 	{
-		const auto res = model->solvePoro(cell);
+		const auto res = model->solvePoro(cell, reg);
 		model->h[start_idx + cell.num * var_poro_size] = res.m;
 		model->h[start_idx + cell.num * var_poro_size + 1] = res.p;
 		model->h[start_idx + cell.num * var_poro_size + 2] = res.sw;
