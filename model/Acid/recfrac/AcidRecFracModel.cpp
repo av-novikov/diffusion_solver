@@ -523,10 +523,10 @@ void AcidRecFrac::calculateTrans()
 			const auto& pcell = cells_poro[j + (cellsNum_y_poro + 2) * (k_ind + (cellsNum_z + 2) * i_ind)];
 			assert(pcell.type == PoroType::WELL_LAT || pcell.type == PoroType::MIDDLE);
 			k = props_sk[0].getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
-			if (pcell.y - props_frac.w2 > width - EQUALITY_TOLERANCE)
+			if (pcell.y - props_frac.w2 > width)
 				break;
 			else
-				sum += k * pcell.hx;
+				sum += k * pcell.hy;
 		}
 		trans[tr_idx] = (sum > 0.0) ? sum / (k0 * width) : 1.0;
 	}
