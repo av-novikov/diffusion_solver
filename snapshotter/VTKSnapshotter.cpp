@@ -1328,7 +1328,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			conc_w_frac->InsertNextValue(1.0 - next.c);
 			conc_s_frac->InsertNextValue(0.0);
 			conc_co2_frac->InsertNextValue(0.0);
-			trans->InsertNextValue(1.0);
+			trans->InsertNextValue(model->trans[k]);
 			v_leak->InsertNextValue(0.0);
 			type->InsertNextValue(cell.type);
 
