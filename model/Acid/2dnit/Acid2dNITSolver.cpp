@@ -24,6 +24,10 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
+
+	pvd.open("snaps/Acid2dNIT.pvd", std::ofstream::out);
+	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
+	pvd << "\t<Collection>\n";
 }
 Acid2dNITSolver::~Acid2dNITSolver()
 {
@@ -35,9 +39,21 @@ Acid2dNITSolver::~Acid2dNITSolver()
 	delete[] ind_i, ind_j, ind_rhs;
 	delete[] cols;
 	delete[] a, rhs;
+
+	pvd << "\t</Collection>\n";
+	pvd << "</VTKFile>\n";
+	pvd.close();
 }
 void Acid2dNITSolver::writeData()
 {
+	pvd << "\t\t<DataSet part=\"0\" timestep=\"";
+	if (cur_t == 0.0)
+		pvd << std::to_string(0.0);
+	else
+		pvd << cur_t * t_dim / 3600.0;
+	pvd << "0\" file=\"Acid2dNIT_" + std::to_string(step_idx) + ".vtp\"/>\n";
+
+
 /*	double p = 0.0, s_w = 0.0, s_o = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
@@ -66,7 +82,7 @@ void Acid2dNITSolver::writeData()
 }
 void Acid2dNITSolver::start()
 {
-	int counter = 0;
+	step_idx = 0;
 	iterations = 8;
 
 	fillIndices();
@@ -78,13 +94,13 @@ void Acid2dNITSolver::start()
 	{
 		control();
 		if (model->isWriteSnaps)
-			model->snapshot_all(counter++);
+			model->snapshot_all(step_idx++);
 		doNextStep();
 		copyTimeLayer();
 		cout << "---------------------NEW TIME STEP---------------------" << endl;
 	}
 	if (model->isWriteSnaps)
-		model->snapshot_all(counter++);
+		model->snapshot_all(step_idx);
 	writeData();
 }
 void Acid2dNITSolver::copySolution(const Vector& sol)

@@ -172,6 +172,7 @@ namespace acid2dnit
 
 		std::vector<double> xa;
 		std::vector<double> temps;
+		std::vector<bool> LeftBoundIsRate;
 
 		std::vector< std::pair<double, double> > rho_co2;
 	};

@@ -44,6 +44,7 @@ namespace acid2dnit
 		std::vector<double> xas;
 		double temp;
 		std::vector<double> temps;
+		std::vector<bool> LeftBoundIsRate;
 
 		void setProps(Properties& props);
 		void makeDimLess();

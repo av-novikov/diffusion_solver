@@ -31,12 +31,65 @@ Acid2dNIT::~Acid2dNIT()
 void Acid2dNIT::setProps(Properties& props)
 {
 	props_sk = props.props_sk;
-	setBasicProps(props);
+	
+
+	rightBoundIsPres = props.rightBoundIsPres;
+
+	// Setting grid properties
+	r_w = props.r_w;
+	r_e = props.r_e;
+	cellsNum_r = props.cellsNum_r;
+	cellsNum_z = props.cellsNum_z;
+	cellsNum = (cellsNum_r + 2) * (cellsNum_z + 2);
+
+	// Setting skeleton properties
+	perfIntervals = props.perfIntervals;
+
+	skeletonsNum = props.props_sk.size();
+	checkSkeletons(props.props_sk);
+	for (int j = 0; j < skeletonsNum; j++)
+	{
+		props_sk[j].perm_r = MilliDarcyToM2(props_sk[j].perm_r);
+		props_sk[j].perm_z = MilliDarcyToM2(props_sk[j].perm_z);
+	}
+
+	periodsNum = props.timePeriods.size();
+	rate.resize(periodsNum);
+	pwf.resize(periodsNum);
+	int rate_idx = 0, pres_idx = 0;
 	for (int i = 0; i < periodsNum; i++)
 	{
+		period.push_back(props.timePeriods[i]);
+		LeftBoundIsRate.push_back(props.LeftBoundIsRate[i]);
 		xas.push_back(props.xa[i]);
 		temps.push_back(props.temps[i]);
+
+		if (LeftBoundIsRate.back())
+		{
+			rate[i] = props.rates[rate_idx++] / 86400.0;
+			pwf[i] = 0.0;
+		}
+		else
+		{
+			pwf[i] = props.pwf[pres_idx++];
+			rate[i] = 0.0;
+		}
+		for (int j = 0; j < skeletonsNum; j++)
+		{
+			if (props_sk[j].radiuses_eff[i] > props.r_w)
+				props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[j].perm_r * log(props.props_sk[j].radiuses_eff[i] / props.r_w) / (log(props.props_sk[j].radiuses_eff[i] / props.r_w) + props.props_sk[j].skins[i])));
+			else
+				props_sk[j].perms_eff.push_back(MilliDarcyToM2(props.props_sk[j].perm_r));
+		}
 	}
+
+	// Temporal properties
+	ht = props.ht;
+	ht_min = props.ht_min;
+	ht_max = props.ht_max;
+
+	alpha = props.alpha;
+	depth_point = props.depth_point;
 
 	props_w = props.props_w;
 	props_w.visc = cPToPaSec(props_w.visc);
@@ -53,7 +106,55 @@ void Acid2dNIT::setProps(Properties& props)
 	for (auto& comp : reac.comps)
 		comp.mol_weight = gramToKg(comp.mol_weight);
 
-	makeBasicDimLess();
+	// Main units
+	R_dim = r_e / 100.0;
+	t_dim = 3600.0;
+	P_dim = props_sk[0].p_init;
+
+	// Temporal properties
+	ht /= t_dim;
+	ht_min /= t_dim;
+	ht_max /= t_dim;
+
+	// Grid properties
+	r_w /= R_dim;
+	r_e /= R_dim;
+
+	// Skeleton properties
+	for (int i = 0; i < skeletonsNum; i++)
+	{
+		props_sk[i].perm_r /= (R_dim * R_dim);
+		props_sk[i].perm_z /= (R_dim * R_dim);
+
+		props_sk[i].beta /= (1.0 / P_dim);
+		props_sk[i].dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
+		props_sk[i].h1 = (props_sk[i].h1 - depth_point) / R_dim;
+		props_sk[i].h2 = (props_sk[i].h2 - depth_point) / R_dim;
+		props_sk[i].height /= R_dim;
+		props_sk[i].p_init /= P_dim;
+		props_sk[i].p_out /= P_dim;
+		props_sk[i].p_ref /= P_dim;
+
+		for (int j = 0; j < periodsNum; j++)
+		{
+			props_sk[i].perms_eff[j] /= (R_dim * R_dim);
+			props_sk[i].radiuses_eff[j] /= R_dim;
+		}
+	}
+
+	Q_dim = R_dim * R_dim * R_dim / t_dim;
+	for (int i = 0; i < periodsNum; i++)
+	{
+		period[i] /= t_dim;
+		rate[i] /= Q_dim;
+		pwf[i] /= P_dim;
+	}
+
+	grav /= (R_dim / t_dim / t_dim);
+	// Rest properties
+	alpha /= t_dim;
+	//depth_point = 0.0;
+
 	makeDimLess();
 
 	// Data sets
@@ -118,6 +219,7 @@ void Acid2dNIT::makeDimLess()
 }
 void Acid2dNIT::setPeriod(int period)
 {
+	leftBoundIsRate = LeftBoundIsRate[period];
 	if (leftBoundIsRate)
 	{
 		Q_sum = rate[period];
@@ -302,10 +404,17 @@ void Acid2dNIT::solve_eqLeft(const Cell& cell)
 
 	h[0] = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
-	condassign(h[1], leftIsRate, props_w.getDensity(next.p, next.xa, next.xw, next.xs) * getTrans(cell, next.m, beta1, nebr1.m) /
-		props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (nebr1.p - next.p) +
-		props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs) * rate,
-		next.p - Pwf);
+	if (leftBoundIsRate)
+	{
+		double tmp = props_w.getDensity(next.p, next.xa, next.xw, next.xs).value() * getTrans(cell, next.m, beta1, nebr1.m).value() /
+			props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * (nebr1.p - next.p).value() +
+			props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs).value() * rate;
+		h[1] = /*props_w.getDensity(next.p, next.xa, next.xw, next.xs) * getTrans(cell, next.m, beta1, nebr1.m) /
+			props_w.getViscosity(next.p, next.xa, next.xw, next.xs) */ (nebr1.p - next.p) /*+
+			props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs) * rate*/;
+	}
+	else
+		h[1] = next.p - Pwf;
 	condassign(h[1], leftPresNonPerforated, next.p - nebr1.p);
 	condassign(h[2], isPerforated, next.sw - (1.0 - props.s_oc), next.sw - nebr1.sw);
 	condassign(h[3], isPerforated, next.xw - (1.0 - xa), next.xw - nebr1.xw);
