@@ -77,7 +77,8 @@ namespace acid2dnit
 	inline SolidComponent getCaCl2()
 	{
 		SolidComponent comp;
-		comp.mol_weight = 110;
+		comp.mol_weight = 111;
+		comp.rho_stc = 2150.0;
 		return comp;
 	};
 	inline LiquidComponent getH2O()
@@ -92,6 +93,20 @@ namespace acid2dnit
 		comp.mol_weight = 44.0;
 		comp.z = 1.0;
 		comp.rho_stc = 1.98;
+		return comp;
+	};
+	inline SolidComponent getDolomite()
+	{
+		SolidComponent comp;
+		comp.mol_weight = 184.4;
+		comp.rho_stc = 2860.0;
+		return comp;
+	};
+	inline SolidComponent getMgCl2CaCl2()
+	{
+		SolidComponent comp;
+		comp.mol_weight = 111 + 95.2;
+		comp.rho_stc = (2150 * 111 + 2316 * 95.2) / (111 + 95.2);
 		return comp;
 	};
 
@@ -126,16 +141,31 @@ namespace acid2dnit
 			comps[REACTS::WATER		] = getH2O();		indices[REACTS::WATER	] = 1.0;
 			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
 
-			activation_energy = 13.0 * KKAL_2_J;
-			reaction_const = 7.29 * 1.e+7 / 10;
+			activation_energy = 8.31 * 7550.0;//13.0 * KKAL_2_J;
+			reaction_const = 7.29 * 1.e+7;
 			surf_init = 0.175;
-			alpha = 1.0;
+			alpha = 0.63;
 		};
 	};
 
 	static const int dolomite_components_num = 5;
 	struct DolomiteReaction : Reaction<dolomite_components_num>
 	{
+		enum REACTS { DOLOMITE, ACID, SALT, WATER, CO2 };
+
+		DolomiteReaction()
+		{
+			comps[REACTS::DOLOMITE	] = getDolomite();	indices[REACTS::DOLOMITE] = -1.0;
+			comps[REACTS::ACID		] = getHCl();		indices[REACTS::ACID	] = -4.0;
+			comps[REACTS::SALT		] = getMgCl2CaCl2();indices[REACTS::SALT	] = 1.0;
+			comps[REACTS::WATER		] = getH2O();		indices[REACTS::WATER	] = 2.0;
+			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 2.0;
+
+			activation_energy = 13.0 * KKAL_2_J;
+			reaction_const = 7.29 * 1.e+7 / 10;
+			surf_init = 0.175;
+			alpha = 1.0;
+		};
 	};
 
 };
