@@ -617,7 +617,7 @@ acid2dnit::Properties* getProps()
 	//props->pwf.push_back(200.0 * 1.0e+5);
 	props->rates.push_back(0.0);
 	props->xa.push_back(0.15);
-	props->xa.push_back(0.0);
+	props->xa.push_back(1.E-5);
 	props->temps.push_back(300.0);
 	props->temps.push_back(300.0);
 
@@ -638,10 +638,10 @@ acid2dnit::Properties* getProps()
 	tmp.m_init = 0.1;
 	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 	tmp.t_init = 300.0;
+	tmp.xa_eqbm = 1.E-5;
 	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
-	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
+	tmp.xa_init = tmp.xa_eqbm;	tmp.xw_init = 1.0 - tmp.xa_eqbm;
 	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
-	tmp.xa_eqbm = 0.0;
 	tmp.h1 = 0.0;
 	tmp.h2 = 10.0;
 	tmp.height = 10.0;

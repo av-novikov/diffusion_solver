@@ -22,7 +22,7 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 	
-	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
+	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-7;
 	MAX_ITER = 20;
 
 	pvd.open("snaps/Acid2dNIT.pvd", std::ofstream::out);
@@ -108,6 +108,18 @@ void Acid2dNITSolver::copySolution(const Vector& sol)
 	for (int i = 0; i < model->cellsNum; i++)
 		for(int j = 0; j < var_size; j++)
 			model->cells[i].u_next.values[j] += sol[i * var_size + j];
+
+	/*double tmp;
+	for (auto& cell : model->cells)
+	{
+		tmp = cell.u_next.xa;
+		if (tmp < cell.props->xa_eqbm - EQUALITY_TOLERANCE)
+		{
+			cell.u_next.xs -= (cell.props->xa_eqbm - tmp) / 2.0;
+			cell.u_next.xw -= (cell.props->xa_eqbm - tmp) / 2.0;
+			cell.u_next.xa = cell.props->xa_eqbm;
+		}
+	}*/
 }
 
 void Acid2dNITSolver::checkStability()

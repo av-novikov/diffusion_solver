@@ -68,13 +68,11 @@ namespace acid2dnit
 		inline adouble getReactionRate(TapeVariable& var, const Skeleton_Props& props) const
 		{
 			adouble tmp = var.xa - props.xa_eqbm;
-			double val = tmp.value();
-			if (fabs(val) < EQUALITY_TOLERANCE && val >= 0)
-				tmp += 1.E-5;
-			else if (fabs(val) < EQUALITY_TOLERANCE && val < 0)
-				tmp -= 1.E-5;
+			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
+			adouble tmp1;
+			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw, var.xs) *
-					pow(tmp, alpha) * 
+					tmp1 * 
 					reac.getReactionRate(props.m_init, var.m, var.t) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
