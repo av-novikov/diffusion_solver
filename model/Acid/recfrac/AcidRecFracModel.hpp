@@ -19,7 +19,7 @@ namespace acidrecfrac
 	typedef VarFrac FracVariable;
 	typedef TapeVarFrac FracTapeVariable;
 
-	typedef HexCell<PoroVariable> PoroCell;
+	typedef HexCell<PoroVariable, Skeleton_Props> PoroCell;
 	typedef HexCell<FracVariable> FracCell;
 	typedef PoroCell::Type PoroType;
 	typedef FracCell::Type FracType;
@@ -119,9 +119,8 @@ namespace acidrecfrac
 		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next,	const PoroCell& beta, const PoroTapeVariable& nebr) const
 		{
 			adouble k1, k2;
-			const auto& props = props_sk.back();
-			k1 = props.getPermCoseni(next.m, next.p);
-			k2 = props.getPermCoseni(nebr.m, nebr.p);
+			k1 = cell.props->getPermCoseni(next.m, next.p);
+			k2 = beta.props->getPermCoseni(nebr.m, nebr.p);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 
@@ -158,7 +157,7 @@ namespace acidrecfrac
 			const auto& poro_beta = cells_poro[idx + 1];
 			const auto& next = x_poro[idx];
 			const auto& nebr = x_poro[idx + 1];
-			const auto& props = props_sk.back();
+			const auto& props = *poro_cell.props;
 			double tmp1 = nebr.p.value();
 			double tmp2 = next.p.value();
 			return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /

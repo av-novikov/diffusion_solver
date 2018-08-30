@@ -487,6 +487,7 @@ void AcidRecFrac::setInitialState()
 		cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = props.xw_init;
 		cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = props.xa_init;
 		cell.u_prev.xs = cell.u_iter.xs = cell.u_next.xs = 0.0;
+		cell.props = &props_sk.back();
 	}
 
 	x_frac = new FracTapeVariable[cellsNum_frac];
@@ -496,13 +497,14 @@ void AcidRecFrac::setInitialState()
 }
 void AcidRecFrac::calculateTrans()
 {
-	double sum, k, k0 = props_sk[0].perm, y0;
+	double sum, k, k0, y0;
 	double width = 0.0;
 	for (const auto& cell : cells_poro)
 	{
 		if (cell.hx != 0.0 && cell.hz != 0.0)
 		{
-			k = props_sk[0].getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			k = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			k0 = cell.props->perm;
 			if (fabs(k - k0) / k0 < 10.0)
 				continue;
 			else
@@ -522,13 +524,13 @@ void AcidRecFrac::calculateTrans()
 		{
 			const auto& pcell = cells_poro[j + (cellsNum_y_poro + 2) * (k_ind + (cellsNum_z + 2) * i_ind)];
 			assert(pcell.type == PoroType::WELL_LAT || pcell.type == PoroType::MIDDLE);
-			k = props_sk[0].getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
+			k = pcell.props->getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
 			if (pcell.y - props_frac.w2 > width)
 				break;
 			else
-				sum += k * pcell.hy;
+				sum += k * pcell.hy / pcell.props->perm / width;
 		}
-		trans[tr_idx] = (sum > 0.0) ? sum / (k0 * width) : 1.0;
+		trans[tr_idx] = (sum > 0.0) ? sum : 1.0;
 	}
 }
 double AcidRecFrac::getRate(int cur) const
@@ -558,7 +560,7 @@ PoroTapeVariable AcidRecFrac::solvePoro(const PoroCell& cell, const Regime reg)
 PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 {
 	assert(cell.type == PoroType::MIDDLE);
-	const auto& props = props_sk.back();
+	const auto& props = *cell.props;
 	auto& next = x_poro[cell.num];
 	const auto& prev = cell.u_prev;
 	adouble rate = getReactionRate(next, props);
@@ -615,9 +617,9 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), dist1, props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), dist2);
 		adouble dens_o = getAverage(props_o.getDensity(next.p), dist1, props_o.getDensity(nebr.p), dist2);
 		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
-			dens_w * props_w.getKr(upwd.sw, upwd.m, &props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
+			dens_w * props_w.getKr(upwd.sw, upwd.m, cells_poro[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
 		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
-			dens_o * props_o.getKr(upwd.sw, upwd.m, &props) / props_o.getViscosity(upwd.p);
+			dens_o * props_o.getKr(upwd.sw, upwd.m, cells_poro[upwd_idx].props) / props_o.getViscosity(upwd.p);
 
 		res.p += buf_w;
 		res.sw += buf_o;
@@ -646,7 +648,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime reg)
 {
 	assert(cell.type == PoroType::WELL_LAT);
-	const auto& props = props_sk.back();
+	const auto& props = *cell.props;
 
 	const auto& beta_poro1 = cells_poro[cell.num + 1];
 	const auto& beta_poro2 = cells_poro[cell.num + 2];
@@ -709,7 +711,7 @@ PoroTapeVariable AcidRecFrac::solvePoroRight(const PoroCell& cell)
 {
 	assert(cell.type == PoroType::RIGHT);
 	const auto& beta = cells_poro[cell.num - 1];
-	const auto& props = props_sk.back();
+	const auto& props = *cell.props;
 
 	const auto& next = x_poro[cell.num];
 	const auto& nebr = x_poro[beta.num];
@@ -738,7 +740,7 @@ PoroTapeVariable AcidRecFrac::solvePoroBorder(const PoroCell& cell)
 	else if (cell.type == PoroType::TOP)
 		beta_idx = cell.num - (cellsNum_y_poro + 2);
 	const auto& beta = cells_poro[beta_idx];
-	const auto& props = props_sk.back();
+	const auto& props = *cell.props;
 
 	const auto& next = x_poro[cell.num];
 	const auto& nebr = x_poro[beta.num];

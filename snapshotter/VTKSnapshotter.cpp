@@ -1405,7 +1405,6 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	conc_s_poro->SetName("SaltConcentration");
 
 	int np_poro = ny_poro * (nz - 1);
-	const auto& props_sk = model->props_sk[0];
 	for (int i = 0; i < nx - 2; i++)
 	{
 		for (int k = 0; k < nz - 2; k++)
@@ -1420,7 +1419,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 					vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
 					poro_poro->InsertNextValue(next.m);
-					perm_poro->InsertNextValue(M2toMilliDarcy(props_sk.getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
+					perm_poro->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 					pres_poro->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 					sat_w_poro->InsertNextValue(next.sw);
 					sat_o_poro->InsertNextValue(1.0 - next.sw);

@@ -3,12 +3,13 @@
 
 #include "model/cells/AbstractCell.hpp"
 
-template <typename varType>
+template <typename varType, typename PropsType = EmptyStruct>
 class HexCell : public AbstractCell<varType>
 {
 public:
 	double x, y, z;
 	double hx, hy, hz;
+	PropsType* props;
 
 	HexCell() {};
 	HexCell(int _num, double _x, double _y, double _z,
