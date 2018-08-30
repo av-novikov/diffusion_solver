@@ -49,6 +49,8 @@ namespace acid2dnit
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState();
+		double skin, r_s;
+		void calcSkin();
 
 		// Service functions
 		inline adouble getAverage(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
@@ -103,10 +105,10 @@ namespace acid2dnit
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
 			condassign(tmp, is_R_axis,
-				-cell.props->getPermCoseni_r(next.m) * props_o.getKr(next.sw, cell.props) / props_o.getViscosity(next.p) *
+				-cell.props->getPermCoseni_r(next.m) * props_o.getKr(next.sw, next.m, cell.props) / props_o.getViscosity(next.p) *
 				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
-				-cell.props->getPermCoseni_z(next.m) * props_o.getKr(next.sw, cell.props) / props_o.getViscosity(next.p) *
+				-cell.props->getPermCoseni_z(next.m) * props_o.getKr(next.sw, next.m, cell.props) / props_o.getViscosity(next.p) *
 				((var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) -
 				grav * props_o.getDensity(next.p)));
 			return tmp;
@@ -118,11 +120,11 @@ namespace acid2dnit
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
 			condassign(tmp, is_R_axis,
-				-cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, cell.props) / 
+				-cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, next.m, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
 				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
-				-cell.props->getPermCoseni_z(next.m) * props_w.getKr(next.sw, cell.props) / 
+				-cell.props->getPermCoseni_z(next.m) * props_w.getKr(next.sw, next.m, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
 				((var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) - 
 				grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs)));
@@ -136,7 +138,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
 				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
-				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_o.getKr(next.sw, cell.props).value() / 
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_o.getKr(next.sw, next.m, cell.props).value() / 
 					props_o.getViscosity(next.p).value() *
 					(cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r);
 			}
@@ -144,7 +146,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - 1];
 				const Cell& cell2 = cells[cell.num + 1];
-				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, cell.props).value() / 
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, next.m, cell.props).value() / 
 					props_o.getViscosity(next.p).value() *
 					((cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z) - grav * props_o.getDensity(next.p).value());
 			}
@@ -158,7 +160,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
 				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
-				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_w.getKr(next.sw, cell.props).value() /
+				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_w.getKr(next.sw, next.m, cell.props).value() /
 					props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() *
 					((cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r) - grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs).value());
 			}
@@ -166,7 +168,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - 1];
 				const Cell& cell2 = cells[cell.num + 1];
-				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_w.getKr(next.sw, cell.props).value() /
+				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_w.getKr(next.sw, next.m, cell.props).value() /
 					props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() *
 					((cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z) - grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs).value());
 			}

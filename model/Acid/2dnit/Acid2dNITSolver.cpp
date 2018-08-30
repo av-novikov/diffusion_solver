@@ -25,6 +25,7 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-7;
 	MAX_ITER = 20;
 
+	skin.open("snaps/Skin.dat", std::ofstream::out);
 	pvd.open("snaps/Acid2dNIT.pvd", std::ofstream::out);
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
@@ -35,6 +36,7 @@ Acid2dNITSolver::~Acid2dNITSolver()
 	//S.close();
 	//qcells.close();
 	//temp.close();
+	skin.close();
 
 	delete[] ind_i, ind_j, ind_rhs;
 	delete[] cols;
@@ -53,7 +55,7 @@ void Acid2dNITSolver::writeData()
 		pvd << cur_t * t_dim / 3600.0;
 	pvd << "0\" file=\"Acid2dNIT_" + std::to_string(step_idx) + ".vtp\"/>\n";
 
-
+	skin << cur_t * t_dim / 3600.0 << "\t" << model->skin << endl;
 /*	double p = 0.0, s_w = 0.0, s_o = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
@@ -198,6 +200,7 @@ void Acid2dNITSolver::solveStep()
 		iterations++;
 	}
 
+	model->calcSkin();
 	cout << "Newton Iterations = " << iterations << "\t cur_t = " << cur_t << endl;
 }
 

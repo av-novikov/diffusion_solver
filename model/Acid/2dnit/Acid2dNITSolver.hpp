@@ -30,7 +30,7 @@ namespace acid2dnit
 		double err_newton;
 		int step_idx;
 
-		std::ofstream S, P, qcells, temp, pvd;
+		std::ofstream S, P, qcells, temp, pvd, skin;
 		std::ofstream mat_a, mat_b, mat_c, rhs_os;
 
 		// Coordinate form of sparse matrix & dense vector

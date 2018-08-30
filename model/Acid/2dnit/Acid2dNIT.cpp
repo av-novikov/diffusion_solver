@@ -18,6 +18,8 @@ Acid2dNIT::Acid2dNIT()
 	jac = new double*[var_size];
 	for (int i = 0; i < var_size; i++)
 		jac[i] = new double[stencil * Variable::size];
+
+	skin = 0.0;
 }
 Acid2dNIT::~Acid2dNIT()
 {
@@ -281,6 +283,25 @@ double Acid2dNIT::getRate(int cur)
 		getTrans(cell, next.m, beta, nebr.m).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * 
 		(nebr.p - next.p);
 };
+void Acid2dNIT::calcSkin()
+{
+	double sum = 0.0, k, k0;
+	k0 = props_sk.back().perm_r;
+	r_s = r_w;
+	for (const auto& cell : cells)
+	{
+		k = cell.props->getPermCoseni_r(cell.u_next.m).value();
+		if (k > 1.2 * k0)
+		{
+			r_s += cell.hr;
+			sum += cell.hr / cell.r / k;
+		}
+		else
+			break;
+	}
+
+	skin = k0 * sum - log(r_s / r_w);
+}
 
 void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 {
@@ -339,9 +360,9 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 		adouble dens_o = getAverage(props_o.getDensity(next.p), cell,
 			props_o.getDensity(nebr.p), beta);
 		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_w * grav * (cell.z - beta.z)) *
-			dens_w * props_w.getKr(upwd.sw, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
+			dens_w * props_w.getKr(upwd.sw, upwd.m, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
 		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
-			dens_o * props_o.getKr(upwd.sw, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
+			dens_o * props_o.getKr(upwd.sw, upwd.m, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
 		const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta));
 
 		h[1] += buf_w;
