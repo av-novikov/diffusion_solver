@@ -132,12 +132,15 @@ namespace acidrecfrac
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
 		};
-		inline adouble getReactionRate(const PoroTapeVariable& var, const Skeleton_Props& props) const
+		inline adouble getReactionRate(PoroTapeVariable& var, const Skeleton_Props& props) const
 		{
-			adouble m = props.getPoro(var.m, var.p);
+			adouble tmp = var.xa - props.xa_eqbm;
+			//adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
+			//adouble tmp1;
+			//condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw, var.xs) *
-				(var.xa - props.xa_eqbm) *
-				reac.getReactionRate(props.m_init, m) / reac.comps[REACTS::ACID].mol_weight;
+				tmp *
+				reac.getReactionRate(props.m_init, var.m) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline const int getFracOut(const int idx) const
 		{

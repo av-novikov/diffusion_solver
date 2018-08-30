@@ -559,7 +559,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 {
 	assert(cell.type == PoroType::MIDDLE);
 	const auto& props = props_sk.back();
-	const auto& next = x_poro[cell.num];
+	auto& next = x_poro[cell.num];
 	const auto& prev = cell.u_prev;
 	adouble rate = getReactionRate(next, props);
 
@@ -648,25 +648,30 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 	assert(cell.type == PoroType::WELL_LAT);
 	const auto& props = props_sk.back();
 
+	const auto& beta_poro1 = cells_poro[cell.num + 1];
+	const auto& beta_poro2 = cells_poro[cell.num + 2];
+	const auto& nebr_poro1 = x_poro[cell.num + 1];
+	const auto& nebr_poro2 = x_poro[cell.num + 2];
+
 	const auto& beta1 = cells_frac[getFracNebr(cell.num)];
-	const auto& beta_poro = cells_poro[cell.num + 1];
 	const auto& beta2 = cells_frac[beta1.num - 1];
 	//const auto& beta3 = cells_frac[beta1.num - 2];
 	const auto& nebr1 = x_frac[beta1.num];
-	const auto& nebr_poro = x_poro[cell.num + 1];
 	const auto& nebr2 = x_frac[beta2.num];
 	//const auto& nebr3 = x_frac[beta3.num];
 
-	const auto& next = x_poro[cell.num];
+	auto& next = x_poro[cell.num];
 	const auto& prev = cell.u_prev;
 
 	const double dist0 = cell.hy / 2.0;
 	const double dist1 = beta1.hy / 2.0;
 	const double dist2 = beta2.hy / 2.0;
+	const double dist_poro1 = beta_poro1.hy / 2.0;
+	const double dist_poro2 = beta_poro2.hy / 2.0;
 
 	PoroTapeVariable res;
-	res.m = (1.0 - props.getPoro(next.m, next.p)) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
-		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
+	res.m = ((next.m - nebr_poro1.m) - (nebr_poro1.m - nebr_poro2.m) *
+		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)) / P_dim;
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
 		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
