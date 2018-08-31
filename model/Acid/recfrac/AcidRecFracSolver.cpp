@@ -44,6 +44,7 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
+	trans.open("snaps/Trans.dat", ofstream::out);
 	pvd_frac.open("snaps/AcidRecFrac_frac.pvd", std::ofstream::out);
 	pvd_poro.open("snaps/AcidRecFrac_poro.pvd", std::ofstream::out);
 	pvd_frac << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
@@ -60,6 +61,7 @@ AcidRecFracSolver::~AcidRecFracSolver()
 
 	P.close();
 	qcells.close();
+	trans.close();
 
 	pvd_frac << "\t</Collection>\n";
 	pvd_frac << "</VTKFile>\n";
@@ -101,6 +103,8 @@ void AcidRecFracSolver::writeData()
 
 	P << cur_t * t_dim / 3600.0 <<
 		"\t" << p / (double)(model->Qcell.size()) << endl;
+
+	trans << cur_t * t_dim / 3600.0 << "\t" << *std::min_element(model->trans.begin(), model->trans.end()) << endl;
 
 	qcells << endl;
 }
