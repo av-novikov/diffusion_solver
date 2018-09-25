@@ -22,7 +22,7 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 	
-	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-7;
+	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-6;
 	MAX_ITER = 20;
 
 	skin.open("snaps/Skin.dat", std::ofstream::out);
@@ -104,6 +104,27 @@ void Acid2dNITSolver::start()
 	if (model->isWriteSnaps)
 		model->snapshot_all(step_idx);
 	writeData();
+}
+void Acid2dNITSolver::control()
+{
+	writeData();
+
+	if (cur_t >= model->period[curTimePeriod])
+	{
+		curTimePeriod++;
+		model->ht = model->ht_min;
+		model->setPeriod(curTimePeriod);
+	}
+
+	if (model->ht <= model->ht_max && iterations < 6)
+		model->ht = model->ht * 1.5;
+	else if (iterations > 6 && model->ht > model->ht_min)
+		model->ht = model->ht / 1.5;
+
+	if (cur_t + model->ht > model->period[curTimePeriod])
+		model->ht = model->period[curTimePeriod] - cur_t;
+
+	cur_t += model->ht;
 }
 void Acid2dNITSolver::copySolution(const Vector& sol)
 {
@@ -201,9 +222,27 @@ void Acid2dNITSolver::solveStep()
 	}
 
 	model->calcSkin();
+	checkVariables();
 	cout << "Newton Iterations = " << iterations << "\t cur_t = " << cur_t << endl;
 }
-
+void Acid2dNITSolver::checkVariables()
+{
+	for (auto cell : model->cells)
+	{
+		if (cell.u_next.m > cell.props->m_max)
+			cell.u_next.m = cell.props->m_max;
+		if (cell.u_next.sw > 1.0)
+			cell.u_next.sw = 1.0;
+		if (cell.u_next.sw < 0.0)
+			cell.u_next.sw = 0.0;
+		if (cell.u_next.xa < 0.0)
+			cell.u_next.xa = 0.0;
+		if (cell.u_next.xs < 0.0)
+			cell.u_next.xs = 0.0;
+		if (cell.u_next.xw < 0.0)
+			cell.u_next.xw = 0.0;
+	}
+}
 void Acid2dNITSolver::fillIndices()
 {
 	int pres_counter = 0, temp_counter = 0;

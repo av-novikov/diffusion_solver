@@ -24,7 +24,7 @@ namespace acidrecfrac
 	typedef PoroCell::Type PoroType;
 	typedef FracCell::Type FracType;
 
-	typedef CalciteReaction CurrentReaction;
+	typedef DolomiteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
 
 	static const int var_poro_size = PoroVariable::size;
@@ -75,6 +75,8 @@ namespace acidrecfrac
 		bool isWriteSnaps;
 		Snapshotter<AcidRecFrac>* snapshotter;
 		std::vector<double> trans;
+		std::vector<double> widths;
+		double width;
 
 		void buildFracGrid();
 		void buildPoroGrid();
@@ -96,6 +98,36 @@ namespace acidrecfrac
 		FracTapeVariable solveFracMid(const FracCell& cell, const Regime reg);
 		FracTapeVariable solveFracBorder(const FracCell& cell);
 		// Service calculations
+		const int getSkeletonId(const PoroCell& cell) const
+		{
+			// Random
+			/*const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
+			const int k_idx = int((cell.num - i_idx * (cellsNum_y_poro + 2) * (cellsNum_z + 2)) / (cellsNum_y_poro + 2));
+			int i_idx_modi = i_idx - 1;
+			if (i_idx_modi < 0)
+				i_idx_modi = 0;
+			if (i_idx_modi == cellsNum_x)
+				i_idx_modi = cellsNum_x - 1;
+
+			int k_idx_modi = k_idx - 1;
+			if (k_idx_modi < 0)
+				k_idx_modi = 0;
+			if (k_idx_modi == cellsNum_z)
+				k_idx_modi = cellsNum_z - 1;
+
+			return i_idx_modi * cellsNum_z + k_idx_modi;*/
+
+			// Example
+			const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
+			const int k_idx = int((cell.num - i_idx * (cellsNum_y_poro + 2) * (cellsNum_z + 2)) / (cellsNum_y_poro + 2));
+			
+			int k_idx_modi = k_idx - 1;
+			if (k_idx_modi < 0)
+				k_idx_modi = 0;
+			if (k_idx_modi == cellsNum_z)
+				k_idx_modi = cellsNum_z - 1;
+			return k_idx_modi;
+		}
 		template <class TCell>
 		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
 		{

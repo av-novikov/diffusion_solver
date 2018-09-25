@@ -18,7 +18,7 @@ protected:
 	Matrix Mat;
 	paralution::BiCGStab<Matrix,Vector,double> bicgstab;
 	void SolveBiCGStab();
-	void SolveBiCGStab_Simple();
+	void SolveBiCGStab_Simple(bool isHarder = false);
 	paralution::GMRES<Matrix,Vector,double> gmres;
 	void SolveGMRES();
 	paralution::ILU<Matrix,Vector,double> p;
@@ -45,6 +45,7 @@ public:
 	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 	void Solve(const PRECOND key);
+	void Solve(const PRECOND key, bool isHarder);
 
 	const Vector& getSolution() { return x; };
 

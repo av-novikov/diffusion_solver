@@ -6,6 +6,7 @@
 #include <iostream>
 #include <valarray>
 #include <random>
+#include <numeric>
 
 #include "util/utils.h"
 #include "method/mcmath.h"
@@ -598,118 +599,6 @@ using namespace std;
 	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
 	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 	
-	return props;
-}*/
-/*acid2dnit::Properties* getProps()
-{
-	acid2dnit::Properties* props = new acid2dnit::Properties;
-
-	props->cellsNum_r = 100;
-	props->cellsNum_z = 1;
-
-	props->timePeriods.push_back(0.2 * 3600.0);
-	props->timePeriods.push_back(5.0 * 3600.0);
-	//props->leftBoundIsRate = false;
-	props->LeftBoundIsRate.push_back(false);
-	props->LeftBoundIsRate.push_back(true);
-	props->rightBoundIsPres = true;
-	props->pwf.push_back(250.0 * 1.0e+5);
-	//props->pwf.push_back(200.0 * 1.0e+5);
-	props->rates.push_back(0.0);
-	props->xa.push_back(0.15);
-	props->xa.push_back(1.E-5);
-	props->temps.push_back(300.0);
-	props->temps.push_back(300.0);
-
-	props->ht = 0.1;
-	props->ht_min = 0.1;
-	props->ht_max = 10000.0;
-
-	props->alpha = 7200.0;
-
-	props->r_w = 0.1;
-	props->r_e = 150.0;
-
-	props->perfIntervals.push_back(make_pair(1, 1));
-	//props->perfIntervals.push_back(make_pair(15, 15));
-
-	acid2dnit::Skeleton_Props tmp;
-	tmp.cellsNum_z = 1;
-	tmp.m_init = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
-	tmp.t_init = 300.0;
-	tmp.xa_eqbm = 1.E-5;
-	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
-	tmp.xa_init = tmp.xa_eqbm;	tmp.xw_init = 1.0 - tmp.xa_eqbm;
-	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
-	tmp.h1 = 0.0;
-	tmp.h2 = 10.0;
-	tmp.height = 10.0;
-	tmp.perm_r = 100.0;
-	tmp.perm_z = 10.0;
-	tmp.dens_stc = 2000.0;
-	tmp.beta = 4.35113e-10;
-	tmp.lambda_r = 5.0;
-	tmp.lambda_z = 5.0;
-	tmp.c = 1800.0;
-	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);
-
-	/*tmp.cellsNum_z = 10;
-	tmp.m_init = 0.1;
-	tmp.p_init = tmp.p_out = tmp.p_ref = 200.0 * 1.0e+5;
-	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
-	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
-	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.00;
-	tmp.xa_eqbm = 0.0;
-	tmp.h1 = 5.0;
-	tmp.h2 = 10.0;
-	tmp.height = 5.0;
-	tmp.perm_r = 20.0;
-	tmp.perm_z = 6.0;
-	tmp.dens_stc = 2000.0;
-	tmp.beta = 4.35113e-10;
-	tmp.skins.push_back(0.0);
-	tmp.skins.push_back(0.0);
-	tmp.radiuses_eff.push_back(props->r_w);
-	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);
-
-	props->depth_point = 0.0;
-
-	props->props_o.visc = 1.0;
-	props->props_o.dens_stc = 887.261;
-	props->props_o.beta = 1.0 * 1.e-9;
-	props->props_o.p_ref = tmp.p_ref;
-	props->props_o.jt = 4.0 * 1.e-7;
-	props->props_o.ad = 2.0 * 1.e-7;
-	props->props_o.c = 1880.0;
-	props->props_o.lambda = 0.16;
-
-	props->props_w.visc = 1.0;
-	props->props_w.dens_stc = 1000.0;
-	props->props_w.beta = 1.0 * 1.e-9;
-	props->props_w.p_ref = tmp.p_ref;
-	props->props_w.jt = 2.0 * 1.e-7;
-	props->props_w.ad = 2.0 * 1.e-7;
-	props->props_w.c = 1880.0;
-	props->props_w.lambda = 0.16;
-
-	props->props_g.visc = 0.06;
-	props->props_g.dens_stc = 0.8;
-	props->props_g.co2 = acid2dnit::getCO2();
-	props->props_g.jt = -1.7 * 1.e-6;
-	props->props_g.ad = 3.6 * 1.e-6;
-	props->props_g.c = 3400.0;
-	props->props_g.lambda = 0.06;
-
-	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
-	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
-	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
-
 	return props;
 }*/
 /*acid1d::Properties* getProps()
@@ -1309,17 +1198,17 @@ using namespace std;
 
 	return props;
 }*/
-acidrecfrac::Properties* getProps()
+/*acidrecfrac::Properties* getProps()
 {
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.0005;
-	props->ht_min = 1.0;
+	props->ht = 0.001;
+	props->ht_min = 0.01;
 	props->ht_max = 500.0;
 
 	props->timePeriods.push_back(0.2 * 3600.0);
-	props->timePeriods.push_back(1.0 * 3600.0);
+	props->timePeriods.push_back(10.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
@@ -1328,64 +1217,67 @@ acidrecfrac::Properties* getProps()
 	props->rightBoundIsPres = true;
 	props->pwf.push_back(300.0 * 1.0e+5);
 	props->rates.push_back(0.0);
-	props->cs.push_back(0.15);
+	props->cs.push_back(0.28);
 	props->cs.push_back(0.0);
 
-	props->props_frac.l2 = 20.0;
+	props->props_frac.l2 = 240.0;
 	props->props_frac.w2 = 0.005;
+	props->props_frac.height = 18.87;
 	props->re = 200.0;
 
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
-	props->props_frac.height = 10.0;
 
-	props->cellsNum_x = 10;
+	props->cellsNum_x = 20;
 	props->cellsNum_y_frac = 10;
 	props->cellsNum_y_poro = 100;
 	props->cellsNum_z = 1;
 
 	acidrecfrac::Skeleton_Props props_sk;
-	props_sk.m_init = 0.1;
+	props_sk.m_init = 0.09;
 	props_sk.t_init = 300.0;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
-	props_sk.sw_init = 0.2;			props_sk.so_init = 0.8;
+	props_sk.sw_init = 0.1;					props_sk.so_init = 0.9;
 	props_sk.xa_eqbm = 0.0;
-	props_sk.xa_init = 0.0;			props_sk.xw_init = 1.0;
+	props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 	props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
-	props_sk.s_wc = 0.0;		props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-	props_sk.perm = 100.0;
+	props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
+	props_sk.perm = 0.5;
 	props_sk.dens_stc = 2000.0;
 	props_sk.beta = 4.35113e-10;
 	props_sk.height = props->props_frac.height;
 	props->props_sk.push_back(props_sk);
-	//default_random_engine generator;
-	//normal_distribution<double> distribution(100.0, 30.0);
-	/*vector<double> perms;
-	ifstream file;
-	file.open("props/perm.txt", ifstream::in);
-	double temp1;
-	while (!file.eof())
+	/*default_random_engine generator;
+	normal_distribution<double> distribution(0.15, 0.02);
+	for (int i = 0; i < props->cellsNum_x * props->cellsNum_z; i++)
 	{
-	file >> temp1;
-	perms.push_back(temp1);
-	if (file.eof())
-	break;
-	}
-	file.close();
-	for (int i = 0; i < props->cellsNum_x; i++)
-	{
-	props->xe.push_back(200.0);
-	props->cellsNum_y_1d.push_back(100);
-	props->props_sk.push_back(props_sk);
-	props->props_sk.back().perm = 100.0;// perms[i];// distribution(generator);
+		acidrecfrac::Skeleton_Props prop = props_sk;
+		double tmp = distribution(generator);
+		prop.m_init = (tmp > 0.01) ? tmp : 0.01;
+		prop.perm = props_sk.getPermCoseni(prop.m_init, 0.0).value();
+		props->props_sk.push_back(prop);
 	}*/
+	/*props_sk.height = 3.05;
+	props_sk.m_init = 0.08;
+	props_sk.perm = 0.3;
+	props->props_sk.push_back(props_sk);
 
-	props->props_o.visc = 1.0;
+	props_sk.height = 0.91;
+	props_sk.m_init = 0.1;
+	props_sk.perm = 1;
+	props->props_sk.push_back(props_sk);
+
+	props_sk.height = 0.61;
+	props_sk.m_init = 0.12;
+	props_sk.perm = 1;
+	props->props_sk.push_back(props_sk);
+
+	props->props_o.visc = 4.75;
 	props->props_o.dens_stc = 887.261;
 	props->props_o.beta = 1.0 * 1.e-9;
 	props->props_o.p_ref = props_sk.p_ref;
 
-	props->props_w.visc = 1.0;
+	props->props_w.visc = 12.0;
 	props->props_w.dens_stc = 1000.0;
 	props->props_w.beta = 1.0 * 1.e-9;
 	props->props_w.p_ref = props_sk.p_ref;
@@ -1394,6 +1286,119 @@ acidrecfrac::Properties* getProps()
 	props->props_g.visc = 0.06;
 	props->props_g.dens_stc = 0.8;
 	props->props_g.co2 = acidrecfrac::getCO2();
+
+	return props;
+}*/
+acid2dnit::Properties* getProps()
+{
+	acid2dnit::Properties* props = new acid2dnit::Properties;
+
+	props->cellsNum_r = 100;
+	props->cellsNum_z = 1;
+
+	props->timePeriods.push_back(1.0 * 3600.0);
+	props->timePeriods.push_back(2.0 * 3600.0);
+	//props->leftBoundIsRate = false;
+	props->LeftBoundIsRate.push_back(false);
+	props->LeftBoundIsRate.push_back(true);
+	props->rightBoundIsPres = true;
+	props->pwf.push_back(250.0 * 1.0e+5);
+	//props->pwf.push_back(200.0 * 1.0e+5);
+	props->rates.push_back(0.0);
+	props->xa.push_back(0.15);
+	props->xa.push_back(1.E-5);
+	props->temps.push_back(300.0);
+	props->temps.push_back(300.0);
+
+	props->ht = 0.5;
+	props->ht_min = 0.1;
+	props->ht_max = 100.0;
+
+	props->alpha = 7200.0;
+
+	props->r_w = 0.1;
+	props->r_e = 150.0;
+
+	props->perfIntervals.push_back(make_pair(1, 1));
+	//props->perfIntervals.push_back(make_pair(15, 15));
+
+	acid2dnit::Skeleton_Props tmp;
+	tmp.cellsNum_z = 1;
+	tmp.m_init = 0.1;
+	tmp.m_max = 0.3;
+	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
+	tmp.t_init = 300.0;
+	tmp.xa_eqbm = 1.E-5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.xa_init = tmp.xa_eqbm;	tmp.xw_init = 1.0 - tmp.xa_eqbm;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.0;
+	tmp.h1 = 0.0;
+	tmp.h2 = 10.0;
+	tmp.height = 10.0;
+	tmp.perm_r = 100.0;
+	tmp.perm_z = 10.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.lambda_r = 5.0;
+	tmp.lambda_z = 5.0;
+	tmp.c = 1800.0;
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back(tmp);
+
+	/*tmp.cellsNum_z = 10;
+	tmp.m_init = 0.1;
+	tmp.p_init = tmp.p_out = tmp.p_ref = 200.0 * 1.0e+5;
+	tmp.sw_init = 0.2;	tmp.so_init = 0.8;
+	tmp.xa_init = 0.0;	tmp.xw_init = 1.0;
+	tmp.s_wc = 0.0;		tmp.s_oc = 0.0;		tmp.s_gc = 0.00;
+	tmp.xa_eqbm = 0.0;
+	tmp.h1 = 5.0;
+	tmp.h2 = 10.0;
+	tmp.height = 5.0;
+	tmp.perm_r = 20.0;
+	tmp.perm_z = 6.0;
+	tmp.dens_stc = 2000.0;
+	tmp.beta = 4.35113e-10;
+	tmp.skins.push_back(0.0);
+	tmp.skins.push_back(0.0);
+	tmp.radiuses_eff.push_back(props->r_w);
+	tmp.radiuses_eff.push_back(props->r_w);
+	props->props_sk.push_back(tmp);*/
+
+	props->depth_point = 0.0;
+
+	props->props_o.visc = 1.0;
+	props->props_o.dens_stc = 887.261;
+	props->props_o.beta = 1.0 * 1.e-9;
+	props->props_o.p_ref = tmp.p_ref;
+	props->props_o.jt = 4.0 * 1.e-7;
+	props->props_o.ad = 2.0 * 1.e-7;
+	props->props_o.c = 1880.0;
+	props->props_o.lambda = 0.16;
+
+	props->props_w.visc = 1.0;
+	props->props_w.dens_stc = 1000.0;
+	props->props_w.beta = 1.0 * 1.e-9;
+	props->props_w.p_ref = tmp.p_ref;
+	props->props_w.jt = 2.0 * 1.e-7;
+	props->props_w.ad = 2.0 * 1.e-7;
+	props->props_w.c = 1880.0;
+	props->props_w.lambda = 0.16;
+
+	props->props_g.visc = 0.06;
+	props->props_g.dens_stc = 0.8;
+	props->props_g.co2 = acid2dnit::getCO2();
+	props->props_g.jt = -1.7 * 1.e-6;
+	props->props_g.ad = 3.6 * 1.e-6;
+	props->props_g.c = 3400.0;
+	props->props_g.lambda = 0.06;
+
+	setDataFromFile(props->B_oil, "props/Boil_tempest.txt");
+	setDataFromFile(props->Rs, "props/Rs_tempest.txt");
+	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 
 	return props;
 }
@@ -1445,11 +1450,11 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*acid2dnit::Properties* props = getProps();
+	acid2dnit::Properties* props = getProps();
 	Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 	/*bing1d::Properties* props = getProps();
 	Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties> scene;
 	scene.load(*props);
@@ -1469,9 +1474,9 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	acidrecfrac::Properties* props = getProps();
+	/*acidrecfrac::Properties* props = getProps();
 	Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();
+	scene.start();*/
 	return 0;
 }

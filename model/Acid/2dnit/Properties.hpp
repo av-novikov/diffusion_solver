@@ -17,7 +17,8 @@ namespace acid2dnit
 	{
 		//SolidComponent cur_mineral;
 		double xa_eqbm;
-
+		// Maximum porosity
+		double m_max;
 		// Initial values
 		double p_init;
 		double p_sat;
@@ -69,7 +70,7 @@ namespace acid2dnit
 			adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
 			adouble isAboveCritical = (sw > 1.0 - props->s_oc - props->s_gc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, ((1.0 - m) * pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc)) / (1.0 - props->m_init), (adouble)0.0);
+			condassign(tmp, isAboveZero, ((props->m_max - m) * pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc)) / (props->m_max - props->m_init), (adouble)0.0);
 			//condassign(tmp, isAboveZero, pow((sw - (adouble)props->s_wc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
@@ -112,7 +113,7 @@ namespace acid2dnit
 			adouble isAboveZero = (1.0 - sw - props->s_oc > 0.0) ? true : false;
 			adouble isAboveCritical = (1.0 - sw > 1.0 - props->s_wc - props->s_gc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, ((1.0 - m) * pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc)) / (1.0 - props->m_init), (adouble)0.0);
+			condassign(tmp, isAboveZero, ((props->m_max - m) * pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc)) / (props->m_max - props->m_init), (adouble)0.0);
 			//condassign(tmp, isAboveZero, pow((1.0 - sw - (adouble)props->s_oc) / (adouble)(1.0 - props->s_wc - props->s_oc - props->s_gc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;

@@ -1305,6 +1305,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	trans->SetName("Transmissibility");
 	auto v_leak = vtkSmartPointer<vtkDoubleArray>::New();
 	v_leak->SetName("Leakoff_Velocity");
+	auto width = vtkSmartPointer<vtkDoubleArray>::New();
+	width->SetName("Width");
 	auto type = vtkSmartPointer<vtkDoubleArray>::New();
 	type->SetName("Type");
 
@@ -1329,6 +1331,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			conc_s_frac->InsertNextValue(0.0);
 			conc_co2_frac->InsertNextValue(0.0);
 			trans->InsertNextValue(model->trans[k]);
+			width->InsertNextValue(model->widths[k] * r_dim);
 			v_leak->InsertNextValue(0.0);
 			type->InsertNextValue(cell.type);
 
@@ -1366,6 +1369,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 				conc_s_frac->InsertNextValue(0.0);
 				conc_co2_frac->InsertNextValue(0.0);
 				trans->InsertNextValue(model->trans[k + (i - 1) * model->cellsNum_z]);
+				width->InsertNextValue(model->widths[k + (i - 1) * model->cellsNum_z] * r_dim);
 				v_leak->InsertNextValue(model->getFlowLeak(cell).value() * r_dim / t_dim);
 				type->InsertNextValue(cell.type);
 
@@ -1455,6 +1459,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	fd_frac->AddArray(conc_s_frac);
 	fd_frac->AddArray(conc_co2_frac);
 	fd_frac->AddArray(trans);
+	fd_frac->AddArray(width);
 	fd_frac->AddArray(v_leak);
 	fd_frac->AddArray(type);
 

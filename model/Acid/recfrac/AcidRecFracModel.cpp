@@ -1,5 +1,6 @@
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
 #include <assert.h>
+#include <numeric>
 
 using namespace acidrecfrac;
 
@@ -87,7 +88,7 @@ void AcidRecFrac::setProps(Properties& props)
 void AcidRecFrac::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
-	R_dim = props_frac.l2 * 10.0;
+	R_dim = props_frac.l2;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
 	// Temporal properties
@@ -107,6 +108,7 @@ void AcidRecFrac::makeDimLess()
 		sk.hx /= R_dim;
 		sk.hz /= R_dim;
 		sk.t_init /= T_dim;
+		sk.height /= R_dim;
 	}
 
 	Q_dim = R_dim * R_dim * R_dim / t_dim;
@@ -175,8 +177,10 @@ void AcidRecFrac::buildFracGrid()
 		}
 		else
 		{
-			hz = props_frac.height / cellsNum_z;
-			cz = ((double)k - 0.5) * hz;
+			//hz = props_frac.height / cellsNum_z;
+			cz += hz / 2.0;
+			hz = props_sk[k - 1].height;
+			cz += hz / 2.0;
 		}
 
 		for (int i = 0; i < cellsNum_y_frac + 1; i++)
@@ -208,8 +212,10 @@ void AcidRecFrac::buildFracGrid()
 			}
 			else
 			{
-				hz = props_frac.height / cellsNum_z;
-				cz = ((double)k - 0.5) * hz;
+				//hz = props_frac.height / cellsNum_z;
+				cz += hz / 2.0;
+				hz = props_sk[k - 1].height;
+				cz += hz / 2.0;
 			}
 
 			for (int i = 0; i < cellsNum_y_frac + 1; i++)
@@ -253,8 +259,10 @@ void AcidRecFrac::buildFracGrid()
 		}
 		else
 		{
-			hz = props_frac.height / cellsNum_z;
-			cz = ((double)k - 0.5) * hz;
+			//hz = props_frac.height / cellsNum_z;
+			cz += hz / 2.0;
+			hz = props_sk[k - 1].height;
+			cz += hz / 2.0;
 		}
 
 		for (int i = 0; i < cellsNum_y_frac + 1; i++)
@@ -301,8 +309,10 @@ void AcidRecFrac::buildPoroGrid()
 		}
 		else
 		{
-			hz = props_frac.height / cellsNum_z;
-			cz = ((double)k - 0.5) * hz;
+			//hz = props_frac.height / cellsNum_z;
+			cz += hz / 2.0;
+			hz = props_sk[k - 1].height;
+			cz += hz / 2.0;
 		}
 
 		for (int i = 0; i < cellsNum_y_poro + 2; i++)
@@ -343,8 +353,10 @@ void AcidRecFrac::buildPoroGrid()
 			}
 			else
 			{
-				hz = props_frac.height / cellsNum_z;
-				cz = ((double)k - 0.5) * hz;
+				//hz = props_frac.height / cellsNum_z;
+				cz += hz / 2.0;
+				hz = props_sk[k - 1].height;
+				cz += hz / 2.0;
 			}
 
 			for (int i = 0; i < cellsNum_y_poro + 2; i++)
@@ -399,8 +411,10 @@ void AcidRecFrac::buildPoroGrid()
 		}
 		else
 		{
-			hz = props_frac.height / cellsNum_z;
-			cz = ((double)k - 0.5) * hz;
+			//hz = props_frac.height / cellsNum_z;
+			cz += hz / 2.0;
+			hz = props_sk[k - 1].height;
+			cz += hz / 2.0;
 		}
 
 		for (int i = 0; i < cellsNum_y_poro + 2; i++)
@@ -473,7 +487,7 @@ void AcidRecFrac::setPeriod(int period)
 }
 void AcidRecFrac::setInitialState() 
 {
-	const auto& props = props_sk.back();
+	//const auto& props = props_sk.back();
 	for (auto& cell : cells_frac)
 	{
 		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = props_frac.p_init - grav * props_w.dens_stc * cell.z;
@@ -481,24 +495,25 @@ void AcidRecFrac::setInitialState()
 	}
 	for (auto& cell : cells_poro)
 	{
-		cell.u_prev.m = cell.u_iter.m = cell.u_next.m = props.m_init;
-		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = props.p_init - grav * props_w.dens_stc * cell.z;
-		cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = props.sw_init;
-		cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = props.xw_init;
-		cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = props.xa_init;
+		cell.props = &props_sk[getSkeletonId(cell)];
+		cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
+		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
+		cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = cell.props->sw_init;
+		cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = cell.props->xw_init;
+		cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = cell.props->xa_init;
 		cell.u_prev.xs = cell.u_iter.xs = cell.u_next.xs = 0.0;
-		cell.props = &props_sk.back();
 	}
 
 	x_frac = new FracTapeVariable[cellsNum_frac];
 	x_poro = new PoroTapeVariable[cellsNum_poro];
 	h = new adouble[ var_frac_size * cellsNum_frac + var_poro_size * cellsNum_poro ];
 	trans.resize(cellsNum_x * cellsNum_z, 1.0);
+	widths.resize(cellsNum_x * cellsNum_z, props_frac.w2);
 }
 void AcidRecFrac::calculateTrans()
 {
-	double sum, k, k0, y0;
-	double width = 0.0;
+	double sum, k, k0, y0, cur_width;
+	/*width = 0.0;
 	for (const auto& cell : cells_poro)
 	{
 		if (cell.hx != 0.0 && cell.hz != 0.0)
@@ -511,10 +526,26 @@ void AcidRecFrac::calculateTrans()
 				width += cell.hy;
 		}
 	}
-
 	width /= (cellsNum_z * cellsNum_x);
-	std::cout << std::endl << "width = " << width * R_dim << std::endl << std::endl;
+	std::cout << std::endl << "width = " << width * R_dim << std::endl << std::endl;*/
 	int i_ind, k_ind;
+	for (int tr_idx = 0; tr_idx < trans.size(); tr_idx++)
+	{
+		k_ind = int(tr_idx % cellsNum_z) + 1;
+		i_ind = int(tr_idx / cellsNum_z) + 1;
+		cur_width = sum = 0.0;
+		for (int j = 0; j < cellsNum_y_poro + 2; j++)
+		{
+			const auto& pcell = cells_poro[j + (cellsNum_y_poro + 2) * (k_ind + (cellsNum_z + 2) * i_ind)];
+			k = pcell.props->getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
+			k0 = pcell.props->perm;
+			if (fabs(k - k0) / k0 >= 10.0)
+				cur_width += pcell.hy;
+		}
+		widths[tr_idx] = cur_width;
+	}
+	width = std::accumulate(widths.begin(), widths.end(), 0.0) / widths.size();
+
 	for (int tr_idx = 0; tr_idx < trans.size(); tr_idx++)
 	{
 		k_ind = int(tr_idx % cellsNum_z) + 1;
@@ -525,10 +556,10 @@ void AcidRecFrac::calculateTrans()
 			const auto& pcell = cells_poro[j + (cellsNum_y_poro + 2) * (k_ind + (cellsNum_z + 2) * i_ind)];
 			assert(pcell.type == PoroType::WELL_LAT || pcell.type == PoroType::MIDDLE);
 			k = pcell.props->getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
-			if (pcell.y - props_frac.w2 > width)
+			if (pcell.y - props_frac.w2 > widths[tr_idx])
 				break;
 			else
-				sum += k * pcell.hy / pcell.props->perm / width;
+				sum += (k / pcell.props->perm) * (pcell.hy / widths[tr_idx]);
 		}
 		trans[tr_idx] = (sum > 0.0) ? sum : 1.0;
 	}
@@ -569,7 +600,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 	adouble m = props.getPoro(next.m, next.p);
 	adouble m_prev = props.getPoro(prev.m, prev.p);
 	res.m = (1.0 - m) * props.getDensity(next.p) - (1.0 - m_prev) * props.getDensity(prev.p) -
-		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * rate;
+		ht * reac.indices[REACTS::DOLOMITE] * reac.comps[REACTS::DOLOMITE].mol_weight * rate;
 	res.p = m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) -
 		m_prev * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) -
 		ht * (reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight +
@@ -634,14 +665,14 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 	//res.xa *= sqrt(cell.V);
 	//res.xs *= sqrt(cell.V);
 
-	if (cell.num % (cellsNum_y_poro + 2) > cellsNum_y_poro / 3)
+	/*if (cell.num % (cellsNum_y_poro + 2) > cellsNum_y_poro / 3)
 	{
 		res.p *= sqrt(cell.V);
 		res.sw *= sqrt(cell.V);
 		res.xw *= sqrt(cell.V);
 		res.xa *= sqrt(cell.V);
 		res.xs *= sqrt(cell.V);
-	}
+	}*/
 
 	return res;
 }
@@ -775,9 +806,9 @@ FracTapeVariable AcidRecFrac::solveFracIn(const FracCell& cell)
 	if (leftBoundIsRate)
 	{
 		if (cell.hy * cell.hz != 0.0)
-			res.p = ((next.p - nebr.p) +
+			res.p = ((next.p - beta.u_prev.p) /*+
 				Qcell[cell.num] / (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) / props_frac.w2 / props_frac.w2 * props_w.visc
-				/ (cell.hy * cell.hz) * beta.hx / 2.0) / P_dim;
+				/ (cell.hy * cell.hz) * beta.hx / 2.0*/) / P_dim;
 		else
 			res.p = (next.p - nebr.p) / P_dim;
 		res.c = (next.c - nebr.c) / P_dim;

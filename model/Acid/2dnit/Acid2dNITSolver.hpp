@@ -21,6 +21,8 @@ namespace acid2dnit
 		void solveStep();
 		void writeData();
 		void checkStability();
+		void control();
+		void checkVariables();
 
 		//void construction_from_fz(int N, int n, int key);
 		static const int var_size = Variable::size;

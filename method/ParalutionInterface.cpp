@@ -61,6 +61,18 @@ void ParSolver::Solve(const PRECOND key)
 
 	x.MoveToHost();
 }
+void ParSolver::Solve(const PRECOND key, bool isHarder)
+{
+	//SolveGMRES();
+	if (key == PRECOND::ILU_SERIOUS)
+		SolveBiCGStab();
+	else if (key == PRECOND::ILU_SIMPLE)
+		SolveBiCGStab_Simple(isHarder);
+	else if (key == PRECOND::ILU_GMRES)
+		SolveGMRES();
+
+	x.MoveToHost();
+}
 void ParSolver::SolveBiCGStab()
 {
 	bicgstab.SetOperator(Mat);
@@ -78,7 +90,7 @@ void ParSolver::SolveBiCGStab()
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
-	writeSystem();
+	//writeSystem();
 
 	//getResiduals();
 	//cout << "Initial residual: " << initRes << endl;
@@ -87,16 +99,24 @@ void ParSolver::SolveBiCGStab()
 
 	bicgstab.Clear();
 }
-void ParSolver::SolveBiCGStab_Simple()
+void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 {
 	bicgstab.SetOperator(Mat);
-	//p.Set(1.E-15, 100);
-	p.Set(0);
-	bicgstab.SetPreconditioner(p);
+	if (!isHarder)
+	{
+		p.Set(0);
+		bicgstab.SetPreconditioner(p);
+	}
+	else
+	{
+		p_ilut.Set(1.E-15, 100);
+		bicgstab.SetPreconditioner(p_ilut);
+	}
+	
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-15, 1.E-10, 1E+12, 500);
+	bicgstab.Init(1.E-18, 1.E-10, 1E+12, 500);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();

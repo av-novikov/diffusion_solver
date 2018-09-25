@@ -104,7 +104,9 @@ void AcidRecFracSolver::writeData()
 	P << cur_t * t_dim / 3600.0 <<
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 
-	trans << cur_t * t_dim / 3600.0 << "\t" << *std::min_element(model->trans.begin(), model->trans.end()) << endl;
+	const double tran = *std::min_element(model->trans.begin(), model->trans.end());
+	const double k0 = M2toMilliDarcy(model->props_sk.back().perm * model->R_dim * model->R_dim);
+	trans << cur_t * t_dim / 3600.0 << "\t" << tran << "\t" << tran * model->width * model->R_dim * k0 << endl;
 
 	qcells << endl;
 }
@@ -119,7 +121,7 @@ void AcidRecFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max && iterations < 5 && (curTimePeriod == 0 || err_newton_first < 1.0))
+	if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0)
 		model->ht = model->ht * 1.5;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
@@ -217,6 +219,7 @@ void AcidRecFracSolver::solveStep()
 	averValue(averValPrev);
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
+	bool isHarder = (curTimePeriod == 0) ? false : true;
 
 	auto continueIterations = [this]()
 	{

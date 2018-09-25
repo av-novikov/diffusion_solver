@@ -75,7 +75,7 @@ namespace acid2dnit
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw * props_w.getDensity(var.p, var.xa, var.xw, var.xs) *
 					tmp1 * 
-					reac.getReactionRate(props.m_init, var.m, var.t) / reac.comps[REACTS::ACID].mol_weight;
+					reac.getReactionRate(props.m_init, props.m_max, var.m, var.t) / reac.comps[REACTS::ACID].mol_weight;
 		};
 		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
 		{

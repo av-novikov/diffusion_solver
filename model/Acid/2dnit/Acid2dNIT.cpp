@@ -290,17 +290,20 @@ void Acid2dNIT::calcSkin()
 	r_s = r_w;
 	for (const auto& cell : cells)
 	{
-		k = cell.props->getPermCoseni_r(cell.u_next.m).value();
-		if (k > 1.2 * k0)
+		if (cell.hz > 0.0)
 		{
-			r_s += cell.hr;
-			sum += cell.hr / cell.r / k;
+			k = cell.props->getPermCoseni_r(cell.u_next.m).value();
+			if (k > 1.05 * k0)
+			{
+				r_s += cell.hr;
+				sum += (k0 / k) * (cell.hr / cell.r);
+			}
+			else
+				break;
 		}
-		else
-			break;
 	}
 
-	skin = k0 * sum - log(r_s / r_w);
+	skin = sum - log(r_s / r_w);
 }
 
 void Acid2dNIT::solve_eqMiddle(const Cell& cell)
