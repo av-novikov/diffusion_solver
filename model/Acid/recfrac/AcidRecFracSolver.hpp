@@ -43,6 +43,7 @@ namespace acidrecfrac
 		int options[4];
 		int repeat;
 
+		void checkVariables();
 		void checkStability();
 		void computeJac();
 		void fill();

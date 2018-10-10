@@ -169,7 +169,7 @@ namespace acidrecfrac
 			//adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
 			//adouble tmp1;
 			//condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-			return var.sw *	tmp * reac.getReactionRate(props.m_init, var.m);
+			return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
 		inline const int getFracOut(const int idx) const
 		{
