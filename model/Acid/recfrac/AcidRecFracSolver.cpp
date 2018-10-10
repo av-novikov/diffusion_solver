@@ -211,7 +211,24 @@ void AcidRecFracSolver::checkStability()
 		checkMaxResidual(data.u_next, data.u_iter);
 	}*/
 }
-
+void AcidRecFracSolver::checkVariables()
+{
+	for (auto cell : model->cells_poro)
+	{
+		if (cell.u_next.m > cell.props->m_max)
+			cell.u_next.m = cell.props->m_max;
+		if (cell.u_next.sw > 1.0)
+			cell.u_next.sw = 1.0;
+		if (cell.u_next.sw < 0.0)
+			cell.u_next.sw = 0.0;
+		if (cell.u_next.xa < 0.0)
+			cell.u_next.xa = 0.0;
+		if (cell.u_next.xs < 0.0)
+			cell.u_next.xs = 0.0;
+		if (cell.u_next.xw < 0.0)
+			cell.u_next.xw = 0.0;
+	}
+}
 void AcidRecFracSolver::solveStep()
 {
 	int cellIdx, varIdx;
@@ -252,6 +269,8 @@ void AcidRecFracSolver::solveStep()
 		averValPrev = averVal;
 		iterations++;
 	}
+
+	checkVariables();
 
 	cout << "Newton Iterations = " << iterations << endl;
 }
