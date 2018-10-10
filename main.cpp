@@ -926,6 +926,8 @@ using namespace std;
 	props->props_oil.ad = 1.0 * 1.e-7;
 	props->props_oil.c = 1233.0;
 	props->props_oil.lambda = 0.16;
+=======
+>>>>>>> Stashed changes
 
 	props->props_wat.visc = 4.0;
 	props->props_wat.dens_stc = 1000.0;
@@ -1293,11 +1295,11 @@ acid2dnit::Properties* getProps()
 {
 	acid2dnit::Properties* props = new acid2dnit::Properties;
 
-	props->cellsNum_r = 100;
+	props->cellsNum_r = 10;
 	props->cellsNum_z = 1;
 
+	props->timePeriods.push_back(0.2 * 3600.0);
 	props->timePeriods.push_back(1.0 * 3600.0);
-	props->timePeriods.push_back(2.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
 	props->LeftBoundIsRate.push_back(true);
@@ -1312,7 +1314,7 @@ acid2dnit::Properties* getProps()
 
 	props->ht = 0.5;
 	props->ht_min = 0.1;
-	props->ht_max = 100.0;
+	props->ht_max = 10.0;
 
 	props->alpha = 7200.0;
 
@@ -1325,7 +1327,7 @@ acid2dnit::Properties* getProps()
 	acid2dnit::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
-	tmp.m_max = 0.3;
+	tmp.m_max = 0.5;
 	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 	tmp.t_init = 300.0;
 	tmp.xa_eqbm = 1.E-5;

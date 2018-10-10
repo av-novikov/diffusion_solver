@@ -249,6 +249,28 @@ void BlackOilNITEllipticSolver<solType>::copySolution(const Vector& sol, const i
 		}
 
 		for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
+			model->wellCells[i - model->cellsNum].u_next.values[TEMP] += sol[i];
+	}
+	else if (val == PRES)
+	{
+		for (int i = 0; i < model->cellsNum; i++)
+		{
+			Variable& next = model->cells[i].u_next;
+			next.p += sol[i * var_size];
+			next.s_w += sol[i * var_size + 1];
+			if (next.SATUR)
+			{
+				next.s_o += sol[i * var_size + 2];
+				next.p_bub = next.p;
+			}
+			else
+			{
+				next.s_o -= sol[i * var_size + 1];
+				next.p_bub += sol[i * var_size + 2];
+			}
+		}
+
+		for (int i = model->cellsNum; i < model->cellsNum + model->wellCells.size(); i++)
 		{
 			Variable& next = model->wellCells[i - model->cellsNum].u_next;
 			next.p += sol[i * var_size];
