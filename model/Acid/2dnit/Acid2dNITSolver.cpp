@@ -23,7 +23,7 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	MAX_SAT_CHANGE = 1.0;
 	
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-6;
-	MAX_ITER = 20;
+	MAX_ITER = 10;
 
 	skin.open("snaps/Skin.dat", std::ofstream::out);
 	pvd.open("snaps/Acid2dNIT.pvd", std::ofstream::out);
