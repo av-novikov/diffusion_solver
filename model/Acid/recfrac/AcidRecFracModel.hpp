@@ -166,9 +166,9 @@ namespace acidrecfrac
 		inline adouble getReactionRate(PoroTapeVariable& var, const Skeleton_Props& props) const
 		{
 			adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
-			//adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
-			//adouble tmp1;
-			//condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
+			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
+			adouble tmp1;
+			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
 		inline const int getFracOut(const int idx) const
@@ -286,7 +286,7 @@ namespace acidrecfrac
 		FracTapeVariable* x_frac;
 
 		int getCellsNum() { return cellsNum_frac + cellsNum_poro; };
-		double getRate(int cur) const;
+		double getRate() const;
 	};
 };
 

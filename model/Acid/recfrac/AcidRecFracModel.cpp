@@ -564,17 +564,16 @@ void AcidRecFrac::calculateTrans()
 		trans[tr_idx] = (sum > 0.0) ? sum : 1.0;
 	}
 }
-double AcidRecFrac::getRate(int cur) const
+double AcidRecFrac::getRate() const
 {
-	/*const FracCell& cell = cells_frac[cur];
+	const FracCell& cell = cells_frac[int((cellsNum_y_frac + 1) / 2) + (cellsNum_y_frac + 1) * int((cellsNum_z + 2) / 2)];
 	assert(cell.type == FracType::FRAC_IN);
-	const FracCell& beta = cells_frac[cur + (cellsNum_z + 2) * (cellsNum_y + 1)];
+	const FracCell& beta = cells_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y_frac + 1)];
 	const FracVariable& next = cell.u_next;
 	const FracVariable& nebr = beta.u_next;
 
-	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));
-	return alpha * cell.hy * cell.hz * (next.p - nebr.p) / (cell.hx + beta.hx);*/
-	return 0;
+	double alpha = -4.0 / 3.0 * props_frac.w2 * props_frac.w2 / props_w.visc;
+	return alpha * props_frac.w2 * props_frac.height * (nebr.p - next.p) / (cell.hx + beta.hx);
 };
 
 PoroTapeVariable AcidRecFrac::solvePoro(const PoroCell& cell, const Regime reg)
@@ -703,8 +702,8 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 	const double dist_poro2 = beta_poro2.hy / 2.0;
 
 	PoroTapeVariable res;
-	res.m = ((next.m - nebr_poro1.m) - (nebr_poro1.m - nebr_poro2.m) *
-		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)) / P_dim;
+	res.m = ((next.m - nebr_poro1.m) /*- (nebr_poro1.m - nebr_poro2.m) *
+		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim;
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
 		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;

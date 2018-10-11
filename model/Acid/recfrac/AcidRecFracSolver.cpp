@@ -90,16 +90,7 @@ void AcidRecFracSolver::writeData()
 
 	double p = 0.0;
 	qcells << cur_t * t_dim / 3600.0;
-
-	map<int, double>::iterator it;
-	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
-	{
-		p += model->cells_frac[it->first].u_next.p * model->P_dim;
-		if (model->leftBoundIsRate)
-			qcells << "\t" << it->second * model->Q_dim * 86400.0;
-		else
-			qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
-	}
+	qcells << "\t" << model->getRate() * model->ht * model->t_dim * model->Q_dim;
 
 	P << cur_t * t_dim / 3600.0 <<
 		"\t" << p / (double)(model->Qcell.size()) << endl;
@@ -122,7 +113,7 @@ void AcidRecFracSolver::control()
 	}
 
 	if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0)
-		model->ht = model->ht * 1.5;
+		model->ht = model->ht * 1.4;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
 
