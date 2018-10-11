@@ -116,7 +116,7 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-18, 1.E-10, 1E+12, 500);
+	bicgstab.Init(1.E-18, 1.E-30, 1E+12, 500);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
