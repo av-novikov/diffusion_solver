@@ -1330,7 +1330,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			conc_w_frac->InsertNextValue(1.0 - next.c);
 			conc_s_frac->InsertNextValue(0.0);
 			conc_co2_frac->InsertNextValue(0.0);
-			trans->InsertNextValue(model->trans[k]);
+            trans->InsertNextValue(model->trans[k] * model->widths[k] * model->R_dim *
+                                M2toMilliDarcy(props.perm * r_dim * r_dim) * model->R_dim * model->R_dim);
 			width->InsertNextValue(model->widths[k] * r_dim);
 			v_leak->InsertNextValue(0.0);
 			type->InsertNextValue(cell.type);
@@ -1368,7 +1369,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 				conc_w_frac->InsertNextValue(1.0 - next.c);
 				conc_s_frac->InsertNextValue(0.0);
 				conc_co2_frac->InsertNextValue(0.0);
-				trans->InsertNextValue(model->trans[k + (i - 1) * model->cellsNum_z]);
+				trans->InsertNextValue(model->trans[k + (i - 1) * model->cellsNum_z] * model->widths[k + (i - 1) * model->cellsNum_z] * model->R_dim *
+                                            M2toMilliDarcy(props.perm * r_dim * r_dim) * model->R_dim * model->R_dim);
 				width->InsertNextValue(model->widths[k + (i - 1) * model->cellsNum_z] * r_dim);
 				v_leak->InsertNextValue(model->getFlowLeak(cell).value() * r_dim / t_dim);
 				type->InsertNextValue(cell.type);

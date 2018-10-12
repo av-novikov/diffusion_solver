@@ -96,7 +96,7 @@ void AcidRecFracSolver::writeData()
 		"\t" << p / (double)(model->Qcell.size()) << endl;
 
 	const double tran = *std::min_element(model->trans.begin(), model->trans.end());
-	const double k0 = M2toMilliDarcy(model->props_sk.back().perm * model->R_dim * model->R_dim);
+	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
 	trans << cur_t * t_dim / 3600.0 << "\t" << tran << "\t" << tran * model->width * model->R_dim * k0 << endl;
 
 	qcells << endl;
@@ -113,7 +113,7 @@ void AcidRecFracSolver::control()
 	}
 
 	if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0)
-		model->ht = model->ht * 1.4;
+		model->ht = model->ht * 2.0;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
 

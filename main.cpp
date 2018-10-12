@@ -1205,9 +1205,9 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.1;
+	props->ht = 0.08;
 	props->ht_min = 1.0;
-	props->ht_max = 800.0;
+	props->ht_max = 50.0;
 
 	props->timePeriods.push_back(0.5 * 3600.0);
 	props->timePeriods.push_back(1.0 * 3600.0);
@@ -1237,7 +1237,7 @@ acidrecfrac::Properties* getProps()
 
 	acidrecfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.09;
-	props_sk.m_max = 0.8;
+	props_sk.m_max = 0.2;
 	props_sk.t_init = 300.0;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
 	props_sk.sw_init = 0.1;					props_sk.so_init = 0.9;
@@ -1261,7 +1261,7 @@ acidrecfrac::Properties* getProps()
 		props->props_sk.push_back(prop);
 	}*/
 	
-	props_sk.height = 3.05;
+	/*props_sk.height = 3.05;
 	props_sk.m_init = 0.08;
 	props_sk.perm = 0.3;
 	props->props_sk.push_back(props_sk);
@@ -1274,7 +1274,7 @@ acidrecfrac::Properties* getProps()
 	props_sk.height = 0.61;
 	props_sk.m_init = 0.12;
 	props_sk.perm = 1;
-	props->props_sk.push_back(props_sk);
+	props->props_sk.push_back(props_sk);*/
 
 	props->props_o.visc = 4.75;
 	props->props_o.dens_stc = 887.261;

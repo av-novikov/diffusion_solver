@@ -38,12 +38,17 @@ namespace acidrecfrac
 			return m0;
 			//return m0 * (1.0 + beta * (p - p_init));
 		};
-		inline adouble getPermCoseni(adouble m0, adouble p) const
+		/*inline adouble getPermCoseni(adouble m0, adouble p) const
 		{
 			//return d_pore_r * d_pore_r * m * m * m / (1 - m) / (1 - m) / 150.0;
 			adouble m = getPoro(m0, p);
 			return perm * (m * m * m / (1 - m) / (1 - m)) / 
 							(m_init * m_init * m_init / (1 - m_init) / (1 - m_init));
+		};*/
+		inline adouble getPermCoseni(adouble m0, adouble p) const
+		{
+			adouble m = getPoro(m0, p);
+			return perm * exp(150.0 * (m - m_init));
 		};
 		inline double getInitDiam(double m_init, double k0)
 		{
