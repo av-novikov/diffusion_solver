@@ -109,8 +109,8 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	}
 	else
 	{
-		p_ilut.Set(1.E-15, 100);
-		bicgstab.SetPreconditioner(p_ilut);
+		p.Set(1);
+		bicgstab.SetPreconditioner(p);
 	}
 	
 	bicgstab.Build();
