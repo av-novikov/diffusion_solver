@@ -1207,9 +1207,9 @@ acidrecfrac::Properties* getProps()
 
 	props->ht = 0.08;
 	props->ht_min = 1.0;
-	props->ht_max = 50.0;
+	props->ht_max = 20.0;
 
-	props->timePeriods.push_back(0.5 * 3600.0);
+	props->timePeriods.push_back(0.2 * 3600.0);
 	props->timePeriods.push_back(1.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;

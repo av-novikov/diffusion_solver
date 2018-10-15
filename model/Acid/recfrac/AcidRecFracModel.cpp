@@ -88,7 +88,7 @@ void AcidRecFrac::setProps(Properties& props)
 void AcidRecFrac::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
-	R_dim = props_frac.l2;
+	R_dim = props_frac.l2 / 5.0;
 	t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
 	// Temporal properties
@@ -672,6 +672,12 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 		res.xa *= sqrt(cell.V);
 		res.xs *= sqrt(cell.V);
 	}*/
+	res.m *= 2.0;
+	res.p *= 2.0;
+	res.sw *= 2.0;
+	res.xa *= 2.0;
+	res.xs *= 2.0;
+	res.xw *= 2.0;
 
 	return res;
 }
@@ -703,9 +709,9 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 
 	PoroTapeVariable res;
 	res.m = ((next.m - nebr_poro1.m) /*- (nebr_poro1.m - nebr_poro2.m) *
-		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim;
+		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim / 5.0;
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
-		(dist0 + dist1) / (dist1 + dist2)) / P_dim;
+		(dist0 + dist1) / (dist1 + dist2)) / P_dim / 5.0;
 	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
 	//res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
 	//res.xw = ((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) *
@@ -716,10 +722,10 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 
 	if (reg == INJECTION || reg == STOP)
 	{
-		res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
-		res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim;
-		res.xa = (next.xa - nebr1.c) / P_dim;
-		res.xs = next.xs / P_dim;
+		res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim / 5.0;
+		res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim / 5.0;
+		res.xa = (next.xa - nebr1.c) / P_dim / 5.0;
+		res.xs = next.xs / P_dim / 5.0;
 	}
 	/*else if (beta_poro.u_next.p - cell.u_next.p > EQUALITY_TOLERANCE)
 	{
@@ -730,10 +736,10 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 	}*/
 	else
 	{
-		res.sw = (next.sw - prev.sw) / P_dim;
-		res.xw = (next.xw - prev.xw) / P_dim;
-		res.xa = (next.xa - prev.xa) / P_dim;
-		res.xs = (next.xs - prev.xs) / P_dim;
+		res.sw = (next.sw - prev.sw) / P_dim / 5.0;
+		res.xw = (next.xw - prev.xw) / P_dim / 5.0;
+		res.xa = (next.xa - prev.xa) / P_dim / 5.0;
+		res.xs = (next.xs - prev.xs) / P_dim / 5.0;
 	}
 	return res;
 }
@@ -888,5 +894,7 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 			sy * (c_y_minus * vy_minus - c_y_plus * vy_plus - diff_plus - diff_minus) +
 			sz * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[2]])].c * vz_minus +
 				x_frac[getUpwindIdx(cell, cells_frac[neighbor[3]])].c * vz_plus)));
+	res.p /= 2.5;
+	res.c /= 2.5;
 	return res;
 }
