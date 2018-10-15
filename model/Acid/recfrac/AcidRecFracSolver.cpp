@@ -112,8 +112,10 @@ void AcidRecFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0)
+	if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0 && curTimePeriod == 0)
 		model->ht = model->ht * 2.0;
+    else if (model->ht <= model->ht_max / 7.0 && iterations < 5 && err_newton_first < 1.0 && curTimePeriod == 1)
+        model->ht = model->ht * 1.5;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
 
@@ -228,6 +230,7 @@ void AcidRecFracSolver::solveStep()
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
 	bool isHarder = (curTimePeriod == 0) ? false : true;
+    bool isInit = (cur_t < 100 * model->ht_min) ? false : true;
 
 	auto continueIterations = [this]()
 	{
@@ -245,7 +248,7 @@ void AcidRecFracSolver::solveStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE);
+		solver.Solve(PRECOND::ILU_SIMPLE, isInit);
 		copySolution(solver.getSolution());
 
 		checkStability();
