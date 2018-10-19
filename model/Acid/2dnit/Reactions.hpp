@@ -141,10 +141,10 @@ namespace acid2dnit
 			comps[REACTS::WATER		] = getH2O();		indices[REACTS::WATER	] = 1.0;
 			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
 
-			activation_energy = 8.31 * 7550.0;//13.0 * KKAL_2_J;
+			activation_energy = 8.31 * 7550.0;//15.0 * KKAL_2_J;
 			alpha = 0.63;
 			reaction_const = 7.29 * 1.e+7;
-			surf_init = 1000.0;
+			surf_init = 10000.0;
 		};
 	};
 
@@ -164,7 +164,7 @@ namespace acid2dnit
 			activation_energy = 8.31 * 11320.0;
 			alpha = 0.618 / 1.5;
 			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha);
-			surf_init = 1000.0;
+			surf_init = 10000.0;
 		};
 	};
 

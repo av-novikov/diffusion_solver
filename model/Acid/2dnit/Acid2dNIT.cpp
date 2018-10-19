@@ -212,7 +212,7 @@ void Acid2dNIT::makeDimLess()
 
 	reac.activation_energy /= (P_dim * R_dim * R_dim * R_dim);
 	reac.surf_init /= (1.0 / R_dim);
-	reac.reaction_const /= (R_dim / t_dim);
+    reac.reaction_const /= (pow(R_dim, 3 * reac.alpha - 2.0) / t_dim);
 	for (auto& comp : reac.comps)
 	{
 		comp.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
