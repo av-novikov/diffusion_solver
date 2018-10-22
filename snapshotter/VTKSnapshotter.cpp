@@ -1277,7 +1277,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 				if (j != 1)
 					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y - cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
 				else
-					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y - 2.0 * cell.hy / 5.0), r_dim * (cell.z + cell.hz / 2.0));
+					points_poro->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y - 2.0 * cell.hy / 200.0), r_dim * (cell.z + cell.hz / 2.0));
 			}
 		}
 	grid_poro->SetPoints(points_poro);

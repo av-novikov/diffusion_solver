@@ -287,9 +287,15 @@ void AcidRecFrac::buildPoroGrid()
 	cells_poro.reserve(cellsNum_poro);
 	Volume_poro = 0.0;
 
+	// Grid sparcity parameters
+	double delta = 0.98 * props_frac.w2;
+	int mult_num = cellsNum_y_poro / 2 + 1;
+
 	double r_prev = re;
-	double logMax = log(re / props_frac.w2);
+	double logMax = log((re - delta) / (props_frac.w2 - delta));
 	double logStep = logMax / (double)cellsNum_y_poro;
+
+	double mult = 1.0 / exp(0.8 * logStep);
 
 	double hy = 0.0, hx = 0.0, hz = 0.0;
 	double cy = 0.0, cx = 0.0, cz = 0.0;
@@ -320,7 +326,8 @@ void AcidRecFrac::buildPoroGrid()
 			if (i == 0)
 			{
 				hy = 0.0;
-				r_prev = cy = props_frac.w2;
+				cy = props_frac.w2;
+				r_prev = props_frac.w2 - delta;
 			}
 			else if (i == cellsNum_y_poro + 1)
 			{
@@ -329,9 +336,14 @@ void AcidRecFrac::buildPoroGrid()
 			}
 			else
 			{
-				cy = r_prev * (exp(logStep) + 1.0) / 2.0;
+				cy = delta + r_prev * (exp(logStep) + 1.0) / 2.0;
 				hy = r_prev * (exp(logStep) - 1.0);
-				r_prev *= exp(logStep);
+				if(i < mult_num)
+					r_prev *= exp(logStep) * mult;
+				else if (i > cellsNum_y_poro + 1 - mult_num)
+					r_prev *= exp(logStep) / mult;
+				else
+					r_prev *= exp(logStep);
 			}
 
 			cells_poro.push_back(PoroCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
@@ -364,7 +376,8 @@ void AcidRecFrac::buildPoroGrid()
 				if (i == 0)
 				{
 					hy = 0.0;
-					r_prev = cy = props_frac.w2;
+					r_prev = props_frac.w2 - delta;
+					cy = props_frac.w2;
 				}
 				else if (i == cellsNum_y_poro + 1)
 				{
@@ -373,9 +386,14 @@ void AcidRecFrac::buildPoroGrid()
 				}
 				else
 				{
-					cy = r_prev * (exp(logStep) + 1.0) / 2.0;
+					cy = delta + r_prev * (exp(logStep) + 1.0) / 2.0;
 					hy = r_prev * (exp(logStep) - 1.0);
-					r_prev *= exp(logStep);
+					if (i < mult_num)
+						r_prev *= exp(logStep) * mult;
+					else if (i > cellsNum_y_poro + 1 - mult_num)
+						r_prev *= exp(logStep) / mult;
+					else
+						r_prev *= exp(logStep);
 				}
 
 				if (i == cellsNum_y_poro + 1)
@@ -422,7 +440,8 @@ void AcidRecFrac::buildPoroGrid()
 			if (i == 0)
 			{
 				hy = 0.0;
-				r_prev = cy = props_frac.w2;
+				r_prev = props_frac.w2 - delta;
+				cy = props_frac.w2;
 			}
 			else if (i == cellsNum_y_poro + 1)
 			{
@@ -431,9 +450,14 @@ void AcidRecFrac::buildPoroGrid()
 			}
 			else
 			{
-				cy = r_prev * (exp(logStep) + 1.0) / 2.0;
+				cy = delta + r_prev * (exp(logStep) + 1.0) / 2.0;
 				hy = r_prev * (exp(logStep) - 1.0);
-				r_prev *= exp(logStep);
+				if (i < mult_num)
+					r_prev *= exp(logStep) * mult;
+				else if (i > cellsNum_y_poro + 1 - mult_num)
+					r_prev *= exp(logStep) / mult;
+				else
+					r_prev *= exp(logStep);
 			}
 
 			cells_poro.push_back(PoroCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));

@@ -32,6 +32,8 @@ namespace acidrecfrac
 		double xw_init;
 		// Maximum porosity
 		double m_max;
+		// Coefficient in petrophysical relationsship
+		double A;
 
 		inline adouble getPoro(adouble m0, adouble p) const
 		{
@@ -48,7 +50,7 @@ namespace acidrecfrac
 		inline adouble getPermCoseni(adouble m0, adouble p) const
 		{
 			adouble m = getPoro(m0, p);
-			return perm * exp(70.0 * (m - m_init));
+			return perm * exp(A * (m - m_init));
 		};
 		inline double getInitDiam(double m_init, double k0)
 		{
