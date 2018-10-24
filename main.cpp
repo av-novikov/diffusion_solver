@@ -1205,9 +1205,9 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.02;
-	props->ht_min = 0.2;
-	props->ht_max = 0.1;
+	props->ht = 0.008;
+	props->ht_min = 0.02;
+	props->ht_max = 5.0;
 
 	props->timePeriods.push_back(0.5 * 3600.0);
 	props->timePeriods.push_back(1.0 * 3600.0);

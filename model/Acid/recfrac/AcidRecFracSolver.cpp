@@ -116,7 +116,7 @@ void AcidRecFracSolver::control()
 		model->ht = model->ht * 1.5;
 	else if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0 && curTimePeriod == 0)
 		model->ht = model->ht * 1.5;
-    else if (model->ht <= model->ht_max && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 1)
+    else if (model->ht <= model->ht_max / 2.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 1)
         model->ht = model->ht * 1.5;
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;

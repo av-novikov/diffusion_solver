@@ -296,7 +296,7 @@ void AcidRecFrac::buildPoroGrid()
 	double logMax2 = log((re - delta2) / (dist - delta2));
 	double logStep2 = logMax2 / (double)(cellsNum_y_poro - mult_num);
 
-    double delta1 = 0.0 * props_frac.w2;
+    double delta1 = 0.95 * props_frac.w2;
     double r_prev1 = re;
     double logMax1 = log((dist - delta1) / (props_frac.w2 - delta1));
     double logStep1 = logMax1 / (double)mult_num;

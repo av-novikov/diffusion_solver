@@ -1409,16 +1409,20 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	conc_co2_poro->SetName("CO2Concentration");
 	auto conc_s_poro = vtkSmartPointer<vtkDoubleArray>::New();
 	conc_s_poro->SetName("SaltConcentration");
+    auto trans_poro = vtkSmartPointer<vtkDoubleArray>::New();
+    trans_poro->SetName("Transmissibility");
 
+    double sum_width, sum_trans;
 	int np_poro = ny_poro * (nz - 1);
 	for (int i = 0; i < nx - 2; i++)
 	{
 		for (int k = 0; k < nz - 2; k++)
 		{
+            sum_width = sum_trans = 0.0;
 			for (int j = 0; j < ny_poro - 1; j++)
 			{
 				const PoroCell& cell = model->cells_poro[j + (k + 1) * ny_poro + (i + 1) * nz * ny_poro];
-				if (cell.y * r_dim < 1.0)
+				if (cell.y * r_dim < 0.1)
 				{
 					assert(cell.type == PoroType::MIDDLE || (cell.type == PoroType::WELL_LAT && j == 0));
 					const auto& next = cell.u_next;
@@ -1433,6 +1437,10 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 					conc_w_poro->InsertNextValue(next.xw);
 					conc_s_poro->InsertNextValue(next.xs);
 					conc_co2_poro->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
+
+                    sum_width += cell.hy * r_dim;
+                    sum_trans += M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim) * cell.hy * r_dim;
+                    trans_poro->InsertNextValue(sum_trans);
 
 					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
 					hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
@@ -1476,6 +1484,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	fd_poro->AddArray(conc_w_poro);
 	fd_poro->AddArray(conc_s_poro);
 	fd_poro->AddArray(conc_co2_poro);
+    fd_poro->AddArray(trans_poro);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
