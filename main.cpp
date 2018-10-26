@@ -1205,9 +1205,9 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.008;
-	props->ht_min = 0.02;
-	props->ht_max = 5.0;
+	props->ht = 0.002;
+	props->ht_min = 0.01;
+	props->ht_max = 2.0;
 
 	props->timePeriods.push_back(0.5 * 3600.0);
 	props->timePeriods.push_back(1.0 * 3600.0);
@@ -1219,7 +1219,7 @@ acidrecfrac::Properties* getProps()
 	props->rightBoundIsPres = true;
 	props->pwf.push_back(300.0 * 1.0e+5);
 	props->pwf.push_back(300.0 * 1.0e+5);
-	props->cs.push_back(0.28);
+	props->cs.push_back(0.15);
 	props->cs.push_back(0.0);
 
 	props->props_frac.l2 = 240.0;
@@ -1232,13 +1232,13 @@ acidrecfrac::Properties* getProps()
 
 	props->cellsNum_x = 20;
 	props->cellsNum_y_frac = 10;
-	props->cellsNum_y_poro = 50;
+	props->cellsNum_y_poro = 75;
 	props->cellsNum_z = 1;
 
 	acidrecfrac::Skeleton_Props props_sk;
 	props_sk.m_init = 0.09;
 	props_sk.m_max = 0.4;
-	props_sk.A = 70.0;
+	props_sk.A = 60.0;
 	props_sk.t_init = 300.0;
 	props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
 	props_sk.sw_init = 0.1;					props_sk.so_init = 0.9;
