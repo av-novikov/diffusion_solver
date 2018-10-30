@@ -506,6 +506,11 @@ void AcidRecFrac::setPeriod(int period)
 	if (leftBoundIsRate)
 	{
 		Q_sum = rate[period];
+		if (Q_sum == 0.0)
+		{
+			for(auto& cell : cells_frac)
+				cell.u_prev.c = cell.u_iter.c = cell.u_next.c = 0.0;
+		}
 
 		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) 
 		{
@@ -540,10 +545,21 @@ void AcidRecFrac::setInitialState()
 		cell.props = &props_sk[getSkeletonId(cell)];
 		cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
 		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
-		cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = cell.props->sw_init;
-		cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = cell.props->xw_init;
-		cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = cell.props->xa_init;
+		
+		if (cell.type == PoroType::WELL_LAT)
+		{
+			cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = 1.0 - cell.props->s_oc;
+			cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = 0.0;
+			cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = 1.0;
+		}
+		else
+		{
+			cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = cell.props->sw_init;
+			cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = cell.props->xa_init;
+			cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = cell.props->xw_init;
+		}
 		cell.u_prev.xs = cell.u_iter.xs = cell.u_next.xs = 0.0;
+
 	}
 
 	x_frac = new FracTapeVariable[cellsNum_frac];
@@ -754,35 +770,26 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim / 5.0;
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
 		(dist0 + dist1) / (dist1 + dist2)) / P_dim / 5.0;
-	//res.p = (next.p - getQuadAppr({ nebr1.p, nebr2.p, nebr3.p }, { beta1.y, beta2.y, beta3.y }, cell.x)) / P_dim;
-	//res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
-	//res.xw = ((next.xw - (1.0 - nebr1.c)) - (nebr2.c - nebr1.c) *
-	//	(dist0 + dist1) / (dist1 + dist2)) / P_dim;
-	//res.xa = ((next.xa - nebr1.c) - (nebr1.c - nebr2.c) *
-	//	(dist0 + dist1) / (dist1 + dist2)) / P_dim;
-	//res.xs = next.xs / P_dim;
+	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim / 5.0;
+	res.xw = (next.xw - (1.0 - next.xa)) / P_dim / 5.0;
+	res.xs = next.xs / P_dim / 5.0;
 
 	if (reg == INJECTION || reg == STOP)
 	{
-		res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim / 5.0;
-		res.xw = (next.xw - (1.0 - nebr1.c)) / P_dim / 5.0;
+		adouble vL = getFlowLeak(beta1);
+
 		res.xa = (next.xa - nebr1.c) / P_dim / 5.0;
-		res.xs = next.xs / P_dim / 5.0;
+		
+		//res.p = getPoroTrans(cell, next, beta_poro1, nebr_poro1) * props_w.getKr(next.sw, next.m, cell.props) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (next.p - nebr_poro1.p) 
+		//	+ (cell.hx * cell.hz * (vL - 2.0 * props_w.D_e * (next.xa - nebr1.c) / beta1.hy));
+		
+		//res.xa = next.xa * getPoroTrans(cell, next, beta_poro1, nebr_poro1).value() * props_w.getKr(next.sw, next.m, cell.props).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * (next.p - nebr_poro1.p).value();
+		//if (reg == INJECTION)
+		//	res.xa -= (next.m.value() * cell.hx * cell.hz * (nebr1.c * vL.value() /*- 2.0 * props_w.D_e * (next.xa - nebr1.c) / beta1.hy*/));
+		//else
+		//	res.xa -= (next.m * cell.hx * cell.hz * (next.xa * vL /*- 2.0 * props_w.D_e * (next.xa - nebr1.c) / beta1.hy*/));
 	}
-	/*else if (beta_poro.u_next.p - cell.u_next.p > EQUALITY_TOLERANCE)
-	{
-		res.sw = (next.sw - nebr_poro.sw) / P_dim;
-		res.xw = (next.xw - nebr_poro.xw) / P_dim;
-		res.xa = (next.xa - nebr_poro.xa) / P_dim;
-		res.xs = (next.xs - nebr_poro.xs) / P_dim;
-	}*/
-	else
-	{
-		res.sw = (next.sw - prev.sw) / P_dim / 5.0;
-		res.xw = (next.xw - prev.xw) / P_dim / 5.0;
-		res.xa = (next.xa - prev.xa) / P_dim / 5.0;
-		res.xs = (next.xs - prev.xs) / P_dim / 5.0;
-	}
+
 	return res;
 }
 PoroTapeVariable AcidRecFrac::solvePoroRight(const PoroCell& cell)
