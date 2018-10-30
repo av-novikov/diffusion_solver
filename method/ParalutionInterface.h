@@ -36,8 +36,6 @@ protected:
 		x.WriteFileASCII("snaps/x.dat");
 	};
 
-	double initRes, finalRes;
-	int iterNum;
 	const std::string resHistoryFile;
 	void getResiduals();
 public:
@@ -48,6 +46,9 @@ public:
 	void Solve(const PRECOND key, bool isHarder);
 
 	const Vector& getSolution() { return x; };
+    double init_res, final_res;
+    const int max_iter;
+    int iter_num;
 
 	ParSolver();
 	~ParSolver();

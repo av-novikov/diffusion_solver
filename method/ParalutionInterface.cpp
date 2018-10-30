@@ -8,12 +8,12 @@ using std::ifstream;
 using std::cout;
 using std::endl;
 
-ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat")
+ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat"), max_iter(500)
 {
 	isAssembled = false;
 	isPrecondBuilt = false;
-	gmres.Init(1.E-15, 1.E-10, 1E+12, 500);
-	bicgstab.Init(1.E-15, 1.E-10, 1E+12, 500);
+	gmres.Init(1.E-15, 1.E-10, 1E+12, max_iter);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+12, max_iter);
 }
 ParSolver::~ParSolver()
 {
@@ -82,11 +82,14 @@ void ParSolver::SolveBiCGStab()
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-15, 1.E-10, 1E+12, 500);
+	bicgstab.Init(1.E-15, 1.E-10, 1E+12, max_iter);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
+    init_res = bicgstab.GetCurrentResidual();
 	bicgstab.Solve(Rhs, &x);
+    final_res = bicgstab.GetCurrentResidual();
+    iter_num = bicgstab.GetIterationCount();
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
@@ -116,11 +119,14 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-18, 1.E-30, 1E+12, 500);
+	bicgstab.Init(1.E-18, 1.E-30, 1E+12, max_iter);
 	Mat.info();
 
 	//bicgstab.RecordResidualHistory();
-	bicgstab.Solve(Rhs, &x);
+    init_res = bicgstab.GetCurrentResidual();
+    bicgstab.Solve(Rhs, &x);
+    final_res = bicgstab.GetCurrentResidual();
+    iter_num = bicgstab.GetIterationCount();
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
@@ -141,12 +147,15 @@ void ParSolver::SolveGMRES()
 	gmres.Build();
 	//isAssembled = true;
 
-	gmres.Init(1.E-17, 1.E-12, 1E+12, 500);
+	gmres.Init(1.E-17, 1.E-12, 1E+12, max_iter);
 	Mat.info();
 
 	//gmres.RecordResidualHistory();
-	gmres.Solve(Rhs, &x);
-	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
+    init_res = gmres.GetCurrentResidual();
+    gmres.Solve(Rhs, &x);
+    final_res = gmres.GetCurrentResidual();
+    iter_num = gmres.GetIterationCount();
+	status = static_cast<RETURN_TYPE>(gmres.GetSolverStatus());
 	//gmres.RecordHistory(resHistoryFile);
 	//writeSystem();
 
@@ -166,14 +175,14 @@ void ParSolver::getResiduals()
 	ifstream file;
 	file.open(resHistoryFile, ifstream::in);
 
-	file >> initRes;
+	file >> init_res;
 	while ( !file.eof() )
 	{
 		file >> tmp;
 		i++;
 	}
-	finalRes = tmp;
-	iterNum = i;
+	final_res = tmp;
+	iter_num = i;
 
 	file.close();
 }
