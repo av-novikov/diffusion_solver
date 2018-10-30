@@ -88,16 +88,30 @@ void AcidRecFracSolver::writeData()
 	pvd_frac << "0\" file=\"AcidRecFrac_frac_" + std::to_string(step_idx) + ".vtu\"/>\n";
 	pvd_poro << "0\" file=\"AcidRecFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
-	double p = 0.0;
+	double q = 0.0;
+	for (int i = 0; i < (model->cellsNum_y_frac + 1) * (model->cellsNum_z + 2); i++)
+	{
+		const auto& cell = model->cells_frac[i];
+		if (cell.type == FracType::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)
+			q += model->getRate(cell.num);
+	}
 	qcells << cur_t * t_dim / 3600.0;
-	qcells << "\t" << model->getRate() * model->ht * model->t_dim * model->Q_dim;
+	qcells << "\t" << q * model->ht * model->t_dim * model->Q_dim;
 
-	P << cur_t * t_dim / 3600.0 <<
-		"\t" << p / (double)(model->Qcell.size()) << endl;
+	double p = model->cells_frac[model->cellsNum_y_frac + 2].u_next.p;
+	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
 
-	const double tran = *std::min_element(model->trans.begin(), model->trans.end());
 	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
-	trans << cur_t * t_dim / 3600.0 << "\t" << tran << "\t" << tran * model->width * model->R_dim * k0 << endl;
+	double mean_trans = 0.0, harm_mean_trans = 0.0, cur_trans;
+	for (int i = 0; i < model->trans.size(); i++)
+	{
+		cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
+		mean_trans += cur_trans / model->trans.size();
+		harm_mean_trans += 1.0 / cur_trans;
+	}
+	harm_mean_trans = model->trans.size() / harm_mean_trans;
+
+	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << harm_mean_trans << endl;
 
 	qcells << endl;
 }
@@ -232,7 +246,7 @@ void AcidRecFracSolver::solveStep()
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
 	bool isHarder = (curTimePeriod == 0) ? false : true;
-    bool isInit = (cur_t < 5.0 / t_dim) ? false : true;
+	bool isInit = true;// (cur_t < 0.001 / t_dim) ? false : true;
 
 	auto continueIterations = [this]()
 	{

@@ -286,7 +286,7 @@ namespace acidrecfrac
 		FracTapeVariable* x_frac;
 
 		int getCellsNum() { return cellsNum_frac + cellsNum_poro; };
-		double getRate() const;
+		double getRate(const int idx) const;
 	};
 };
 

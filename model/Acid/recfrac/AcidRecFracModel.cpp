@@ -496,7 +496,7 @@ void AcidRecFrac::setPerforated()
 		if (cell.type == FracType::FRAC_IN)
 		{
 			Qcell[cell.num] = 0.0;
-			height_perf += cell.y * cell.z;
+			height_perf += cell.hy * cell.hz;
 		}
 	}
 };
@@ -516,7 +516,8 @@ void AcidRecFrac::setPeriod(int period)
 		{
 			std::map<int, double>::iterator it;
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)
-				it->second = Q_sum;// *cells_frac[it->first].hz * cells_frac[it->first].hy / height_perf;
+				it->second = 3.0 * Q_sum * cells_frac[it->first].hy / 2.0 / props_frac.w2 * 
+					(1.0 - (cells_frac[it->first].y / props_frac.w2) * (cells_frac[it->first].y / props_frac.w2));
 		}
 		else 
 		{
@@ -622,16 +623,17 @@ void AcidRecFrac::calculateTrans()
 		trans[tr_idx] = (sum > 0.0) ? sum : 1.0;
 	}
 }
-double AcidRecFrac::getRate() const
+double AcidRecFrac::getRate(const int idx) const
 {
-	const FracCell& cell = cells_frac[int((cellsNum_y_frac + 1) / 2) + (cellsNum_y_frac + 1) * int((cellsNum_z + 2) / 2)];
+	const FracCell& cell = cells_frac[idx];
 	assert(cell.type == FracType::FRAC_IN);
+	assert(cell.hy != 0.0 && cell.hz != 0.0);
 	const FracCell& beta = cells_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y_frac + 1)];
 	const FracVariable& next = cell.u_next;
 	const FracVariable& nebr = beta.u_next;
 
-	double alpha = -4.0 / 3.0 * props_frac.w2 * props_frac.w2 / props_w.visc;
-	return alpha * props_frac.w2 * props_frac.height * (nebr.p - next.p) / (cell.hx + beta.hx);
+	return cell.hy * cell.hz * props_frac.w2 * props_frac.w2 / props_w.visc * (nebr.p - next.p) / (cell.hx + beta.hx) * 
+				(1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));
 };
 
 PoroTapeVariable AcidRecFrac::solvePoro(const PoroCell& cell, const Regime reg)
@@ -860,12 +862,12 @@ FracTapeVariable AcidRecFrac::solveFracIn(const FracCell& cell)
 	if (leftBoundIsRate)
 	{
 		if (cell.hy * cell.hz != 0.0)
-			res.p = ((next.p - beta.u_prev.p) /*+
+			res.p = ((next.p - beta.u_prev.p) +
 				Qcell[cell.num] / (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) / props_frac.w2 / props_frac.w2 * props_w.visc
-				/ (cell.hy * cell.hz) * beta.hx / 2.0*/) / P_dim;
+				/ (cell.hy * cell.hz) * beta.hx) / P_dim;
 		else
 			res.p = (next.p - nebr.p) / P_dim;
-		res.c = (next.c - nebr.c) / P_dim;
+		res.c = (next.c - c) / P_dim;
 	}
 	else
 	{
