@@ -1206,23 +1206,24 @@ acidrecfrac::Properties* getProps()
 	Properties* props = new Properties;
 
 	props->ht = 0.005;
-	props->ht_min = 0.01;
-	props->ht_max = 2.0;
+	props->ht_min = props->ht;
+	props->ht_max = 1.0;
 
 	props->timePeriods.push_back(0.5 * 3600.0);
-	props->timePeriods.push_back(1.0 * 3600.0);
+	props->timePeriods.push_back(5.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
 	//props->LeftBoundIsRate.push_back(false);
 	props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(300.0 * 1.0e+5);
+	props->pwf.push_back(260.0 * 1.0e+5);
 	//props->pwf.push_back(300.0 * 1.0e+5);
 	//props->rates.push_back(-10.0);
 	props->rates.push_back(0.0);
 	props->cs.push_back(0.15);
 	props->cs.push_back(0.0);
+	props->max_sol_volume = 50.0;
 
 	props->props_frac.l2 = 240.0;
 	props->props_frac.w2 = 0.001;

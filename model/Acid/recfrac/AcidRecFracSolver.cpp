@@ -95,8 +95,12 @@ void AcidRecFracSolver::writeData()
 		if (cell.type == FracType::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)
 			q += model->getRate(cell.num);
 	}
+	model->injected_sol_volume -= q * model->ht;
+	model->injected_acid_volume -= q * model->c * model->ht;
 	qcells << cur_t * t_dim / 3600.0;
-	qcells << "\t" << q * model->ht * model->t_dim * model->Q_dim;
+	qcells << "\t" << -q * model->Q_dim * 86400.0;
+	qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
+	qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
 
 	double p = model->cells_frac[model->cellsNum_y_frac + 2].u_next.p;
 	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
@@ -119,7 +123,7 @@ void AcidRecFracSolver::control()
 {
 	writeData();
 
-	if (cur_t >= model->period[curTimePeriod])
+	if (/*cur_t >= model->period[curTimePeriod]*/ model->injected_sol_volume >= model->max_sol_volume && curTimePeriod == 0)
 	{
 		curTimePeriod++;
 		model->ht = model->ht_min;
@@ -135,8 +139,8 @@ void AcidRecFracSolver::control()
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
 
-	if (cur_t + model->ht > model->period[curTimePeriod])
-		model->ht = model->period[curTimePeriod] - cur_t;
+	//if (cur_t + model->ht > model->period[curTimePeriod])
+	//	model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
 }

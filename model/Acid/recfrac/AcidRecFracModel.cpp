@@ -11,6 +11,7 @@ AcidRecFrac::AcidRecFrac()
 {
 	grav = 9.8;
 	Volume_frac = Volume_poro = 0.0;
+	injected_sol_volume = injected_acid_volume = 0.0;
 }
 AcidRecFrac::~AcidRecFrac()
 {
@@ -61,6 +62,7 @@ void AcidRecFrac::setProps(Properties& props)
 			rate[i] = 0.0;
 		}
 	}
+	max_sol_volume = props.max_sol_volume;
 
 	// Temporal properties
 	ht = props.ht;
@@ -118,6 +120,7 @@ void AcidRecFrac::makeDimLess()
 		rate[i] /= Q_dim;
 		pwf[i] /= P_dim;
 	}
+	max_sol_volume /= R_dim * R_dim * R_dim;
 
 	grav /= (R_dim / t_dim / t_dim);
 	Component::p_std /= P_dim;

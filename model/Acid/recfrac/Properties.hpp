@@ -156,6 +156,7 @@ namespace acidrecfrac
 		size_t cellsNum_y_poro;
 		double re;
 
+		double max_sol_volume;
 		std::vector<double> cs;
 		std::vector<bool> LeftBoundIsRate;
 		std::vector< std::pair<double, double> > rho_co2;
