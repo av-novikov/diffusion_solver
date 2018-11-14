@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <array>
+#include <vector>
 
 struct ErrInfo
 {
@@ -49,6 +50,11 @@ class AbstractSolver {
 		double MAX_SAT_CHANGE;
 		double CONV_W2, CONV_VAR;
 		int MAX_ITER;
+
+        std::vector<double> init_step_res, final_step_res;
+        std::vector<int> iter_num;
+        double MAX_INIT_RES;
+        bool DECREASE_STEP, INCREASE_STEP;
 
 		virtual void checkStability();
 

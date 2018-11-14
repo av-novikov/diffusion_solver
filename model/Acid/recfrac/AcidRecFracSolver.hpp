@@ -43,6 +43,7 @@ namespace acidrecfrac
 		int options[4];
 		int repeat;
 
+        void analyzeNewtonConvergence();
 		void checkVariables();
 		void checkStability();
 		void computeJac();

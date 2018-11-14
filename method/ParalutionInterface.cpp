@@ -85,12 +85,13 @@ void ParSolver::SolveBiCGStab()
 	bicgstab.Init(1.E-15, 1.E-10, 1E+12, max_iter);
 	Mat.info();
 
-	//bicgstab.RecordResidualHistory();
-    init_res = bicgstab.GetCurrentResidual();
-	bicgstab.Solve(Rhs, &x);
-    final_res = bicgstab.GetCurrentResidual();
+    bicgstab.RecordResidualHistory();
+    bicgstab.Solve(Rhs, &x);
+    bicgstab.RecordHistory(resHistoryFile);
+    getResiduals();
     iter_num = bicgstab.GetIterationCount();
-	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
+    final_res = bicgstab.GetCurrentResidual();
+    status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
 	//writeSystem();
@@ -122,11 +123,12 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	bicgstab.Init(1.E-18, 1.E-30, 1E+12, max_iter);
 	Mat.info();
 
-	//bicgstab.RecordResidualHistory();
-    init_res = bicgstab.GetCurrentResidual();
+	bicgstab.RecordResidualHistory();
     bicgstab.Solve(Rhs, &x);
-    final_res = bicgstab.GetCurrentResidual();
+    bicgstab.RecordHistory(resHistoryFile);
+    getResiduals();
     iter_num = bicgstab.GetIterationCount();
+    final_res = bicgstab.GetCurrentResidual();
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
 	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
 	//bicgstab.RecordHistory(resHistoryFile);
@@ -150,12 +152,13 @@ void ParSolver::SolveGMRES()
 	gmres.Init(1.E-17, 1.E-12, 1E+12, max_iter);
 	Mat.info();
 
-	//gmres.RecordResidualHistory();
-    init_res = gmres.GetCurrentResidual();
+    gmres.RecordResidualHistory();
     gmres.Solve(Rhs, &x);
-    final_res = gmres.GetCurrentResidual();
+    gmres.RecordHistory(resHistoryFile);
+    getResiduals();
     iter_num = gmres.GetIterationCount();
-	status = static_cast<RETURN_TYPE>(gmres.GetSolverStatus());
+    final_res = gmres.GetCurrentResidual();
+    status = static_cast<RETURN_TYPE>(gmres.GetSolverStatus());
 	//gmres.RecordHistory(resHistoryFile);
 	//writeSystem();
 

@@ -119,6 +119,21 @@ void AcidRecFracSolver::writeData()
 
 	qcells << endl;
 }
+void AcidRecFracSolver::analyzeNewtonConvergence()
+{
+    DECREASE_STEP = false;
+    INCREASE_STEP = true;
+    for (int i = 0; i < iterations - 1; i++)
+    {
+        if (init_step_res[i + 1] >= init_step_res[i])
+        {
+            INCREASE_STEP = false;
+            if (iterations > 4)
+                DECREASE_STEP = true;
+            break;
+        }
+    }
+}
 void AcidRecFracSolver::control()
 {
 	writeData();
@@ -130,14 +145,21 @@ void AcidRecFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max * 5.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 0)
+    analyzeNewtonConvergence();
+    if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
+                        (model->ht <= 1.0 * model->ht_max && curTimePeriod == 1)))
+        model->ht = model->ht * 1.5;
+    else if (DECREASE_STEP)
+        model->ht = model->ht / 1.5;
+
+	/*if (model->ht <= model->ht_max * 5.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 0)
 		model->ht = model->ht * 1.5;
 	else if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0 && curTimePeriod == 0)
 		model->ht = model->ht * 1.5;
     else if (model->ht <= model->ht_max / 2.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 1)
         model->ht = model->ht * 1.5;
 	else if (iterations > 5 && model->ht > model->ht_min)
-		model->ht = model->ht / 1.5;
+		model->ht = model->ht / 1.5;*/
 
 	//if (cur_t + model->ht > model->period[curTimePeriod])
 	//	model->ht = model->period[curTimePeriod] - cur_t;
@@ -146,7 +168,6 @@ void AcidRecFracSolver::control()
 }
 void AcidRecFracSolver::start()
 {
-	iterations = 8;
 	step_idx = 0;
 
 	fillIndices();
@@ -169,6 +190,9 @@ void AcidRecFracSolver::start()
 }
 void AcidRecFracSolver::doNextStep()
 {
+    init_step_res.clear();
+    final_step_res.clear();
+    iter_num.clear();
 	solveStep();
 	model->calculateTrans();
 }
@@ -269,6 +293,9 @@ void AcidRecFracSolver::solveStep()
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
 		solver.Solve(PRECOND::ILU_SIMPLE, isInit);
+        init_step_res.push_back(solver.init_res);
+        final_step_res.push_back(solver.final_res);
+        iter_num.push_back(solver.iter_num);
 		copySolution(solver.getSolution());
 
 		checkStability();
