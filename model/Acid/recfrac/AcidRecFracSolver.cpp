@@ -155,7 +155,7 @@ void AcidRecFracSolver::control()
 
     analyzeNewtonConvergence();
     if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
-                        (model->ht <= 1.0 * model->ht_max && curTimePeriod == 1)))
+                        (model->ht <= 0.5 * model->ht_max && curTimePeriod == 1)))
         model->ht = model->ht * 1.5;
     else if (DECREASE_STEP)
         model->ht = model->ht / 1.5;
