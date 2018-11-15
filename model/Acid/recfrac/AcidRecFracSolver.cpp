@@ -42,6 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
+    MAX_INIT_RES = 1.E-8;
+
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
 	trans.open("snaps/Trans.dat", ofstream::out);
@@ -125,6 +127,12 @@ void AcidRecFracSolver::analyzeNewtonConvergence()
     INCREASE_STEP = true;
     for (int i = 0; i < iterations - 1; i++)
     {
+        if (init_step_res[0] > MAX_INIT_RES)
+        {
+            DECREASE_STEP = true;
+            INCREASE_STEP = false;
+            break;
+        }
         if (init_step_res[i + 1] >= init_step_res[i])
         {
             INCREASE_STEP = false;
