@@ -15,10 +15,15 @@ namespace acidrecfrac
 	class AcidRecFracSolver : public AbstractSolver<AcidRecFrac>
 	{
 	protected:
+        
 		void control();
-		void solveStep();
-		void writeData();
-		void doNextStep();
+		bool solveSmartStep();
+        void writeData();
+        bool doNextSmartStep();
+
+        // garbage
+        void solveStep() {};
+        void doNextStep() {};
 
 		double** jac;
 		double* y;

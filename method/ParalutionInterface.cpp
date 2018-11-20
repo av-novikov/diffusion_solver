@@ -108,19 +108,19 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	bicgstab.SetOperator(Mat);
 	if (!isHarder)
 	{
-		p.Set(0);
+		p.Set(1);
 		bicgstab.SetPreconditioner(p);
 	}
 	else
 	{
-		p.Set(1);
-		bicgstab.SetPreconditioner(p);
+        p_ilut.Set(1.E-30, 50);
+		bicgstab.SetPreconditioner(p_ilut);
 	}
 	
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-18, 1.E-30, 1E+12, max_iter);
+	bicgstab.Init(1.E-18, 1.E-30, 1E+4, max_iter);
 	Mat.info();
 
 	bicgstab.RecordResidualHistory();

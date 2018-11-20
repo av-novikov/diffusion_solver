@@ -42,7 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES = 1.E-8;
+    MAX_INIT_RES1 = 5.E-9;
+    MAX_INIT_RES2 = 2.E-9;
 
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
@@ -127,9 +128,15 @@ void AcidRecFracSolver::analyzeNewtonConvergence()
     INCREASE_STEP = true;
     for (int i = 0; i < iterations - 1; i++)
     {
-        if (init_step_res[0] > MAX_INIT_RES)
+        if (init_step_res[i] > MAX_INIT_RES1)
         {
             DECREASE_STEP = true;
+            INCREASE_STEP = false;
+            break;
+        }
+        if (init_step_res[i] > MAX_INIT_RES2)
+        {
+            DECREASE_STEP = false;
             INCREASE_STEP = false;
             break;
         }
@@ -186,8 +193,15 @@ void AcidRecFracSolver::start()
 	while (cur_t < Tt)
 	{
 		control();
-		model->snapshot_all(step_idx++);
-		doNextStep();
+        model->snapshot_all(step_idx++);
+        while (!doNextSmartStep())
+        {
+            cur_t -= model->ht;
+            model->ht /= 1.5;
+            cout << "------------------REPEATED TIME STEP------------------" << endl;
+            cout << setprecision(6);
+            cout << "time = " << cur_t << endl;
+        }
 		copyTimeLayer();
 		cout << "---------------------NEW TIME STEP---------------------" << endl;
 		cout << setprecision(6);
@@ -196,13 +210,15 @@ void AcidRecFracSolver::start()
 	model->snapshot_all(step_idx);
 	writeData();
 }
-void AcidRecFracSolver::doNextStep()
+bool AcidRecFracSolver::doNextSmartStep()
 {
     init_step_res.clear();
     final_step_res.clear();
     iter_num.clear();
-	solveStep();
+    if (!solveSmartStep())
+        return false;
 	model->calculateTrans();
+    return true;
 }
 void AcidRecFracSolver::copySolution(const paralution::LocalVector<double>& sol)
 {
@@ -274,7 +290,7 @@ void AcidRecFracSolver::checkVariables()
 			cell.u_next.xw = 0.0;
 	}
 }
-void AcidRecFracSolver::solveStep()
+bool AcidRecFracSolver::solveSmartStep()
 {
 	int cellIdx, varIdx;
 	err_newton = 1.0;
@@ -282,7 +298,7 @@ void AcidRecFracSolver::solveStep()
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
 	bool isHarder = (curTimePeriod == 0) ? false : true;
-	bool isInit = true;// (cur_t < 0.001 / t_dim) ? false : true;
+    bool isInit = false;// (cur_t < 0.001 / t_dim) ? false : true;
 
 	auto continueIterations = [this]()
 	{
@@ -304,24 +320,31 @@ void AcidRecFracSolver::solveStep()
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);
-		copySolution(solver.getSolution());
+		
+        if (init_step_res.back() >= 2.0 * final_step_res.back())
+        {
+            copySolution(solver.getSolution());
 
-		checkStability();
-		auto err = convergance();
-		err_newton = fmax(err[0].err, err[1].err);
-		if (iterations == 0)
-			err_newton_first = err_newton;
+            checkStability();
+            auto err = convergance();
+            err_newton = fmax(err[0].err, err[1].err);
+            if (iterations == 0)
+                err_newton_first = err_newton;
 
-		averValue(averVal);
-		for (int i = 0; i < AcidRecFrac::var_size; i++)
-			dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
-		averValPrev = averVal;
+            averValue(averVal);
+            for (int i = 0; i < AcidRecFrac::var_size; i++)
+                dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
+            averValPrev = averVal;
+        }
+        else
+            return false;
 		iterations++;
 	}
 
 	checkVariables();
 
 	cout << "Newton Iterations = " << iterations << endl;
+    return true;
 }
 void AcidRecFracSolver::computeJac()
 {
