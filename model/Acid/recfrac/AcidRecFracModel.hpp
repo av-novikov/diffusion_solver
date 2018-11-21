@@ -223,7 +223,7 @@ namespace acidrecfrac
             double vel_x, vel_y, vel_z;
             vel_x = transmissivity * (cells_poro[neighbor[3]].u_next.p - cells_poro[neighbor[2]].u_next.p) / (cells_poro[neighbor[3]].x - cells_poro[neighbor[2]].x);
             if (cell.type != PoroType::WELL_LAT)
-                vel_y = (cells_poro[neighbor[1]].u_next.p - cells_poro[neighbor[0]].u_next.p) / (cells_poro[neighbor[1]].y - cells_poro[neighbor[0]].y);
+                vel_y = transmissivity * (cells_poro[neighbor[1]].u_next.p - cells_poro[neighbor[0]].u_next.p) / (cells_poro[neighbor[1]].y - cells_poro[neighbor[0]].y);
             else
                 vel_y = getFlowLeak(cells_frac[getFracNebr(cell.num)]).value();
             vel_z = transmissivity * (cells_poro[neighbor[5]].u_next.p - cells_poro[neighbor[4]].u_next.p) / (cells_poro[neighbor[5]].z - cells_poro[neighbor[4]].z);

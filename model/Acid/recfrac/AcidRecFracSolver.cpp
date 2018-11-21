@@ -192,20 +192,21 @@ void AcidRecFracSolver::start()
 
 	while (cur_t < Tt)
 	{
-		control();
         model->snapshot_all(step_idx++);
+        cout << "---------------------NEW TIME STEP---------------------" << endl;
+		control();
+        cout << setprecision(6);
+        cout << "time = " << cur_t << endl;
         while (!doNextSmartStep())
         {
+            cout << "------------------REPEATED TIME STEP------------------" << endl;
             cur_t -= model->ht;
             model->ht /= 1.5;
-            cout << "------------------REPEATED TIME STEP------------------" << endl;
+            cur_t += model->ht;
             cout << setprecision(6);
             cout << "time = " << cur_t << endl;
         }
 		copyTimeLayer();
-		cout << "---------------------NEW TIME STEP---------------------" << endl;
-		cout << setprecision(6);
-		cout << "time = " << cur_t << endl;
 	}
 	model->snapshot_all(step_idx);
 	writeData();
