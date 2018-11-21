@@ -120,7 +120,7 @@ namespace acidrecfrac
 		double surf_init;
 		double activation_energy;
 		double reaction_const;
-		inline adouble getReactionRate(double m0, double m_max, adouble m) const
+		inline adouble getReactionRate(const double m0, const double m_max, const adouble m) const
 		{
 			return reaction_const * surf_init * pow((m_max - m) / (m_max - m0), 2) *
 				exp(-activation_energy / Component::R / Component::T);

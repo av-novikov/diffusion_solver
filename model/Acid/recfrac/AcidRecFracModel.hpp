@@ -164,7 +164,7 @@ namespace acidrecfrac
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
 		};
-		inline adouble getReactionRate(PoroTapeVariable& var, const Skeleton_Props& props) const
+		inline adouble getReactionRate(const PoroTapeVariable& var, const Skeleton_Props& props) const
 		{
 			adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
 			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
@@ -172,6 +172,14 @@ namespace acidrecfrac
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
+        inline adouble getReactionRateOutput(const PoroVariable& var, const Skeleton_Props& props) const
+        {
+            adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
+            adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
+            adouble tmp1;
+            condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
+            return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
+        };
 		inline const int getFracOut(const int idx) const
 		{
 			return int(idx / (cellsNum_y_frac + 1)) * (cellsNum_y_frac + 1) + cellsNum_y_frac;
@@ -191,10 +199,36 @@ namespace acidrecfrac
 			const auto& props = *poro_cell.props;
 			double tmp1 = nebr.p.value();
 			double tmp2 = next.p.value();
-			return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
-				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
-				(nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
+            double tmp3 = props.getPermCoseni(next.m, next.p).value();
+            double tmp4 = props_w.getKr(next.sw, next.m, &props).value();
+            double tmp5 = 1.0 / (poro_cell.hy + poro_beta.hy);
+            double tmp6 = next.sw.value();
+            double tmp7 = next.m.value();
+            if(next.sw.value() != 0.0)
+			    return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
+    				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
+	    			(nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
+            else
+                return -props.getPermCoseni(next.m, next.p) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / 
+                next.m * (nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
 		};
+        inline std::array<double, 3> getPoroWaterVelocity(const PoroCell& cell)
+        {
+            int neighbor[NEBRS_NUM];
+            getPoroNeighborIdx(cell.num, neighbor);
+            const auto& next = cell.u_next;
+
+            double transmissivity = -cell.props->getPermCoseni(next.m, next.p).value() * 
+                props_w.getKr(next.sw, next.m, cell.props).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value();
+            double vel_x, vel_y, vel_z;
+            vel_x = transmissivity * (cells_poro[neighbor[3]].u_next.p - cells_poro[neighbor[2]].u_next.p) / (cells_poro[neighbor[3]].x - cells_poro[neighbor[2]].x);
+            if (cell.type != PoroType::WELL_LAT)
+                vel_y = (cells_poro[neighbor[1]].u_next.p - cells_poro[neighbor[0]].u_next.p) / (cells_poro[neighbor[1]].y - cells_poro[neighbor[0]].y);
+            else
+                vel_y = getFlowLeak(cells_frac[getFracNebr(cell.num)]).value();
+            vel_z = transmissivity * (cells_poro[neighbor[5]].u_next.p - cells_poro[neighbor[4]].u_next.p) / (cells_poro[neighbor[5]].z - cells_poro[neighbor[4]].z);
+            return{ vel_x, vel_y, vel_z };
+        };
 		/*inline double getFracDistance(const int idx1, const int idx2) const
 		{
 			const auto& cell1 = cells_frac[idx1];

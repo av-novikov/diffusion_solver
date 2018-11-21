@@ -1233,7 +1233,7 @@ acidrecfrac::Properties* getProps()
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
 
-	props->cellsNum_x = 20;
+	props->cellsNum_x = 40;
 	props->cellsNum_y_frac = 10;
 	props->cellsNum_y_poro = 75;
 	props->cellsNum_z = 1;

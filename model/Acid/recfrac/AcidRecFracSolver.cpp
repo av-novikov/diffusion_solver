@@ -126,7 +126,7 @@ void AcidRecFracSolver::analyzeNewtonConvergence()
 {
     DECREASE_STEP = false;
     INCREASE_STEP = true;
-    for (int i = 0; i < iterations - 1; i++)
+    for (int i = 0; i < int(init_step_res.size()) - 1; i++)
     {
         if (init_step_res[i] > MAX_INIT_RES1)
         {

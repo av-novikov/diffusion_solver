@@ -1309,9 +1309,11 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	width->SetName("Width");
 	auto type = vtkSmartPointer<vtkDoubleArray>::New();
 	type->SetName("Type");
+    //auto reaction_frac = vtkSmartPointer<vtkDoubleArray>::New();
+   // reaction_frac->SetName("ReactionSpeed");
 
 	int np = ny * (nz - 1);
-	double vel[3];
+	std::array<double,3> vel;
 	for (int k = 0; k < nz - 2; k++)
 	{
 		for (int j = 0; j < ny - 1; j++)
@@ -1335,6 +1337,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			width->InsertNextValue(model->widths[k] * r_dim);
 			v_leak->InsertNextValue(0.0);
 			type->InsertNextValue(cell.type);
+            //reaction_frac->InsertNextValue(0.0);
 
 			hex->GetPointIds()->SetId(0, j + k * ny);
 			hex->GetPointIds()->SetId(1, j + 1 + k * ny);
@@ -1411,6 +1414,11 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	conc_s_poro->SetName("SaltConcentration");
     auto trans_poro = vtkSmartPointer<vtkDoubleArray>::New();
     trans_poro->SetName("Transmissibility");
+    auto reaction_poro = vtkSmartPointer<vtkDoubleArray>::New();
+    reaction_poro->SetName("ReactionSpeed");
+    auto vel_poro = vtkSmartPointer<vtkDoubleArray>::New();
+    vel_poro->SetName("Velocity");
+    vel_poro->SetNumberOfComponents(3);
 
     double sum_width, sum_trans;
 	int np_poro = ny_poro * (nz - 1);
@@ -1442,6 +1450,21 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
                     sum_trans += M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim) * cell.hy * r_dim;
                     trans_poro->InsertNextValue(sum_trans);
 
+                    if (cell.type != PoroType::WELL_LAT)
+                    {
+                        reaction_poro->InsertNextValue(model->getReactionRateOutput(next, *cell.props).value() * P_dim * t_dim / r_dim / r_dim);
+                        vel = model->getPoroWaterVelocity(cell);
+                        vel[0] *= r_dim / t_dim;    vel[1] *= r_dim / t_dim;    vel[2] *= r_dim / t_dim;
+                        vel_poro->InsertNextTuple(&vel[0]);
+                    }
+                    else
+                    {
+                        reaction_poro->InsertNextValue(0.0);
+                        vel[0] = 0.0;   vel[2] = 0.0;
+                        vel[1] = model->getFlowLeak(model->cells_frac[model->getFracNebr(cell.num)]).value() * r_dim / t_dim;
+                        vel_poro->InsertNextTuple(&vel[0]);
+                    }
+
 					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
 					hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
 					hex->GetPointIds()->SetId(2, j + 1 + k * ny_poro + (i + 1) * np_poro);
@@ -1472,6 +1495,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	fd_frac->AddArray(width);
 	fd_frac->AddArray(v_leak);
 	fd_frac->AddArray(type);
+    //fd_frac->AddArray(reaction_frac);
 
 	grid_poro->SetCells(VTK_HEXAHEDRON, hexs_poro);
 	vtkCellData* fd_poro = grid_poro->GetCellData();
@@ -1485,6 +1509,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	fd_poro->AddArray(conc_s_poro);
 	fd_poro->AddArray(conc_co2_poro);
     fd_poro->AddArray(trans_poro);
+    fd_poro->AddArray(reaction_poro);
+    fd_poro->AddArray(vel_poro);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
