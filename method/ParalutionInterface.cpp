@@ -92,15 +92,7 @@ void ParSolver::SolveBiCGStab()
     iter_num = bicgstab.GetIterationCount();
     final_res = bicgstab.GetCurrentResidual();
     status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
-	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
-	//bicgstab.RecordHistory(resHistoryFile);
 	//writeSystem();
-
-	//getResiduals();
-	//cout << "Initial residual: " << initRes << endl;
-	//cout << "Final residual: " << finalRes << endl;
-	//cout << "Number of iterations: " << iterNum << endl << endl;
-
 	bicgstab.Clear();
 }
 void ParSolver::SolveBiCGStab_Simple(bool isHarder)
@@ -130,14 +122,7 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
     iter_num = bicgstab.GetIterationCount();
     final_res = bicgstab.GetCurrentResidual();
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
-	//if(status == RETURN_TYPE::DIV_CRITERIA || status == RETURN_TYPE::MAX_ITER)
-	//bicgstab.RecordHistory(resHistoryFile);
-	//writeSystem();
-	//getResiduals();
-	//cout << "Initial residual: " << initRes << endl;
-	//cout << "Final residual: " << finalRes << endl;
-	//cout << "Number of iterations: " << iterNum << endl << endl;
-
+	writeSystem();
 	bicgstab.Clear();
 }
 void ParSolver::SolveGMRES()
@@ -159,15 +144,7 @@ void ParSolver::SolveGMRES()
     iter_num = gmres.GetIterationCount();
     final_res = gmres.GetCurrentResidual();
     status = static_cast<RETURN_TYPE>(gmres.GetSolverStatus());
-	//gmres.RecordHistory(resHistoryFile);
 	//writeSystem();
-
-
-	//getResiduals();
-	//cout << "Initial residual: " << initRes << endl;
-	//cout << "Final residual: " << finalRes << endl;
-	//cout << "Number of iterations: " << iterNum << endl << endl;
-
 	gmres.Clear();
 }
 void ParSolver::getResiduals()

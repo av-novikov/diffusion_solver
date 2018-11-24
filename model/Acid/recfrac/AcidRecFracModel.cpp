@@ -90,8 +90,10 @@ void AcidRecFrac::setProps(Properties& props)
 void AcidRecFrac::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
-	R_dim = props_frac.l2 / 5.0;
-	t_dim = 3600.0;
+	R_dim = props_frac.l2 / 8.0;
+	//R_dim = props_frac.l2 / 5.0;
+	t_dim = 1.7 * 3600.0;
+	//t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
 	// Temporal properties
 	ht /= t_dim;
@@ -291,7 +293,7 @@ void AcidRecFrac::buildPoroGrid()
 	Volume_poro = 0.0;
 
 	// Grid sparcity parameters
-	int mult_num = cellsNum_y_poro / 2;
+	int mult_num = 2 * cellsNum_y_poro / 3;
     double dist = 2.0 * props_frac.w2;
 
     double delta2 = 0.95 * dist;
