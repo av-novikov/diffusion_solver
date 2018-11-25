@@ -196,7 +196,7 @@ void AcidRecFracSolver::start()
         cout << "---------------------NEW TIME STEP---------------------" << endl;
 		control();
         cout << setprecision(6);
-        cout << "time = " << cur_t << endl;
+        cout << "time = " << cur_t * t_dim / 3600.0 << endl;
         while (!doNextSmartStep())
         {
             cout << "------------------REPEATED TIME STEP------------------" << endl;
@@ -204,7 +204,7 @@ void AcidRecFracSolver::start()
             model->ht /= 1.5;
             cur_t += model->ht;
             cout << setprecision(6);
-            cout << "time = " << cur_t << endl;
+            cout << "time = " << cur_t * t_dim / 3600.0 << endl;
         }
 		copyTimeLayer();
 	}

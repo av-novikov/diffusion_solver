@@ -60,6 +60,7 @@ namespace acidrecfrac
 		std::vector<PoroCell> cells_poro;
 		std::vector<FracCell> cells_frac;
 		double re;
+		double dist_x;
 		//FaceMap fmap_frac, fmap_poro, fmap_inter;
 		
 		// Temporary properties

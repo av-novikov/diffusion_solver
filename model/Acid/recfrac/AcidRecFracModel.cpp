@@ -90,8 +90,8 @@ void AcidRecFrac::setProps(Properties& props)
 void AcidRecFrac::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
-	R_dim = props_frac.l2 / 8.0;
-	//R_dim = props_frac.l2 / 5.0;
+	//R_dim = props_frac.l2 / 8.0;
+	R_dim = props_frac.l2 / 5.0;
 	t_dim = 1.7 * 3600.0;
 	//t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
@@ -168,6 +168,11 @@ void AcidRecFrac::buildFracGrid()
 	double cx = 0.0, cy = 0.0, cz = 0.0;
 	FracType cur_type;
 
+	dist_x = props_frac.l2 / 100.0;
+	double x_prev = dist_x;
+	double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
+	double x_logStep = x_logMax / (double)cellsNum_x;
+
 	// Left border
 	cur_type = FracType::FRAC_IN;
 	hx = 0.0;	 cx = 0.0;
@@ -206,6 +211,10 @@ void AcidRecFrac::buildFracGrid()
 	hx = props_frac.l2 / cellsNum_x;	 cx = hx / 2;
 	for (int j = 0; j < cellsNum_x; j++)
 	{
+		cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
+		hx = x_prev * (exp(x_logStep) - 1.0);
+		x_prev *= exp(x_logStep);
+
 		for (int k = 0; k < cellsNum_z + 2; k++)
 		{
 			if (k == 0)
@@ -306,6 +315,10 @@ void AcidRecFrac::buildPoroGrid()
     double logMax1 = log((dist - delta1) / (props_frac.w2 - delta1));
     double logStep1 = logMax1 / (double)mult_num;
 
+	double x_prev = dist_x;
+	double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
+	double x_logStep = x_logMax / (double)cellsNum_x;
+
     double r_prev, delta = delta1, logStep = logStep1;
 
 	double hy = 0.0, hx = 0.0, hz = 0.0;
@@ -369,6 +382,10 @@ void AcidRecFrac::buildPoroGrid()
 	hx = props_frac.l2 / cellsNum_x;	 cx = hx / 2;
 	for (int j = 0; j < cellsNum_x; j++)
 	{
+		cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
+		hx = x_prev * (exp(x_logStep) - 1.0);
+		x_prev *= exp(x_logStep);
+
 		for (int k = 0; k < cellsNum_z + 2; k++)
 		{
 			if (k == 0)
@@ -774,12 +791,12 @@ PoroTapeVariable AcidRecFrac::solvePoroLeft(const PoroCell& cell, const Regime r
 
 	PoroTapeVariable res;
 	res.m = ((next.m - nebr_poro1.m) /*- (nebr_poro1.m - nebr_poro2.m) *
-		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim / 5.0;
+		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim * 2.0;
 	res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
-		(dist0 + dist1) / (dist1 + dist2)) / P_dim / 5.0;
-	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim / 5.0;
-	res.xw = (next.xw - (1.0 - next.xa)) / P_dim / 5.0;
-	res.xs = next.xs / P_dim / 5.0;
+		(dist0 + dist1) / (dist1 + dist2)) / P_dim * 2.0;
+	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim * 2.0;
+	res.xw = (next.xw - (1.0 - next.xa)) / P_dim * 2.0;
+	res.xs = next.xs / P_dim * 2.0;
 
 	if (reg == INJECTION || reg == STOP)
 	{
