@@ -112,7 +112,7 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-18, 1.E-30, 1E+4, max_iter);
+	bicgstab.Init(1.E-30, 1.E-18, 1E+4, max_iter);
 	Mat.info();
 
 	bicgstab.RecordResidualHistory();
@@ -122,7 +122,7 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
     iter_num = bicgstab.GetIterationCount();
     final_res = bicgstab.GetCurrentResidual();
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
-	writeSystem();
+	//writeSystem();
 	bicgstab.Clear();
 }
 void ParSolver::SolveGMRES()

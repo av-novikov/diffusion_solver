@@ -39,11 +39,11 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 
-	CONV_W2 = 1.e-4;		CONV_VAR = 1.e-10;
+	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-12;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES1 = 5.E-9;
-    MAX_INIT_RES2 = 2.E-9;
+    MAX_INIT_RES1 = 3.E-9;
+    MAX_INIT_RES2 = 1.E-9;
 
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
