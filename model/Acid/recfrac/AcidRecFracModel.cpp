@@ -168,10 +168,10 @@ void AcidRecFrac::buildFracGrid()
 	double cx = 0.0, cy = 0.0, cz = 0.0;
 	FracType cur_type;
 
-	dist_x = props_frac.l2 / 100.0;
-	double x_prev = dist_x;
-	double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
-	double x_logStep = x_logMax / (double)cellsNum_x;
+	//dist_x = props_frac.l2 / 100.0;
+	//double x_prev = dist_x;
+	//double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
+	//double x_logStep = x_logMax / (double)cellsNum_x;
 
 	// Left border
 	cur_type = FracType::FRAC_IN;
@@ -211,9 +211,9 @@ void AcidRecFrac::buildFracGrid()
 	hx = props_frac.l2 / cellsNum_x;	 cx = hx / 2;
 	for (int j = 0; j < cellsNum_x; j++)
 	{
-		cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
-		hx = x_prev * (exp(x_logStep) - 1.0);
-		x_prev *= exp(x_logStep);
+		//cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
+		//hx = x_prev * (exp(x_logStep) - 1.0);
+		//x_prev *= exp(x_logStep);
 
 		for (int k = 0; k < cellsNum_z + 2; k++)
 		{
@@ -315,9 +315,9 @@ void AcidRecFrac::buildPoroGrid()
     double logMax1 = log((dist - delta1) / (props_frac.w2 - delta1));
     double logStep1 = logMax1 / (double)mult_num;
 
-	double x_prev = dist_x;
-	double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
-	double x_logStep = x_logMax / (double)cellsNum_x;
+	//double x_prev = dist_x;
+	//double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
+	//double x_logStep = x_logMax / (double)cellsNum_x;
 
     double r_prev, delta = delta1, logStep = logStep1;
 
@@ -382,9 +382,9 @@ void AcidRecFrac::buildPoroGrid()
 	hx = props_frac.l2 / cellsNum_x;	 cx = hx / 2;
 	for (int j = 0; j < cellsNum_x; j++)
 	{
-		cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
-		hx = x_prev * (exp(x_logStep) - 1.0);
-		x_prev *= exp(x_logStep);
+		//cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
+		//hx = x_prev * (exp(x_logStep) - 1.0);
+		//x_prev *= exp(x_logStep);
 
 		for (int k = 0; k < cellsNum_z + 2; k++)
 		{
