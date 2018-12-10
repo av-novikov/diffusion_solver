@@ -48,6 +48,7 @@ namespace acidrecfrac
 		int options[4];
 		int repeat;
 
+		double cfl_x, cfl_y, cfl;
         void analyzeNewtonConvergence();
 		void checkVariables();
 		void checkStability();

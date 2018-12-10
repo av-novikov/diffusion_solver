@@ -12,6 +12,7 @@ AcidRecFrac::AcidRecFrac()
 	grav = 9.8;
 	Volume_frac = Volume_poro = 0.0;
 	injected_sol_volume = injected_acid_volume = 0.0;
+	max_vel_x = max_vel_y = 0.0;
 }
 AcidRecFrac::~AcidRecFrac()
 {
@@ -943,6 +944,12 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[3]].hz) + grav * props_w.dens_stc / 2.0);
 	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cells_frac[neighbor[4]].hx);
 	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[5]].hx);
+	if (max_vel_x < fabs(vx_minus.value()))
+		max_vel_x = fabs(vx_minus.value());
+	if (max_vel_x < fabs(vx_plus.value()))
+		max_vel_x = fabs(vx_plus.value());
+	if (max_vel_y < fabs(vL.value()))
+		max_vel_y = fabs(vL.value());
 
 	adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[0]].hy);
 	adouble diff_plus, c_y_plus, c_y_minus;

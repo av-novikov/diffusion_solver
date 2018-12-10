@@ -61,7 +61,7 @@ namespace acidrecfrac
 		std::vector<FracCell> cells_frac;
 		double re;
 		double dist_x;
-		//FaceMap fmap_frac, fmap_poro, fmap_inter;
+		double max_vel_x, max_vel_y;
 		
 		// Temporary properties
 		double ht, ht_min, ht_max;
