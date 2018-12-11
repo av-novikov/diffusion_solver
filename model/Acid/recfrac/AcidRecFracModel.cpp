@@ -934,16 +934,22 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	const auto& nebr_z_minus = x_frac[neighbor[4]];
 	const auto& nebr_z_plus = x_frac[neighbor[5]];
 
+    const auto& cell_x_minus = cells_frac[neighbor[2]];
+    const auto& cell_x_plus = cells_frac[neighbor[3]];
+    const auto& cell_y_minus = cells_frac[neighbor[0]];
+    const auto& cell_z_minus = cells_frac[neighbor[4]];
+    const auto& cell_z_plus = cells_frac[neighbor[5]];
+
 	double y_plus = cell.y + cell.hy / 2.0;
 	double y_minus = cell.y - cell.hy / 2.0;
 	adouble vL = getFlowLeak(cell);
 	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));	
 	adouble vy_minus = vL * (1.5 * (y_minus / props_frac.w2) - 0.5 * y_minus * y_minus * y_minus / props_frac.w2 / props_frac.w2 / props_frac.w2);
 	adouble vy_plus = vL * (1.5 * (y_plus / props_frac.w2) - 0.5 * y_plus * y_plus * y_plus / props_frac.w2 / props_frac.w2 / props_frac.w2);
-	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cells_frac[neighbor[2]].hz) - grav * props_w.dens_stc / 2.0);
-	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cells_frac[neighbor[3]].hz) + grav * props_w.dens_stc / 2.0);
-	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cells_frac[neighbor[4]].hx);
-	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cells_frac[neighbor[5]].hx);
+	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cell_z_minus.hz) - grav * props_w.dens_stc / 2.0);
+	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cell_z_plus.hz) + grav * props_w.dens_stc / 2.0);
+	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cell_x_minus.hx);
+	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cell_x_plus.hx);
 	if (max_vel_x < fabs(vx_minus.value()))
 		max_vel_x = fabs(vx_minus.value());
 	if (max_vel_x < fabs(vx_plus.value()))
@@ -951,7 +957,7 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	if (max_vel_y < fabs(vL.value()))
 		max_vel_y = fabs(vL.value());
 
-	adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[0]].hy);
+	/*adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[0]].hy);
 	adouble diff_plus, c_y_plus, c_y_minus;
 	if (cell.type == FracType::FRAC_OUT)
 	{
@@ -963,17 +969,64 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 		diff_plus = 2.0 * props_w.D_e * (next.c - x_frac[neighbor[1]].c) / (cell.hy + cells_frac[neighbor[1]].hy);
 		c_y_plus = (reg == INJECTION) ? next.c : x_frac[neighbor[1]].c;
 	}
-	c_y_minus = (reg == INJECTION) ? x_frac[neighbor[0]].c : next.c;
+	c_y_minus = (reg == INJECTION) ? x_frac[neighbor[0]].c : next.c;*/
 
 	const double sx = cell.hy * cell.hz, sy = cell.hx * cell.hz, sz = cell.hx * cell.hy;
 	res.p = ((sx * (vx_minus + vx_plus) + sz * (vz_minus + vz_plus) - sy * (vy_plus - vy_minus)) / alpha / sx * (cell.hx + cells_frac[neighbor[4]].hx));
 	res.p *= cell.V;
-	res.c = ((next.c - cell.u_prev.c) * cell.V - ht *
+	/*res.c = ((next.c - cell.u_prev.c) * cell.V - ht *
 		(sx * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[4]])].c * vx_minus +
 			x_frac[getUpwindIdx(cell, cells_frac[neighbor[5]])].c * vx_plus) +
 			sy * (c_y_minus * vy_minus - c_y_plus * vy_plus - diff_plus - diff_minus) +
 			sz * (x_frac[getUpwindIdx(cell, cells_frac[neighbor[2]])].c * vz_minus +
-				x_frac[getUpwindIdx(cell, cells_frac[neighbor[3]])].c * vz_plus)));
+				x_frac[getUpwindIdx(cell, cells_frac[neighbor[3]])].c * vz_plus)));*/
+
+    const double vx1 = vx_minus.value();
+    const double vx2 = vx_plus.value();
+    const double vy1 = vy_minus.value();
+    const double vy2 = vy_plus.value();
+
+    double rx_minus1, rx_minus2, rx_plus1, rx_plus2, ry_minus1, ry_minus2, ry_plus1, ry_plus2, c_y_plus;
+    if (cell_x_minus.type == FracType::FRAC_IN)
+    {
+        rx_minus1 = cell.hx / 2.0;
+        rx_minus2 = cell_x_minus.hx / 2.0;
+    }
+    else
+    {
+        rx_minus1 = (cell.hx + fabs(vx_minus.value()) * ht) / 2.0;
+        rx_minus2 = (cell_x_minus.hx - fabs(vx_minus.value()) * ht) / 2.0;
+    }
+    rx_plus1 = (cell.hx - fabs(vx_plus.value()) * ht) / 2.0;
+    rx_plus2 = (cell_x_plus.hx + fabs(vx_plus.value()) * ht) / 2.0;
+    if (cell_y_minus.type == FracType::FRAC_BORDER)
+    {
+        ry_minus1 = cell.hy / 2.0;
+        ry_minus2 = cell_y_minus.hy / 2.0;
+    }
+    else
+    {
+        ry_minus1 = (cell.hy + fabs(vy_minus.value()) * ht) / 2.0;
+        ry_minus2 = (cell_y_minus.hy - fabs(vy_minus.value()) * ht) / 2.0;
+    }
+    ry_plus1 = (cell.hy - fabs(vy_plus.value()) * ht) / 2.0;
+    if (cell.type == FracType::FRAC_OUT)
+    {
+        ry_plus2 = fabs(vy_plus.value()) * ht / 2.0;
+        c_y_plus = cells_poro[neighbor[1]].u_prev.xa;
+    }
+    else
+    {
+        ry_plus2 = (cells_frac[neighbor[1]].hy + fabs(vy_plus.value()) * ht) / 2.0;
+        c_y_plus = cells_frac[neighbor[1]].u_prev.c;
+    }
+
+    res.c = (next.c - cell.u_prev.c) * cell.V + ht * (
+        sx * (fabs(vx_plus.value()) * (rx_plus1 * cell_x_plus.u_prev.c + rx_plus2 * cell.u_prev.c) / (rx_plus1 + rx_plus2) -
+                fabs(vx_minus.value()) * (rx_minus1 * cell_x_minus.u_prev.c + rx_minus2 * cell.u_prev.c) / (rx_minus1 + rx_minus2)) +
+        sy * (fabs(vy_plus.value()) * (ry_plus1 * c_y_plus + ry_plus2 * cell.u_prev.c) / (ry_plus1 + ry_plus2) -
+                fabs(vy_minus.value()) * (ry_minus1 * cell_y_minus.u_prev.c + ry_minus2 * cell.u_prev.c) / (ry_minus1 + ry_minus2)));
+
 	res.p /= 2.5;
 	res.c /= 2.5;
 	return res;
