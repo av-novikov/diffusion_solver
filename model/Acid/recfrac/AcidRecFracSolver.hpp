@@ -61,6 +61,9 @@ namespace acidrecfrac
 			for (int i = 0; i < strNum; i++)
 				ind_rhs[i] = i;
 		};
+
+		double MULT_UP, MULT_DOWN;
+
 	public:
 		AcidRecFracSolver(AcidRecFrac* _model);
 		~AcidRecFracSolver();

@@ -1020,12 +1020,12 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
         ry_plus2 = (cells_frac[neighbor[1]].hy + fabs(vy_plus.value()) * ht) / 2.0;
         c_y_plus = cells_frac[neighbor[1]].u_prev.c;
     }
-
-    res.c = (next.c - cell.u_prev.c) * cell.V + ht * (
-        sx * (fabs(vx_plus.value()) * (rx_plus1 * cell_x_plus.u_prev.c + rx_plus2 * cell.u_prev.c) / (rx_plus1 + rx_plus2) -
-                fabs(vx_minus.value()) * (rx_minus1 * cell_x_minus.u_prev.c + rx_minus2 * cell.u_prev.c) / (rx_minus1 + rx_minus2)) +
-        sy * (fabs(vy_plus.value()) * (ry_plus1 * c_y_plus + ry_plus2 * cell.u_prev.c) / (ry_plus1 + ry_plus2) -
-                fabs(vy_minus.value()) * (ry_minus1 * cell_y_minus.u_prev.c + ry_minus2 * cell.u_prev.c) / (ry_minus1 + ry_minus2)));
+	
+	adouble fx_plus = -vx_plus.value() * (rx_plus1 * cell_x_plus.u_prev.c + rx_plus2 * cell.u_prev.c) / (rx_plus1 + rx_plus2);
+	adouble fx_minus = vx_minus.value() * (rx_minus1 * cell_x_minus.u_prev.c + rx_minus2 * cell.u_prev.c) / (rx_minus1 + rx_minus2);
+	adouble fy_plus = 0.0;// vy_plus.value() * (ry_plus1 * c_y_plus + ry_plus2 * cell.u_prev.c) / (ry_plus1 + ry_plus2);
+	adouble fy_minus = 0.0;// vy_minus.value() * (ry_minus1 * cell_y_minus.u_prev.c + ry_minus2 * cell.u_prev.c) / (ry_minus1 + ry_minus2);
+    res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * (fx_plus - fx_minus) + sy * (fy_plus - fy_minus));
 
 	res.p /= 2.5;
 	res.c /= 2.5;

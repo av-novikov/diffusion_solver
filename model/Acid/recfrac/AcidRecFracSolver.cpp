@@ -45,6 +45,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
     MAX_INIT_RES1 = 3.E-9;
     MAX_INIT_RES2 = 1.E-9;
 
+	MULT_UP = MULT_DOWN = 1.5;
+
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_cells.dat", ofstream::out);
 	trans.open("snaps/Trans.dat", ofstream::out);
@@ -160,12 +162,21 @@ void AcidRecFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
+	MULT_UP = MULT_DOWN = 1.5;
+	if (INCREASE_STEP)
+	{
+		double cfl_new_x = model->max_vel_x * MULT_UP * model->ht / (model->props_frac.l2 / model->cellsNum_x);
+		double cfl_new_y = model->max_vel_y * MULT_UP * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
+		if (cfl_new_x + cfl_new_y > 0.5)
+			MULT_UP *= 0.49 / (cfl_new_x + cfl_new_y);
+	}
+
     analyzeNewtonConvergence();
     if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
                         (model->ht <= 0.5 * model->ht_max && curTimePeriod == 1)))
-        model->ht = model->ht * 1.5;
+        model->ht = model->ht * MULT_UP;
     else if (DECREASE_STEP)
-        model->ht = model->ht / 1.5;
+        model->ht = model->ht / MULT_DOWN;
 
 	/*if (model->ht <= model->ht_max * 5.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 0)
 		model->ht = model->ht * 1.5;
