@@ -52,6 +52,7 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	trans.open("snaps/Trans.dat", ofstream::out);
 	pvd_frac.open("snaps/AcidRecFrac_frac.pvd", std::ofstream::out);
 	pvd_poro.open("snaps/AcidRecFrac_poro.pvd", std::ofstream::out);
+    CFL.open("snaps/CFL.dat", std::ofstream::out);
 	pvd_frac << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd_poro << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd_frac << "\t<Collection>\n";
@@ -75,6 +76,8 @@ AcidRecFracSolver::~AcidRecFracSolver()
 	pvd_poro << "\t</Collection>\n";
 	pvd_poro << "</VTKFile>\n";
 	pvd_poro.close();
+
+    CFL.close();
 }
 void AcidRecFracSolver::writeData()
 {
@@ -162,16 +165,20 @@ void AcidRecFracSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	MULT_UP = MULT_DOWN = 1.5;
-	if (INCREASE_STEP)
-	{
-		double cfl_new_x = model->max_vel_x * MULT_UP * model->ht / (model->props_frac.l2 / model->cellsNum_x);
-		double cfl_new_y = model->max_vel_y * MULT_UP * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
-		if (cfl_new_x + cfl_new_y > 0.5)
-			MULT_UP *= 0.49 / (cfl_new_x + cfl_new_y);
-	}
-
     analyzeNewtonConvergence();
+
+    cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
+    cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
+    MULT_UP = MULT_DOWN = 1.5;
+    if (cfl_x + cfl_y > 0.98)
+    {
+        INCREASE_STEP = false;
+        DECREASE_STEP = true;
+        MULT_DOWN = (cfl_x + cfl_y) / 0.98;
+    }
+    else if (INCREASE_STEP && (cfl_x + cfl_y) * MULT_UP > 0.98)
+        MULT_UP = 0.98 / (cfl_x + cfl_y);
+
     if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
                         (model->ht <= 0.5 * model->ht_max && curTimePeriod == 1)))
         model->ht = model->ht * MULT_UP;
@@ -212,6 +219,7 @@ void AcidRecFracSolver::start()
 		cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
 		model->max_vel_x = model->max_vel_y = 0.0;
 		cfl = cfl_x + cfl_y;
+        CFL << cfl_x << "\t" << cfl_y << "\t" << cfl << std::endl;
 		std::cout << "cfl_x = " << cfl_x << "\tcfl_y = " << cfl_y << "\tcfl = " << cfl << std::endl;
         while (!doNextSmartStep())
         {

@@ -33,7 +33,7 @@ namespace acidrecfrac
 		double err_newton_first, err_newton;
 		int step_idx;
 
-		std::ofstream S, P, qcells, pvd_frac, pvd_poro, trans;
+		std::ofstream S, P, qcells, pvd_frac, pvd_poro, trans, CFL;
 		ParSolver solver;
 
 		int strNum;

@@ -1025,7 +1025,10 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	adouble fx_minus = vx_minus.value() * (rx_minus1 * cell_x_minus.u_prev.c + rx_minus2 * cell.u_prev.c) / (rx_minus1 + rx_minus2);
 	adouble fy_plus = 0.0;// vy_plus.value() * (ry_plus1 * c_y_plus + ry_plus2 * cell.u_prev.c) / (ry_plus1 + ry_plus2);
 	adouble fy_minus = 0.0;// vy_minus.value() * (ry_minus1 * cell_y_minus.u_prev.c + ry_minus2 * cell.u_prev.c) / (ry_minus1 + ry_minus2);
-    res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * (fx_plus - fx_minus) + sy * (fy_plus - fy_minus));
+    //res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * (fx_plus - fx_minus) + sy * (fy_plus - fy_minus));
+
+    res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * vx_minus.value() * (cell.u_prev.c - cell_x_minus.u_prev.c) + 
+                                                        sy * vy_minus.value() * (cell.u_prev.c - cell_y_minus.u_prev.c));
 
 	res.p /= 2.5;
 	res.c /= 2.5;
