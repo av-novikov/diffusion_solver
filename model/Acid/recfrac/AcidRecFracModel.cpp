@@ -12,7 +12,7 @@ AcidRecFrac::AcidRecFrac()
 	grav = 9.8;
 	Volume_frac = Volume_poro = 0.0;
 	injected_sol_volume = injected_acid_volume = 0.0;
-	max_vel_x = max_vel_y = 0.0;
+	max_vel_x = max_vel_y = max_vel_z = 0.0;
 }
 AcidRecFrac::~AcidRecFrac()
 {
@@ -956,6 +956,10 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 		max_vel_x = fabs(vx_plus.value());
 	if (max_vel_y < fabs(vL.value()))
 		max_vel_y = fabs(vL.value());
+    if (max_vel_z < fabs(vz_plus.value()))
+        max_vel_z = fabs(vz_plus.value());
+    if (max_vel_z < fabs(vz_minus.value()))
+        max_vel_z = fabs(vz_minus.value());
 
 	/*adouble diff_minus = 2.0 * props_w.D_e * (next.c - nebr_y_minus.c) / (cell.hy + cells_frac[neighbor[0]].hy);
 	adouble diff_plus, c_y_plus, c_y_minus;
@@ -1029,7 +1033,17 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	adouble fx_minus = cell_x_minus.u_prev.c * vx_minus.value();
 	adouble fy_plus = next.c * vy_plus.value();
 	adouble fy_minus = cell_y_minus.u_prev.c * vy_minus.value();
-	res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * (fx_plus - fx_minus) + sy * (fy_plus - fy_minus));
+    adouble fz_plus, fz_minus;
+    if(cell.u_prev.p > cell_z_plus.u_prev.p)
+        fz_plus = -next.c * vz_plus.value();
+    else
+        fz_plus = -cell_z_plus.u_prev.c * vz_plus.value();
+    if (cell.u_prev.p > cell_z_minus.u_prev.p)
+        fz_minus = next.c * vz_minus.value();
+    else
+        fz_minus = cell_z_minus.u_prev.c * vz_minus.value();
+
+	res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * (fx_plus - fx_minus) + sy * (fy_plus - fy_minus) + sz * (fz_plus - fz_minus));
     //res.c = (next.c - cell.u_prev.c) * cell.V + ht * (sx * vx_minus.value() * (cell.u_prev.c - cell_x_minus.u_prev.c) + 
     //                                                    sy * vy_minus.value() * (cell.u_prev.c - cell_y_minus.u_prev.c));
 
