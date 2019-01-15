@@ -1223,7 +1223,7 @@ acidrecfrac::Properties* getProps()
 	props->rates.push_back(0.0);
 	props->cs.push_back(0.15);
 	props->cs.push_back(0.0);
-	props->max_sol_volume = 25.0;
+	props->max_sol_volume = 50.0;
 
 	props->props_frac.l2 = 240.0;
 	props->props_frac.w2 = 0.001;
@@ -1233,7 +1233,7 @@ acidrecfrac::Properties* getProps()
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
 
-	props->cellsNum_x = 10;
+	props->cellsNum_x = 20;
 	props->cellsNum_y_frac = 10;
 	props->cellsNum_y_poro = 75;
 	props->cellsNum_z = 1;
