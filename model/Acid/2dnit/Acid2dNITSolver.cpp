@@ -7,9 +7,9 @@ using namespace acid2dnit;
 
 Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Acid2dNIT>(_model)
 {
-	//P.open("snaps/P.dat", ofstream::out);
-	//S.open("snaps/S.dat", ofstream::out);
-	//qcells.open("snaps/q_cells.dat", ofstream::out);
+	P.open("snaps/P.dat", ofstream::out);
+	S.open("snaps/S.dat", ofstream::out);
+	qcells.open("snaps/q_cells.dat", ofstream::out);
 	//temp.open("snaps/temp.dat", ofstream::out);
 	const int strNum = var_size * model->cellsNum;
 	ind_i = new int[stencil * var_size * strNum];
@@ -29,12 +29,16 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	pvd.open("snaps/Acid2dNIT.pvd", std::ofstream::out);
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
+
+    MAX_INIT_RES1 = 3.E-9;
+    MAX_INIT_RES2 = 1.E-9;
+    MULT_UP = MULT_DOWN = 1.5;
 }
 Acid2dNITSolver::~Acid2dNITSolver()
 {
-	//P.close();
-	//S.close();
-	//qcells.close();
+	P.close();
+	S.close();
+	qcells.close();
 	//temp.close();
 	skin.close();
 
@@ -56,7 +60,7 @@ void Acid2dNITSolver::writeData()
 	pvd << "0\" file=\"Acid2dNIT_" + std::to_string(step_idx) + ".vtp\"/>\n";
 
 	skin << cur_t * t_dim / 3600.0 << "\t" << model->skin << endl;
-/*	double p = 0.0, s_w = 0.0, s_o = 0.0;
+	double p = 0.0, s_w = 0.0, s_o = 0.0, q = 0.0;
 
 	qcells << cur_t * t_dim / 3600.0;
 
@@ -64,13 +68,21 @@ void Acid2dNITSolver::writeData()
 	for (it = model->Qcell.begin(); it != model->Qcell.end(); ++it)
 	{
 		p += model->cells[it->first].u_next.p * model->P_dim;
-		s_w += model->cells[it->first].u_next.s_w;
-		s_o += model->cells[it->first].u_next.s_o;
+		s_w += model->cells[it->first].u_next.sw;
+		s_o += (1.0 - model->cells[it->first].u_next.sw);
+        q += model->getRate(it->first);
 		if (model->leftBoundIsRate)
 			qcells << "\t" << it->second * model->Q_dim * 86400.0;
 		else
-			qcells << "\t" << model->getRate(it->first) * model->Q_dim * 86400.0;
+			qcells << "\t" << q * model->Q_dim * 86400.0;
 	}
+    
+    model->injected_sol_volume -= q * model->ht;
+    model->injected_acid_volume -= q * model->xa * model->ht;
+    qcells << "\t" << cur_t * t_dim / 3600.0;
+    qcells << "\t" << -q * model->Q_dim * 86400.0;
+    qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
+    qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
 
 	P << cur_t * t_dim / 3600.0 <<
 		"\t" << p / (double)(model->Qcell.size()) << endl;
@@ -80,7 +92,6 @@ void Acid2dNITSolver::writeData()
 		"\t" << 1.0 - (s_w + s_o) / (double)(model->Qcell.size()) << endl;
 
 	qcells << endl;
-	*/
 }
 void Acid2dNITSolver::start()
 {
@@ -105,6 +116,33 @@ void Acid2dNITSolver::start()
 		model->snapshot_all(step_idx);
 	writeData();
 }
+void Acid2dNITSolver::analyzeNewtonConvergence()
+{
+    DECREASE_STEP = false;
+    INCREASE_STEP = true;
+    for (int i = 0; i < int(init_step_res.size()) - 1; i++)
+    {
+        if (init_step_res[i] > MAX_INIT_RES1)
+        {
+            DECREASE_STEP = true;
+            INCREASE_STEP = false;
+            break;
+        }
+        if (init_step_res[i] > MAX_INIT_RES2)
+        {
+            DECREASE_STEP = false;
+            INCREASE_STEP = false;
+            break;
+        }
+        if (init_step_res[i + 1] >= init_step_res[i])
+        {
+            INCREASE_STEP = false;
+            if (iterations > 4)
+                DECREASE_STEP = true;
+            break;
+        }
+    }
+}
 void Acid2dNITSolver::control()
 {
 	writeData();
@@ -120,6 +158,23 @@ void Acid2dNITSolver::control()
 		model->ht = model->ht * 1.5;
 	else if (iterations > 6 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;
+
+    if (/*cur_t >= model->period[curTimePeriod]*/ model->injected_sol_volume >= model->max_sol_volume && curTimePeriod == 0)
+    {
+        curTimePeriod++;
+        model->ht = model->ht_min;
+        model->setPeriod(curTimePeriod);
+    }
+
+    analyzeNewtonConvergence();
+    MULT_UP = MULT_DOWN = 1.5;
+
+    if (INCREASE_STEP && ((model->ht <= model->ht_max && curTimePeriod == 0) ||
+        (model->ht <= 3.0 * model->ht_max && curTimePeriod == 1)))
+        model->ht = model->ht * MULT_UP;
+    else if (DECREASE_STEP)
+        model->ht = model->ht / MULT_DOWN;
+
 
 	if (cur_t + model->ht > model->period[curTimePeriod])
 		model->ht = model->period[curTimePeriod] - cur_t;

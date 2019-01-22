@@ -55,6 +55,7 @@ class AbstractSolver {
         std::vector<int> iter_num;
         double MAX_INIT_RES1, MAX_INIT_RES2;
         bool DECREASE_STEP, INCREASE_STEP;
+        double MULT_UP, MULT_DOWN;
 
 		virtual void checkStability();
 

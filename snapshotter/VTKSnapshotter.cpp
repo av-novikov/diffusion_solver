@@ -476,7 +476,7 @@ void VTKSnapshotter<acid2dnit::Acid2dNIT>::dump_all(int i)
 		polygons->InsertNextCell(polygon);
 
 		poro->InsertNextValue(next.m);
-		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
+		perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m, next.p).value() * r_dim * r_dim));
 		pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 		sat_w->InsertNextValue(next.sw);
 		sat_o->InsertNextValue(1.0 - next.sw);
@@ -509,7 +509,7 @@ void VTKSnapshotter<acid2dnit::Acid2dNIT>::dump_all(int i)
 			polygons->InsertNextCell(polygon);
 
 			poro->InsertNextValue(next.m);
-			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m).value() * r_dim * r_dim));
+			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni_r(next.m, next.p).value() * r_dim * r_dim));
 			pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			sat_w->InsertNextValue(next.sw);
 			sat_o->InsertNextValue(1.0 - next.sw);

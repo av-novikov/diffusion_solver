@@ -45,6 +45,7 @@ namespace acid2dnit
 		double temp;
 		std::vector<double> temps;
 		std::vector<bool> LeftBoundIsRate;
+        double injected_sol_volume, injected_acid_volume, max_sol_volume;
 
 		void setProps(Properties& props);
 		void makeDimLess();
@@ -75,21 +76,21 @@ namespace acid2dnit
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw * tmp1 * reac.getReactionRate(props.m_init, props.m_max, var.m, var.t);
 		};
-		inline adouble getTrans(const Cell& cell, adouble m_cell, const Cell& beta, adouble m_beta) const
+		inline adouble getTrans(const Cell& cell, const TapeVariable& next, const Cell& beta, const TapeVariable& nebr) const
 		{
 			adouble k1, k2, S;
 
 			if (abs(cell.num - beta.num) == 1) {
-				k1 = cell.props->getPermCoseni_z(m_cell);
-				k2 = beta.props->getPermCoseni_z(m_beta);
+				k1 = cell.props->getPermCoseni_z(next.m, next.p);
+				k2 = beta.props->getPermCoseni_z(nebr.m, nebr.p);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 				S = 2.0 * M_PI * cell.r * cell.hr;
 				return 2.0 * k1 * k2 * S / (k1 * beta.hz + k2 * cell.hz);
 			}
 			else {
-				k1 = cell.props->getPermCoseni_r(m_cell);
-				k2 = beta.props->getPermCoseni_r(m_beta);
+				k1 = cell.props->getPermCoseni_r(next.m, next.p);
+				k2 = beta.props->getPermCoseni_r(nebr.m, nebr.p);
 				if (k1 == 0.0 && k2 == 0.0)
 					return 0.0;
 				S = 2.0 * M_PI * cell.hz * (cell.r + sign(beta.num - cell.num) * cell.hr / 2.0);
@@ -103,10 +104,10 @@ namespace acid2dnit
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
 			condassign(tmp, is_R_axis,
-				-cell.props->getPermCoseni_r(next.m) * props_o.getKr(next.sw, next.m, cell.props) / props_o.getViscosity(next.p) *
+				-cell.props->getPermCoseni_r(next.m, next.p) * props_o.getKr(next.sw, next.m, cell.props) / props_o.getViscosity(next.p) *
 				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
-				-cell.props->getPermCoseni_z(next.m) * props_o.getKr(next.sw, next.m, cell.props) / props_o.getViscosity(next.p) *
+				-cell.props->getPermCoseni_z(next.m, next.p) * props_o.getKr(next.sw, next.m, cell.props) / props_o.getViscosity(next.p) *
 				((var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) -
 				grav * props_o.getDensity(next.p)));
 			return tmp;
@@ -118,11 +119,11 @@ namespace acid2dnit
 			adouble is_R_axis = (axis == R_AXIS) ? true : false;
 			adouble is_Z_axis = (axis == Z_AXIS) ? true : false;
 			condassign(tmp, is_R_axis,
-				-cell.props->getPermCoseni_r(next.m) * props_w.getKr(next.sw, next.m, cell.props) / 
+				-cell.props->getPermCoseni_r(next.m, next.p) * props_w.getKr(next.sw, next.m, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
 				(var[2].p - var[1].p) / (cells[cell.num + cellsNum_z + 2].r - cells[cell.num - cellsNum_z - 2].r));
 			condassign(tmp, is_Z_axis,
-				-cell.props->getPermCoseni_z(next.m) * props_w.getKr(next.sw, next.m, cell.props) / 
+				-cell.props->getPermCoseni_z(next.m, next.p) * props_w.getKr(next.sw, next.m, cell.props) / 
 				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) *
 				((var[4].p - var[3].p) / (cells[cell.num + 1].z - cells[cell.num - 1].z) - 
 				grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs)));
@@ -136,7 +137,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
 				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
-				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_o.getKr(next.sw, next.m, cell.props).value() / 
+				tmp = -cell.props->getPermCoseni_r(next.m, next.p).value() * props_o.getKr(next.sw, next.m, cell.props).value() / 
 					props_o.getViscosity(next.p).value() *
 					(cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r);
 			}
@@ -144,7 +145,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - 1];
 				const Cell& cell2 = cells[cell.num + 1];
-				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_o.getKr(next.sw, next.m, cell.props).value() / 
+				tmp = -cell.props->getPermCoseni_z(next.m, next.p).value() * props_o.getKr(next.sw, next.m, cell.props).value() / 
 					props_o.getViscosity(next.p).value() *
 					((cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z) - grav * props_o.getDensity(next.p).value());
 			}
@@ -158,7 +159,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - cellsNum_z - 2];
 				const Cell& cell2 = cells[cell.num + cellsNum_z + 2];
-				tmp = -cell.props->getPermCoseni_r(next.m).value() * props_w.getKr(next.sw, next.m, cell.props).value() /
+				tmp = -cell.props->getPermCoseni_r(next.m, next.p).value() * props_w.getKr(next.sw, next.m, cell.props).value() /
 					props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() *
 					((cell2.u_next.p - cell1.u_next.p) / (cell2.r - cell1.r) - grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs).value());
 			}
@@ -166,7 +167,7 @@ namespace acid2dnit
 			{
 				const Cell& cell1 = cells[cell.num - 1];
 				const Cell& cell2 = cells[cell.num + 1];
-				tmp = -cell.props->getPermCoseni_z(next.m).value() * props_w.getKr(next.sw, next.m, cell.props).value() /
+				tmp = -cell.props->getPermCoseni_z(next.m, next.p).value() * props_w.getKr(next.sw, next.m, cell.props).value() /
 					props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() *
 					((cell2.u_next.p - cell1.u_next.p) / (cell2.z - cell1.z) - grav * props_w.getDensity(next.p, next.xa, next.xw, next.xs).value());
 			}
@@ -269,7 +270,7 @@ namespace acid2dnit
 		double** jac;
 
 		void setPeriod(int period);
-		double getRate(int cur);
+		double getRate(int cur) const;
 		static const int var_size = Variable::size;
 	};
 };

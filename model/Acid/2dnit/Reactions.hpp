@@ -123,7 +123,7 @@ namespace acid2dnit
 		double reaction_const;
 		inline adouble getReactionRate(double m0, double m_max, adouble m, adouble t) const
 		{
-			return reaction_const * surf_init * (m_max - m) / (m_max - m0) *
+			return reaction_const * surf_init * pow((m_max - m) / (m_max - m0), 2) *
 				exp(-activation_energy / Component::R / t);
 		}
 	};
@@ -142,9 +142,9 @@ namespace acid2dnit
 			comps[REACTS::CO2		] = getCO2();		indices[REACTS::CO2		] = 1.0;
 
 			activation_energy = 8.31 * 7550.0;//15.0 * KKAL_2_J;
-			alpha = 0.63;
+			alpha = 0.2;
 			reaction_const = 7.29 * 1.e+7;
-			surf_init = 10000.0;
+			surf_init = 100.0;
 		};
 	};
 
@@ -164,7 +164,7 @@ namespace acid2dnit
 			activation_energy = 8.31 * 11320.0;
 			alpha = 0.618 / 1.5;
 			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha);
-			surf_init = 10000.0;
+			surf_init = 100.0;
 		};
 	};
 

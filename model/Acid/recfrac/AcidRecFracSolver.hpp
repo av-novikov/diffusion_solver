@@ -62,8 +62,6 @@ namespace acidrecfrac
 				ind_rhs[i] = i;
 		};
 
-		double MULT_UP, MULT_DOWN;
-
 	public:
 		AcidRecFracSolver(AcidRecFrac* _model);
 		~AcidRecFracSolver();

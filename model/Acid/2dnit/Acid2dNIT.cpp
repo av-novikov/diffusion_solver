@@ -20,6 +20,7 @@ Acid2dNIT::Acid2dNIT()
 		jac[i] = new double[stencil * Variable::size];
 
 	skin = 0.0;
+    injected_sol_volume = injected_acid_volume = 0.0;
 }
 Acid2dNIT::~Acid2dNIT()
 {
@@ -85,6 +86,7 @@ void Acid2dNIT::setProps(Properties& props)
 		}
 	}
 
+    max_sol_volume = props.max_sol_volume;
 	// Temporal properties
 	ht = props.ht;
 	ht_min = props.ht_min;
@@ -185,6 +187,8 @@ void Acid2dNIT::makeDimLess()
 	for (int i = 0; i < periodsNum; i++)
 		temps[i] /= T_dim;
 
+    max_sol_volume /= R_dim * R_dim * R_dim;
+
 	props_w.visc /= (P_dim * t_dim);
 	props_w.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_w.beta /= (1.0 / P_dim);
@@ -272,15 +276,17 @@ void Acid2dNIT::setInitialState()
 	var = new TapeVariable[stencil];
 	h = new adouble[var_size];
 }
-double Acid2dNIT::getRate(int cur)
+double Acid2dNIT::getRate(int cur) const
 {
 	const Cell& cell = cells[cur];
 	const Cell& beta = cells[cur + cellsNum_z + 2];
 	const Variable& next = cell.u_next;
 	const Variable& nebr = beta.u_next;
+    const TapeVariable next_tape = { next.m, next.p, next.sw, next.xw, next.xa, next.xs, next.t };
+    const TapeVariable nebr_tape = { nebr.m, nebr.p, nebr.sw, nebr.xw, nebr.xa, nebr.xs, nebr.t };
 
 	return props_w.getDensity(next.p, next.xa, next.xw, next.xs).value() / props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs).value() *
-		getTrans(cell, next.m, beta, nebr.m).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * 
+		getTrans(cell, next_tape, beta, nebr_tape).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * 
 		(nebr.p - next.p);
 };
 void Acid2dNIT::calcSkin()
@@ -292,7 +298,7 @@ void Acid2dNIT::calcSkin()
 	{
 		if (cell.hz > 0.0)
 		{
-			k = cell.props->getPermCoseni_r(cell.u_next.m).value();
+			k = cell.props->getPermCoseni_r(cell.u_next.m, cell.u_next.p).value();
 			if (k > 1.05 * k0)
 			{
 				r_s += cell.hr;
@@ -362,9 +368,9 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 			props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), beta);
 		adouble dens_o = getAverage(props_o.getDensity(next.p), cell,
 			props_o.getDensity(nebr.p), beta);
-		adouble buf_w = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_w * grav * (cell.z - beta.z)) *
+		adouble buf_w = ht / cell.V * getTrans(cell, next, beta, nebr) * ((next.p - nebr.p) - dens_w * grav * (cell.z - beta.z)) *
 			dens_w * props_w.getKr(upwd.sw, upwd.m, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
-		adouble buf_o = ht / cell.V * getTrans(cell, next.m, beta, nebr.m) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
+		adouble buf_o = ht / cell.V * getTrans(cell, next, beta, nebr) * ((next.p - nebr.p) - dens_o * grav * (cell.z - beta.z)) *
 			dens_o * props_o.getKr(upwd.sw, upwd.m, cells[upwd_idx].props) / props_o.getViscosity(upwd.p);
 		const auto mult = getDivCoeff(const_cast<Cell&>(cell), const_cast<Cell&>(beta));
 
@@ -430,7 +436,7 @@ void Acid2dNIT::solve_eqLeft(const Cell& cell)
 		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
 	if (leftBoundIsRate)
 	{
-		double tmp = props_w.getDensity(next.p, next.xa, next.xw, next.xs).value() * getTrans(cell, next.m, beta1, nebr1.m).value() /
+		double tmp = props_w.getDensity(next.p, next.xa, next.xw, next.xs).value() * getTrans(cell, next, beta1, nebr1).value() /
 			props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * (nebr1.p - next.p).value() +
 			props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs).value() * rate;
 		h[1] = /*props_w.getDensity(next.p, next.xa, next.xw, next.xs) * getTrans(cell, next.m, beta1, nebr1.m) /

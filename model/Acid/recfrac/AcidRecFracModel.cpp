@@ -542,7 +542,7 @@ void AcidRecFrac::setPeriod(int period)
 				it->second = 3.0 * Q_sum * cells_frac[it->first].hy / 2.0 / props_frac.w2 * 
 					(1.0 - (cells_frac[it->first].y / props_frac.w2) * (cells_frac[it->first].y / props_frac.w2));
 		}
-		else 
+		else
 		{
 			std::map<int, double>::iterator it;
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)

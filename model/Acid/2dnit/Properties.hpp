@@ -19,6 +19,8 @@ namespace acid2dnit
 		double xa_eqbm;
 		// Maximum porosity
 		double m_max;
+        // Coefficient in petrophysical relationsship
+        double A;
 		// Initial values
 		double p_init;
 		double p_sat;
@@ -29,7 +31,7 @@ namespace acid2dnit
 		double t_init;
 
 		//double d_pore_r, d_pore_z;
-		inline adouble getPermCoseni_r(adouble m) const
+		/*inline adouble getPermCoseni_r(adouble m) const
 		{
 			//return d_pore_r * d_pore_r * m * m * m / (1 - m) / (1 - m) / 150.0;
 			return perm_r * (m * m * m / (1 - m) / (1 - m)) / 
@@ -40,7 +42,22 @@ namespace acid2dnit
 			//return d_pore_z * d_pore_z * m * m * m / (1 - m) / (1 - m) / 150.0;
 			return perm_z * (m * m * m / (1 - m) / (1 - m)) /
 				(m_init * m_init * m_init / (1 - m_init) / (1 - m_init));
-		};
+		};*/
+        inline adouble getPoro(adouble m0, adouble p) const
+        {
+            return m0;
+            //return m0 * (1.0 + beta * (p - p_init));
+        };
+        inline adouble getPermCoseni_r(adouble m0, adouble p) const
+        {
+            adouble m = getPoro(m0, p);
+            return perm_r * exp(A * (m - m_init));
+        };
+        inline adouble getPermCoseni_z(adouble m0, adouble p) const
+        {
+            adouble m = getPoro(m0, p);
+            return perm_z * exp(A * (m - m_init));
+        };
 		inline double getInitDiam(double m_init, double k0)
 		{
 			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
@@ -177,6 +194,7 @@ namespace acid2dnit
 		std::vector<double> temps;
 		std::vector<bool> LeftBoundIsRate;
 
+        double max_sol_volume;
 		std::vector< std::pair<double, double> > rho_co2;
 	};
 };

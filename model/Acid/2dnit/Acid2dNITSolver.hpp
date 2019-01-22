@@ -23,6 +23,7 @@ namespace acid2dnit
 		void checkStability();
 		void control();
 		void checkVariables();
+        void analyzeNewtonConvergence();
 
 		//void construction_from_fz(int N, int n, int key);
 		static const int var_size = Variable::size;

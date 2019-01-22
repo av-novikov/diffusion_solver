@@ -1200,7 +1200,7 @@ using namespace std;
 
 	return props;
 }*/
-acidrecfrac::Properties* getProps()
+/*acidrecfrac::Properties* getProps()
 {
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
@@ -1249,7 +1249,7 @@ acidrecfrac::Properties* getProps()
 	props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 	props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 	props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-	props_sk.perm = 0.5;
+	props_sk.perm = 50.0;
 	props_sk.dens_stc = 2000.0;
 	props_sk.beta = 4.35113e-10;
 	props_sk.height = props->props_frac.height;
@@ -1278,7 +1278,7 @@ acidrecfrac::Properties* getProps()
 	props_sk.height = 0.61;
 	props_sk.m_init = 0.12;
 	props_sk.perm = 1;
-	props->props_sk.push_back(props_sk);*/
+	props->props_sk.push_back(props_sk);
 
 	props->props_o.visc = 4.75;
 	props->props_o.dens_stc = 887.261;
@@ -1296,21 +1296,21 @@ acidrecfrac::Properties* getProps()
 	props->props_g.co2 = acidrecfrac::getCO2();
 
 	return props;
-}
-/*acid2dnit::Properties* getProps()
+}*/
+acid2dnit::Properties* getProps()
 {
 	acid2dnit::Properties* props = new acid2dnit::Properties;
 
-	props->cellsNum_r = 50;
+	props->cellsNum_r = 100;
 	props->cellsNum_z = 1;
 
-	props->timePeriods.push_back(0.2 * 3600.0);
-	props->timePeriods.push_back(1.0 * 3600.0);
+	props->timePeriods.push_back(0.5 * 3600.0);
+	props->timePeriods.push_back(2.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
 	props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(300.0 * 1.0e+5);
+	props->pwf.push_back(400.0 * 1.0e+5);
 	//props->pwf.push_back(200.0 * 1.0e+5);
 	props->rates.push_back(0.0);
 	props->xa.push_back(0.15);
@@ -1318,22 +1318,23 @@ acidrecfrac::Properties* getProps()
 	props->temps.push_back(300.0);
 	props->temps.push_back(300.0);
 
-	props->ht = 0.05;
+	props->ht = 0.01;
 	props->ht_min = 0.01;
-	props->ht_max = 50.0;
+	props->ht_max = 10.0;
 
 	props->alpha = 7200.0;
 
 	props->r_w = 0.1;
-	props->r_e = 150.0;
+	props->r_e = 200.0;
 
 	props->perfIntervals.push_back(make_pair(1, 1));
 	//props->perfIntervals.push_back(make_pair(15, 15));
-
+    props->max_sol_volume = 10.0;
 	acid2dnit::Skeleton_Props tmp;
 	tmp.cellsNum_z = 1;
 	tmp.m_init = 0.1;
-	tmp.m_max = 0.5;
+    tmp.m_max = 0.4;
+    tmp.A = 60.0;
 	tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 	tmp.t_init = 300.0;
 	tmp.xa_eqbm = 1.E-5;
@@ -1374,7 +1375,7 @@ acidrecfrac::Properties* getProps()
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);
+	props->props_sk.push_back(tmp);*/
 
 	props->depth_point = 0.0;
 
@@ -1409,7 +1410,7 @@ acidrecfrac::Properties* getProps()
 	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 
 	return props;
-}*/
+}
 
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
@@ -1458,11 +1459,11 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*acid2dnit::Properties* props = getProps();
+	acid2dnit::Properties* props = getProps();
 	Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();*/
+	scene.start();
 	/*bing1d::Properties* props = getProps();
 	Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties> scene;
 	scene.load(*props);
@@ -1482,9 +1483,9 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	acidrecfrac::Properties* props = getProps();
+	/*acidrecfrac::Properties* props = getProps();
 	Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();
+	scene.start();*/
 	return 0;
 }
