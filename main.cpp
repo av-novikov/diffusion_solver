@@ -1200,17 +1200,17 @@ using namespace std;
 
 	return props;
 }*/
-/*acidrecfrac::Properties* getProps()
+acidrecfrac::Properties* getProps()
 {
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.0001;
+	props->ht = 0.0002;
 	props->ht_min = props->ht;
 	props->ht_max = 10.0;
 
+	props->timePeriods.push_back(0.4 * 3600.0);
 	props->timePeriods.push_back(0.5 * 3600.0);
-	props->timePeriods.push_back(1.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
@@ -1278,7 +1278,7 @@ using namespace std;
 	props_sk.height = 0.61;
 	props_sk.m_init = 0.12;
 	props_sk.perm = 1;
-	props->props_sk.push_back(props_sk);
+	props->props_sk.push_back(props_sk);*/
 
 	props->props_o.visc = 4.75;
 	props->props_o.dens_stc = 887.261;
@@ -1296,8 +1296,8 @@ using namespace std;
 	props->props_g.co2 = acidrecfrac::getCO2();
 
 	return props;
-}*/
-acid2dnit::Properties* getProps()
+}
+/*acid2dnit::Properties* getProps()
 {
 	acid2dnit::Properties* props = new acid2dnit::Properties;
 
@@ -1375,7 +1375,7 @@ acid2dnit::Properties* getProps()
 	tmp.skins.push_back(0.0);
 	tmp.radiuses_eff.push_back(props->r_w);
 	tmp.radiuses_eff.push_back(props->r_w);
-	props->props_sk.push_back(tmp);*/
+	props->props_sk.push_back(tmp);
 
 	props->depth_point = 0.0;
 
@@ -1410,7 +1410,7 @@ acid2dnit::Properties* getProps()
 	setDataFromFile(props->rho_co2, "props/acid/co2_dens.txt");
 
 	return props;
-}
+}*/
 
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
@@ -1459,11 +1459,11 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	acid2dnit::Properties* props = getProps();
+	/*acid2dnit::Properties* props = getProps();
 	Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties> scene;
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
-	scene.start();
+	scene.start();*/
 	/*bing1d::Properties* props = getProps();
 	Scene<bing1d::Bingham1d, bing1d::Bing1dSolver, bing1d::Properties> scene;
 	scene.load(*props);
@@ -1483,9 +1483,9 @@ int main(int argc, char* argv[])
 	scene.load(*props);
 	scene.setSnapshotterType("VTK");
 	scene.start();*/
-	/*acidrecfrac::Properties* props = getProps();
+	acidrecfrac::Properties* props = getProps();
 	Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties> scene;
 	scene.load(*props);
-	scene.start();*/
+	scene.start();
 	return 0;
 }
