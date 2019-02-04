@@ -676,7 +676,7 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 	const auto& props = *cell.props;
 	auto& next = x_poro[cell.num];
 	const auto& prev = cell.u_prev;
-	adouble rate = getReactionRate(next, props);
+	adouble rate = getReactionRate(next, props);// / reac.indices[REACTS::ACID] / reac.comps[REACTS::ACID].mol_weight;
 
 	PoroTapeVariable res;
 	adouble m = props.getPoro(next.m, next.p);

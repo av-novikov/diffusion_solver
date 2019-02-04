@@ -124,6 +124,10 @@ namespace acidrecfrac
 		{
 			return reaction_const * surf_init * pow((m_max - m) / (m_max - m0), 2) *
 				exp(-activation_energy / Component::R / Component::T);
+		}		
+		inline adouble getSpecificReactionRate() const
+		{
+			return reaction_const * exp(-activation_energy / Component::R / Component::T);
 		}
 	};
 	static const int calcite_components_num = 5;

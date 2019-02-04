@@ -138,7 +138,7 @@ namespace acidrecfrac
 			else
 				return cell.num;
 		};
-		inline const size_t getFracNebr(const size_t poro_idx)
+		inline const size_t getFracNebr(const size_t poro_idx) const
 		{
 			return poro_idx / (cellsNum_y_poro + 2) * (cellsNum_y_frac + 1) + cellsNum_y_frac;
 		};
@@ -181,6 +181,17 @@ namespace acidrecfrac
             condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
             return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
         };
+		inline adouble getDarmkoller(const PoroCell& cell, const const PoroVariable& var, const Skeleton_Props& props) const
+		{
+			std::array<double, 3> vel;
+			vel = getPoroWaterVelocity(cell);
+
+			adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
+			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
+			adouble tmp1;
+			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha - 1.0), (adouble)0.0);
+			return var.sw *	tmp * reac.getSpecificReactionRate() / sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+		};
 		inline const int getFracOut(const int idx) const
 		{
 			return int(idx / (cellsNum_y_frac + 1)) * (cellsNum_y_frac + 1) + cellsNum_y_frac;
@@ -213,7 +224,7 @@ namespace acidrecfrac
                 return -props.getPermCoseni(next.m, next.p) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / 
                 next.m * (nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
 		};
-        inline std::array<double, 3> getPoroWaterVelocity(const PoroCell& cell)
+        inline std::array<double, 3> getPoroWaterVelocity(const PoroCell& cell) const
         {
             int neighbor[NEBRS_NUM];
             getPoroNeighborIdx(cell.num, neighbor);
@@ -260,7 +271,7 @@ namespace acidrecfrac
 							x[2] * (p[0] * x[1] * (x[1] - x[2]) + p[1] * x[0] * (x[2] - x[0]))) / den;
 			return a * cur_x * cur_x + b * cur_x + c;
 		};*/
-		inline void getPoroNeighborIdx(const int cur, int* const neighbor)
+		inline void getPoroNeighborIdx(const int cur, int* const neighbor) const
 		{
 			neighbor[0] = cur - 1;
 			neighbor[1] = cur + 1;

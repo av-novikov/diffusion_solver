@@ -1314,6 +1314,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 
 	int np = ny * (nz - 1);
 	std::array<double,3> vel;
+	double buf;
 	for (int k = 0; k < nz - 2; k++)
 	{
 		for (int j = 0; j < ny - 1; j++)
@@ -1419,6 +1420,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
     auto vel_poro = vtkSmartPointer<vtkDoubleArray>::New();
     vel_poro->SetName("Velocity");
     vel_poro->SetNumberOfComponents(3);
+	auto darmkoller = vtkSmartPointer<vtkDoubleArray>::New();
+	darmkoller->SetName("Darmkoller");
 
     double sum_width, sum_trans;
 	int np_poro = ny_poro * (nz - 1);
@@ -1452,17 +1455,21 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 
                     if (cell.type != PoroType::WELL_LAT)
                     {
-                        reaction_poro->InsertNextValue(model->getReactionRateOutput(next, *cell.props).value() * P_dim * t_dim / r_dim / r_dim);
+						buf = model->getReactionRateOutput(next, *cell.props).value();
+                        reaction_poro->InsertNextValue(buf * P_dim * t_dim / r_dim / r_dim);
                         vel = model->getPoroWaterVelocity(cell);
                         vel[0] *= r_dim / t_dim;    vel[1] *= r_dim / t_dim;    vel[2] *= r_dim / t_dim;
                         vel_poro->InsertNextTuple(&vel[0]);
+						darmkoller->InsertNextValue(model->getDarmkoller(cell, next, *cell.props).value());
                     }
                     else
                     {
-                        reaction_poro->InsertNextValue(0.0);
+						buf = 0.0;
+                        reaction_poro->InsertNextValue(buf * P_dim * t_dim / r_dim / r_dim);
                         vel[0] = 0.0;   vel[2] = 0.0;
                         vel[1] = model->getFlowLeak(model->cells_frac[model->getFracNebr(cell.num)]).value() * r_dim / t_dim;
                         vel_poro->InsertNextTuple(&vel[0]);
+						darmkoller->InsertNextValue(model->getDarmkoller(cell, next, *cell.props).value());
                     }
 
 					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
@@ -1511,6 +1518,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
     fd_poro->AddArray(trans_poro);
     fd_poro->AddArray(reaction_poro);
     fd_poro->AddArray(vel_poro);
+	fd_poro->AddArray(darmkoller);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
