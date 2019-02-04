@@ -296,7 +296,7 @@ void Acid2dNIT::calcSkin()
 	r_s = r_w;
 	for (const auto& cell : cells)
 	{
-		if (cell.hz > 0.0)
+		if (cell.hz > 0.0 && cell.hr > 0.0)
 		{
 			k = cell.props->getPermCoseni_r(cell.u_next.m, cell.u_next.p).value();
 			if (k > 1.05 * k0)
@@ -336,7 +336,7 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 	//double rate0 = getReactionRate(next, props).value();
 
 	h[0] = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) - 
-			ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * rate;
+			ht * reac.indices[REACTS::DOLOMITE] * reac.comps[REACTS::DOLOMITE].mol_weight * rate;
 	h[1] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) -
 		ht * (reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight +
@@ -433,7 +433,7 @@ void Acid2dNIT::solve_eqLeft(const Cell& cell)
 	}
 
 	h[0] = (1.0 - next.m) * props.getDensity(next.p) - (1.0 - prev.m) * props.getDensity(prev.p) -
-		ht * reac.indices[REACTS::CALCITE] * reac.comps[REACTS::CALCITE].mol_weight * getReactionRate(next, props);
+		ht * reac.indices[REACTS::DOLOMITE] * reac.comps[REACTS::DOLOMITE].mol_weight * getReactionRate(next, props);
 	if (leftBoundIsRate)
 	{
 		double tmp = props_w.getDensity(next.p, next.xa, next.xw, next.xs).value() * getTrans(cell, next, beta1, nebr1).value() /

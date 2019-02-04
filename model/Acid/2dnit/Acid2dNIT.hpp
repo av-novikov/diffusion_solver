@@ -23,7 +23,7 @@ namespace acid2dnit
 	typedef TapeJustAcidNIT TapeVariable;
 	typedef NewCylCell2D<Variable, Skeleton_Props> Cell;
 	template <typename TVariable> using TCell = NewCylCell2D<TVariable, Skeleton_Props>;
-	typedef CalciteReaction CurrentReaction;
+	typedef DolomiteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
 	typedef Cell::Type Type;
 
