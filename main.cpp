@@ -1205,19 +1205,19 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.0002;
+	props->ht = 0.001;
 	props->ht_min = props->ht;
 	props->ht_max = 10.0;
 
-	props->timePeriods.push_back(0.4 * 3600.0);
 	props->timePeriods.push_back(0.5 * 3600.0);
+	props->timePeriods.push_back(1.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
 	//props->LeftBoundIsRate.push_back(false);
 	props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(400.0 * 1.0e+5);
+	props->pwf.push_back(250.0 * 1.0e+5);
 	//props->pwf.push_back(300.0 * 1.0e+5);
 	//props->rates.push_back(-10.0);
 	props->rates.push_back(0.0);
@@ -1264,7 +1264,6 @@ acidrecfrac::Properties* getProps()
 		prop.perm = props_sk.getPermCoseni(prop.m_init, 0.0).value();
 		props->props_sk.push_back(prop);
 	}*/
-	
 	/*props_sk.height = 3.05;
 	props_sk.m_init = 0.08;
 	props_sk.perm = 0.3;

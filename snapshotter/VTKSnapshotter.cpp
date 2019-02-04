@@ -1455,21 +1455,21 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 
                     if (cell.type != PoroType::WELL_LAT)
                     {
-						buf = model->getReactionRateOutput(next, *cell.props).value();
-                        reaction_poro->InsertNextValue(buf * P_dim * t_dim / r_dim / r_dim);
+                        buf = model->getReactionRateOutput(next, *cell.props).value();
+                        reaction_poro->InsertNextValue(buf / r_dim / r_dim / r_dim / t_dim);
                         vel = model->getPoroWaterVelocity(cell);
                         vel[0] *= r_dim / t_dim;    vel[1] *= r_dim / t_dim;    vel[2] *= r_dim / t_dim;
                         vel_poro->InsertNextTuple(&vel[0]);
-						darmkoller->InsertNextValue(model->getDarmkoller(cell, next, *cell.props).value());
+						darmkoller->InsertNextValue(model->getDarmkoller(cell, next, *cell.props));
                     }
                     else
                     {
 						buf = 0.0;
-                        reaction_poro->InsertNextValue(buf * P_dim * t_dim / r_dim / r_dim);
+                        reaction_poro->InsertNextValue(buf / r_dim / r_dim / r_dim / t_dim);
                         vel[0] = 0.0;   vel[2] = 0.0;
                         vel[1] = model->getFlowLeak(model->cells_frac[model->getFracNebr(cell.num)]).value() * r_dim / t_dim;
                         vel_poro->InsertNextTuple(&vel[0]);
-						darmkoller->InsertNextValue(model->getDarmkoller(cell, next, *cell.props).value());
+						darmkoller->InsertNextValue(0.0);
                     }
 
 					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);

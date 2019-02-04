@@ -171,7 +171,7 @@ namespace acidrecfrac
 			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
 			adouble tmp1;
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-			return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
+			return var.sw *	tmp1 * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
         inline adouble getReactionRateOutput(const PoroVariable& var, const Skeleton_Props& props) const
         {
@@ -179,9 +179,9 @@ namespace acidrecfrac
             adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
             adouble tmp1;
             condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-            return var.sw *	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
+            return var.sw *	tmp1 * reac.getReactionRate(props.m_init, props.m_max, var.m);
         };
-		inline adouble getDarmkoller(const PoroCell& cell, const const PoroVariable& var, const Skeleton_Props& props) const
+		inline double getDarmkoller(const PoroCell& cell, const PoroVariable& var, const Skeleton_Props& props) const
 		{
 			std::array<double, 3> vel;
 			vel = getPoroWaterVelocity(cell);
@@ -190,7 +190,12 @@ namespace acidrecfrac
 			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
 			adouble tmp1;
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha - 1.0), (adouble)0.0);
-			return var.sw *	tmp * reac.getSpecificReactionRate() / sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+            double vel_mag = sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+            double tmp22 = var.sw * tmp1.value() * reac.getSpecificReactionRate().value();
+            if (vel_mag > EQUALITY_TOLERANCE && fabs(var.xa - props.xa_eqbm) > 1.E-3)
+                return tmp22 / vel_mag;
+            else
+                return 0.0;
 		};
 		inline const int getFracOut(const int idx) const
 		{
