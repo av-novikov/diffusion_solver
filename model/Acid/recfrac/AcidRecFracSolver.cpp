@@ -39,7 +39,7 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 
-	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-12;
+	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-8;
 	MAX_ITER = 20;
 
     MAX_INIT_RES1 = 3.E-9;
@@ -334,7 +334,8 @@ bool AcidRecFracSolver::solveSmartStep()
 		bool result = false;
 
 		for (const auto& val : dAverVal)
-			result += (val > CONV_VAR);
+            if (val > CONV_VAR)
+                result = true;
 
 		return result * (err_newton > CONV_W2) * (iterations < MAX_ITER);
 	};

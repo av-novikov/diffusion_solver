@@ -1210,14 +1210,14 @@ acidrecfrac::Properties* getProps()
 	props->ht_max = 10.0;
 
 	props->timePeriods.push_back(0.5 * 3600.0);
-	props->timePeriods.push_back(1.0 * 3600.0);
+	props->timePeriods.push_back(2.0 * 3600.0);
 	//props->timePeriods.push_back(10.0 * 3600.0);
 	//props->leftBoundIsRate = false;
 	props->LeftBoundIsRate.push_back(false);
 	//props->LeftBoundIsRate.push_back(false);
 	props->LeftBoundIsRate.push_back(true);
 	props->rightBoundIsPres = true;
-	props->pwf.push_back(250.0 * 1.0e+5);
+	props->pwf.push_back(400.0 * 1.0e+5);
 	//props->pwf.push_back(300.0 * 1.0e+5);
 	//props->rates.push_back(-10.0);
 	props->rates.push_back(0.0);
@@ -1233,8 +1233,8 @@ acidrecfrac::Properties* getProps()
 	props->props_frac.p_init = 200.0 * BAR_TO_PA;
 	props->props_frac.c_init = 0.0;
 
-	props->cellsNum_x = 20;
-	props->cellsNum_y_frac = 10;
+	props->cellsNum_x = 10;
+	props->cellsNum_y_frac = 20;
 	props->cellsNum_y_poro = 75;
 	props->cellsNum_z = 1;
 

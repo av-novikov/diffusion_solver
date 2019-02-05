@@ -145,7 +145,7 @@ namespace acidrecfrac
 
 			activation_energy = 15.0 * KKAL_2_J;
 			reaction_const = 7.29 * 1.e+7;
-			surf_init = 1.0;
+			surf_init = 100000.0;
 			alpha = 0.63;
 		};
 	};
@@ -165,7 +165,7 @@ namespace acidrecfrac
 			activation_energy = 8.31 * 11320.0;
 			alpha = 0.618 / 1.5;
 			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha);
-			surf_init = 1.0;
+			surf_init = 100000.0;
 		};
 	};
 
