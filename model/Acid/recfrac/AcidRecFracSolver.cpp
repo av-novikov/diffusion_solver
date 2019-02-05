@@ -39,7 +39,7 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 
-	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-8;
+	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
     MAX_INIT_RES1 = 3.E-9;
@@ -217,7 +217,7 @@ void AcidRecFracSolver::start()
         cout << "---------------------NEW TIME STEP---------------------" << endl;
 		control();
         cout << setprecision(6);
-        cout << "time = " << cur_t * t_dim / 3600.0 << endl;
+        cout << "time = " << cur_t * t_dim / 3600.0 << "\tht = " << model->ht * t_dim / 3600.0 << endl;
 		cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
 		cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
         cfl_z = model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
