@@ -40,7 +40,7 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	MAX_SAT_CHANGE = 1.0;
 
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
-	MAX_ITER = 20;
+	MAX_ITER = 8;
 
     MAX_INIT_RES1 = 3.E-9;
     MAX_INIT_RES2 = 1.E-9;
