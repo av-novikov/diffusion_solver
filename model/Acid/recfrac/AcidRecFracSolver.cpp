@@ -116,16 +116,29 @@ void AcidRecFracSolver::writeData()
 	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
 
 	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
-	double mean_trans = 0.0, harm_mean_trans = 0.0, cur_trans;
+	double mean_trans = 0.0, Cfd_inv = 0.0, cur_trans, frac_len = 0.0;
+    int i_ind, k_ind;
 	for (int i = 0; i < model->trans.size(); i++)
 	{
 		cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
 		mean_trans += cur_trans / model->trans.size();
-		harm_mean_trans += 1.0 / cur_trans;
 	}
-	harm_mean_trans = model->trans.size() / harm_mean_trans;
+    for (int i = 0; i < model->trans.size(); i++)
+    {
+        cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
+        if (cur_trans > 0.2 * mean_trans)
+        {
+            k_ind = int(i % model->cellsNum_z) + 1;
+            i_ind = int(i / model->cellsNum_z) + 1;
+            const auto& pcell = model->cells_poro[(model->cellsNum_y_poro + 2) * (k_ind + (model->cellsNum_z + 2) * i_ind)];
 
-	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << harm_mean_trans << endl;
+            frac_len += pcell.hx;
+            Cfd_inv += pcell.hx * model->R_dim * k0 / cur_trans;
+        }
+    }
+
+    Cfd_inv = 1.0 / Cfd_inv;
+	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << "\t" << frac_len * model->R_dim << endl;
 
 	qcells << endl;
 }
@@ -232,7 +245,7 @@ void AcidRecFracSolver::start()
             model->ht /= 1.5;
             cur_t += model->ht;
             cout << setprecision(6);
-            cout << "time = " << cur_t * t_dim / 3600.0 << endl;
+            cout << "time = " << cur_t * t_dim / 3600.0 << "\tht = " << model->ht * t_dim / 3600.0 << endl;
         }
 		copyTimeLayer();
 	}
