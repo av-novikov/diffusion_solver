@@ -171,7 +171,7 @@ namespace acidrecfrac
 			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
 			adouble tmp1;
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-			return var.sw *	tmp1 * reac.getReactionRate(props.m_init, props.m_max, var.m);
+			return /*var.sw */	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
         inline adouble getReactionRateOutput(const PoroVariable& var, const Skeleton_Props& props) const
         {
@@ -179,19 +179,19 @@ namespace acidrecfrac
             adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
             adouble tmp1;
             condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-            return var.sw *	tmp1 * reac.getReactionRate(props.m_init, props.m_max, var.m);
+            return /*var.sw */	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
         };
 		inline double getDarmkoller(const PoroCell& cell, const PoroVariable& var, const Skeleton_Props& props) const
 		{
 			std::array<double, 3> vel;
 			vel = getPoroWaterVelocity(cell);
 
-			adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
-			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
-			adouble tmp1;
-			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha - 1.0), (adouble)0.0);
+			//adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
+			//adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
+			//adouble tmp1;
+			//condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha - 1.0), (adouble)0.0);
             double vel_mag = sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
-            double tmp22 = var.sw * tmp1.value() * reac.getSpecificReactionRate().value();
+            double tmp22 = /*var.sw */ reac.getSpecificReactionRate().value();
             if (vel_mag > EQUALITY_TOLERANCE && fabs(var.xa - props.xa_eqbm) > 1.E-3)
                 return tmp22 / vel_mag;
             else

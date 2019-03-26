@@ -594,7 +594,7 @@ void AcidRecFrac::setInitialState()
 }
 void AcidRecFrac::calculateTrans()
 {
-	double sum, k, k0, y0, cur_width;
+	double sum, k, k0, y0, cur_width, m, m0;
 	/*width = 0.0;
 	for (const auto& cell : cells_poro)
 	{
@@ -619,9 +619,12 @@ void AcidRecFrac::calculateTrans()
 		for (int j = 0; j < cellsNum_y_poro + 2; j++)
 		{
 			const auto& pcell = cells_poro[j + (cellsNum_y_poro + 2) * (k_ind + (cellsNum_z + 2) * i_ind)];
+			m = pcell.u_next.m;
+			m0 = pcell.props->m_init;
 			k = pcell.props->getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
 			k0 = pcell.props->perm;
-			if (fabs(k - k0) / k0 >= 10.0)
+			//if (fabs(k - k0) / k0 >= 10.0)
+			if(fabs(m - m0) > EQUALITY_TOLERANCE)
 				cur_width += pcell.hy;
 		}
 		widths[tr_idx] = cur_width;

@@ -122,7 +122,7 @@ namespace acidrecfrac
 		double reaction_const;
 		inline adouble getReactionRate(const double m0, const double m_max, const adouble m) const
 		{
-			return reaction_const * surf_init * pow((m_max - m) / (m_max - m0), 2) *
+			return reaction_const * surf_init /* pow((m_max - m) / (m_max - m0), 2)*/ *
 				exp(-activation_energy / Component::R / Component::T);
 		}		
 		inline adouble getSpecificReactionRate() const
@@ -164,7 +164,7 @@ namespace acidrecfrac
 
 			activation_energy = 8.31 * 11320.0;
 			alpha = 0.618 / 1.5;
-			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha);
+			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha) * 1.E-5;
 			surf_init = 100000.0;
 		};
 	};

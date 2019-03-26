@@ -42,10 +42,10 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES1 = 3.E-9;
-    MAX_INIT_RES2 = 1.E-9;
-    //MAX_INIT_RES1 = 1.E-8; 
-    //MAX_INIT_RES2 = 5.E-9;
+    MAX_INIT_RES1 = 1.E-9;
+	MAX_INIT_RES2 = 3.E-9;
+    //MAX_INIT_RES1 = 4.E-8; 
+    //MAX_INIT_RES2 = 1.E-9;
 
 	MULT_UP = MULT_DOWN = 1.5;
 
@@ -116,16 +116,21 @@ void AcidRecFracSolver::writeData()
 	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
 
 	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
-	double mean_trans = 0.0, harm_mean_trans = 0.0, cur_trans;
+	double mean_trans = 0.0, Cfd_inv = 0.0, cur_trans;
+	int k_ind, i_ind;
 	for (int i = 0; i < model->trans.size(); i++)
 	{
 		cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
 		mean_trans += cur_trans / model->trans.size();
-		harm_mean_trans += 1.0 / cur_trans;
-	}
-	harm_mean_trans = model->trans.size() / harm_mean_trans;
 
-	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << harm_mean_trans << endl;
+		k_ind = int(i % model->cellsNum_z) + 1;
+		i_ind = int(i / model->cellsNum_z) + 1;
+		const auto& pcell = model->cells_poro[(model->cellsNum_y_poro + 2) * (k_ind + (model->cellsNum_z + 2) * i_ind)];
+		Cfd_inv += k0 * pcell.hx * model->R_dim / cur_trans;
+	}
+	Cfd_inv = 1.0 / Cfd_inv;
+
+	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << endl;
 
 	qcells << endl;
 }
@@ -317,6 +322,13 @@ void AcidRecFracSolver::checkVariables()
 			cell.u_next.xs = 0.0;
 		if (cell.u_next.xw < 0.0)
 			cell.u_next.xw = 0.0;
+	}
+	for (auto cell : model->cells_frac)
+	{
+		if (cell.u_next.c < 0.0)
+			cell.u_next.c = 0.0;
+		else if (cell.u_next.c > model->c)
+			cell.u_next.c = model->c;
 	}
 }
 bool AcidRecFracSolver::solveSmartStep()

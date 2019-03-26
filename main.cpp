@@ -1205,7 +1205,7 @@ acidrecfrac::Properties* getProps()
 	typedef acidrecfrac::Properties Properties;
 	Properties* props = new Properties;
 
-	props->ht = 0.001;
+	props->ht = 0.0005;
 	props->ht_min = props->ht;
 	props->ht_max = 10.0;
 
@@ -1249,7 +1249,7 @@ acidrecfrac::Properties* getProps()
 	props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 	props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 	props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-	props_sk.perm = 50.0;
+	props_sk.perm = 5.0;
 	props_sk.dens_stc = 2000.0;
 	props_sk.beta = 4.35113e-10;
 	props_sk.height = props->props_frac.height;
