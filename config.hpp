@@ -16,6 +16,7 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
+#include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
 #include "model/WaxNIT/2d/WaxNIT.hpp"
@@ -887,6 +888,102 @@ namespace issues
 
 		return props;
 	}
+	template<> acidrecfracmov::Properties* getProps<acidrecfracmov::Properties>()
+	{
+		typedef acidrecfracmov::Properties Properties;
+		Properties* props = new Properties;
+
+		props->ht = 0.0005;
+		props->ht_min = props->ht;
+		props->ht_max = 10.0;
+
+		props->timePeriods.push_back(0.5 * 3600.0);
+		props->timePeriods.push_back(2.0 * 3600.0);
+		//props->timePeriods.push_back(10.0 * 3600.0);
+		//props->leftBoundIsRate = false;
+		props->LeftBoundIsRate.push_back(false);
+		//props->LeftBoundIsRate.push_back(false);
+		props->LeftBoundIsRate.push_back(true);
+		props->rightBoundIsPres = true;
+		props->pwf.push_back(300.0 * 1.0e+5);
+		//props->pwf.push_back(300.0 * 1.0e+5);
+		//props->rates.push_back(-10.0);
+		props->rates.push_back(0.0);
+		props->cs.push_back(0.15);
+		props->cs.push_back(0.0);
+		props->max_sol_volume = 50.0;
+
+		props->props_frac.l2 = 240.0;
+		props->props_frac.w2 = 0.001;
+		props->props_frac.height = 18.87;
+		props->re = 200.0;
+
+		props->props_frac.p_init = 200.0 * BAR_TO_PA;
+		props->props_frac.c_init = 0.0;
+
+		props->cellsNum_x = 20;
+		props->cellsNum_y_frac = 20;
+		props->cellsNum_y_poro = 75;
+		props->cellsNum_z = 1;
+
+		acidrecfracmov::Skeleton_Props props_sk;
+		props_sk.m_init = 0.09;
+		props_sk.m_max = 0.4;
+		props_sk.A = 60.0;
+		props_sk.t_init = 300.0;
+		props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
+		props_sk.sw_init = 0.1;					props_sk.so_init = 0.9;
+		props_sk.xa_eqbm = 0.0;
+		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
+		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
+		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
+		props_sk.perm = 5.0;
+		props_sk.dens_stc = 2000.0;
+		props_sk.beta = 4.35113e-10;
+		props_sk.height = props->props_frac.height;
+		props->props_sk.push_back(props_sk);
+		/*default_random_engine generator;
+		normal_distribution<double> distribution(0.15, 0.02);
+		for (int i = 0; i < props->cellsNum_x * props->cellsNum_z; i++)
+		{
+		acidrecfrac::Skeleton_Props prop = props_sk;
+		double tmp = distribution(generator);
+		prop.m_init = (tmp > 0.01) ? tmp : 0.01;
+		prop.perm = props_sk.getPermCoseni(prop.m_init, 0.0).value();
+		props->props_sk.push_back(prop);
+		}*/
+		/*props_sk.height = 3.05;
+		props_sk.m_init = 0.08;
+		props_sk.perm = 0.3;
+		props->props_sk.push_back(props_sk);
+
+		props_sk.height = 0.91;
+		props_sk.m_init = 0.1;
+		props_sk.perm = 1;
+		props->props_sk.push_back(props_sk);
+
+		props_sk.height = 0.61;
+		props_sk.m_init = 0.12;
+		props_sk.perm = 1;
+		props->props_sk.push_back(props_sk);*/
+
+		props->props_o.visc = 4.75;
+		props->props_o.dens_stc = 887.261;
+		props->props_o.beta = 1.0 * 1.e-9;
+		props->props_o.p_ref = props_sk.p_ref;
+
+		props->props_w.visc = 12.0;
+		props->props_w.dens_stc = 1000.0;
+		props->props_w.beta = 1.0 * 1.e-9;
+		props->props_w.p_ref = props_sk.p_ref;
+		props->props_w.D_e = 0.0;// 1.E-8;
+
+		props->props_g.visc = 0.06;
+		props->props_g.dens_stc = 0.8;
+		props->props_g.co2 = acidrecfracmov::getCO2();
+
+		return props;
+	}
 	template<> acid2dnit::Properties* getProps<acid2dnit::Properties>()
 	{
 		acid2dnit::Properties* props = new acid2dnit::Properties;
@@ -1018,6 +1115,7 @@ double acid2dnit::Component::T = 300.0;
 double acidfrac::Component::T = 300.0;
 double acidellfrac::Component::T = 300.0;
 double acidrecfrac::Component::T = 300.0;
+double acidrecfracmov::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
 double blackoilnit_elliptic::Oil_Props::dens_stc = 887.261;
 double blackoilnit_elliptic::Gas_Props::dens_stc = 0.8;

@@ -44,6 +44,9 @@
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracSolver.hpp"
 
+#include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
+#include "model/Acid/recfracmov/AcidRecFracMovSolver.hpp"
+
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
 
@@ -90,6 +93,13 @@ Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Pro
 	delete method;
 }
 Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	delete method;
+}
+Scene<acidrecfracmov::AcidRecFracMov, acidrecfracmov::AcidRecFracMovSolver, acidrecfracmov::Properties>::~Scene()
 {
 	paralution::stop_paralution();
 
@@ -165,6 +175,12 @@ void Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac
 	model->load(props);
 	paralution::init_paralution();
 	method = new acidrecfrac::AcidRecFracSolver(model);
+}
+void Scene<acidrecfracmov::AcidRecFracMov, acidrecfracmov::AcidRecFracMovSolver, acidrecfracmov::Properties>::load(acidrecfracmov::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	method = new acidrecfracmov::AcidRecFracMovSolver(model);
 }
 void Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>::load(wax_nit::Properties& props)
 {
@@ -255,5 +271,6 @@ template class Scene<acid1d::Acid1d, acid1d::Acid1dSolver, acid1d::Properties>;
 template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>;
 template class Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>;
 template class Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>;
+template class Scene<acidrecfracmov::AcidRecFracMov, acidrecfracmov::AcidRecFracMovSolver, acidrecfracmov::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
 template class Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>;
