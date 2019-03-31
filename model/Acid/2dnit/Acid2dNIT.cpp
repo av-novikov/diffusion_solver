@@ -215,6 +215,7 @@ void Acid2dNIT::makeDimLess()
 	props_g.ad = props_g.ad * P_dim / T_dim;
 
 	reac.activation_energy /= (P_dim * R_dim * R_dim * R_dim);
+	reac.reaction_heat /= (P_dim * R_dim * R_dim * R_dim);
 	reac.surf_init /= (1.0 / R_dim);
     reac.reaction_const /= (pow(R_dim, 3 * reac.alpha - 2.0) / t_dim);
 	for (auto& comp : reac.comps)
@@ -353,7 +354,9 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 	h[5] = next.m * next.sw * props_w.getDensity(next.p, next.xa, next.xw, next.xs) * next.xs -
 		prev.m * prev.sw * props_w.getDensity(prev.p, prev.xa, prev.xw, prev.xs) * prev.xs -
 		ht * reac.indices[REACTS::SALT] * reac.comps[REACTS::SALT].mol_weight * rate;
-	h[6] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (next.p - prev.p);
+	h[6] = getCn(cell) * (next.t - prev.t) - getAd(cell) * (next.p - prev.p) - 
+		ht * reac.reaction_heat /* reac.indices[REACTS::ACID] * reac.comps[REACTS::ACID].mol_weight */ * rate;
+	const double qwe123 = ht * reac.reaction_heat * rate.value();
 
 	int neighbor[4];
 	getNeighborIdx(cell.num, neighbor);
@@ -380,6 +383,8 @@ void Acid2dNIT::solve_eqMiddle(const Cell& cell)
 		h[4] += buf_w * upwd.xa;
 		h[5] += buf_w * upwd.xs;
 		h[6] += ht * (mult.ther * (next.t - nebr.t) + mult.pres * (next.p - nebr.p)) / fabs(getDistance(beta, cell));
+		const double qwe = ht * (mult.ther.value() * (next.t.value() - nebr.t.value()) + mult.pres.value() * (next.p.value() - nebr.p.value())) / fabs(getDistance(beta, cell));
+		const double qwe1233 = 0.0;
 	}
 
 	//for (int i = 0; i < var_size; i++)

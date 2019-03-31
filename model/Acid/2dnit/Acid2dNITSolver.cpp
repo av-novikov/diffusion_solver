@@ -30,8 +30,8 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
 
-    MAX_INIT_RES1 = 3.E-9;
-    MAX_INIT_RES2 = 1.E-9;
+    MAX_INIT_RES1 = 10.0;
+    MAX_INIT_RES2 = 5.0;
     MULT_UP = MULT_DOWN = 1.5;
 }
 Acid2dNITSolver::~Acid2dNITSolver()
@@ -79,8 +79,6 @@ void Acid2dNITSolver::writeData()
     
     model->injected_sol_volume -= q * model->ht;
     model->injected_acid_volume -= q * model->xa * model->ht;
-    qcells << "\t" << cur_t * t_dim / 3600.0;
-    qcells << "\t" << -q * model->Q_dim * 86400.0;
     qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
     qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
 
@@ -154,10 +152,10 @@ void Acid2dNITSolver::control()
 		model->setPeriod(curTimePeriod);
 	}
 
-	if (model->ht <= model->ht_max && iterations < 6)
-		model->ht = model->ht * 1.5;
-	else if (iterations > 6 && model->ht > model->ht_min)
-		model->ht = model->ht / 1.5;
+	//if (model->ht <= model->ht_max && iterations < 6)
+	//	model->ht = model->ht * 1.5;
+	//else if (iterations > 6 && model->ht > model->ht_min)
+	//	model->ht = model->ht / 1.5;
 
     if (/*cur_t >= model->period[curTimePeriod]*/ model->injected_sol_volume >= model->max_sol_volume && curTimePeriod == 0)
     {
@@ -246,6 +244,9 @@ void Acid2dNITSolver::solveStep()
 	averValue(averValPrev);
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
+	init_step_res.clear();
+	final_step_res.clear();
+	iter_num.clear();
 
 	auto continueIterations = [this]()
 	{
@@ -263,8 +264,11 @@ void Acid2dNITSolver::solveStep()
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
 		solver.Solve(PRECOND::ILU_SIMPLE);
-		copySolution(solver.getSolution());
+		init_step_res.push_back(solver.init_res);
+		final_step_res.push_back(solver.final_res);
+		iter_num.push_back(solver.iter_num);
 
+		copySolution(solver.getSolution());
 		checkStability();
 		err_newton = convergance(cellIdx, varIdx);
 
@@ -278,7 +282,7 @@ void Acid2dNITSolver::solveStep()
 
 	model->calcSkin();
 	checkVariables();
-	cout << "Newton Iterations = " << iterations << "\t cur_t = " << cur_t << endl;
+	cout << "Newton Iterations = " << iterations << "\t cur_t = " << cur_t * model->t_dim / 3600.0 << "\t ht = " << model->ht * model->t_dim / 3600.0 << endl;
 }
 void Acid2dNITSolver::checkVariables()
 {
