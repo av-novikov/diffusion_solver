@@ -33,73 +33,79 @@ namespace acidrecfracmov
 	//typedef std::unordered_map<new_cell::AdjancedCellIdx,Face,new_cell::IdxHasher> FaceMap;
 	const int NEBRS_NUM = 6;
 
-	class AcidRecFracMov
-	{
-		template<typename> friend class Snapshotter;
-		template<typename> friend class VTKSnapshotter;
-		template<typename> friend class AbstractSolver;
-		friend class AcidRecFracMovSolver; 
-	public:
-		static const int var_size = var_poro_size;
-	protected:
-		// Porous medium
-		int skeletonsNum;
-		std::vector<Skeleton_Props> props_sk;
-		// Fracture
-		FracProperties props_frac;
-		// Fluids
-		CurrentReaction reac;
-		Water_Props props_w;
-		Oil_Props props_o;
-		Gas_Props props_g;
-		
-		// Grids
-		int cellsNum_frac, cellsNum_poro, cellsNum_y_frac, cellsNum_y_poro, cellsNum_x, cellsNum_z;
-		double Volume_frac, Volume_poro;
-		//std::vector<PoroGrid> poro_grids;
-		std::vector<PoroCell> cells_poro;
-		std::vector<FracCell> cells_frac;
-		double re;
-		double dist_x;
-		double max_vel_x, max_vel_y, max_vel_z;
-		
-		// Temporary properties
-		double ht, ht_min, ht_max;
-		int periodsNum;
-		double Q_sum, Pwf, c, height_perf;
-		std::map<int, double> Qcell;
-		std::vector<double> period, rate, pwf, cs;
-		std::vector<bool> LeftBoundIsRate;
-		double injected_sol_volume, injected_acid_volume, max_sol_volume;
-		bool leftBoundIsRate;
-		bool rightBoundIsPres;
-		// Snapshotter
-		bool isWriteSnaps;
-		Snapshotter<AcidRecFracMov>* snapshotter;
-		std::vector<double> trans;
-		std::vector<double> widths;
-		double width;
+    class AcidRecFracMov
+    {
+        template<typename> friend class Snapshotter;
+        template<typename> friend class VTKSnapshotter;
+        template<typename> friend class AbstractSolver;
+        friend class AcidRecFracMovSolver;
+    public:
+        static const int var_size = var_poro_size;
+    protected:
+        // Porous medium
+        int skeletonsNum;
+        std::vector<Skeleton_Props> props_sk;
+        // Fracture
+        FracProperties props_frac;
+        // Fluids
+        CurrentReaction reac;
+        Water_Props props_w;
+        Oil_Props props_o;
+        Gas_Props props_g;
 
-		void buildFracGrid();
-		void buildPoroGrid();
-		void processGeometry();
-		void setProps(Properties& props);
-		void makeDimLess();
-		void setInitialState();
-		void setPerforated();
-		void calculateTrans();
-		// Service functions
-		// Schemes
-		PoroTapeVariable solvePoro(const PoroCell& cell, const Regime reg);
-		PoroTapeVariable solvePoroMid(const PoroCell& cell);
-		PoroTapeVariable solvePoroLeft(const PoroCell& cell, const Regime reg);
-		PoroTapeVariable solvePoroRight(const PoroCell& cell);
-		PoroTapeVariable solvePoroBorder(const PoroCell& cell);
-		FracTapeVariable solveFrac(const FracCell& cell, const Regime reg);
-		FracTapeVariable solveFracIn(const FracCell& cell);
-		FracTapeVariable solveFracMid(const FracCell& cell, const Regime reg);
-		FracTapeVariable solveFracBorder(const FracCell& cell);
-		// Service calculations
+        // Grids
+        int cellsNum_frac, cellsNum_poro, cellsNum_y_frac, cellsNum_y_poro, cellsNum_x, cellsNum_z;
+        double Volume_frac, Volume_poro;
+        std::vector<PoroCell> cells_poro;
+        std::vector<FracCell> cells_frac;
+        double re;
+        double dist_x;
+        double max_vel_x, max_vel_y, max_vel_z;
+
+        // Temporary properties
+        double ht, ht_min, ht_max;
+        int periodsNum;
+        double Q_sum, Pwf, c, height_perf;
+        std::map<int, double> Qcell;
+        std::vector<double> period, rate, pwf, cs;
+        std::vector<bool> LeftBoundIsRate;
+        double injected_sol_volume, injected_acid_volume, max_sol_volume;
+        bool leftBoundIsRate;
+        bool rightBoundIsPres;
+        // Snapshotter
+        bool isWriteSnaps;
+        Snapshotter<AcidRecFracMov>* snapshotter;
+        std::valarray<double> trans;
+        std::valarray<double> widths;
+        double width;
+
+        void buildFracGrid();
+        void buildPoroGrid();
+        void processGeometry();
+        void setProps(Properties& props);
+        void makeDimLess();
+        void setInitialState();
+        void setPerforated();
+        void calculateTrans();
+        void checkPoroCells();
+        void expandFracByCell(PoroCell& cell);
+        // Schemes
+        PoroTapeVariable solvePoro(const PoroCell& cell, const Regime reg);
+        PoroTapeVariable solvePoroMid(const PoroCell& cell);
+        PoroTapeVariable solvePoroLeft(const PoroCell& cell, const Regime reg);
+        PoroTapeVariable solvePoroRight(const PoroCell& cell);
+        PoroTapeVariable solvePoroBorder(const PoroCell& cell);
+        FracTapeVariable solveFrac(const FracCell& cell, const Regime reg);
+        FracTapeVariable solveFracIn(const FracCell& cell);
+        FracTapeVariable solveFracMid(const FracCell& cell, const Regime reg);
+        FracTapeVariable solveFracBorder(const FracCell& cell);
+        // Service calculations
+        inline const int getWidthIdByFracId(const int cell_id) const
+        {
+            const int i_ind = int(cell_id / ((cellsNum_z + 2) * (cellsNum_y_frac + 1))) - 1;
+            const int k_ind = int((cell_id % ((cellsNum_z + 2) * (cellsNum_y_frac + 1))) / (cellsNum_y_frac + 1)) - 1;
+            return i_ind * cellsNum_z + k_ind;
+        };
 		const int getSkeletonId(const PoroCell& cell) const
 		{
 			// Random
@@ -138,11 +144,11 @@ namespace acidrecfracmov
 			else
 				return cell.num;
 		};
-		inline const size_t getFracNebr(const size_t poro_idx) const
+		inline const int getFracNebr(const size_t poro_idx) const
 		{
 			return poro_idx / (cellsNum_y_poro + 2) * (cellsNum_y_frac + 1) + cellsNum_y_frac;
 		};
-		inline const size_t getPoroNebr(const size_t frac_idx)
+		inline const int getPoroNebr(const size_t frac_idx)
 		{
 			return (frac_idx - cellsNum_y_frac) / (cellsNum_y_frac + 1) * (cellsNum_y_poro + 2);
 		};

@@ -2,6 +2,7 @@
 #define ACIDRECFRACMOV_PROPERTIES_HPP_
 
 #include <array>
+#include <valarray>
 
 #include "model/Basic1d/Properties.hpp"
 #include "model/Acid/recfracmov/Reactions.hpp"
@@ -15,8 +16,10 @@ namespace acidrecfracmov
 
 	struct FracProperties
 	{
-		double w2, l2, height;
+		double l2, height;
 		double p_init, c_init;
+        std::valarray<double> w2;
+        double w2_init;
 	};
 	struct Skeleton_Props : public basic1d::Skeleton_Props
 	{
@@ -32,6 +35,8 @@ namespace acidrecfracmov
 		double xw_init;
 		// Maximum porosity
 		double m_max;
+        // Maximum permeability
+        double perm_max;
 		// Coefficient in petrophysical relationsship
 		double A;
 

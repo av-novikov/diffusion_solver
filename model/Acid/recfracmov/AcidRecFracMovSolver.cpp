@@ -175,7 +175,7 @@ void AcidRecFracMovSolver::control()
     analyzeNewtonConvergence();
 
     cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
-    cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
+    cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2_init / model->cellsNum_y_frac);
     cfl_z = model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
     MULT_UP = MULT_DOWN = 1.5;
     if (cfl_x + cfl_y + cfl_z > 0.98)
@@ -224,7 +224,7 @@ void AcidRecFracMovSolver::start()
         cout << setprecision(6);
         cout << "time = " << cur_t * t_dim / 3600.0 << "\tht = " << model->ht * t_dim / 3600.0 << endl;
 		cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
-		cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
+		cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2_init / model->cellsNum_y_frac);
         cfl_z = model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
 		model->max_vel_x = model->max_vel_y = model->max_vel_z = 0.0;
 		cfl = cfl_x + cfl_y + cfl_z;
@@ -252,6 +252,7 @@ bool AcidRecFracMovSolver::doNextSmartStep()
     if (!solveSmartStep())
         return false;
 	model->calculateTrans();
+    model->checkPoroCells();
     return true;
 }
 void AcidRecFracMovSolver::copySolution(const paralution::LocalVector<double>& sol)

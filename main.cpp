@@ -5,7 +5,8 @@ using namespace issues;
 
 int main(int argc, char* argv[])
 { 
-	using namespace acidrecfracmov;
-	run<Properties, AcidRecFracMov, AcidRecFracMovSolver>();
+	using namespace acidrecfrac;
+	//run<Properties, AcidRecFracMov, AcidRecFracMovSolver>();
+    run<Properties, AcidRecFrac, AcidRecFracSolver>();
 	return 0;
 }

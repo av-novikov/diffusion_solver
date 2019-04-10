@@ -63,6 +63,21 @@ void Snapshotter<acidellfrac::AcidEllFrac>::setModel(acidellfrac::AcidEllFrac* _
 	nz = model->cellsNum_z + 2;
 }
 template<>
+void Snapshotter<acidrecfrac::AcidRecFrac>::setModel(acidrecfrac::AcidRecFrac* _model)
+{
+    model = _model;
+
+    T_dim = model->T_dim;
+    t_dim = model->t_dim;
+    r_dim = model->R_dim;
+    T_dim = model->T_dim;
+    P_dim = model->P_dim;
+
+    nx = model->cellsNum_x + 2;
+    ny = model->cellsNum_y_frac + 1;
+    nz = model->cellsNum_z + 2;
+}
+template<>
 void Snapshotter<acidrecfracmov::AcidRecFracMov>::setModel(acidrecfracmov::AcidRecFracMov* _model)
 {
 	model = _model;

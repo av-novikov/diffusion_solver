@@ -1538,7 +1538,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 void VTKSnapshotter<acidrecfracmov::AcidRecFracMov>::dump_all(int i)
 {
 	using namespace acidrecfracmov;
-	const double& w2 = model->props_frac.w2;
+	const double w2 = model->props_frac.w2_init;
 	const double Y_MULT = 1.0;
 	// Grid
 	auto grid_frac = vtkSmartPointer<vtkUnstructuredGrid>::New();
