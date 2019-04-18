@@ -2,6 +2,7 @@
 #define HEXCELL_HPP_
 
 #include "model/cells/AbstractCell.hpp"
+#include "model/cells/Variables.hpp"
 
 template <typename varType, typename PropsType = EmptyStruct>
 class HexCell : public AbstractCell<varType>
@@ -24,7 +25,18 @@ public:
 	{
 		V = hx * hy * hz;
 	};
-	~HexCell() {};
+    template <typename TVar, typename TProp,
+        typename = typename std::enable_if<std::is_same<VarOilWater, varType>::value
+                                        && std::is_same<JustAcid, TVar>::value 
+                                        && std::is_same<PropsType, TProp>::value>::type>
+    HexCell(const HexCell<TVar,TProp>& rhs, const int _num, const Type _type) : AbstractCell<varType>(_num, _type)
+    {
+        x = rhs.x;      y = rhs.y;      z = rhs.z;
+        hx = rhs.hx;    hy = rhs.hy;    hz = rhs.hz;
+        props = rhs.props;
+        V = rhs.V;
+    };
+    ~HexCell() {};
 };
 
 #endif /* HEXCELL_HPP_ */

@@ -29,8 +29,6 @@ namespace acidrecfrac
 
 	static const int var_poro_size = PoroVariable::size;
 	static const int var_frac_size = FracVariable::size;
-	//typedef FracCell::Face Face;
-	//typedef std::unordered_map<new_cell::AdjancedCellIdx,Face,new_cell::IdxHasher> FaceMap;
 	const int NEBRS_NUM = 6;
 
 	class AcidRecFrac
@@ -339,6 +337,7 @@ namespace acidrecfrac
 
 		int getCellsNum() { return cellsNum_frac + cellsNum_poro; };
 		double getRate(const int idx) const;
+        std::vector<PoroCell>& getPoroMesh() { return cells_poro; };
 	};
 };
 

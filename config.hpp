@@ -16,11 +16,13 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
+#include "model/Acid/recfrac/RecFracProd.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
 #include "model/WaxNIT/2d/WaxNIT.hpp"
 #include "model/WaxNIT/2d/WaxNITSolver.hpp"
+#include "Scene.h"
 
 namespace issues
 {
@@ -830,6 +832,10 @@ namespace issues
 		props->cellsNum_y_poro = 75;
 		props->cellsNum_z = 1;
 
+        props->prod_props.x_size = props->prod_props.y_size = 1000.0;
+        props->prod_props.z_size = props->props_frac.height;
+        props->prod_props.nx = props->prod_props.ny = 200;
+
 		acidrecfrac::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
 		props_sk.m_max = 0.4;
@@ -1109,6 +1115,20 @@ namespace issues
 		scene.load(*props);
 		scene.start();
 	};
+    template <>
+    void run<acidrecfrac::Properties, acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver>()
+    {
+        using namespace acidrecfrac;
+        auto props = issues::getProps<Properties>();
+        Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
+        scene.load(*props);
+
+        const auto model = scene.getModel();
+        acidrecfrac_prod::RecFracProd prod_model;
+        prod_model.load(*props, model->getPoroMesh());
+
+        scene.start();
+    };
 };
 
 double acid1d::Component::T = 300.0;

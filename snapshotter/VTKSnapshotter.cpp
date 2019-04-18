@@ -22,6 +22,7 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
+#include "model/Acid/recfrac/RecFracProd.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/VPP2d/VPP2d.hpp"
 #include "model/Bingham1d/Bingham1d.hpp"
@@ -53,6 +54,11 @@ template<>
 VTKSnapshotter<acidrecfrac::AcidRecFrac>::VTKSnapshotter()
 {
 	pattern = prefix + "AcidRecFrac_%{NAME}_%{STEP}.vtu";
+}
+template<>
+VTKSnapshotter<acidrecfrac_prod::RecFracProd>::VTKSnapshotter()
+{
+    pattern = prefix + "AcidRecFrac_Prod_%{NAME}_%{STEP}.vtu";
 }
 template<>
 VTKSnapshotter<acidrecfracmov::AcidRecFracMov>::VTKSnapshotter()
@@ -3131,6 +3137,7 @@ template class VTKSnapshotter<wax_nit1d::WaxNIT1d>;
 template class VTKSnapshotter<acidfrac::AcidFrac>;
 template class VTKSnapshotter<acidellfrac::AcidEllFrac>;
 template class VTKSnapshotter<acidrecfrac::AcidRecFrac>;
+template class VTKSnapshotter<acidrecfrac_prod::RecFracProd>;
 template class VTKSnapshotter<vpp2d::VPP2d>;
 template class VTKSnapshotter<bing1d::Bingham1d>;
 template class VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>;

@@ -144,6 +144,11 @@ namespace acidrecfrac
 			//return co2.getDensity(p);
 		};
 	};
+    struct ProdProps
+    {
+        double x_size, y_size, z_size;
+        int nx, ny;
+    };
 	struct Properties : public basic1d::Properties
 	{
 		FracProperties props_frac;
@@ -151,6 +156,7 @@ namespace acidrecfrac
 		Water_Props props_w;
 		Oil_Props props_o;
 		Gas_Props props_g;
+        ProdProps prod_props;
 
 		size_t cellsNum_y_frac, cellsNum_z;
 		size_t cellsNum_y_poro;

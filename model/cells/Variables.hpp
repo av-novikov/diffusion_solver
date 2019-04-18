@@ -42,6 +42,25 @@ struct TapeVar1PhaseNIT
 	static const int size = 1;
 	adouble t;
 };
+struct VarOilWater
+{
+    static const int size = 2;
+
+    union {
+        double values[2];
+        struct
+        {
+            double p;
+            double s;
+        };
+    };
+};
+struct TapeOilWater
+{
+    static const int size = 2;
+    adouble p;
+    adouble s;
+};
 struct Var2phase 
 {
 	static const int size = 3;
