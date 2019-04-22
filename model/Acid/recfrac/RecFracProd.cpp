@@ -31,7 +31,8 @@ void RecFracProd::setProps(Properties& props)
     x_size = props.prod_props.x_size;
     y_size = props.prod_props.y_size;
     z_size = props.prod_props.z_size;
-    
+    R_dim = props.prod_props.R_dim;
+
 	periodsNum = props.timePeriods.size();
 	rate.resize(periodsNum);
 	pwf.resize(periodsNum);
@@ -71,8 +72,6 @@ void RecFracProd::setProps(Properties& props)
 void RecFracProd::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
-	//R_dim = props_frac.l2 / 8.0;
-    R_dim = 1000.0;
 	t_dim = 1.7 * 3600.0;
 	//t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
@@ -125,61 +124,48 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
     hy = (y_size - prev_y_size) / (cellsNum_y - prev_cellsNum_y);
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
 
+    const double tmp = cells_poro[0].y;
     for (auto& cell : cells_poro)
-        cell.y -= cells_poro[0].y;
+        cell.y -= tmp;
 
-	// Left border
-	auto cur_type = Type::SIDE_LEFT;
-    cur_hx = 0.0;	 cx = 0.0;
-	for (int k = 0; k < cellsNum_z + 2; k++)
-	{
-        cy = 0.0;
-        for (int i = 0; i < cellsNum_y + 2; i++)
+    auto cur_type = Type::MIDDLE;
+    for (int j = 0; j < cellsNum_x + 2; j++)
+    {
+        if (j < prev_cellsNum_x + 1)
         {
-            if (k < prev_cellsNum_z + 2 && i < prev_cellsNum_y)
+            cx = cells_poro[j * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x;
+            cur_hx = cells_poro[j * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].hx;
+        }
+        else
+        {
+            cx = cells_poro[(prev_cellsNum_x + 1) * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x +
+                (double)(j - (prev_cellsNum_x + 1)) * hx;
+            cur_hx = (j == cellsNum_x + 1) ? 0.0 : hx;
+        }                                            
+        
+        for (int k = 0; k < cellsNum_z + 2; k++)
+        {
+            cz = cells_poro[k * (prev_cellsNum_y + 2)].z;
+            cur_hz = cells_poro[k * (prev_cellsNum_y + 2)].hz;
+
+            for (int i = 0; i < cellsNum_y + 2; i++)
             {
-                cells.push_back(Cell(cells_poro[i + k * (cellsNum_y + 2)], counter, cur_type));
-                cy = cells.back().y;    cz = cells.back().z;
-            }
-            else
-            {
-                cur_hy = (i == cellsNum_y + 1) ? 0.0 : hy;
-                cells.push_back(Cell(counter++, cx, cy, cz, cur_hx, cur_hy, cur_hz, cur_type));
+                cy = 0.0;
+                if (j < prev_cellsNum_x + 1 && i < prev_cellsNum_y + 1)
+                {
+                    cells.push_back(Cell(cells_poro[i + k * (cellsNum_y + 2) + j * (cellsNum_y + 2) * (cellsNum_z + 2)], counter, cur_type));
+                    const auto& cell = cells.back();
+                    cy = cell.y + cell.hy;
+                }
+                else
+                {
+                    cur_hy = (i == cellsNum_y + 1) ? 0.0 : hy;
+                    cells.push_back(Cell(counter++, cx + cur_hx / 2.0, cy + cur_hy / 2.0, cz, cur_hx, cur_hy, cur_hz, cur_type));
+                    cy += cur_hy;
+                }
             }
         }
-		/*if (k == 0)
-			hz = cz = 0.0;
-		else if (k == cellsNum_z + 1)
-		{
-			hz = 0.0;
-			cz = z_size;
-		}
-		else
-		{
-			//hz = props_frac.height / cellsNum_z;
-			cz += hz / 2.0;
-			hz = props_sk[k - 1].height;
-			cz += hz / 2.0;
-		}
-
-		for (int i = 0; i < cellsNum_y + 2; i++)
-		{
-			if (i == cellsNum_y + 1)
-			{
-				hy = 0.0;
-				cy = re;
-			}
-			else
-			{
-				cy = delta + r_prev * (exp(logStep) + 1.0) / 2.0;
-				hy = r_prev * (exp(logStep) - 1.0);
-				r_prev *= exp(logStep);
-			}
-
-			cells.push_back(PoroCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
-			auto& cell = cells_poro.back();
-		}*/
-	}
+    }
 }
 void RecFracProd::processGeometry()
 {

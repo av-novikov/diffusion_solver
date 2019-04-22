@@ -834,7 +834,8 @@ namespace issues
 
         props->prod_props.x_size = props->prod_props.y_size = 1000.0;
         props->prod_props.z_size = props->props_frac.height;
-        props->prod_props.nx = props->prod_props.ny = 200;
+        props->prod_props.nx = props->prod_props.ny = 100;
+        props->R_dim = props->prod_props.R_dim = props->props_frac.l2 / 5.0;
 
 		acidrecfrac::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;

@@ -146,7 +146,7 @@ namespace acidrecfrac
 	};
     struct ProdProps
     {
-        double x_size, y_size, z_size;
+        double x_size, y_size, z_size, R_dim;
         int nx, ny;
     };
 	struct Properties : public basic1d::Properties
@@ -166,6 +166,7 @@ namespace acidrecfrac
 		std::vector<double> cs;
 		std::vector<bool> LeftBoundIsRate;
 		std::vector< std::pair<double, double> > rho_co2;
+        double R_dim;
 	};
 };
 

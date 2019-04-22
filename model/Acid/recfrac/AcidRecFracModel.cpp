@@ -32,6 +32,7 @@ void AcidRecFrac::setProps(Properties& props)
 	cellsNum_y_poro = props.cellsNum_y_poro;
 	cellsNum_x = props.cellsNum_x;
 	cellsNum_z = props.cellsNum_z;
+    R_dim = props.R_dim;
 
 	cellsNum_frac = (cellsNum_y_frac + 1) * (cellsNum_x + 2) * (cellsNum_z + 2);
 	cellsNum_poro = (cellsNum_y_poro + 2) * (cellsNum_x + 2) * (cellsNum_z + 2);
@@ -92,7 +93,6 @@ void AcidRecFrac::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
 	//R_dim = props_frac.l2 / 8.0;
-	R_dim = props_frac.l2 / 5.0;
 	t_dim = 1.7 * 3600.0;
 	//t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
