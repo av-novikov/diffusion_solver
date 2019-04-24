@@ -14,6 +14,7 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
+#include "model/Acid/recfrac/RecFracProd.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/2d/WaxNIT.hpp"
@@ -1077,6 +1078,7 @@ template class AbstractSolver<acid1d::Acid1d>;
 template class AbstractSolver<acidfrac::AcidFrac>;
 template class AbstractSolver<acidellfrac::AcidEllFrac>;
 template class AbstractSolver<acidrecfrac::AcidRecFrac>;
+template class AbstractSolver<acidrecfrac_prod::RecFracProd>;
 template class AbstractSolver<acidrecfracmov::AcidRecFracMov>;
 template class AbstractSolver<wax_nit1d::WaxNIT1d>;
 template class AbstractSolver<wax_nit::WaxNIT>;

@@ -16,6 +16,7 @@
 #include "model/Acid/frac/AcidFracModel.hpp"
 #include "model/Acid/ellfrac/AcidEllFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
+#include "model/Acid/recfrac/RecFracProdSolver.hpp"
 #include "model/Acid/recfrac/RecFracProd.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
@@ -1124,11 +1125,11 @@ namespace issues
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
 
-        const auto model = scene.getModel();
-        acidrecfrac_prod::RecFracProd prod_model;
-        prod_model.load(*props, model->getPoroMesh());
-
-        scene.start();
+        auto model0 = scene.getModel();
+        acidrecfrac_prod::RecFracProd model;
+        model.load(*props, model0->getPoroMesh());
+        acidrecfrac_prod::RecFracProdSolver method(&model);
+        method.start();
     };
 };
 

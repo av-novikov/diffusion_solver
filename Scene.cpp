@@ -44,6 +44,9 @@
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
 #include "model/Acid/recfrac/AcidRecFracSolver.hpp"
 
+#include "model/Acid/recfrac/RecFracProd.hpp"
+#include "model/Acid/recfrac/RecFracProdSolver.hpp"
+
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovSolver.hpp"
 

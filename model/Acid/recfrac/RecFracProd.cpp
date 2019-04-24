@@ -26,38 +26,29 @@ void RecFracProd::setProps(Properties& props)
     cellsNum_y = props.prod_props.ny;
     cellsNum_z = props.cellsNum_z;
     prev_x_size = props.props_frac.l2;
-    prev_y_size = props.re;
+    prev_y_size = props.re - props.props_frac.w2;
     prev_z_size = props.props_frac.height;
     x_size = props.prod_props.x_size;
     y_size = props.prod_props.y_size;
     z_size = props.prod_props.z_size;
     R_dim = props.prod_props.R_dim;
 
-	periodsNum = props.timePeriods.size();
+    periodsNum = 1;// props.timePeriods.size();
 	rate.resize(periodsNum);
 	pwf.resize(periodsNum);
 	int rate_idx = 0, pres_idx = 0;
 	for (int i = 0; i < periodsNum; i++)
 	{
-		LeftBoundIsRate.push_back(props.LeftBoundIsRate[i]);
-		cs.push_back(props.cs[i]);
-		period.push_back(props.timePeriods[i]);
-		if (LeftBoundIsRate.back())
-		{
-			rate[i] = props.rates[rate_idx++] / 86400.0;
-			pwf[i] = 0.0;
-		}
-		else
-		{
-			pwf[i] = props.pwf[pres_idx++];
-			rate[i] = 0.0;
-		}
+        LeftBoundIsRate.push_back(false);// props.LeftBoundIsRate[i]);
+        period.push_back(365.0 * 86400.0);// props.timePeriods[i]);
+        pwf[i] = 0.8 * props_sk.back().p_out;// .pwf[pres_idx++];
+        rate[i] = 0.0;
 	}
 
 	// Temporal properties
-	ht = props.ht;
-	ht_min = props.ht_min;
-	ht_max = props.ht_max;
+    ht = 3600.0;// props.ht;
+    ht_min = 1000.0;// props.ht_min;
+    ht_max = 1000000.0;// props.ht_max;
 
 	props_w = props.props_w;
 	props_w.visc = cPToPaSec(props_w.visc);
@@ -65,9 +56,6 @@ void RecFracProd::setProps(Properties& props)
 	props_o.visc = cPToPaSec(props_o.visc);
 
 	makeDimLess();
-
-	props_o.b = setDataset(props.B_oil, P_dim / BAR_TO_PA, 1.0);
-	props_o.Rs = setDataset(props.Rs, P_dim / BAR_TO_PA, 1.0);
 }
 void RecFracProd::makeDimLess()
 {
@@ -123,6 +111,7 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
     hx = (x_size - prev_x_size) / (cellsNum_x - prev_cellsNum_x);
     hy = (y_size - prev_y_size) / (cellsNum_y - prev_cellsNum_y);
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
+    Volume = 0.0;
 
     const double tmp = cells_poro[0].y;
     for (auto& cell : cells_poro)
@@ -139,28 +128,39 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
         else
         {
             cx = cells_poro[(prev_cellsNum_x + 1) * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x +
-                (double)(j - (prev_cellsNum_x + 1)) * hx;
+                (double)(j - (prev_cellsNum_x + 1) + 0.5) * hx;
             cur_hx = (j == cellsNum_x + 1) ? 0.0 : hx;
         }                                            
-        
+
+
         for (int k = 0; k < cellsNum_z + 2; k++)
         {
             cz = cells_poro[k * (prev_cellsNum_y + 2)].z;
             cur_hz = cells_poro[k * (prev_cellsNum_y + 2)].hz;
+            cy = 0.0;
 
             for (int i = 0; i < cellsNum_y + 2; i++)
             {
-                cy = 0.0;
+                cur_type = (j == 0) ? Type::SIDE_LEFT : Type::MIDDLE;
+                cur_type = (j == cellsNum_x + 1) ? Type::SIDE_RIGHT : cur_type;
+                cur_type = (k == 0) ? Type::BOTTOM : cur_type;
+                cur_type = (k == cellsNum_z + 1) ? Type::TOP : cur_type;
+                cur_type = (i == 0 && cur_type == Type::MIDDLE) ? Type::WELL_LAT : cur_type;
+                cur_type = (i == cellsNum_y + 1 && cur_type == Type::MIDDLE) ? Type::RIGHT : cur_type;
+                cur_type = (i < 20 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
                 if (j < prev_cellsNum_x + 1 && i < prev_cellsNum_y + 1)
                 {
-                    cells.push_back(Cell(cells_poro[i + k * (cellsNum_y + 2) + j * (cellsNum_y + 2) * (cellsNum_z + 2)], counter, cur_type));
+                    cells.push_back(Cell(cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))], counter++, cur_type));
                     const auto& cell = cells.back();
-                    cy = cell.y + cell.hy;
+                    Volume += cell.V;
+                    cy = cell.y + cell.hy / 2.0;
                 }
                 else
                 {
-                    cur_hy = (i == cellsNum_y + 1) ? 0.0 : hy;
-                    cells.push_back(Cell(counter++, cx + cur_hx / 2.0, cy + cur_hy / 2.0, cz, cur_hx, cur_hy, cur_hz, cur_type));
+                    cur_hy = (i < prev_cellsNum_y + 1) ? cells_poro[i].hy : hy;
+                    cur_hy = (i == cellsNum_y + 1) ? 0.0 : cur_hy;
+                    cells.push_back(Cell(counter++, cx, cy + cur_hy / 2.0, cz, cur_hx, cur_hy, cur_hz, cur_type));
+                    Volume += cells.back().V;
                     cy += cur_hy;
                 }
             }
@@ -185,81 +185,140 @@ void RecFracProd::setPerforated()
 };
 void RecFracProd::setPeriod(int period)
 {
-	/*leftBoundIsRate = LeftBoundIsRate[period];
-	if (leftBoundIsRate)
-	{
-		Q_sum = rate[period];
-		if (Q_sum == 0.0)
-		{
-			for(auto& cell : cells)
-				cell.u_prev.p = cell.u_iter.c = cell.u_next.c = 0.0;
-		}
-
-		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) 
-		{
-			std::map<int, double>::iterator it;
-			for (it = Qcell.begin(); it != Qcell.end(); ++it)
-				it->second = 3.0 * Q_sum * cells[it->first].hy / 2.0 / props_frac.w2 * 
-					(1.0 - (cells_frac[it->first].y / props_frac.w2) * (cells_frac[it->first].y / props_frac.w2));
-		}
-		else
-		{
-			std::map<int, double>::iterator it;
-			for (it = Qcell.begin(); it != Qcell.end(); ++it)
-				it->second = it->second * Q_sum / rate[period - 1];
-		}
-	}
-	else
-	{
-		Pwf = pwf[period];
-		Q_sum = 0.0;
-	}
-	c = cs[period];*/
+    leftBoundIsRate = false;
+    Pwf = pwf[period];
+    Q_sum = 0.0;
 }
-void RecFracProd::setInitialState()
+void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
 {
-	//const auto& props = props_sk.back();
-/*	for (auto& cell : cells)
-	{
-		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = props.p_init - grav * props_w.dens_stc * cell.z;
-        cell.u_prev.p = cell.u_iter.p = cell.u_next.p = 1.0;
-	}
-	for (auto& cell : cells_poro)
-	{
-		cell.props = &props_sk[getSkeletonId(cell)];
-		cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
-		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
-		
-		if (cell.type == PoroType::WELL_LAT)
-		{
-			cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = 1.0 - cell.props->s_oc;
-			cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = 0.0;
-			cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = 1.0;
-		}
-		else
-		{
-			cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = cell.props->sw_init;
-			cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = cell.props->xa_init;
-			cell.u_prev.xw = cell.u_iter.xw = cell.u_next.xw = cell.props->xw_init;
-		}
-		cell.u_prev.xs = cell.u_iter.xs = cell.u_next.xs = 0.0;
+    for (int j = 0; j < cellsNum_x + 2; j++)
+    {
+        for (int k = 0; k < cellsNum_z + 2; k++)
+        {
+            for (int i = 0; i < cellsNum_y + 2; i++)
+            {
+                auto& cell = cells[i + (cellsNum_y + 2) * (k + j * (cellsNum_z + 2))];
+                cell.props = &props_sk[getSkeletonId(cell)];
+                cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
+                if (j < prev_cellsNum_x + 1 && i < prev_cellsNum_y + 1)
+                {
+                    auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
+                    cell.u_prev.s = cell.u_iter.s = cell.u_next.s = cell0.u_next.sw;
+                    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell0.u_next.m;
+                }
+                else
+                {
+                    cell.u_prev.s = cell.u_iter.s = cell.u_next.s = cell.props->sw_init;
+                    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
+                }
+            }
+        }
+    }
 
-	}
-
-	x_frac = new FracTapeVariable[cellsNum_frac];
-	x_poro = new PoroTapeVariable[cellsNum_poro];
-	h = new adouble[ var_frac_size * cellsNum_frac + var_poro_size * cellsNum_poro ];*/
+	x = new TapeVariable[ cellsNum ];
+	h = new adouble[ Variable::size * cellsNum ];
 }
-double RecFracProd::getRate(const int idx) const
+double RecFracProd::getRate(const Cell& cell) const
 {
-	/*const FracCell& cell = cells_frac[idx];
-	assert(cell.type == FracType::FRAC_IN);
 	assert(cell.hy != 0.0 && cell.hz != 0.0);
-	const FracCell& beta = cells_frac[cell.num + (cellsNum_z + 2) * (cellsNum_y_frac + 1)];
-	const FracVariable& next = cell.u_next;
-	const FracVariable& nebr = beta.u_next;
-
-	return cell.hy * cell.hz * props_frac.w2 * props_frac.w2 / props_w.visc * (nebr.p - next.p) / (cell.hx + beta.hx) * 
-				(1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));*/
-    return 0.0;
+	const Cell& beta = cells[cell.num + (cellsNum_z + 2) * (cellsNum_y + 2)];
+	const Variable& next = cell.u_next;
+	const Variable& nebr = beta.u_next;
+    return -cell.hy * cell.hz * getPoroTrans(cell, beta).value() * props_w.getKr(next.s, next.m, cell.props).value() * (nebr.p - next.p) / (cell.hx + beta.hx) / props_w.visc;
 };
+
+TapeVariable RecFracProd::solveFrac(const Cell& cell)
+{
+    if (cell.type == Type::MIDDLE)
+        return solvePoroMid(cell);
+    else if (cell.type == Type::FRAC_IN)
+        return solvePoroLeft(cell);
+    else if (cell.type == Type::RIGHT || cell.type == Type::SIDE_RIGHT)
+        return solvePoroRight(cell);
+    else
+        return solvePoroBorder(cell);
+}
+TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
+{
+    assert(cell.type == Type::MIDDLE);
+    const auto& props = *cell.props;
+    auto& next = x[cell.num];
+    const auto& prev = cell.u_prev;
+
+    TapeVariable res;
+    res.p = cell.u_next.m * props_w.dens_stc * (next.s - prev.s);
+    res.s = -res.p;
+
+    int upwd_idx;
+    int neighbor[NEBRS_NUM];
+    getPoroNeighborIdx(cell.num, neighbor);
+    for (size_t i = 0; i < NEBRS_NUM; i++)
+    {
+        const auto& beta = cells[neighbor[i]];
+        const auto& nebr = x[beta.num];
+        upwd_idx = getUpwindIdx(cell, beta);
+        const auto& upwd = x[upwd_idx];
+
+        res.p += ht / cell.V * getPoroTrans(cell, beta) * (next.p - nebr.p) *
+            props_w.dens_stc * props_w.getKr(upwd.s, cell.u_next.m, cell.props) / props_w.visc;
+        res.s += ht / cell.V * getPoroTrans(cell, beta) * (next.p - nebr.p) *
+            props_o.dens_stc * props_o.getKr(upwd.s, cell.u_next.m, cell.props) / props_o.visc;
+    }
+
+    return res;
+}
+TapeVariable RecFracProd::solvePoroLeft(const Cell& cell)
+{
+    assert(cell.type == Type::FRAC_IN);
+    const auto& beta = cells[cell.num + (cellsNum_z + 2) * (cellsNum_y + 2)];
+    const auto& props = *cell.props;
+    const auto& next = x[cell.num];
+    const auto& nebr = x[beta.num];
+    TapeVariable res;
+    res.p = (next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim;
+    res.s = (next.s - nebr.s) / P_dim;
+    return res;
+}
+TapeVariable RecFracProd::solvePoroRight(const Cell& cell)
+{
+    assert(cell.type == Type::RIGHT || cell.type == Type::SIDE_RIGHT);
+    int beta_idx = -1;
+    if (cell.type == Type::SIDE_RIGHT)
+        beta_idx = cell.num - (cellsNum_z + 2) * (cellsNum_y + 2);
+    else if (cell.type == Type::RIGHT)
+        beta_idx = cell.num - 1;
+    const auto& beta = cells[beta_idx];
+    const auto& props = *cell.props;
+
+    const auto& next = x[cell.num];
+    const auto& nebr = x[beta.num];
+
+    adouble rightIsPres = rightBoundIsPres;
+    TapeVariable res;
+    res.p = (next.p - props.p_out + grav * props_w.dens_stc * cell.z) / P_dim;
+    res.s = (next.s - nebr.s) / P_dim;
+    return res;
+}
+TapeVariable RecFracProd::solvePoroBorder(const Cell& cell)
+{
+    assert(cell.type == Type::SIDE_LEFT || cell.type == Type::TOP || cell.type == Type::BOTTOM || cell.type == Type::WELL_LAT);
+    int beta_idx = -1;
+    if (cell.type == Type::SIDE_LEFT)
+        beta_idx = cell.num + (cellsNum_z + 2) * (cellsNum_y + 2);
+    else if (cell.type == Type::BOTTOM)
+        beta_idx = cell.num + (cellsNum_y + 2);
+    else if (cell.type == Type::TOP)
+        beta_idx = cell.num - (cellsNum_y + 2);
+    else if (cell.type == Type::WELL_LAT)
+        beta_idx = cell.num + 1;
+
+    const auto& beta = cells[beta_idx];
+    const auto& props = *cell.props;
+    const auto& next = x[cell.num];
+    const auto& nebr = x[beta.num];
+
+    TapeVariable res;
+    res.p = (next.p - nebr.p + grav * props_w.dens_stc * (cell.z - beta.z)) / P_dim;
+    res.s = (next.s - nebr.s) / P_dim;
+    return res;
+}

@@ -90,7 +90,7 @@ void Snapshotter<acidrecfrac_prod::RecFracProd>::setModel(acidrecfrac_prod::RecF
     P_dim = model->P_dim;
 
     nx = model->cellsNum_x + 2;
-    ny = model->cellsNum_y + 1;
+    ny = model->cellsNum_y + 2;
     nz = model->cellsNum_z + 2;
 }
 template<>

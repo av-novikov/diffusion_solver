@@ -47,11 +47,12 @@ struct VarOilWater
     static const int size = 2;
 
     union {
-        double values[2];
+        double values[3];
         struct
         {
             double p;
             double s;
+            double m;
         };
     };
 };

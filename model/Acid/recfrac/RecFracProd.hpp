@@ -20,7 +20,9 @@ namespace acidrecfrac_prod
     typedef acidrecfrac::PoroCell PoroCell;
     typedef HexCell<Variable, Skeleton_Props> Cell;
     typedef Cell::Type Type;
+    const int NEBRS_NUM = acidrecfrac::NEBRS_NUM;
 
+    static const int var_size = Variable::size;
 	class RecFracProd
 	{
 		template<typename> friend class Snapshotter;
@@ -28,6 +30,7 @@ namespace acidrecfrac_prod
 		template<typename> friend class AbstractSolver;
 		friend class RecFracProdSolver; 
 	public:
+        static const int var_size = var_size;
 	protected:
 		std::vector<Skeleton_Props> props_sk;
 		// Fluids
@@ -41,7 +44,7 @@ namespace acidrecfrac_prod
         double prev_x_size, prev_y_size, prev_z_size;
         int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z;
         int prev_cellsNum_x, prev_cellsNum_y, prev_cellsNum_z;
-		
+
 		// Temporary properties
 		double ht, ht_min, ht_max;
 		int periodsNum;
@@ -59,7 +62,7 @@ namespace acidrecfrac_prod
 		void processGeometry();
 		void setProps(Properties& props);
 		void makeDimLess();
-		void setInitialState();
+		void setInitialState(const std::vector<PoroCell>& cells_poro);
 		void setPerforated();
 		// Service calculations
 		template <class TCell>
@@ -74,11 +77,11 @@ namespace acidrecfrac_prod
 		{
 			return (p1 * (adouble)l2 + p2 * (adouble)l1) / (adouble)(l1 + l2);
 		};
-		inline adouble getPoroTrans(const Cell& cell, const TapeVariable& next,	const Cell& beta, const TapeVariable& nebr) const
+        inline adouble getPoroTrans(const Cell& cell, const Cell& beta) const
 		{
-			/*adouble k1, k2;
-			k1 = cell.props->getPermCoseni(next.m, next.p);
-			k2 = beta.props->getPermCoseni(nebr.m, nebr.p);
+			adouble k1, k2;
+			k1 = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p);
+			k2 = beta.props->getPermCoseni(cell.u_next.m, cell.u_next.p);
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 
@@ -87,7 +90,7 @@ namespace acidrecfrac_prod
 			if (fabs(cell.y - beta.y) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hx * cell.hz / (k1 * beta.hy + k2 * cell.hy);
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
-				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);*/
+				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
             return 0.0;
 		};
 		inline double upwindIsCur(const Cell& cell, const Cell& beta)
@@ -97,6 +100,51 @@ namespace acidrecfrac_prod
 			else
 				return 1.0;
 		};
+        const int getSkeletonId(const Cell& cell) const
+        {
+            // Random
+            /*const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
+            const int k_idx = int((cell.num - i_idx * (cellsNum_y_poro + 2) * (cellsNum_z + 2)) / (cellsNum_y_poro + 2));
+            int i_idx_modi = i_idx - 1;
+            if (i_idx_modi < 0)
+            i_idx_modi = 0;
+            if (i_idx_modi == cellsNum_x)
+            i_idx_modi = cellsNum_x - 1;
+
+            int k_idx_modi = k_idx - 1;
+            if (k_idx_modi < 0)
+            k_idx_modi = 0;
+            if (k_idx_modi == cellsNum_z)
+            k_idx_modi = cellsNum_z - 1;
+
+            return i_idx_modi * cellsNum_z + k_idx_modi;*/
+
+            // Example
+            const int i_idx = int(cell.num / ((cellsNum_y + 2) * (cellsNum_z + 2)));
+            const int k_idx = int((cell.num - i_idx * (cellsNum_y + 2) * (cellsNum_z + 2)) / (cellsNum_y + 2));
+
+            int k_idx_modi = k_idx - 1;
+            if (k_idx_modi < 0)
+                k_idx_modi = 0;
+            if (k_idx_modi == cellsNum_z)
+                k_idx_modi = cellsNum_z - 1;
+            return k_idx_modi;
+        }
+        inline void getPoroNeighborIdx(const int cur, int* const neighbor) const
+        {
+            neighbor[0] = cur - 1;
+            neighbor[1] = cur + 1;
+            neighbor[2] = cur - (cellsNum_y + 2) * (cellsNum_z + 2);
+            neighbor[3] = cur + (cellsNum_y + 2) * (cellsNum_z + 2);
+            neighbor[4] = cur - (cellsNum_y + 2);
+            neighbor[5] = cur + (cellsNum_y + 2);
+        };
+
+        TapeVariable solvePoroMid(const Cell& cell);
+        TapeVariable solvePoroLeft(const Cell& cell);
+        TapeVariable solvePoroRight(const Cell& cell);
+        TapeVariable solvePoroBorder(const Cell& cell);
+        TapeVariable solveFrac(const Cell& cell);
 	public:
 		// Dimensions
 		double t_dim, R_dim, P_dim, T_dim, Q_dim, grav;
@@ -111,9 +159,7 @@ namespace acidrecfrac_prod
 			buildGrid(cells_poro);
 			processGeometry();
 			setPerforated();
-			setInitialState();
-
-			snapshotter->dump_all(0);
+			setInitialState(cells_poro);
 		};
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
 		void setSnapshotter(std::string type, RecFracProd* model)
@@ -128,7 +174,7 @@ namespace acidrecfrac_prod
 		TapeVariable* x;
 
 		int getCellsNum() { return cellsNum; };
-		double getRate(const int idx) const;
+		double getRate(const Cell& cell) const;
 	};
 };
 

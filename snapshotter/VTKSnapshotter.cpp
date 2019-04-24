@@ -58,7 +58,7 @@ VTKSnapshotter<acidrecfrac::AcidRecFrac>::VTKSnapshotter()
 template<>
 VTKSnapshotter<acidrecfrac_prod::RecFracProd>::VTKSnapshotter()
 {
-    pattern = prefix + "AcidRecFrac_Prod_%{NAME}_%{STEP}.vtu";
+    pattern = prefix + "AcidRecFrac_prod_%{STEP}.vtu";
 }
 template<>
 VTKSnapshotter<acidrecfracmov::AcidRecFracMov>::VTKSnapshotter()
@@ -1540,6 +1540,96 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	writer->SetFileName(getFileName(i, "poro").c_str());
 	writer->SetInputData(grid_poro);
 	writer->Write();
+}
+void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
+{
+    using namespace acidrecfrac_prod;
+    const double Y_MULT = 1.0;
+    // Grid
+    auto grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+    // Frac points
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    for (int k = 0; k < nz - 1; k++)
+    {
+        for (int j = 0; j < ny; j++)
+        {
+            const auto& cell = model->cells[j + k * ny];
+            const auto& xnebr = model->cells[j + k * ny + ny * nz];
+            points->InsertNextPoint(r_dim * (cell.x - xnebr.hx / 30.0), Y_MULT * r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+        }
+    }
+    for (int i = 0; i < nx - 1; i++)
+        for (int k = 0; k < nz - 1; k++)
+        {
+            for (int j = 0; j < ny; j++)
+            {
+                const auto& cell = model->cells[j + k * ny + i * ny * nz];
+                points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+            }
+        }
+    grid->SetPoints(points);
+    // Data
+    auto hexs = vtkSmartPointer<vtkCellArray>::New();
+
+    int np = ny * (nz - 1);
+    std::array<double, 3> vel;
+    double buf;
+    for (int k = 0; k < nz - 2; k++)
+    {
+        for (int j = 0; j < ny - 1; j++)
+        {
+            const auto cell = model->cells[j + 1 + (k + 1) * ny];
+            //assert(cell.type == FracType::FRAC_IN);
+            const auto& props = model->props_sk[0];
+            const auto& next = cell.u_next;
+            vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+
+            hex->GetPointIds()->SetId(0, j + k * ny);
+            hex->GetPointIds()->SetId(1, j + 1 + k * ny);
+            hex->GetPointIds()->SetId(2, j + 1 + k * ny + np);
+            hex->GetPointIds()->SetId(3, j + k * ny + np);
+
+            hex->GetPointIds()->SetId(4, j + (k + 1) * ny);
+            hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny);
+            hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny + np);
+            hex->GetPointIds()->SetId(7, j + (k + 1) * ny + np);
+
+            hexs->InsertNextCell(hex);
+        }
+    }
+    for (int i = 1; i < nx - 1; i++)
+    {
+        for (int k = 0; k < nz - 2; k++)
+        {
+            for (int j = 0; j < ny - 1; j++)
+            {
+                const auto& cell = model->cells[j + 1 + (k + 1) * ny + i * nz * ny];
+                //assert(cell.type == FracType::FRAC_MID || cell.type == FracType::FRAC_OUT);
+                const auto& next = cell.u_next;
+                const auto& props = model->props_sk[0];
+                vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
+
+                hex->GetPointIds()->SetId(0, j + k * ny + i * np);
+                hex->GetPointIds()->SetId(1, j + 1 + k * ny + i * np);
+                hex->GetPointIds()->SetId(2, j + 1 + k * ny + (i + 1) * np);
+                hex->GetPointIds()->SetId(3, j + k * ny + (i + 1) * np);
+
+                hex->GetPointIds()->SetId(4, j + (k + 1) * ny + i * np);
+                hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny + i * np);
+                hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny + (i + 1) * np);
+                hex->GetPointIds()->SetId(7, j + (k + 1) * ny + (i + 1) * np);
+                hexs->InsertNextCell(hex);
+            }
+        }
+    }
+    
+    grid->SetCells(VTK_HEXAHEDRON, hexs);
+    vtkCellData* fd = grid->GetCellData();
+    // Writing
+    auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+    writer->SetFileName(getFileName(i).c_str());
+    writer->SetInputData(grid);
+    writer->Write();
 }
 void VTKSnapshotter<acidrecfracmov::AcidRecFracMov>::dump_all(int i)
 {

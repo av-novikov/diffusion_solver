@@ -3,6 +3,7 @@
 
 #include <new>
 #include <string>
+#include <vector>
 
 template <class modelType, class methodType, typename propsType>
 class Scene
