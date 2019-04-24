@@ -1124,6 +1124,7 @@ namespace issues
         auto props = issues::getProps<Properties>();
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
+		//scene.start();
 
         auto model0 = scene.getModel();
         acidrecfrac_prod::RecFracProd model;

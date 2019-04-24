@@ -47,7 +47,7 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open("snaps/P.dat", ofstream::out);
-	qcells.open("snaps/q_cells.dat", ofstream::out);
+	qcells.open("snaps/q_prod.dat", ofstream::out);
 	pvd.open("snaps/AcidRecFrac_prod.pvd", std::ofstream::out);
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
@@ -75,41 +75,22 @@ void RecFracProdSolver::writeData()
 		pvd << cur_t * t_dim / 3600.0;
 	pvd << "0\" file=\"AcidRecFrac_prod_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
-	/*double q = 0.0;
-	for (int i = 0; i < (model->cellsNum_y + 1) * (model->cellsNum_z + 2); i++)
+	double q = 0.0, s = 0.0;
+	for (int i = 0; i < (model->cellsNum_y + 2) * (model->cellsNum_z + 2); i++)
 	{
-		const auto& cell = model->cells_frac[i];
-		if (cell.type == FracType::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)
-			q += model->getRate(cell.num);
+		const auto& cell = model->cells[i];
+		if (cell.type == Type::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)
+		{
+			q += model->getRate(cell);
+			s += cell.hy;
+		}
 	}
-	model->injected_sol_volume -= q * model->ht;
-	model->injected_acid_volume -= q * model->c * model->ht;
+
 	qcells << cur_t * t_dim / 3600.0;
-	qcells << "\t" << -q * model->Q_dim * 86400.0;
-	qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
-	qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
-
-	double p = model->cells_frac[model->cellsNum_y_frac + 2].u_next.p;
-	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
-
-	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
-	double mean_trans = 0.0, Cfd_inv = 0.0, cur_trans;
-	int k_ind, i_ind;
-	for (int i = 0; i < model->trans.size(); i++)
-	{
-		cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
-		mean_trans += cur_trans / model->trans.size();
-
-		k_ind = int(i % model->cellsNum_z) + 1;
-		i_ind = int(i / model->cellsNum_z) + 1;
-		const auto& pcell = model->cells_poro[(model->cellsNum_y_poro + 2) * (k_ind + (model->cellsNum_z + 2) * i_ind)];
-		Cfd_inv += k0 * pcell.hx * model->R_dim / cur_trans;
-	}
-	Cfd_inv = 1.0 / Cfd_inv;
-
-	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << endl;
-
-	qcells << endl;*/
+	qcells << "\t" << (model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA;
+	qcells << "\t" << s * model->R_dim;
+	qcells << "\t" << q * model->Q_dim * 86400.0;
+	qcells << endl;
 }
 void RecFracProdSolver::analyzeNewtonConvergence()
 {
@@ -167,8 +148,8 @@ void RecFracProdSolver::control()
 	else if (iterations > 5 && model->ht > model->ht_min)
 		model->ht = model->ht / 1.5;*/
 
-	//if (cur_t + model->ht > model->period[curTimePeriod])
-	//	model->ht = model->period[curTimePeriod] - cur_t;
+	if (cur_t + model->ht > model->period[curTimePeriod])
+		model->ht = model->period[curTimePeriod] - cur_t;
 
 	cur_t += model->ht;
 }

@@ -37,8 +37,7 @@ namespace acidrecfrac
 
 		inline adouble getPoro(adouble m0, adouble p) const
 		{
-			return m0;
-			//return m0 * (1.0 + beta * (p - p_init));
+			return m0 * exp(beta * (p - p_ref));
 		};
 		/*inline adouble getPermCoseni(adouble m0, adouble p) const
 		{
@@ -88,6 +87,10 @@ namespace acidrecfrac
 		{
 			return dens_stc;
 		};
+		inline adouble getRho(adouble p) const
+		{
+			return dens_stc * exp(beta * (p - p_ref));
+		};
 	};
 	struct Oil_Props : public basic1d::Liquid_Props
 	{
@@ -101,6 +104,10 @@ namespace acidrecfrac
 		inline adouble getDensity(adouble p) const
 		{
 			return dens_stc / getB(p);
+		};
+		inline adouble getRho(adouble p) const
+		{
+			return dens_stc * exp(beta * (p - p_ref));
 		};
 
 		Interpolate* kr;

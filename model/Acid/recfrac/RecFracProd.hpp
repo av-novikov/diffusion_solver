@@ -44,6 +44,7 @@ namespace acidrecfrac_prod
         double prev_x_size, prev_y_size, prev_z_size;
         int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z;
         int prev_cellsNum_x, prev_cellsNum_y, prev_cellsNum_z;
+		int num_input_cells;
 
 		// Temporary properties
 		double ht, ht_min, ht_max;
@@ -77,11 +78,11 @@ namespace acidrecfrac_prod
 		{
 			return (p1 * (adouble)l2 + p2 * (adouble)l1) / (adouble)(l1 + l2);
 		};
-        inline adouble getPoroTrans(const Cell& cell, const Cell& beta) const
+        inline double getPoroTrans(const Cell& cell, const Cell& beta) const
 		{
-			adouble k1, k2;
-			k1 = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p);
-			k2 = beta.props->getPermCoseni(cell.u_next.m, cell.u_next.p);
+			double k1, k2;
+			k1 = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			k2 = beta.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 
