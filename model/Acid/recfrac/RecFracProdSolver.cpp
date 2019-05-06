@@ -36,7 +36,7 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 
-	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
+	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-8;
 	MAX_ITER = 20;
 
     MAX_INIT_RES1 = 1.E-9;
@@ -44,7 +44,7 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
     //MAX_INIT_RES1 = 4.E-8; 
     //MAX_INIT_RES2 = 1.E-9;
 
-	MULT_UP = MULT_DOWN = 1.5;
+	MULT_UP = MULT_DOWN = 2;
 
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_prod.dat", ofstream::out);
@@ -90,6 +90,7 @@ void RecFracProdSolver::writeData()
 	qcells << "\t" << (model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA;
 	qcells << "\t" << s * model->R_dim;
 	qcells << "\t" << q * model->Q_dim * 86400.0;
+	qcells << "\t" << q * model->Q_dim * 86400.0 / ((model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA);
 	qcells << endl;
 }
 void RecFracProdSolver::analyzeNewtonConvergence()
@@ -133,20 +134,10 @@ void RecFracProdSolver::control()
     analyzeNewtonConvergence();
     MULT_UP = MULT_DOWN = 1.5;
     
-    if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
-                        (model->ht <= 0.5 * model->ht_max && curTimePeriod == 1)))
+    if(INCREASE_STEP && model->ht <= model->ht_max)
         model->ht = model->ht * MULT_UP;
     else if (DECREASE_STEP)
         model->ht = model->ht / MULT_DOWN;
-
-	/*if (model->ht <= model->ht_max * 5.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 0)
-		model->ht = model->ht * 1.5;
-	else if (model->ht <= model->ht_max && iterations < 5 && err_newton_first < 1.0 && curTimePeriod == 0)
-		model->ht = model->ht * 1.5;
-    else if (model->ht <= model->ht_max / 2.0 && iterations < 4 && err_newton_first < 1.0 && curTimePeriod == 1)
-        model->ht = model->ht * 1.5;
-	else if (iterations > 5 && model->ht > model->ht_min)
-		model->ht = model->ht / 1.5;*/
 
 	if (cur_t + model->ht > model->period[curTimePeriod])
 		model->ht = model->period[curTimePeriod] - cur_t;

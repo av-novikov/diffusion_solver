@@ -804,15 +804,15 @@ namespace issues
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
  
-		props->timePeriods.push_back(0.5 * 3600.0);
-		props->timePeriods.push_back(2.0 * 3600.0);
+		props->timePeriods.push_back(0.1 * 3600.0);
+		props->timePeriods.push_back(0.2 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
 		props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(false);
 		props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(410.0 * 1.0e+5);
+		props->pwf.push_back(400.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		props->rates.push_back(0.0);
@@ -849,7 +849,7 @@ namespace issues
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-		props_sk.perm = 0.5;
+		props_sk.perm = 50.0;
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->props_frac.height;
@@ -1124,7 +1124,7 @@ namespace issues
         auto props = issues::getProps<Properties>();
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
-		//scene.start();
+		scene.start();
 
         auto model0 = scene.getModel();
         acidrecfrac_prod::RecFracProd model;
