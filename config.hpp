@@ -850,7 +850,7 @@ namespace issues
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-		props_sk.perm = 0.5;
+		props_sk.perm = 50.0;
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->props_frac.height;

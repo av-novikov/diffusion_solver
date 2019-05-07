@@ -26,7 +26,7 @@ public:
 		V = hx * hy * hz;
 	};
     template <typename TVar, typename TProp,
-        typename = typename std::enable_if<std::is_same<VarOilWater, varType>::value
+        typename = typename std::enable_if<std::is_same<Var1phasePoro, varType>::value
                                         && std::is_same<JustAcid, TVar>::value 
                                         && std::is_same<PropsType, TProp>::value>::type>
     HexCell(const HexCell<TVar,TProp>& rhs, const int _num, const Type _type) : AbstractCell<varType>(_num, _type)

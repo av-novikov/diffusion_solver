@@ -15,8 +15,10 @@ namespace acidrecfrac_prod
     typedef acidrecfrac::Water_Props Water_Props;
     typedef acidrecfrac::Oil_Props Oil_Props;
     typedef acidrecfrac::Skeleton_Props Skeleton_Props;
-    typedef VarOilWater Variable;
-    typedef TapeOilWater TapeVariable;
+    //typedef VarOilWater Variable;
+    //typedef TapeOilWater TapeVariable;
+    typedef Var1phasePoro Variable;
+    typedef TapeVar1Phase TapeVariable;
     typedef acidrecfrac::PoroCell PoroCell;
     typedef HexCell<Variable, Skeleton_Props> Cell;
     typedef Cell::Type Type;
@@ -60,7 +62,6 @@ namespace acidrecfrac_prod
 		Snapshotter<RecFracProd>* snapshotter;
 
 		void buildGrid(std::vector<PoroCell>& cells_poro);
-		void processGeometry();
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState(const std::vector<PoroCell>& cells_poro);
@@ -158,7 +159,6 @@ namespace acidrecfrac_prod
 			setProps(props);
 			setSnapshotter("", this);
 			buildGrid(cells_poro);
-			processGeometry();
 			setPerforated();
 			setInitialState(cells_poro);
 		};

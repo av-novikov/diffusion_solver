@@ -39,8 +39,8 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-8;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES1 = 1.E-9;
-	MAX_INIT_RES2 = 3.E-9;
+    MAX_INIT_RES1 = 5.E-7;
+	MAX_INIT_RES2 = 1.E-8;
     //MAX_INIT_RES1 = 4.E-8; 
     //MAX_INIT_RES2 = 1.E-9;
 
@@ -89,8 +89,8 @@ void RecFracProdSolver::writeData()
 	qcells << cur_t * t_dim / 3600.0;
 	qcells << "\t" << (model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA;
 	qcells << "\t" << s * model->R_dim;
-	qcells << "\t" << q * model->Q_dim * 86400.0;
-	qcells << "\t" << q * model->Q_dim * 86400.0 / ((model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA);
+	qcells << "\t" << 4.0 * q * model->Q_dim * 86400.0;
+	qcells << "\t" << 4.0 * q * model->Q_dim * 86400.0 / ((model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA);
 	qcells << endl;
 }
 void RecFracProdSolver::analyzeNewtonConvergence()
@@ -111,13 +111,15 @@ void RecFracProdSolver::analyzeNewtonConvergence()
             INCREASE_STEP = false;
             break;
         }
-        if (init_step_res[i + 1] >= init_step_res[i])
+        //INCREASE_STEP = true;
+        DECREASE_STEP = false;
+        /*if (init_step_res[i + 1] >= init_step_res[i])
         {
             INCREASE_STEP = false;
             if (iterations > 4)
                 DECREASE_STEP = true;
             break;
-        }
+        }*/
     }
 }
 void RecFracProdSolver::control()
@@ -132,7 +134,6 @@ void RecFracProdSolver::control()
 	}
 
     analyzeNewtonConvergence();
-    MULT_UP = MULT_DOWN = 1.5;
     
     if(INCREASE_STEP && model->ht <= model->ht_max)
         model->ht = model->ht * MULT_UP;
@@ -229,13 +230,13 @@ void RecFracProdSolver::checkStability()
 }
 void RecFracProdSolver::checkVariables()
 {
-	for (auto cell : model->cells)
+	/*for (auto cell : model->cells)
 	{
 		if (cell.u_next.s > 1.0)
 			cell.u_next.s = 1.0;
 		if (cell.u_next.s < 0.0)
 			cell.u_next.s = 0.0;
-	}
+	}*/
 }
 bool RecFracProdSolver::solveSmartStep()
 {
@@ -264,7 +265,7 @@ bool RecFracProdSolver::solveSmartStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE, isInit, 1);
+		solver.Solve(PRECOND::ILU_SERIOUS, isInit);
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);
@@ -301,16 +302,16 @@ void RecFracProdSolver::computeJac()
 	{
 		auto& cur_x = model->x[cell.num];
 		cur_x.p <<= cell.u_next.p;
-		cur_x.s <<= cell.u_next.s;
+		//cur_x.s <<= cell.u_next.s;
 
 		x[cell.num * var_size] = cell.u_next.p;
-		x[cell.num * var_size + 1] = cell.u_next.s;
+		//x[cell.num * var_size + 1] = cell.u_next.s;
 	}
 	for (const auto& cell : model->cells)
 	{
 		const auto res = model->solveFrac(cell);
 		model->h[cell.num * var_size] = res.p;
-		model->h[cell.num * var_size + 1] = res.s;
+		//model->h[cell.num * var_size + 1] = res.s;
 	}
 
 	for (int i = 0; i < strNum; i++)

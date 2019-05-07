@@ -45,7 +45,7 @@ void RecFracProd::setProps(Properties& props)
 	rate.resize(periodsNum);
 	pwf.resize(periodsNum);
 	int rate_idx = 0, pres_idx = 0;
-	double max_t = 86400.0 * 50.0;
+	double max_t = 86400.0 * 365.0;
 	for (int i = 0; i < periodsNum; i++)
 	{
         LeftBoundIsRate.push_back(false);// props.LeftBoundIsRate[i]);
@@ -55,9 +55,10 @@ void RecFracProd::setProps(Properties& props)
 	}
 
 	// Temporal properties
-    ht = 100.0;// props.ht;
-    ht_min = 1000.0;// props.ht_min;
-    ht_max = 1000000.0;// props.ht_max;
+    //ht = 10000.0;// props.ht;
+    ht = 20000.0;
+    ht_min = 10000.0;// props.ht_min;
+    ht_max = 10000000.0;// props.ht_max;
 
 	props_w = props.props_w;
 	props_w.visc = cPToPaSec(props_w.visc);
@@ -178,9 +179,6 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
         }
     }
 }
-void RecFracProd::processGeometry()
-{
-}
 void RecFracProd::setPerforated()
 {
 	/*height_perf = 0.0;
@@ -211,7 +209,7 @@ void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
                 auto& cell = cells[i + (cellsNum_y + 2) * (k + j * (cellsNum_z + 2))];
                 cell.props = &props_sk[getSkeletonId(cell)];
                 cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
-				cell.u_prev.s = cell.u_iter.s = cell.u_next.s = cell.props->sw_init;
+				//cell.u_prev.s = cell.u_iter.s = cell.u_next.s = cell.props->sw_init;
                 if (j < prev_cellsNum_x + 1 && i < prev_cellsNum_y + 1)
                 {
                     auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
@@ -236,8 +234,8 @@ double RecFracProd::getRate(const Cell& cell) const
 	const Cell& beta = cells[cell.num + (cellsNum_z + 2) * (cellsNum_y + 2)];
 	const Variable& next = cell.u_next;
 	const Variable& nebr = beta.u_next;
-	double kr = props_o.getKr(next.s, next.m, cell.props).value();
-    return getPoroTrans(cell, beta) * kr * (nebr.p - next.p) / props_o.visc;
+	//double kr = props_o.getKr(next.s, next.m, cell.props).value();
+    return getPoroTrans(cell, beta) * (nebr.p - next.p) / props_o.visc;
 };
 
 TapeVariable RecFracProd::solveFrac(const Cell& cell)
@@ -259,8 +257,9 @@ TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
     const auto& prev = cell.u_prev;
 
     TapeVariable res;
-    res.p = props.getPoro(cell.u_next.m, next.p) * props_w.getRho(next.p) * (next.s - prev.s);
-    res.s = props.getPoro(cell.u_next.m, next.p) * props_o.getRho(next.p) * (prev.s - next.s);
+    res.p = props.getPoro(cell.u_next.m, next.p) * props_o.getRho(next.p) -
+        props.getPoro(cell.u_prev.m, prev.p) * props_o.getRho(prev.p);// *(next.s - prev.s);
+    //res.s = props.getPoro(cell.u_next.m, next.p) * props_o.getRho(next.p) * (prev.s - next.s);
 
     int upwd_idx;
     int neighbor[NEBRS_NUM];
@@ -273,10 +272,9 @@ TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
         const auto& upwd = x[upwd_idx];
         const double trans = getPoroTrans(cell, beta);
 
-         res.p += ht / cell.V * trans * (next.p - nebr.p) *
-			props_w.getRho(next.p) * props_w.getKr(upwd.s, cell.u_next.m, cell.props) / props_w.visc;
-        res.s += ht / cell.V * trans * (next.p - nebr.p) *
-			props_o.getRho(next.p) * props_o.getKr(upwd.s, cell.u_next.m, cell.props) / props_o.visc;
+         res.p += ht / cell.V * trans * (next.p - nebr.p) * props_o.getRho(next.p) / props_o.visc;
+        /*res.s += ht / cell.V * trans * (next.p - nebr.p) *
+			props_o.getRho(next.p) * props_o.getKr(upwd.s, cell.u_next.m, cell.props) / props_o.visc;*/
     }
 
     return res;
@@ -290,7 +288,7 @@ TapeVariable RecFracProd::solvePoroLeft(const Cell& cell)
     const auto& nebr = x[beta.num];
     TapeVariable res;
     res.p = (next.p - Pwf + grav * props_w.dens_stc * cell.z) / P_dim;
-    res.s = (next.s - nebr.s) / P_dim;
+    //res.s = (next.s - nebr.s) / P_dim;
     return res;
 }
 TapeVariable RecFracProd::solvePoroRight(const Cell& cell)
@@ -310,7 +308,7 @@ TapeVariable RecFracProd::solvePoroRight(const Cell& cell)
     adouble rightIsPres = rightBoundIsPres;
     TapeVariable res;
     res.p = (next.p - props.p_out + grav * props_w.dens_stc * cell.z) / P_dim;
-	res.s = (next.s - props.sw_init) / P_dim;// (next.s - nebr.s) / P_dim;
+	//res.s = (next.s - props.sw_init) / P_dim;// (next.s - nebr.s) / P_dim;
     return res;
 }
 TapeVariable RecFracProd::solvePoroBorder(const Cell& cell)
@@ -333,6 +331,6 @@ TapeVariable RecFracProd::solvePoroBorder(const Cell& cell)
 
     TapeVariable res;
     res.p = (next.p - nebr.p + grav * props_w.dens_stc * (cell.z - beta.z)) / P_dim;
-    res.s = (next.s - nebr.s) / P_dim;
+    //res.s = (next.s - nebr.s) / P_dim;
     return res;
 }

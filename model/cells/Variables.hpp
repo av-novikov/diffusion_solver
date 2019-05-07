@@ -24,6 +24,19 @@ struct TapeVar1Phase
 	static const int size = 1;
 	adouble p;
 };
+struct Var1phasePoro
+{
+    static const int size = 1;
+
+    union {
+        double values[1];
+        struct
+        {
+            double p;
+            double m;
+        };
+    };
+};
 struct Var1phaseNIT 
 {
 	static const int size = 2;

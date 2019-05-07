@@ -1609,7 +1609,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 				poro->InsertNextValue(next.m);
 				perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
-				sat_w->InsertNextValue(next.s);
+				//sat_w->InsertNextValue(next.s);
 			}
         }
     }
@@ -1639,7 +1639,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 				poro->InsertNextValue(next.m);
 				perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
-				sat_w->InsertNextValue(next.s);
+				//sat_w->InsertNextValue(next.s);
             }
         }
     }
@@ -1649,7 +1649,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 	fd->AddArray(poro);
 	fd->AddArray(perm);
 	fd->AddArray(pres);
-	fd->AddArray(sat_w);
+	//fd->AddArray(sat_w);
     // Writing
     auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
     writer->SetFileName(getFileName(i).c_str());
