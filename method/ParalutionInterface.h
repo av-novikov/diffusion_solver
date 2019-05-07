@@ -18,7 +18,7 @@ protected:
 	Matrix Mat;
 	paralution::BiCGStab<Matrix,Vector,double> bicgstab;
 	void SolveBiCGStab();
-	void SolveBiCGStab_Simple(bool isHarder = false);
+	void SolveBiCGStab_Simple(const int degree, bool isHarder = false);
 	paralution::GMRES<Matrix,Vector,double> gmres;
 	void SolveGMRES();
 	paralution::ILU<Matrix,Vector,double> p;
@@ -39,16 +39,18 @@ protected:
 	const std::string resHistoryFile;
 	void getResiduals();
 public:
-	void Init(const int vecSize, const double relTol, const double dropTol);
+	void Init(const int vecSize, const double absTol, const double relTol, const double dropTol);
 	void Assemble(const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 	void Solve(const PRECOND key);
-	void Solve(const PRECOND key, bool isHarder);
+	void Solve(const PRECOND key, bool isHarder, const int degree = 0);
 
 	const Vector& getSolution() { return x; };
     double init_res, final_res;
-    const int max_iter;
     int iter_num;
+
+    int max_iter;
+    double abs_tol, rel_tol, div_crit;
 
 	ParSolver();
 	~ParSolver();

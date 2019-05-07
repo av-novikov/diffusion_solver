@@ -99,7 +99,7 @@ void Acid2dNITSolver::start()
 	iterations = 8;
 
 	fillIndices();
-	solver.Init(var_size * model->cellsNum, 1.e-15, 1.e-15);
+	solver.Init(var_size * model->cellsNum, 1.E-30, 1.E-18, 1E+4);
 
 	model->setPeriod(curTimePeriod);
 

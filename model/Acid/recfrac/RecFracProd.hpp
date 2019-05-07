@@ -82,7 +82,7 @@ namespace acidrecfrac_prod
 		{
 			double k1, k2;
 			k1 = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
-			k2 = beta.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			k2 = beta.props->getPermCoseni(beta.u_next.m, beta.u_next.p).value();
 			if (k1 == 0.0 && k2 == 0.0)
 				return 0.0;
 

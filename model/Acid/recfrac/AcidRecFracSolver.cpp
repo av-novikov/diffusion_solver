@@ -212,7 +212,7 @@ void AcidRecFracSolver::start()
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-15, 1.e-15);
+	solver.Init(strNum, 1.e-15, 1.e-8, 1.e+8);
 
 	model->setPeriod(curTimePeriod);
 
@@ -358,7 +358,7 @@ bool AcidRecFracSolver::solveSmartStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE, isInit);
+		solver.Solve(PRECOND::ILU_SIMPLE, isInit, 1);
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);

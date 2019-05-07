@@ -31,7 +31,7 @@ void RecFracProd::setProps(Properties& props)
     cellsNum_y = props.prod_props.ny;
     cellsNum_z = props.cellsNum_z;
 	cellsNum = (cellsNum_x + 2) * (cellsNum_y + 2) * (cellsNum_z + 2);
-	num_input_cells = 60;
+	num_input_cells = 0.7 * prev_cellsNum_y;
     prev_x_size = props.props_frac.l2;
     prev_y_size = props.re - props.props_frac.w2;
     prev_z_size = props.props_frac.height;
@@ -55,7 +55,7 @@ void RecFracProd::setProps(Properties& props)
 	}
 
 	// Temporal properties
-    ht = 3600.0;// props.ht;
+    ht = 100.0;// props.ht;
     ht_min = 1000.0;// props.ht_min;
     ht_max = 1000000.0;// props.ht_max;
 
@@ -216,6 +216,8 @@ void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
                 {
                     auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
                     cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell0.u_next.m;
+                    if (i < num_input_cells + 1)
+                        cell.u_prev.m = cell.u_iter.m = cell.u_next.m = 0.3;
                 }
                 else
                 {
@@ -269,10 +271,11 @@ TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
         const auto& nebr = x[beta.num];
         upwd_idx = getUpwindIdx(cell, beta);
         const auto& upwd = x[upwd_idx];
+        const double trans = getPoroTrans(cell, beta);
 
-        res.p += ht / cell.V * getPoroTrans(cell, beta) * (next.p - nebr.p) *
+         res.p += ht / cell.V * trans * (next.p - nebr.p) *
 			props_w.getRho(next.p) * props_w.getKr(upwd.s, cell.u_next.m, cell.props) / props_w.visc;
-        res.s += ht / cell.V * getPoroTrans(cell, beta) * (next.p - nebr.p) *
+        res.s += ht / cell.V * trans * (next.p - nebr.p) *
 			props_o.getRho(next.p) * props_o.getKr(upwd.s, cell.u_next.m, cell.props) / props_o.visc;
     }
 

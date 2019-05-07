@@ -12,14 +12,20 @@ ParSolver::ParSolver() : resHistoryFile("snaps/resHistory.dat"), max_iter(500)
 {
 	isAssembled = false;
 	isPrecondBuilt = false;
-	gmres.Init(1.E-15, 1.E-10, 1E+12, max_iter);
-	bicgstab.Init(1.E-15, 1.E-10, 1E+12, max_iter);
+    abs_tol = 1.E-15;
+    rel_tol = 1.E-10;
+    div_crit = 1.E+8;
+	//gmres.Init(1.E-15, 1.E-10, 1E+12, max_iter);
+	//bicgstab.Init(1.E-15, 1.E-10, 1E+12, max_iter);
 }
 ParSolver::~ParSolver()
 {
 }
-void ParSolver::Init(const int vecSize, const double relTol, const double dropTol)
+void ParSolver::Init(const int vecSize, const double absTol, const double relTol, const double dropTol)
 {
+    abs_tol = absTol;
+    rel_tol = relTol;
+    div_crit = dropTol;
 	matSize = vecSize;
 	x.Allocate("x", vecSize);
 }
@@ -55,19 +61,19 @@ void ParSolver::Solve(const PRECOND key)
 	if (key == PRECOND::ILU_SERIOUS)
 		SolveBiCGStab();
 	else if (key == PRECOND::ILU_SIMPLE)
-		SolveBiCGStab_Simple();
+		SolveBiCGStab_Simple(0);
 	else if (key == PRECOND::ILU_GMRES)
 		SolveGMRES();
 
 	x.MoveToHost();
 }
-void ParSolver::Solve(const PRECOND key, bool isHarder)
+void ParSolver::Solve(const PRECOND key, bool isHarder, const int degree)
 {
 	//SolveGMRES();
 	if (key == PRECOND::ILU_SERIOUS)
 		SolveBiCGStab();
 	else if (key == PRECOND::ILU_SIMPLE)
-		SolveBiCGStab_Simple(isHarder);
+		SolveBiCGStab_Simple(degree, isHarder);
 	else if (key == PRECOND::ILU_GMRES)
 		SolveGMRES();
 
@@ -82,7 +88,7 @@ void ParSolver::SolveBiCGStab()
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-15, 1.E-10, 1E+12, max_iter);
+	bicgstab.Init(abs_tol, rel_tol, div_crit, max_iter);
 	Mat.info();
 
     bicgstab.RecordResidualHistory();
@@ -95,12 +101,12 @@ void ParSolver::SolveBiCGStab()
 	//writeSystem();
 	bicgstab.Clear();
 }
-void ParSolver::SolveBiCGStab_Simple(bool isHarder)
+void ParSolver::SolveBiCGStab_Simple(const int degree, bool isHarder)
 {
 	bicgstab.SetOperator(Mat);
 	if (!isHarder)
 	{
-		p.Set(1);
+		p.Set(degree);
 		bicgstab.SetPreconditioner(p);
 	}
 	else
@@ -112,7 +118,7 @@ void ParSolver::SolveBiCGStab_Simple(bool isHarder)
 	bicgstab.Build();
 	//isAssembled = true;
 
-	bicgstab.Init(1.E-30, 1.E-18, 1E+4, max_iter);
+	bicgstab.Init(abs_tol, rel_tol, div_crit, max_iter);
 	Mat.info();
 
 	bicgstab.RecordResidualHistory();
@@ -134,7 +140,7 @@ void ParSolver::SolveGMRES()
 	gmres.Build();
 	//isAssembled = true;
 
-	gmres.Init(1.E-17, 1.E-12, 1E+12, max_iter);
+	gmres.Init(abs_tol, rel_tol, div_crit, max_iter);
 	Mat.info();
 
     gmres.RecordResidualHistory();

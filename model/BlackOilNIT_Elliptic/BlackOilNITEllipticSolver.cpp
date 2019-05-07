@@ -172,8 +172,8 @@ void BlackOilNITEllipticSolver<solType>::start()
 	iterations = 8;
 
 	fillIndices();
-	pres_solver.Init(var_size * (model->cellsNum + model->wellCells.size()), 1.e-15, 1.e-15);
-	temp_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-8, 1.e-5);
+	pres_solver.Init(var_size * (model->cellsNum + model->wellCells.size()), 1.e-15, 1.e-8, 1.e+4);
+	temp_solver.Init(model->cellsNum + model->wellCells.size(), 1.e-8, 1.e-5, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 

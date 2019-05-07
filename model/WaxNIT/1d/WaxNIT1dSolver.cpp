@@ -80,7 +80,7 @@ void WaxNIT1dSolver::start()
 	iterations = 8;
 
 	fillIndices();
-	solver.Init(var_size * model->cellsNum, 1.e-15, 1.e-15);
+	solver.Init(var_size * model->cellsNum, 1.e-15, 1.e-8, 1.E+4);
 
 	model->setPeriod(curTimePeriod);
 

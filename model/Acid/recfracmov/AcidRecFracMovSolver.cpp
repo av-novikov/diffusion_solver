@@ -212,7 +212,7 @@ void AcidRecFracMovSolver::start()
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-15, 1.e-15);
+	solver.Init(strNum, 1.e-15, 1.e-8, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 

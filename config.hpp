@@ -805,14 +805,14 @@ namespace issues
 		props->ht_max = 10.0;
  
 		props->timePeriods.push_back(0.1 * 3600.0);
-		props->timePeriods.push_back(0.2 * 3600.0);
+		props->timePeriods.push_back(1.5 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
 		props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(false);
 		props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(400.0 * 1.0e+5);
+		props->pwf.push_back(420.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		props->rates.push_back(0.0);
@@ -835,7 +835,8 @@ namespace issues
 
         props->prod_props.x_size = props->prod_props.y_size = 1000.0;
         props->prod_props.z_size = props->props_frac.height;
-        props->prod_props.nx = props->prod_props.ny = 100;
+        props->prod_props.nx = 100;
+        props->prod_props.ny = 100;
         props->R_dim = props->prod_props.R_dim = props->props_frac.l2 / 5.0;
 
 		acidrecfrac::Skeleton_Props props_sk;
@@ -844,12 +845,12 @@ namespace issues
 		props_sk.A = 60.0;
 		props_sk.t_init = 300.0;
 		props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
-		props_sk.sw_init = 0.1;					props_sk.so_init = 0.9;
+		props_sk.sw_init = 0.01;					props_sk.so_init = 0.99;
 		props_sk.xa_eqbm = 0.0;
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-		props_sk.perm = 50.0;
+		props_sk.perm = 0.5;
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->props_frac.height;
@@ -1124,7 +1125,7 @@ namespace issues
         auto props = issues::getProps<Properties>();
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
-		scene.start();
+		//scene.start();
 
         auto model0 = scene.getModel();
         acidrecfrac_prod::RecFracProd model;
