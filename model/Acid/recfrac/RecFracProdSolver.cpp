@@ -112,14 +112,14 @@ void RecFracProdSolver::analyzeNewtonConvergence()
             break;
         }
         //INCREASE_STEP = true;
-        DECREASE_STEP = false;
-        /*if (init_step_res[i + 1] >= init_step_res[i])
+        //DECREASE_STEP = false;
+        if (init_step_res[i + 1] >= init_step_res[i])
         {
             INCREASE_STEP = false;
             if (iterations > 4)
                 DECREASE_STEP = true;
             break;
-        }*/
+        }
     }
 }
 void RecFracProdSolver::control()

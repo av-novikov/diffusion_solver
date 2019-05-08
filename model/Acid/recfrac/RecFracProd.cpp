@@ -56,7 +56,7 @@ void RecFracProd::setProps(Properties& props)
 
 	// Temporal properties
     //ht = 10000.0;// props.ht;
-    ht = 20000.0;
+    ht = 2000.0;
     ht_min = 10000.0;// props.ht_min;
     ht_max = 10000000.0;// props.ht_max;
 
@@ -277,6 +277,9 @@ TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
 			props_o.getRho(next.p) * props_o.getKr(upwd.s, cell.u_next.m, cell.props) / props_o.visc;*/
     }
 
+	res.p /= P_dim;
+	//if(cell.y * R_dim < 0.01)
+	//	res.p /= 1.0 / cell.hy;
     return res;
 }
 TapeVariable RecFracProd::solvePoroLeft(const Cell& cell)
