@@ -36,8 +36,8 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
 	CHOP_MULT = 0.1;
 	MAX_SAT_CHANGE = 1.0;
 
-	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-8;
-	MAX_ITER = 20;
+	CONV_W2 = 1.e-6;		CONV_VAR = 1.e-8;
+	MAX_ITER = 8;
 
     MAX_INIT_RES1 = 5.E-7;
 	MAX_INIT_RES2 = 1.E-8;
@@ -150,7 +150,7 @@ void RecFracProdSolver::start()
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-15, 1.e-8, 1.e+4);
+	solver.Init(strNum, 1.e-30, 1.e-18, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 

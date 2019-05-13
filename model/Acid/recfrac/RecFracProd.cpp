@@ -45,7 +45,7 @@ void RecFracProd::setProps(Properties& props)
 	rate.resize(periodsNum);
 	pwf.resize(periodsNum);
 	int rate_idx = 0, pres_idx = 0;
-	double max_t = 86400.0 * 365.0;
+	double max_t = 10 * 86400.0 * 365.0;
 	for (int i = 0; i < periodsNum; i++)
 	{
         LeftBoundIsRate.push_back(false);// props.LeftBoundIsRate[i]);
@@ -56,9 +56,9 @@ void RecFracProd::setProps(Properties& props)
 
 	// Temporal properties
     //ht = 10000.0;// props.ht;
-    ht = 2000.0;
+    ht = 1000.0;
     ht_min = 10000.0;// props.ht_min;
-    ht_max = 10000000.0;// props.ht_max;
+    ht_max = 400 * 3600.0;// props.ht_max;
 
 	props_w = props.props_w;
 	props_w.visc = cPToPaSec(props_w.visc);
@@ -214,8 +214,8 @@ void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
                 {
                     auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
                     cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell0.u_next.m;
-                    if (i < num_input_cells + 1)
-                        cell.u_prev.m = cell.u_iter.m = cell.u_next.m = 0.3;
+                    //if (i < num_input_cells + 1)
+                    //    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = 0.3;
                 }
                 else
                 {
