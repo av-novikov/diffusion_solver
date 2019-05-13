@@ -812,7 +812,7 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(380.0 * 1.0e+5);
+		props->pwf.push_back(320.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		props->rates.push_back(0.0);
