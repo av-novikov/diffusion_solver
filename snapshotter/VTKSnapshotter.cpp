@@ -1561,7 +1561,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     for (int i = 0; i < nx - 1; i++)
         for (int k = 0; k < nz - 1; k++)
         {
-            for (int j = 0; j < ny; j++)
+            for (int j = 0; j < ny - 1; j++)
             {
                 const auto& cell = model->cells[j + k * ny + i * ny * nz];
                 points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
@@ -1585,7 +1585,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     double buf;
     for (int k = 0; k < nz - 2; k++)
     {
-        for (int j = 0; j < ny - 1; j++)
+        for (int j = 1; j < ny - 1; j++)
         {
 			if (j < model->num_input_cells)
 			{
@@ -1617,7 +1617,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     {
         for (int k = 0; k < nz - 2; k++)
         {
-            for (int j = 0; j < ny - 1; j++)
+            for (int j = 1; j < ny - 1; j++)
             {
                 const auto& cell = model->cells[j + 1 + (k + 1) * ny + i * nz * ny];
                 //assert(cell.type == FracType::FRAC_MID || cell.type == FracType::FRAC_OUT);
