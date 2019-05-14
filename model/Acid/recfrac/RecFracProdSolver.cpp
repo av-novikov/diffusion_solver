@@ -86,11 +86,17 @@ void RecFracProdSolver::writeData()
 		}
 	}
 
+    double p_mean = 0.0;
+    for (const auto& cell : model->cells)
+        p_mean += cell.u_next.p * cell.V;
+    p_mean /= model->Volume;
+
 	qcells << cur_t * t_dim / 3600.0;
-	qcells << "\t" << (model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA;
+	qcells << "\t" << (p_mean - model->Pwf) * model->P_dim / BAR_TO_PA;
 	qcells << "\t" << s * model->R_dim;
 	qcells << "\t" << 4.0 * q * model->Q_dim * 86400.0;
 	qcells << "\t" << 4.0 * q * model->Q_dim * 86400.0 / ((model->props_sk.back().p_out - model->Pwf) * model->P_dim / BAR_TO_PA);
+    qcells << "\t" << 4.0 * q * model->Q_dim * 86400.0 / ((p_mean - model->Pwf) * model->P_dim / BAR_TO_PA);
 	qcells << endl;
 }
 void RecFracProdSolver::analyzeNewtonConvergence()
