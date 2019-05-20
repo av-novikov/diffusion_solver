@@ -1551,7 +1551,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     auto points = vtkSmartPointer<vtkPoints>::New();
     for (int k = 0; k < nz - 1; k++)
     {
-        for (int j = 0; j < ny; j++)
+        for (int j = 0; j < ny - 1; j++)
         {
             const auto& cell = model->cells[j + k * ny];
             const auto& xnebr = model->cells[j + k * ny + ny * nz];
@@ -1576,16 +1576,13 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 	perm->SetName("permeability");
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
-	auto sat_w = vtkSmartPointer<vtkDoubleArray>::New();
-	sat_w->SetName("WaterSaturation");
 
-
-    int np = ny * (nz - 1);
+    int np = (ny - 1) * (nz - 1);
     std::array<double, 3> vel;
     double buf;
     for (int k = 0; k < nz - 2; k++)
     {
-        for (int j = 1; j < ny - 1; j++)
+        for (int j = 0; j < ny - 2; j++)
         {
 			if (j < model->num_input_cells)
 			{
@@ -1595,21 +1592,20 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 				const auto& next = cell.u_next;
 				vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-				hex->GetPointIds()->SetId(0, j + k * ny);
-				hex->GetPointIds()->SetId(1, j + 1 + k * ny);
-				hex->GetPointIds()->SetId(2, j + 1 + k * ny + np);
-				hex->GetPointIds()->SetId(3, j + k * ny + np);
+				hex->GetPointIds()->SetId(0, j + k * (ny - 1));
+				hex->GetPointIds()->SetId(1, j + 1 + k * (ny - 1));
+				hex->GetPointIds()->SetId(2, j + 1 + k * (ny - 1) + np);
+				hex->GetPointIds()->SetId(3, j + k * (ny - 1) + np);
 
-				hex->GetPointIds()->SetId(4, j + (k + 1) * ny);
-				hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny);
-				hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny + np);
-				hex->GetPointIds()->SetId(7, j + (k + 1) * ny + np);
+				hex->GetPointIds()->SetId(4, j + (k + 1) * (ny - 1));
+				hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * (ny - 1));
+				hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * (ny - 1) + np);
+				hex->GetPointIds()->SetId(7, j + (k + 1) * (ny - 1) + np);
 
 				hexs->InsertNextCell(hex);
 				poro->InsertNextValue(next.m);
 				perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
-				//sat_w->InsertNextValue(next.s);
 			}
         }
     }
@@ -1617,7 +1613,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     {
         for (int k = 0; k < nz - 2; k++)
         {
-            for (int j = 1; j < ny - 1; j++)
+            for (int j = 0; j < ny - 2; j++)
             {
                 const auto& cell = model->cells[j + 1 + (k + 1) * ny + i * nz * ny];
                 //assert(cell.type == FracType::FRAC_MID || cell.type == FracType::FRAC_OUT);
@@ -1625,21 +1621,20 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
                 const auto& props = model->props_sk[0];
                 vtkSmartPointer<vtkHexahedron> hex = vtkSmartPointer<vtkHexahedron>::New();
 
-                hex->GetPointIds()->SetId(0, j + k * ny + i * np);
-                hex->GetPointIds()->SetId(1, j + 1 + k * ny + i * np);
-                hex->GetPointIds()->SetId(2, j + 1 + k * ny + (i + 1) * np);
-                hex->GetPointIds()->SetId(3, j + k * ny + (i + 1) * np);
+                hex->GetPointIds()->SetId(0, j + k * (ny - 1) + i * np);
+                hex->GetPointIds()->SetId(1, j + 1 + k * (ny - 1) + i * np);
+                hex->GetPointIds()->SetId(2, j + 1 + k * (ny - 1) + (i + 1) * np);
+                hex->GetPointIds()->SetId(3, j + k * (ny - 1) + (i + 1) * np);
 
-                hex->GetPointIds()->SetId(4, j + (k + 1) * ny + i * np);
-                hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny + i * np);
-                hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny + (i + 1) * np);
-                hex->GetPointIds()->SetId(7, j + (k + 1) * ny + (i + 1) * np);
+                hex->GetPointIds()->SetId(4, j + (k + 1) * (ny - 1) + i * np);
+                hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * (ny - 1) + i * np);
+                hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * (ny - 1) + (i + 1) * np);
+                hex->GetPointIds()->SetId(7, j + (k + 1) * (ny - 1) + (i + 1) * np);
 
                 hexs->InsertNextCell(hex);
 				poro->InsertNextValue(next.m);
 				perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
-				//sat_w->InsertNextValue(next.s);
             }
         }
     }
@@ -1649,7 +1644,6 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 	fd->AddArray(poro);
 	fd->AddArray(perm);
 	fd->AddArray(pres);
-	//fd->AddArray(sat_w);
     // Writing
     auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
     writer->SetFileName(getFileName(i).c_str());
