@@ -179,6 +179,99 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
         }
     }
 }
+void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
+{
+    int counter = 0;
+    double cx, cy, cz, hx, hy, hz, cur_hx, cur_hy, cur_hz;
+    double max_prev_y = cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0;
+    hx = (x_size - prev_x_size) / (cellsNum_x - prev_cellsNum_x);
+    hy = (y_size - max_prev_y) / (cellsNum_y - 1);
+    hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
+    Volume = 0.0;
+
+    double delta = -9.0 * max_prev_y;
+    double r_prev = max_prev_y - delta;
+    double logMax = log((y_size - delta) / (max_prev_y - delta));
+    double logStep = logMax / (double)(cellsNum_y - 1);
+
+    const double tmp = cells_poro[0].y;
+    for (auto& cell : cells_poro)
+        cell.y -= tmp;
+
+    auto cur_type = Type::MIDDLE;
+    for (int j = 0; j < cellsNum_x + 2; j++)
+    {
+        if (j < prev_cellsNum_x + 1)
+        {
+            cx = cells_poro[j * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x;
+            cur_hx = cells_poro[j * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].hx;
+        }
+        else
+        {
+            cx = cells_poro[(prev_cellsNum_x + 1) * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x +
+                (double)(j - (prev_cellsNum_x + 1) + 0.5) * hx;
+            cur_hx = (j == cellsNum_x + 1) ? 0.0 : hx;
+        }
+
+
+        for (int k = 0; k < cellsNum_z + 2; k++)
+        {
+            cz = cells_poro[k * (prev_cellsNum_y + 2)].z;
+            cur_hz = cells_poro[k * (prev_cellsNum_y + 2)].hz;
+            cy = cur_hy = 0.0;
+
+            r_prev = max_prev_y - delta;
+            for (int i = 0; i < cellsNum_y + 2; i++)
+            {
+                cur_type = (j == 0) ? Type::SIDE_LEFT : Type::MIDDLE;
+                cur_type = (j == cellsNum_x + 1) ? Type::SIDE_RIGHT : cur_type;
+                cur_type = (k == 0) ? Type::BOTTOM : cur_type;
+                cur_type = (k == cellsNum_z + 1) ? Type::TOP : cur_type;
+                cur_type = (i == 0 && cur_type == Type::MIDDLE) ? Type::WELL_LAT : cur_type;
+                cur_type = (i == cellsNum_y + 1 && cur_type == Type::MIDDLE) ? Type::RIGHT : cur_type;
+                cur_type = (i < num_input_cells + 1 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
+                
+
+                if (j < prev_cellsNum_x + 1 && i < 2)
+                {
+                    //cells.push_back(Cell(cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))], counter++, cur_type));
+                    const auto& old_cell = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
+                    cells.push_back(Cell(counter++, cx, cy, cz, cur_hx, cur_hy, cur_hz, cur_type));
+                    const auto& cell = cells.back();
+                    Volume += cell.V;
+                    cy += max_prev_y / 2.0;
+                    cur_hy = max_prev_y;
+                }
+                else
+                {
+                    if (i == 0)
+                    {
+                        cy = 0.0;
+                        cur_hy = 0.0;
+                    }
+                    else if (i < 2)
+                    {
+                        cy = max_prev_y / 2.0;
+                        cur_hy = max_prev_y;
+                    }
+                    else if (i == cellsNum_y + 1)
+                    {
+                        cur_hy = 0.0;
+                        cy = y_size;
+                    }
+                    else
+                    {
+                        cy = delta + r_prev * (exp(logStep) + 1.0) / 2.0;
+                        cur_hy = r_prev * (exp(logStep) - 1.0);
+                        r_prev *= exp(logStep);
+                    }
+                    cells.push_back(Cell(counter++, cx, cy, cz, cur_hx, cur_hy, cur_hz, cur_type));
+                    Volume += cells.back().V;
+                }
+            }
+        }
+    }
+}
 void RecFracProd::setPerforated()
 {
 	/*height_perf = 0.0;

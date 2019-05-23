@@ -62,6 +62,7 @@ namespace acidrecfrac_prod
 		Snapshotter<RecFracProd>* snapshotter;
 
 		void buildGrid(std::vector<PoroCell>& cells_poro);
+        void buildBetterGrid(std::vector<PoroCell>& cells_poro);
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState(const std::vector<PoroCell>& cells_poro);
@@ -158,7 +159,7 @@ namespace acidrecfrac_prod
 		{
 			setProps(props);
 			setSnapshotter("", this);
-			buildGrid(cells_poro);
+			buildBetterGrid(cells_poro);
 			setPerforated();
 			setInitialState(cells_poro);
 		};
