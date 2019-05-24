@@ -291,6 +291,20 @@ void RecFracProd::setPeriod(int period)
     Pwf = pwf[period];
     Q_sum = 0.0;
 }
+const std::array<double, 3> RecFracProd::calcAvgFracPerm(const std::vector<PoroCell>& cells_poro, const int j, const int k) const
+{
+    double m = 0.0, kx = 0.0, ky = 0.0, k0, vol = 0.0;
+    for (int i = 0; i < num_input_cells + 1; i++)
+    {
+        auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
+        m += cell0.V * cell0.u_next.m;
+        vol += cell0.V;
+        k0 = cell0.props->getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
+        kx += k0;
+        ky += 1.0 / k0;
+    }
+    return{ m / vol, kx, 1.0 / ky };
+}
 void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
 {
     for (int j = 0; j < cellsNum_x + 2; j++)
@@ -303,16 +317,20 @@ void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
                 cell.props = &props_sk[getSkeletonId(cell)];
                 cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
 				//cell.u_prev.s = cell.u_iter.s = cell.u_next.s = cell.props->sw_init;
-                if (j < prev_cellsNum_x + 1 && i < prev_cellsNum_y + 1)
+                if (j < prev_cellsNum_x + 1 && i < 2)
                 {
-                    auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
-                    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell0.u_next.m;
+                    const auto pars = calcAvgFracPerm(cells_poro, j, k);
+                    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = pars[0];
+                    cell.u_prev.kx = cell.u_iter.kx = cell.u_next.kx = pars[1];
+                    cell.u_prev.ky = cell.u_iter.ky = cell.u_next.ky = pars[2];
                     //if (i < num_input_cells + 1)
                     //    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = 0.3;
                 }
                 else
                 {
                     cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
+                    cell.u_prev.kx = cell.u_iter.kx = cell.u_next.kx = 
+                    cell.u_prev.ky = cell.u_iter.ky = cell.u_next.ky = cell.props->perm;
                 }
             }
         }
@@ -327,7 +345,6 @@ double RecFracProd::getRate(const Cell& cell) const
 	const Cell& beta = cells[cell.num + (cellsNum_z + 2) * (cellsNum_y + 2)];
 	const Variable& next = cell.u_next;
 	const Variable& nebr = beta.u_next;
-	//double kr = props_o.getKr(next.s, next.m, cell.props).value();
     return getPoroTrans(cell, beta) * (nebr.p - next.p) / props_o.visc;
 };
 

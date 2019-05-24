@@ -83,17 +83,26 @@ namespace acidrecfrac_prod
         inline double getPoroTrans(const Cell& cell, const Cell& beta) const
 		{
 			double k1, k2;
-			k1 = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+			/*k1 = cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
 			k2 = beta.props->getPermCoseni(beta.u_next.m, beta.u_next.p).value();
 			if (k1 == 0.0 && k2 == 0.0)
-				return 0.0;
+				return 0.0;*/
 
-			if (fabs(cell.x - beta.x) > EQUALITY_TOLERANCE)
-				return 2.0 * k1 * k2 * cell.hy * cell.hz / (k1 * beta.hx + k2 * cell.hx);
-			if (fabs(cell.y - beta.y) > EQUALITY_TOLERANCE)
-				return 2.0 * k1 * k2 * cell.hx * cell.hz / (k1 * beta.hy + k2 * cell.hy);
-			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
-				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
+            if (fabs(cell.x - beta.x) > EQUALITY_TOLERANCE)
+            {
+                k1 = cell.u_next.kx;    k2 = beta.u_next.kx;
+                return 2.0 * k1 * k2 * cell.hy * cell.hz / (k1 * beta.hx + k2 * cell.hx);
+            }
+            if (fabs(cell.y - beta.y) > EQUALITY_TOLERANCE)
+            {
+                k1 = cell.u_next.ky;    k2 = beta.u_next.ky;
+                return 2.0 * k1 * k2 * cell.hx * cell.hz / (k1 * beta.hy + k2 * cell.hy);
+            }
+            if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
+            {
+                k1 = cell.u_next.kx;    k2 = beta.u_next.kx;
+                return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
+            }
             return 0.0;
 		};
 		inline double upwindIsCur(const Cell& cell, const Cell& beta)
@@ -155,6 +164,7 @@ namespace acidrecfrac_prod
         RecFracProd();
 		~RecFracProd();
 
+        const std::array<double, 3> calcAvgFracPerm(const std::vector<PoroCell>& cells_poro, const int j, const int k) const;
 		void load(Properties& props, std::vector<PoroCell>& cells_poro)
 		{
 			setProps(props);

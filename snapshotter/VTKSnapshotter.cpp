@@ -1572,8 +1572,12 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     auto hexs = vtkSmartPointer<vtkCellArray>::New();
 	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
 	poro->SetName("porosity");
-	auto perm = vtkSmartPointer<vtkDoubleArray>::New();
-	perm->SetName("permeability");
+	auto perm_x = vtkSmartPointer<vtkDoubleArray>::New();
+	perm_x->SetName("perm_x");
+    auto perm_y = vtkSmartPointer<vtkDoubleArray>::New();
+    perm_y->SetName("perm_y");
+    auto perm_z = vtkSmartPointer<vtkDoubleArray>::New();
+    perm_z->SetName("perm_z");
 	auto pres = vtkSmartPointer<vtkDoubleArray>::New();
 	pres->SetName("pressure");
 
@@ -1604,7 +1608,9 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 
 				hexs->InsertNextCell(hex);
 				poro->InsertNextValue(next.m);
-				perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
+				perm_x->InsertNextValue(M2toMilliDarcy(cell.u_next.kx) * r_dim * r_dim);
+                perm_y->InsertNextValue(M2toMilliDarcy(cell.u_next.ky) * r_dim * r_dim);
+                perm_z->InsertNextValue(M2toMilliDarcy(cell.u_next.kx) * r_dim * r_dim);
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
 			}
         }
@@ -1633,7 +1639,9 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 
                 hexs->InsertNextCell(hex);
 				poro->InsertNextValue(next.m);
-				perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));
+				perm_x->InsertNextValue(M2toMilliDarcy(cell.u_next.kx)* r_dim * r_dim);
+                perm_y->InsertNextValue(M2toMilliDarcy(cell.u_next.ky)* r_dim * r_dim);
+                perm_z->InsertNextValue(M2toMilliDarcy(cell.u_next.kx)* r_dim * r_dim);
 				pres->InsertNextValue(next.p * P_dim / BAR_TO_PA);
             }
         }
@@ -1642,7 +1650,9 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     grid->SetCells(VTK_HEXAHEDRON, hexs);
     vtkCellData* fd = grid->GetCellData();
 	fd->AddArray(poro);
-	fd->AddArray(perm);
+	fd->AddArray(perm_x);
+    fd->AddArray(perm_y);
+    fd->AddArray(perm_z);
 	fd->AddArray(pres);
     // Writing
     auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();

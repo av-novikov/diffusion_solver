@@ -29,11 +29,13 @@ struct Var1phasePoro
     static const int size = 1;
 
     union {
-        double values[1];
+        double values[4];
         struct
         {
             double p;
             double m;
+            double kx;
+            double ky;
         };
     };
 };

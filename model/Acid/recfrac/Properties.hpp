@@ -51,6 +51,10 @@ namespace acidrecfrac
 			//adouble m = getPoro(m0, p);
 			return perm * exp(A * (m0 - m_init));
 		};
+        inline adouble getPoroCoseni(adouble k) const
+        {
+            return m_init + 1.0 / A * log(k / perm);
+        };
 		inline double getInitDiam(double m_init, double k0)
 		{
 			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
