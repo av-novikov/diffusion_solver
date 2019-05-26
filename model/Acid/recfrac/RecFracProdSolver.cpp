@@ -44,7 +44,7 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
     //MAX_INIT_RES1 = 4.E-8; 
     //MAX_INIT_RES2 = 1.E-9;
 
-	MULT_UP = MULT_DOWN = 2;
+	MULT_UP = MULT_DOWN = 1.05;
 
 	P.open("snaps/P.dat", ofstream::out);
 	qcells.open("snaps/q_prod.dat", ofstream::out);
@@ -117,8 +117,7 @@ void RecFracProdSolver::analyzeNewtonConvergence()
             INCREASE_STEP = false;
             break;
         }
-        //INCREASE_STEP = true;
-        //DECREASE_STEP = false;
+
         if (init_step_res[i + 1] >= init_step_res[i])
         {
             INCREASE_STEP = false;

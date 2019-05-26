@@ -1588,7 +1588,7 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     {
         for (int j = 0; j < ny - 2; j++)
         {
-			if (j < model->num_input_cells)
+			if (j < 1)
 			{
 				const auto cell = model->cells[j + 1 + (k + 1) * ny];
 				//assert(cell.type == FracType::FRAC_IN);

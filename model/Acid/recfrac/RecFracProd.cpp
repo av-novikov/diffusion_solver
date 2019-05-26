@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <numeric>
 
-using namespace acidrecfrac_prod;
+using namespace acidrecfrac_prod; 
 
 RecFracProd::RecFracProd()
 {
@@ -57,8 +57,8 @@ void RecFracProd::setProps(Properties& props)
 	// Temporal properties
     //ht = 10000.0;// props.ht;
     ht = 1000.0;
-    ht_min = 10000.0;// props.ht_min;
-    ht_max = 400 * 3600.0;// props.ht_max;
+    ht_min = 1000.0;// props.ht_min;
+    ht_max = 1000 * 3600.0;// props.ht_max;
 
 	props_w = props.props_w;
 	props_w.visc = cPToPaSec(props_w.visc);
@@ -229,7 +229,7 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
                 cur_type = (k == cellsNum_z + 1) ? Type::TOP : cur_type;
                 cur_type = (i == 0 && cur_type == Type::MIDDLE) ? Type::WELL_LAT : cur_type;
                 cur_type = (i == cellsNum_y + 1 && cur_type == Type::MIDDLE) ? Type::RIGHT : cur_type;
-                cur_type = (i < num_input_cells + 1 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
+                cur_type = (i < 2 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
                 
 
                 if (j < prev_cellsNum_x + 1 && i < 2)
@@ -293,17 +293,21 @@ void RecFracProd::setPeriod(int period)
 }
 const std::array<double, 3> RecFracProd::calcAvgFracPerm(const std::vector<PoroCell>& cells_poro, const int j, const int k) const
 {
-    double m = 0.0, kx = 0.0, ky = 0.0, k0, vol = 0.0;
-    for (int i = 0; i < num_input_cells + 1; i++)
-    {
-        auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
-        m += cell0.V * cell0.u_next.m;
-        vol += cell0.V;
-        k0 = cell0.props->getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
-        kx += k0;
-        ky += 1.0 / k0;
-    }
-    return{ m / vol, kx, 1.0 / ky };
+	double m = 0.0, kx = 0.0, ky = 0.0, k0, vol = 0.0, s = 0, L = 0;
+	for (int i = 0; i < num_input_cells + 1; i++)
+	{
+		auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
+		vol += cell0.V;
+		s += cell0.hy * cell0.hz;
+		L += cell0.hy;
+		k0 = cell0.props->getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
+
+		m += cell0.V * cell0.u_next.m;
+		kx += cell0.hy * cell0.hz * k0;
+		ky += cell0.hy / k0;
+	}
+	return{ m / vol, kx / s, L / ky };
+	//return{ 0.3, props_sk[0].getPermCoseni(0.3, 0.0).value(), props_sk[0].getPermCoseni(0.3, 0.0).value() };
 }
 void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
 {
@@ -316,15 +320,12 @@ void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
                 auto& cell = cells[i + (cellsNum_y + 2) * (k + j * (cellsNum_z + 2))];
                 cell.props = &props_sk[getSkeletonId(cell)];
                 cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
-				//cell.u_prev.s = cell.u_iter.s = cell.u_next.s = cell.props->sw_init;
                 if (j < prev_cellsNum_x + 1 && i < 2)
                 {
                     const auto pars = calcAvgFracPerm(cells_poro, j, k);
                     cell.u_prev.m = cell.u_iter.m = cell.u_next.m = pars[0];
                     cell.u_prev.kx = cell.u_iter.kx = cell.u_next.kx = pars[1];
                     cell.u_prev.ky = cell.u_iter.ky = cell.u_next.ky = pars[2];
-                    //if (i < num_input_cells + 1)
-                    //    cell.u_prev.m = cell.u_iter.m = cell.u_next.m = 0.3;
                 }
                 else
                 {
