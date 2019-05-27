@@ -183,7 +183,7 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
 {
     int counter = 0;
     double cx, cy, cz, hx, hy, hz, cur_hx, cur_hy, cur_hz;
-    double max_prev_y = cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0;
+    double max_prev_y = cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y;
     hx = (x_size - prev_x_size) / (cellsNum_x - prev_cellsNum_x);
     hy = (y_size - max_prev_y) / (cellsNum_y - 1);
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
@@ -194,9 +194,9 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
     double logMax = log((y_size - delta) / (max_prev_y - delta));
     double logStep = logMax / (double)(cellsNum_y - 1);
 
-    const double tmp = cells_poro[0].y;
-    for (auto& cell : cells_poro)
-        cell.y -= tmp;
+    //const double tmp = cells_poro[0].y;
+    //for (auto& cell : cells_poro)
+    //    cell.y -= tmp;
 
     auto cur_type = Type::MIDDLE;
     for (int j = 0; j < cellsNum_x + 2; j++)
@@ -306,7 +306,10 @@ const std::array<double, 3> RecFracProd::calcAvgFracPerm(const std::vector<PoroC
 		kx += cell0.hy * cell0.hz * k0;
 		ky += cell0.hy / k0;
 	}
-	return{ m / vol, kx / s, L / ky };
+	if (vol == 0.0 || s == 0.0 || L == 0.0)
+		return{ props_sk[0].m_init, props_sk[0].perm, props_sk[0].perm };
+	else
+		return{ m / vol, kx / s, L / ky };
 	//return{ 0.3, props_sk[0].getPermCoseni(0.3, 0.0).value(), props_sk[0].getPermCoseni(0.3, 0.0).value() };
 }
 void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
