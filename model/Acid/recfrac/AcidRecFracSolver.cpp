@@ -132,6 +132,13 @@ void AcidRecFracSolver::writeData()
 
 	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << endl;
 
+	double cum_vol = 0.0;
+	for (const auto& cell : model->cells_poro)
+	{
+		cum_vol += (cell.props->m_init - cell.u_next.m) * cell.V * model->R_dim * model->R_dim * model->R_dim;
+	}
+	qcells << "\t" << cum_vol;
+
 	qcells << endl;
 }
 void AcidRecFracSolver::analyzeNewtonConvergence()
