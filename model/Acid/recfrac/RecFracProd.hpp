@@ -47,6 +47,7 @@ namespace acidrecfrac_prod
         int cellsNum, cellsNum_x, cellsNum_y, cellsNum_z;
         int prev_cellsNum_x, prev_cellsNum_y, prev_cellsNum_z;
 		int num_input_cells;
+        const int add_cellsNum_x = 10;
 
 		// Temporary properties
 		double ht, ht_min, ht_max;

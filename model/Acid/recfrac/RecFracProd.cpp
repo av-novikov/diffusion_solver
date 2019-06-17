@@ -184,7 +184,7 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
     int counter = 0;
     double cx, cy, cz, hx, hy, hz, cur_hx, cur_hy, cur_hz;
     double max_prev_y = cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y;
-    hx = (x_size - prev_x_size) / (cellsNum_x - prev_cellsNum_x);
+    hx = (x_size - prev_x_size) / (cellsNum_x - add_cellsNum_x - prev_cellsNum_x + 1);
     hy = (y_size - max_prev_y) / (cellsNum_y - 1);
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
     Volume = 0.0;
@@ -194,22 +194,36 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
     double logMax = log((y_size - delta) / (max_prev_y - delta));
     double logStep = logMax / (double)(cellsNum_y - 1);
 
+    double delta_x = 0.0;
+    double rw = 0.02 / R_dim;
+    double x_prev = cells_poro[(prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].hx - delta_x;
+    double logMax_x = log((x_prev - delta_x) / (rw - delta_x));
+    double logStep_x = logMax_x / (double)(add_cellsNum_x);
+
     //const double tmp = cells_poro[0].y;
     //for (auto& cell : cells_poro)
     //    cell.y -= tmp;
 
     auto cur_type = Type::MIDDLE;
+    x_prev = rw - delta_x;
     for (int j = 0; j < cellsNum_x + 2; j++)
     {
-        if (j < prev_cellsNum_x + 1)
+        if (j < add_cellsNum_x + 1 && j > 0)
         {
-            cx = cells_poro[j * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x;
-            cur_hx = cells_poro[j * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].hx;
+            cx = delta_x + x_prev * (exp(logStep_x) + 1.0) / 2.0;
+            cur_hx = x_prev * (exp(logStep_x) - 1.0);
+            x_prev *= exp(logStep_x);
+        }
+        else if (j < add_cellsNum_x + prev_cellsNum_x)
+        {
+            int ind = (j == 0 ? j : j + 1 - add_cellsNum_x);
+            cx = cells_poro[ind * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x;
+            cur_hx = cells_poro[ind * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].hx;
         }
         else
         {
             cx = cells_poro[(prev_cellsNum_x + 1) * (prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].x +
-                (double)(j - (prev_cellsNum_x + 1) + 0.5) * hx;
+                (double)(j - (add_cellsNum_x + prev_cellsNum_x) + 0.5) * hx;
             cur_hx = (j == cellsNum_x + 1) ? 0.0 : hx;
         }
 
@@ -232,10 +246,10 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
                 cur_type = (i < 2 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
                 
 
-                if (j < prev_cellsNum_x + 1 && i < 2)
+                if (j < add_cellsNum_x + prev_cellsNum_x && i < 2)
                 {
                     //cells.push_back(Cell(cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))], counter++, cur_type));
-                    const auto& old_cell = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
+                    //const auto& old_cell = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
                     cells.push_back(Cell(counter++, cx, cy, cz, cur_hx, cur_hy, cur_hz, cur_type));
                     const auto& cell = cells.back();
                     Volume += cell.V;
@@ -314,6 +328,7 @@ const std::array<double, 3> RecFracProd::calcAvgFracPerm(const std::vector<PoroC
 }
 void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
 {
+    int j_ind;
     for (int j = 0; j < cellsNum_x + 2; j++)
     {
         for (int k = 0; k < cellsNum_z + 2; k++)
@@ -323,9 +338,11 @@ void RecFracProd::setInitialState(const std::vector<PoroCell>& cells_poro)
                 auto& cell = cells[i + (cellsNum_y + 2) * (k + j * (cellsNum_z + 2))];
                 cell.props = &props_sk[getSkeletonId(cell)];
                 cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
-                if (j < prev_cellsNum_x + 1 && i < 2)
+                if (j < add_cellsNum_x + prev_cellsNum_x && i < 2)
                 {
-                    const auto pars = calcAvgFracPerm(cells_poro, j, k);
+                    j_ind = j > add_cellsNum_x ? j - add_cellsNum_x + 1 : 1;
+                    j_ind = j == 0 ? j : j_ind;
+                    const auto pars = calcAvgFracPerm(cells_poro, j_ind, k);
                     cell.u_prev.m = cell.u_iter.m = cell.u_next.m = pars[0];
                     cell.u_prev.kx = cell.u_iter.kx = cell.u_next.kx = pars[1];
                     cell.u_prev.ky = cell.u_iter.ky = cell.u_next.ky = pars[2];
@@ -378,6 +395,7 @@ TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
     int upwd_idx;
     int neighbor[NEBRS_NUM];
     getPoroNeighborIdx(cell.num, neighbor);
+    double ress = res.p.value();
     for (size_t i = 0; i < NEBRS_NUM; i++)
     {
         const auto& beta = cells[neighbor[i]];
@@ -387,6 +405,10 @@ TapeVariable RecFracProd::solvePoroMid(const Cell& cell)
         const double trans = getPoroTrans(cell, beta);
 
          res.p += ht / cell.V * trans * (next.p - nebr.p) * props_o.getRho(next.p) / props_o.visc;
+         double ressss = next.p.value();
+         double ressss1 = nebr.p.value();
+         double ress = res.p.value();
+         double qwe = 1232.0;
         /*res.s += ht / cell.V * trans * (next.p - nebr.p) *
 			props_o.getRho(next.p) * props_o.getKr(upwd.s, cell.u_next.m, cell.props) / props_o.visc;*/
     }
