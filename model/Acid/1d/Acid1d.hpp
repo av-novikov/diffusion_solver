@@ -26,7 +26,6 @@ namespace acid1d
 	class Acid1d : public basic1d::Basic1d<Variable, Properties, Skeleton_Props, TCell, Acid1d>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		friend class Acid1dSolver;
 

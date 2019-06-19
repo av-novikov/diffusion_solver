@@ -37,7 +37,6 @@ namespace oilnit_elliptic
 	class OilNIT_Elliptic : public AbstractModel<Variable, Properties, TCell, OilNIT_Elliptic>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractSolver;
 		template<typename> friend class OilNITEllipticSolver;

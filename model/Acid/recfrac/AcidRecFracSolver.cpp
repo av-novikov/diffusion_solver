@@ -49,12 +49,12 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 
 	MULT_UP = MULT_DOWN = 1.5;
 
-	P.open("snaps/P.dat", ofstream::out);
-	qcells.open("snaps/q_cells.dat", ofstream::out);
-	trans.open("snaps/Trans.dat", ofstream::out);
-	pvd_frac.open("snaps/AcidRecFrac_frac.pvd", std::ofstream::out);
-	pvd_poro.open("snaps/AcidRecFrac_poro.pvd", std::ofstream::out);
-    CFL.open("snaps/CFL.dat", std::ofstream::out);
+	P.open(model->prefix + "P.dat", ofstream::out);
+	qcells.open(model->prefix + "q_cells.dat", ofstream::out);
+	trans.open(model->prefix + "Trans.dat", ofstream::out);
+	pvd_frac.open(model->prefix + "AcidRecFrac_frac.pvd", std::ofstream::out);
+	pvd_poro.open(model->prefix + "AcidRecFrac_poro.pvd", std::ofstream::out);
+    CFL.open(model->prefix + "CFL.dat", std::ofstream::out);
 	pvd_frac << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd_poro << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd_frac << "\t<Collection>\n";

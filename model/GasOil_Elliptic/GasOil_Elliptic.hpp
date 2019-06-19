@@ -31,7 +31,6 @@ namespace gasOil_elliptic
 	class GasOil_Elliptic : public AbstractModel<Variable, Properties, TCell, GasOil_Elliptic>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractSolver;
 		friend class GasOilEllipticSolver;

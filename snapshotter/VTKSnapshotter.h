@@ -8,8 +8,10 @@
 
 template <class modelType>
 class VTKSnapshotter : public Snapshotter<modelType> {
+protected:
+    const std::string prefix;
 public:
-	VTKSnapshotter();
+	VTKSnapshotter(const std::string _prefix = "snaps/");
 	~VTKSnapshotter();
 
 	void dump(int i);

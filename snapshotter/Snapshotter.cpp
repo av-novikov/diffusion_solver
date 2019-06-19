@@ -23,9 +23,6 @@
 using namespace std;
 
 template <class modelType>
-const string Snapshotter<modelType>::prefix = "snaps/";
-
-template <class modelType>
 Snapshotter<modelType>::Snapshotter()
 {
 }

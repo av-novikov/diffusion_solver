@@ -22,7 +22,6 @@ namespace vpp2d
 	class VPP2d : public AbstractModel<Variable, Properties, TCell, VPP2d>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		friend class VPPSolver;
 

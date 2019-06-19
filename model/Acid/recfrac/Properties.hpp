@@ -178,6 +178,8 @@ namespace acidrecfrac
 		std::vector<bool> LeftBoundIsRate;
 		std::vector< std::pair<double, double> > rho_co2;
         double R_dim;
+
+        std::string prefix;
 	};
 };
 

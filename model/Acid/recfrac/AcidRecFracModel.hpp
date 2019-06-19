@@ -40,6 +40,7 @@ namespace acidrecfrac
 	public:
 		static const int var_size = var_poro_size;
 	protected:
+        std::string prefix;
 		// Porous medium
 		int skeletonsNum;
 		std::vector<Skeleton_Props> props_sk;
@@ -324,7 +325,7 @@ namespace acidrecfrac
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
 		void setSnapshotter(std::string type, AcidRecFrac* model)
 		{
-			snapshotter = new VTKSnapshotter<AcidRecFrac>();
+			snapshotter = new VTKSnapshotter<AcidRecFrac>(prefix);
 			snapshotter->setModel(model);
 			isWriteSnaps = true;
 		};

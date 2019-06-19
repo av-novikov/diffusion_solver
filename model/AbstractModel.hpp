@@ -6,7 +6,6 @@
 #include <map>
 
 #include "snapshotter/VTKSnapshotter.h"
-#include "snapshotter/GRDECLSnapshotter.h"
 #include "snapshotter/Snapshotter.h"
 #include "util/utils.h"
 
@@ -16,7 +15,6 @@ class AbstractModel
 {
 	template<typename> friend class AbstractSolver;
 	template<typename> friend class Basic2dSolver;
-	template<typename> friend class GRDECLSnapshotter;
 	template<typename> friend class VTKSnapshotter;
 	template<typename> friend class Snapshotter;
 	
@@ -94,11 +92,6 @@ class AbstractModel
 		{
 			if (type == "VTK") {
 				snapshotter = new VTKSnapshotter<modelType>();
-				snapshotter->setModel(model);
-				isWriteSnaps = true;
-			}
-			else if (type == "GRDECL") {
-				snapshotter = new GRDECLSnapshotter<modelType>();
 				snapshotter->setModel(model);
 				isWriteSnaps = true;
 			}

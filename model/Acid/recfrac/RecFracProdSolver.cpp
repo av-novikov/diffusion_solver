@@ -46,9 +46,9 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
 
 	MULT_UP = MULT_DOWN = 1.05;
 
-	P.open("snaps/P.dat", ofstream::out);
-	qcells.open("snaps/q_prod.dat", ofstream::out);
-	pvd.open("snaps/AcidRecFrac_prod.pvd", std::ofstream::out);
+	P.open(model->prefix + "P.dat", ofstream::out);
+	qcells.open(model->prefix + "q_prod.dat", ofstream::out);
+	pvd.open(model->prefix + "AcidRecFrac_prod.pvd", std::ofstream::out);
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
 }

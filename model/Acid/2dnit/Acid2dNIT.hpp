@@ -30,7 +30,6 @@ namespace acid2dnit
 	class Acid2dNIT : public basic2d::Basic2d<Variable, Properties, Skeleton_Props, TCell, Acid2dNIT>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		friend class Acid2dNITSolver;
 

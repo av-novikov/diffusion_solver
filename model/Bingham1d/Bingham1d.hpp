@@ -146,7 +146,6 @@ namespace bing1d
 	class Bingham1d : public AbstractModel<Variable, Properties, RadialCell, Bingham1d>
 	{
 		template<typename> friend class Snapshotter;
-		template<typename> friend class GRDECLSnapshotter;
 		template<typename> friend class VTKSnapshotter;
 		friend class Bing1dSolver;
 

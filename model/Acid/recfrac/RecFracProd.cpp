@@ -16,6 +16,7 @@ RecFracProd::~RecFracProd()
 }
 void RecFracProd::setProps(Properties& props)
 {
+    prefix = props.prefix;
 	props_sk = props.props_sk;
 	rightBoundIsPres = props.rightBoundIsPres;
 	int skeletonsNum = props.props_sk.size();

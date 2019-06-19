@@ -12,7 +12,6 @@ template <class modelType>
 class Snapshotter {
 protected:
 	modelType* model;
-	static const std::string prefix;
 	std::string pattern;
 	std::string name;
 

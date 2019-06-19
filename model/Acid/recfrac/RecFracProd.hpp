@@ -34,6 +34,7 @@ namespace acidrecfrac_prod
 	public:
         static const int var_size = var_size;
 	protected:
+        std::string prefix;
 		std::vector<Skeleton_Props> props_sk;
 		// Fluids
 		Water_Props props_w;

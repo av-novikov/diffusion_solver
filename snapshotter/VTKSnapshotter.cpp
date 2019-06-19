@@ -41,80 +41,80 @@
 using namespace std;
 
 template<>
-VTKSnapshotter<acidfrac::AcidFrac>::VTKSnapshotter()
+VTKSnapshotter<acidfrac::AcidFrac>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "AcidFrac_%{NAME}_%{STEP}.vtu";
 }
 template<>
-VTKSnapshotter<acidellfrac::AcidEllFrac>::VTKSnapshotter()
+VTKSnapshotter<acidellfrac::AcidEllFrac>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "AcidEllFrac_%{NAME}_%{STEP}.vtu";
 }
 template<>
-VTKSnapshotter<acidrecfrac::AcidRecFrac>::VTKSnapshotter()
+VTKSnapshotter<acidrecfrac::AcidRecFrac>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "AcidRecFrac_%{NAME}_%{STEP}.vtu";
 }
 template<>
-VTKSnapshotter<acidrecfrac_prod::RecFracProd>::VTKSnapshotter()
+VTKSnapshotter<acidrecfrac_prod::RecFracProd>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
     pattern = prefix + "AcidRecFrac_prod_%{STEP}.vtu";
 }
 template<>
-VTKSnapshotter<acidrecfracmov::AcidRecFracMov>::VTKSnapshotter()
+VTKSnapshotter<acidrecfracmov::AcidRecFracMov>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "AcidRecFracMov_%{NAME}_%{STEP}.vtu";
 }
 template <class modelType>
-VTKSnapshotter<modelType>::VTKSnapshotter()
+VTKSnapshotter<modelType>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "snap_%{STEP}.vtp";
 }
-VTKSnapshotter<gasOil_rz::GasOil_RZ>::VTKSnapshotter()
+VTKSnapshotter<gasOil_rz::GasOil_RZ>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "GasOil_RZ_%{STEP}.vtp";
 }
-VTKSnapshotter<acid2dnit::Acid2dNIT>::VTKSnapshotter()
+VTKSnapshotter<acid2dnit::Acid2dNIT>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "Acid2dNIT_%{STEP}.vtp";
 }
-VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter()
+VTKSnapshotter<acid2d::Acid2d>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "Acid2d_%{STEP}.vtp";
 }
-VTKSnapshotter<acid1d::Acid1d>::VTKSnapshotter()
+VTKSnapshotter<acid1d::Acid1d>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "Acid1d_%{STEP}.vtp";
 }
-VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter()
+VTKSnapshotter<vpp2d::VPP2d>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "VPP2d_%{STEP}.vtp";
 }
-VTKSnapshotter<bing1d::Bingham1d>::VTKSnapshotter()
+VTKSnapshotter<bing1d::Bingham1d>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "Bing1d_%{STEP}.vtp";
 }
-VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::VTKSnapshotter()
+VTKSnapshotter<gasOil_elliptic::GasOil_Elliptic>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "GasOil_El_%{STEP}.vtu";
 }
-VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::VTKSnapshotter()
+VTKSnapshotter<oilnit_elliptic::OilNIT_Elliptic>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "OilNIT_El_%{STEP}.vtu";
 }
-VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::VTKSnapshotter()
+VTKSnapshotter<blackoilnit_elliptic::BlackOilNIT_Elliptic>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "BlackOilNIT_El_%{STEP}.vtu";
 }
-VTKSnapshotter<blackoil_rz::BlackOil_RZ> ::VTKSnapshotter()
+VTKSnapshotter<blackoil_rz::BlackOil_RZ>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "BlackOil_RZ_%{STEP}.vtp";
 }
-VTKSnapshotter<wax_nit::WaxNIT> ::VTKSnapshotter()
+VTKSnapshotter<wax_nit::WaxNIT>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "WaxNIT_%{STEP}.vtp";
 }
-VTKSnapshotter<wax_nit1d::WaxNIT1d> ::VTKSnapshotter()
+VTKSnapshotter<wax_nit1d::WaxNIT1d>::VTKSnapshotter(const std::string _prefix) : prefix(_prefix)
 {
 	pattern = prefix + "WaxNIT1d_%{STEP}.vtp";
 }

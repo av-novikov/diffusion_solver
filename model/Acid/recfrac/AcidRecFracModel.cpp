@@ -21,6 +21,7 @@ AcidRecFrac::~AcidRecFrac()
 }
 void AcidRecFrac::setProps(Properties& props)
 {
+    prefix = props.prefix;
 	props_frac = props.props_frac;
 	props_sk = props.props_sk;
 	skeletonsNum = props.props_sk.size();
