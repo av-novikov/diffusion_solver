@@ -2,9 +2,9 @@
 
 using namespace issues;
 
-int main(int argc, char* argv[])
+int main(int ac, char* av[])
 { 
 	using namespace acidrecfrac;
-    run<Properties,AcidRecFrac,AcidRecFracSolver>();
-	return 0;
+    int res = run<Properties,AcidRecFrac,AcidRecFracSolver>(ac, av);
+	return res;
 }

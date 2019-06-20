@@ -25,6 +25,12 @@
 #include "model/WaxNIT/2d/WaxNITSolver.hpp"
 #include "Scene.h"
 
+#include <exception>
+#include <boost/program_options.hpp>
+
+using std::exception;
+namespace po = boost::program_options;
+
 namespace issues
 {
 	template<typename TProp>
@@ -799,12 +805,13 @@ namespace issues
 	{
 		typedef acidrecfrac::Properties Properties;
 		Properties* props = new Properties;
+        props->prefix = "snaps/";
 
 		props->ht = 0.0001;
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
  
-		props->timePeriods.push_back(0.5 * 3600.0);
+		props->timePeriods.push_back(0.1 * 3600.0);
 		props->timePeriods.push_back(1.0 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
@@ -812,14 +819,14 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(400.0 * 1.0e+5);
+		props->pwf.push_back(420.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		props->cs.push_back(0.0);
 		props->max_sol_volume = 50.0;
-
+        
 		props->props_frac.l2 = 240.0;
 		props->props_frac.w2 = 0.001;
 		props->props_frac.height = 18.87;
@@ -835,7 +842,7 @@ namespace issues
 
         props->prod_props.x_size = props->prod_props.y_size = 1000.0;
         props->prod_props.z_size = props->props_frac.height;
-        props->prod_props.nx = 100;
+        props->prod_props.nx = 110;
         props->prod_props.ny = 100;
         props->R_dim = props->prod_props.R_dim = props->props_frac.l2 / 5.0;
 
@@ -1110,8 +1117,41 @@ namespace issues
 		return props;
 	}
 
+    template <typename Properties>
+    int setOptions(Properties& props, int ac, char* av[])
+    {
+        try
+        {
+            po::options_description desc("Allowed options");
+            desc.add_options()
+                ("help", "produce help message")
+                ("dir", po::value<std::string>(), "set output directory")
+                ("pwf", po::value<double>(), "set injection pressure")
+                ("perm", po::value<double>(), "set initial permeability")
+                ;
+
+            po::variables_map vm;
+            po::store(po::parse_command_line(ac, av, desc), vm);
+            po::notify(vm);
+
+            if (vm.count("help")) { cout << desc << "\n"; return 0; }
+            if (vm.count("dir"))        props->prefix = vm["dir"].as<std::string>();
+            if (vm.count("pwf"))        props->pwf[0] = vm["pwf"].as<std::double>();
+            if (vm.count("perm"))       props->props_sk[0].perm = vm["perm"].as<std::double>();
+        }
+        catch (exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+        catch (...)
+        {
+            cerr << "Exception of unknown type!\n";
+        }
+    }
+
 	template <typename TProps, typename TModel, typename TSolver>
-	void run()
+	int run(int ac, char* av[])
 	{
 		TProps* props = issues::getProps<TProps>();
 		Scene<TModel, TSolver, TProps> scene;
@@ -1119,10 +1159,12 @@ namespace issues
 		scene.start();
 	};
     template <>
-    void run<acidrecfrac::Properties, acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver>()
+    int run<acidrecfrac::Properties, acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver>(int ac, char* av[])
     { 
         using namespace acidrecfrac;
         auto props = issues::getProps<Properties>();
+        int res;
+        //res = setOptions(props, ac, av);
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
 		scene.start();
@@ -1132,6 +1174,8 @@ namespace issues
         model.load(*props, model0->getPoroMesh());
         acidrecfrac_prod::RecFracProdSolver method(&model);
         method.start();
+
+        return res;
     };
 };
 
