@@ -1136,8 +1136,8 @@ namespace issues
 
             if (vm.count("help")) { cout << desc << "\n"; return 0; }
             if (vm.count("dir"))        props->prefix = vm["dir"].as<std::string>();
-            if (vm.count("pwf"))        props->pwf[0] = vm["pwf"].as<std::double>();
-            if (vm.count("perm"))       props->props_sk[0].perm = vm["perm"].as<std::double>();
+            if (vm.count("pwf"))        props->pwf[0] = vm["pwf"].as<double>();
+            if (vm.count("perm"))       props->props_sk[0].perm = vm["perm"].as<double>();
         }
         catch (exception& e)
         {
@@ -1163,8 +1163,7 @@ namespace issues
     { 
         using namespace acidrecfrac;
         auto props = issues::getProps<Properties>();
-        int res;
-        //res = setOptions(props, ac, av);
+        int res = setOptions(props, ac, av);
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
 		scene.start();
