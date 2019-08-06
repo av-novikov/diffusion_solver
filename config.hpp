@@ -1136,7 +1136,7 @@ namespace issues
 
             if (vm.count("help")) { cout << desc << "\n"; return 0; }
             if (vm.count("dir"))        props->prefix = vm["dir"].as<std::string>();
-            if (vm.count("pwf"))        props->pwf[0] = vm["pwf"].as<double>();
+            if (vm.count("pwf"))        props->pwf[0] = vm["pwf"].as<double>() * BAR_TO_PA;
             if (vm.count("perm"))       props->props_sk[0].perm = vm["perm"].as<double>();
         }
         catch (exception& e)
@@ -1174,7 +1174,7 @@ namespace issues
         acidrecfrac_prod::RecFracProdSolver method(&model);
         method.start();
 
-        return res;
+		return res;
     };
 };
 
