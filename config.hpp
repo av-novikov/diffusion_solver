@@ -1128,6 +1128,7 @@ namespace issues
                 ("dir", po::value<std::string>(), "set output directory")
                 ("pwf", po::value<double>(), "set injection pressure")
                 ("perm", po::value<double>(), "set initial permeability")
+				("calc_duration", po::value<double>(), "set maximum calculation time")
                 ;
 
             po::variables_map vm;
@@ -1135,9 +1136,10 @@ namespace issues
             po::notify(vm);
 
             if (vm.count("help")) { cout << desc << "\n"; return 0; }
-            if (vm.count("dir"))        props->prefix = vm["dir"].as<std::string>();
-            if (vm.count("pwf"))        props->pwf[0] = vm["pwf"].as<double>() * BAR_TO_PA;
-            if (vm.count("perm"))       props->props_sk[0].perm = vm["perm"].as<double>();
+            if (vm.count("dir"))					props->prefix = vm["dir"].as<std::string>();
+            if (vm.count("pwf"))					props->pwf[0] = vm["pwf"].as<double>() * BAR_TO_PA;
+            if (vm.count("perm"))					props->props_sk[0].perm = vm["perm"].as<double>();
+			if (vm.count("calc_duration"))			props->timePeriods.back() = vm["calc_duration"].as<double>() * 3600.0;
         }
         catch (exception& e)
         {
