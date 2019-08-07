@@ -178,7 +178,7 @@ namespace acidrecfrac_prod
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
 		void setSnapshotter(std::string type, RecFracProd* model)
 		{
-			snapshotter = new VTKSnapshotter<RecFracProd>();
+			snapshotter = new VTKSnapshotter<RecFracProd>(prefix);
 			snapshotter->setModel(model);
 			isWriteSnaps = true;
 		};
