@@ -42,11 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES1 = 1.E-10;
-	MAX_INIT_RES2 = 5.E-10;
-    //MAX_INIT_RES1 = 4.E-8; 
-    //MAX_INIT_RES2 = 1.E-9;
-
+    MAX_INIT_RES[0].first = 1.E-10;     MAX_INIT_RES[0].second = 5.E-10;         
+    MAX_INIT_RES[1].first = 1.E-9;      MAX_INIT_RES[1].second = 5.E-9;
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open(model->prefix + "P.dat", ofstream::out);
@@ -143,22 +140,30 @@ void AcidRecFracSolver::writeData()
 }
 void AcidRecFracSolver::analyzeNewtonConvergence()
 {
+    int control_period = 0;
+    const double control_time = 1.E-5 * 3600.0 / t_dim;
     DECREASE_STEP = false;
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
     {
-        if (init_step_res[i] > MAX_INIT_RES1)
-        {
-            DECREASE_STEP = false;
-            INCREASE_STEP = false;
-            break;
-        }
-        if (init_step_res[i] > MAX_INIT_RES2)
+        if (cur_t < control_time)
+            control_period = 0;
+        else
+            control_period = 1;
+
+        if (init_step_res[i] > MAX_INIT_RES[control_period].second)
         {
             DECREASE_STEP = true;
             INCREASE_STEP = false;
             break;
         }
+        if (init_step_res[i] > MAX_INIT_RES[control_period].first)
+        {
+            DECREASE_STEP = false;
+            INCREASE_STEP = false;
+            break;
+        }
+
         if (init_step_res[i + 1] >= init_step_res[i])
         {
             INCREASE_STEP = false;

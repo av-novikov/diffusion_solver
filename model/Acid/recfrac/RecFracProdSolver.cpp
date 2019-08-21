@@ -39,8 +39,9 @@ RecFracProdSolver::RecFracProdSolver(RecFracProd* _model) : AbstractSolver<RecFr
 	CONV_W2 = 1.e-6;		CONV_VAR = 1.e-8;
 	MAX_ITER = 8;
 
-    MAX_INIT_RES1 = 5.E-7;
-	MAX_INIT_RES2 = 1.E-8;
+    MAX_INIT_RES[0].first = 1.E-8;
+    MAX_INIT_RES[0].second = 5.E-7;
+
     //MAX_INIT_RES1 = 4.E-8; 
     //MAX_INIT_RES2 = 1.E-9;
 
@@ -105,13 +106,13 @@ void RecFracProdSolver::analyzeNewtonConvergence()
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
     {
-        if (init_step_res[i] > MAX_INIT_RES1)
+        if (init_step_res[i] > MAX_INIT_RES[0].second)
         {
             DECREASE_STEP = true;
             INCREASE_STEP = false;
             break;
         }
-        if (init_step_res[i] > MAX_INIT_RES2)
+        if (init_step_res[i] > MAX_INIT_RES[0].first)
         {
             DECREASE_STEP = false;
             INCREASE_STEP = false;

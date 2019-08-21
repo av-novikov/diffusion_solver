@@ -30,8 +30,8 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
 
-    MAX_INIT_RES1 = 3.E-9;
-    MAX_INIT_RES2 = 1.E-9;
+    MAX_INIT_RES[0].first = 1.E-9;
+    MAX_INIT_RES[1].second = 3.E-9;
     MULT_UP = MULT_DOWN = 1.5;
 }
 Acid2dNITSolver::~Acid2dNITSolver()
@@ -122,13 +122,13 @@ void Acid2dNITSolver::analyzeNewtonConvergence()
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
     {
-        if (init_step_res[i] > MAX_INIT_RES1)
+        if (init_step_res[i] > MAX_INIT_RES[0].second)
         {
             DECREASE_STEP = true;
             INCREASE_STEP = false;
             break;
         }
-        if (init_step_res[i] > MAX_INIT_RES2)
+        if (init_step_res[i] > MAX_INIT_RES[0].first)
         {
             DECREASE_STEP = false;
             INCREASE_STEP = false;

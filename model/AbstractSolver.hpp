@@ -53,7 +53,7 @@ class AbstractSolver {
 
         std::vector<double> init_step_res, final_step_res;
         std::vector<int> iter_num;
-        double MAX_INIT_RES1, MAX_INIT_RES2;
+        std::pair<double, double> MAX_INIT_RES[2];
         bool DECREASE_STEP, INCREASE_STEP;
         double MULT_UP, MULT_DOWN;
 

@@ -42,8 +42,8 @@ AcidRecFracMovSolver::AcidRecFracMovSolver(AcidRecFracMov* _model) : AbstractSol
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES1 = 1.E-9;
-	MAX_INIT_RES2 = 3.E-9;
+    MAX_INIT_RES[0].first = 1.E-9;
+	MAX_INIT_RES[0].second = 3.E-9;
     //MAX_INIT_RES1 = 4.E-8; 
     //MAX_INIT_RES2 = 1.E-9;
 
@@ -140,15 +140,15 @@ void AcidRecFracMovSolver::analyzeNewtonConvergence()
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
     {
-        if (init_step_res[i] > MAX_INIT_RES1)
+        if (init_step_res[i] > MAX_INIT_RES[0].first)
         {
-            DECREASE_STEP = true;
+            DECREASE_STEP = false;
             INCREASE_STEP = false;
             break;
         }
-        if (init_step_res[i] > MAX_INIT_RES2)
+        if (init_step_res[i] > MAX_INIT_RES[0].second)
         {
-            DECREASE_STEP = false;
+            DECREASE_STEP = true;
             INCREASE_STEP = false;
             break;
         }
