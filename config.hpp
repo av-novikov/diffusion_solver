@@ -1130,6 +1130,7 @@ namespace issues
                 ("perm", po::value<double>(), "set initial permeability")
 				("calc_duration", po::value<double>(), "set maximum calculation time")
 				("init_step", po::value<double>(), "set initial time step")
+                ("frac_len", po::value<double>(), "set initial fracture length")
                 ;
 
             po::variables_map vm;
@@ -1142,6 +1143,11 @@ namespace issues
             if (vm.count("perm"))					props->props_sk[0].perm = vm["perm"].as<double>();
 			if (vm.count("calc_duration"))			props->timePeriods.back() = vm["calc_duration"].as<double>() * 3600.0;
 			if (vm.count("init_step"))				props->ht = vm["init_step"].as<double>();
+            if (vm.count("frac_len"))
+            {
+                props->props_frac.l2 = vm["frac_len"].as<double>();
+                props->R_dim = props->prod_props.R_dim = props->props_frac.l2 / 5.0;
+            }
         }
         catch (exception& e)
         {

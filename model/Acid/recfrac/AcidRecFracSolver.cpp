@@ -42,8 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES1 = 1.E-9;
-	MAX_INIT_RES2 = 3.E-9;
+    MAX_INIT_RES1 = 1.E-10;
+	MAX_INIT_RES2 = 5.E-10;
     //MAX_INIT_RES1 = 4.E-8; 
     //MAX_INIT_RES2 = 1.E-9;
 
@@ -149,13 +149,13 @@ void AcidRecFracSolver::analyzeNewtonConvergence()
     {
         if (init_step_res[i] > MAX_INIT_RES1)
         {
-            DECREASE_STEP = true;
+            DECREASE_STEP = false;
             INCREASE_STEP = false;
             break;
         }
         if (init_step_res[i] > MAX_INIT_RES2)
         {
-            DECREASE_STEP = false;
+            DECREASE_STEP = true;
             INCREASE_STEP = false;
             break;
         }
