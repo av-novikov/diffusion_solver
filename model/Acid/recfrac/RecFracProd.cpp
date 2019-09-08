@@ -14,8 +14,9 @@ RecFracProd::~RecFracProd()
 	delete snapshotter;
 	delete[] x, h;
 }
-void RecFracProd::setProps(Properties& props)
+void RecFracProd::setProps(Properties& props, const std::vector<double>& _widths)
 {
+	widths = _widths;
     prefix = props.prefix;
 	props_sk = props.props_sk;
 	rightBoundIsPres = props.rightBoundIsPres;
@@ -182,18 +183,19 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
 }
 void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
 {
+	int j_ind;
     int counter = 0;
-    double cx, cy, cz, hx, hy, hz, cur_hx, cur_hy, cur_hz;
-    double max_prev_y = cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y;
+    double cx, cy, cz, hx, hz, cur_hx, cur_hy, cur_hz, width_cur;
     hx = (x_size - prev_x_size) / (cellsNum_x - add_cellsNum_x - prev_cellsNum_x + 1);
-    hy = (y_size - max_prev_y) / (cellsNum_y - 1);
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
     Volume = 0.0;
 
-    double delta = -9.0 * max_prev_y;
-    double r_prev = max_prev_y - delta;
-    double logMax = log((y_size - delta) / (max_prev_y - delta));
-    double logStep = logMax / (double)(cellsNum_y - 1);
+	double max_prev_y = (cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y) / 2.0;
+	double delta = 0.0;// -9.0 * max_prev_y;
+	double r_prev = max_prev_y - delta;
+	double logMax = log((y_size - delta) / (max_prev_y - delta));
+	double logStep = logMax / (double)(cellsNum_y - 2);
+	width_cur = max_prev_y / 2.0;
 
     double delta_x = 0.0;
     double rw = 0.02 / R_dim;
@@ -235,6 +237,7 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
             cur_hz = cells_poro[k * (prev_cellsNum_y + 2)].hz;
             cy = cur_hy = 0.0;
 
+			width_cur = (0.95 - 0.9 * (double)(j) / (double)(cellsNum_x + 1)) * max_prev_y;
             r_prev = max_prev_y - delta;
             for (int i = 0; i < cellsNum_y + 2; i++)
             {
@@ -247,15 +250,25 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
                 cur_type = (i < 2 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
                 
 
-                if (j < add_cellsNum_x + prev_cellsNum_x && i < 2)
+                if (j < add_cellsNum_x + prev_cellsNum_x && i < 3)
                 {
                     //cells.push_back(Cell(cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))], counter++, cur_type));
                     //const auto& old_cell = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
                     cells.push_back(Cell(counter++, cx, cy, cz, cur_hx, cur_hy, cur_hz, cur_type));
                     const auto& cell = cells.back();
                     Volume += cell.V;
-                    cy += max_prev_y / 2.0;
-                    cur_hy = max_prev_y;
+
+					if (i == 0)
+					{
+						cy = width_cur / 2.0;
+						cur_hy = width_cur;
+					}
+					else if (i == 1)
+					{
+						cy += (cur_hy + (max_prev_y - width_cur)) / 2.0;
+						cur_hy = max_prev_y - width_cur;
+					}
+                    
                 }
                 else
                 {
@@ -264,11 +277,16 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
                         cy = 0.0;
                         cur_hy = 0.0;
                     }
-                    else if (i < 2)
+                    else if (i == 1)
                     {
-                        cy = max_prev_y / 2.0;
-                        cur_hy = max_prev_y;
+                        cy = width_cur / 2.0;
+                        cur_hy = width_cur;
                     }
+					else if (i == 2)
+					{
+						cy += (cur_hy + (max_prev_y - width_cur)) / 2.0;
+						cur_hy = max_prev_y - width_cur;
+					}
                     else if (i == cellsNum_y + 1)
                     {
                         cur_hy = 0.0;

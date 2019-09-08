@@ -49,6 +49,7 @@ namespace acidrecfrac_prod
         int prev_cellsNum_x, prev_cellsNum_y, prev_cellsNum_z;
 		int num_input_cells;
         const int add_cellsNum_x = 10;
+		std::vector<double> widths;
 
 		// Temporary properties
 		double ht, ht_min, ht_max;
@@ -65,7 +66,7 @@ namespace acidrecfrac_prod
 
 		void buildGrid(std::vector<PoroCell>& cells_poro);
         void buildBetterGrid(std::vector<PoroCell>& cells_poro);
-		void setProps(Properties& props);
+		void setProps(Properties& props, const std::vector<double>& _widths);
 		void makeDimLess();
 		void setInitialState(const std::vector<PoroCell>& cells_poro);
 		void setPerforated();
@@ -167,9 +168,9 @@ namespace acidrecfrac_prod
 		~RecFracProd();
 
         const std::array<double, 3> calcAvgFracPerm(const std::vector<PoroCell>& cells_poro, const int j, const int k) const;
-		void load(Properties& props, std::vector<PoroCell>& cells_poro)
+		void load(Properties& props, std::vector<PoroCell>& cells_poro, const std::vector<double>& _widths)
 		{
-			setProps(props);
+			setProps(props, _widths);
 			setSnapshotter("", this);
 			buildBetterGrid(cells_poro);
 			setPerforated();
