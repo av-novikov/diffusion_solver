@@ -339,6 +339,7 @@ namespace acidrecfrac
 		int getCellsNum() { return cellsNum_frac + cellsNum_poro; };
 		double getRate(const int idx) const;
         std::vector<PoroCell>& getPoroMesh() { return cells_poro; };
+		const std::vector<double>& getFracWidths() { return widths; };
 	};
 };
 

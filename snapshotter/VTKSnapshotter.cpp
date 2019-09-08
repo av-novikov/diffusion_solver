@@ -1543,6 +1543,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 }
 void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
 {
+	double dy;
     using namespace acidrecfrac_prod;
     const double Y_MULT = 1.0;
     // Grid
@@ -1560,11 +1561,13 @@ void VTKSnapshotter<acidrecfrac_prod::RecFracProd>::dump_all(int i)
     }
     for (int i = 0; i < nx - 1; i++)
         for (int k = 0; k < nz - 1; k++)
-        {
+        { 
             for (int j = 0; j < ny - 1; j++)
             {
                 const auto& cell = model->cells[j + k * ny + i * ny * nz];
-                points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z + cell.hz / 2.0));
+				const auto& right_nebr_cell = model->cells[j + k * ny + (i + 1) * ny * nz];
+				dy = (right_nebr_cell.hx * cell.hy + cell.hx * right_nebr_cell.hy) / (cell.hx + right_nebr_cell.hx) / 2.0;
+                points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), Y_MULT * r_dim * (cell.y + dy), r_dim * (cell.z + cell.hz / 2.0));
             }
         }
     grid->SetPoints(points);

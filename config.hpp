@@ -1142,7 +1142,10 @@ namespace issues
             if (vm.count("pwf"))					props->pwf[0] = vm["pwf"].as<double>() * BAR_TO_PA;
             if (vm.count("perm"))					props->props_sk[0].perm = vm["perm"].as<double>();
 			if (vm.count("calc_duration"))			props->timePeriods.back() = vm["calc_duration"].as<double>() * 3600.0;
-			if (vm.count("init_step"))				props->ht = vm["init_step"].as<double>();
+            if (vm.count("init_step"))
+            {
+                props->ht = props->ht_min = vm["init_step"].as<double>();
+            }
             if (vm.count("frac_len"))
             {
                 props->props_frac.l2 = vm["frac_len"].as<double>();
