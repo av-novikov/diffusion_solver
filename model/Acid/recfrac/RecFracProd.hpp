@@ -50,6 +50,7 @@ namespace acidrecfrac_prod
 		int num_input_cells;
         const int add_cellsNum_x = 10;
 		std::vector<double> widths;
+		double MIN_FRAC_WIDTH;
 
 		// Temporary properties
 		double ht, ht_min, ht_max;

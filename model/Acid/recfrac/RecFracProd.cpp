@@ -183,26 +183,28 @@ void RecFracProd::buildGrid(std::vector<PoroCell>& cells_poro)
 }
 void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
 {
-	int j_ind;
-    int counter = 0;
+    int j_ind, counter = 0;
     double cx, cy, cz, hx, hz, cur_hx, cur_hy, cur_hz, width_cur;
     hx = (x_size - prev_x_size) / (cellsNum_x - add_cellsNum_x - prev_cellsNum_x + 1);
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
     Volume = 0.0;
 
-	double max_prev_y = (cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y) / 2.0;
+	std::fill(widths.begin(), widths.end(),
+		cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y);
+	double max_width = *std::max_element(widths.begin(), widths.end());
+	double max_prev_y = 1.5 * max_width;
+	MIN_FRAC_WIDTH = 0.01 * max_width;
+
 	double delta = 0.0;// -9.0 * max_prev_y;
 	double r_prev = max_prev_y - delta;
 	double logMax = log((y_size - delta) / (max_prev_y - delta));
 	double logStep = logMax / (double)(cellsNum_y - 2);
-	width_cur = max_prev_y / 2.0;
 
     double delta_x = 0.0;
     double rw = 0.02 / R_dim;
     double x_prev = cells_poro[(prev_cellsNum_z + 2) * (prev_cellsNum_y + 2)].hx - delta_x;
     double logMax_x = log((x_prev - delta_x) / (rw - delta_x));
     double logStep_x = logMax_x / (double)(add_cellsNum_x);
-
     //const double tmp = cells_poro[0].y;
     //for (auto& cell : cells_poro)
     //    cell.y -= tmp;
@@ -237,7 +239,12 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
             cur_hz = cells_poro[k * (prev_cellsNum_y + 2)].hz;
             cy = cur_hy = 0.0;
 
-			width_cur = (0.95 - 0.9 * (double)(j) / (double)(cellsNum_x + 1)) * max_prev_y;
+			//width_cur = (0.95 - 0.9 * (double)(j) / (double)(cellsNum_x + 1)) * max_prev_y;
+			j_ind = j > add_cellsNum_x ? j - add_cellsNum_x : 0;
+			j_ind = j > add_cellsNum_x + prev_cellsNum_x - 1 ? prev_cellsNum_x - 1 : j_ind;
+			width_cur = widths[j_ind];
+			if (width_cur < MIN_FRAC_WIDTH)
+				width_cur = MIN_FRAC_WIDTH;
             r_prev = max_prev_y - delta;
             for (int i = 0; i < cellsNum_y + 2; i++)
             {
@@ -248,7 +255,6 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
                 cur_type = (i == 0 && cur_type == Type::MIDDLE) ? Type::WELL_LAT : cur_type;
                 cur_type = (i == cellsNum_y + 1 && cur_type == Type::MIDDLE) ? Type::RIGHT : cur_type;
                 cur_type = (i < 2 && cur_type == Type::SIDE_LEFT) ? Type::FRAC_IN : cur_type;
-                
 
                 if (j < add_cellsNum_x + prev_cellsNum_x && i < 3)
                 {
