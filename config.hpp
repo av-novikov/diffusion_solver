@@ -1183,7 +1183,7 @@ namespace issues
 
         auto model0 = scene.getModel();
         acidrecfrac_prod::RecFracProd model;
-        model.load(*props, model0->getPoroMesh());
+        model.load(*props, model0->getPoroMesh(), model0->getFracWidths());
         acidrecfrac_prod::RecFracProdSolver method(&model);
         method.start();
 
