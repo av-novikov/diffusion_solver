@@ -332,18 +332,23 @@ void RecFracProd::setPeriod(int period)
 }
 const std::array<double, 3> RecFracProd::calcAvgFracPerm(const std::vector<PoroCell>& cells_poro, const int j, const int k) const
 {
+	const int tr_idx = j > 0 ? j - 1 : 0;
 	double m = 0.0, kx = 0.0, ky = 0.0, k0, vol = 0.0, s = 0, L = 0;
-	for (int i = 0; i < num_input_cells + 1; i++)
+	const auto& init_cell = cells_poro[0];
+	for (int i = 0; i < prev_cellsNum_y; i++)
 	{
 		auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * (prev_cellsNum_z + 2))];
-		vol += cell0.V;
-		s += cell0.hy * cell0.hz;
-		L += cell0.hy;
-		k0 = cell0.props->getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
+		if (cell0.y - init_cell.y <= widths[tr_idx])
+		{
+			vol += cell0.V;
+			s += cell0.hy * cell0.hz;
+			L += cell0.hy;
+			k0 = cell0.props->getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
 
-		m += cell0.V * cell0.u_next.m;
-		kx += cell0.hy * cell0.hz * k0;
-		ky += cell0.hy / k0;
+			m += cell0.V * cell0.u_next.m;
+			kx += cell0.hy * cell0.hz * k0;
+			ky += cell0.hy / k0;
+		}
 	}
 	if (vol == 0.0 || s == 0.0 || L == 0.0)
 		return{ props_sk[0].m_init, props_sk[0].perm, props_sk[0].perm };
