@@ -625,7 +625,7 @@ void AcidRecFrac::calculateTrans()
 			k = pcell.props->getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
 			k0 = pcell.props->perm;
 			//if (fabs(m - m0) > EQUALITY_TOLERANCE)
-			if (fabs(k - k0) / k0 >= 10.0)
+			if (fabs(k - k0) / k0 >= 1.5)
 				cur_width += pcell.hy;
 		}
 		widths[tr_idx] = cur_width;

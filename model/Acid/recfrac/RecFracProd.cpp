@@ -189,11 +189,12 @@ void RecFracProd::buildBetterGrid(std::vector<PoroCell>& cells_poro)
     hz = (z_size - prev_z_size) / (cellsNum_z - prev_cellsNum_z);
     Volume = 0.0;
 
-	std::fill(widths.begin(), widths.end(),
-		cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y);
+	/*std::fill(widths.begin(), widths.end(),
+		cells_poro[num_input_cells].y + cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y);*/
 	double max_width = *std::max_element(widths.begin(), widths.end());
 	double max_prev_y = 1.5 * max_width;
-	MIN_FRAC_WIDTH = 0.01 * max_width;
+	MIN_FRAC_WIDTH = 0.01 * fmax(max_width, cells_poro[num_input_cells].y + 
+											cells_poro[num_input_cells].hy / 2.0 - cells_poro[0].y);
 
 	double delta = 0.0;// -9.0 * max_prev_y;
 	double r_prev = max_prev_y - delta;
