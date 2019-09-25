@@ -141,7 +141,7 @@ void AcidRecFracSolver::writeData()
 void AcidRecFracSolver::analyzeNewtonConvergence()
 {
     int control_period = 0;
-    const double control_time = 1.E-2 * 3600.0 / t_dim;
+    const double control_time = 1.E-3 * 3600.0 / t_dim;
     DECREASE_STEP = false;
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
