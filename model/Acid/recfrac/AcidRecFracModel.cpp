@@ -733,9 +733,9 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 
 		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), dist1, props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), dist2);
 		adouble dens_o = getAverage(props_o.getDensity(next.p), dist1, props_o.getDensity(nebr.p), dist2);
-		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
+		adouble buf_w = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p + (cell.z - beta.z) * grav * props_w.dens_stc) *
 			dens_w * props_w.getKr(upwd.sw, upwd.m, cells_poro[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
-		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
+		adouble buf_o = ht / cell.V * getPoroTrans(cell, next, beta, nebr) * (next.p - nebr.p + (cell.z - beta.z) * grav * props_w.dens_stc) *
 			dens_o * props_o.getKr(upwd.sw, upwd.m, cells_poro[upwd_idx].props) / props_o.getViscosity(upwd.p);
 
 		res.p += buf_w;
@@ -950,8 +950,8 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	double alpha = -props_frac.w2 * props_frac.w2 / props_w.visc * (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2));	
 	adouble vy_minus = vL * (1.5 * (y_minus / props_frac.w2) - 0.5 * y_minus * y_minus * y_minus / props_frac.w2 / props_frac.w2 / props_frac.w2);
 	adouble vy_plus = vL * (1.5 * (y_plus / props_frac.w2) - 0.5 * y_plus * y_plus * y_plus / props_frac.w2 / props_frac.w2 / props_frac.w2);
-	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cell_z_minus.hz) - grav * props_w.dens_stc / 2.0);
-	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cell_z_plus.hz) + grav * props_w.dens_stc / 2.0);
+	adouble vz_minus = alpha * ((next.p - nebr_z_minus.p) / (cell.hz + cell_z_minus.hz) + grav * props_w.dens_stc / 2.0);
+	adouble vz_plus = alpha * ((next.p - nebr_z_plus.p) / (cell.hz + cell_z_plus.hz) - grav * props_w.dens_stc / 2.0);
 	adouble vx_minus = alpha * (next.p - nebr_x_minus.p) / (cell.hx + cell_x_minus.hx);
 	adouble vx_plus = alpha * (next.p - nebr_x_plus.p) / (cell.hx + cell_x_plus.hx);
 	if (max_vel_x < fabs(vx_minus.value()))
