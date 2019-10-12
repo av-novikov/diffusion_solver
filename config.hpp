@@ -807,27 +807,27 @@ namespace issues
 		Properties* props = new Properties;
         props->prefix = "snaps/";
 
-		props->ht = 0.0001;
-		props->ht_min = props->ht;
+		props->ht = 0.01;
+		props->ht_min = 1.0 * props->ht;
 		props->ht_max = 10.0;
  
 		props->timePeriods.push_back(0.1 * 3600.0);
-		props->timePeriods.push_back(1.0 * 3600.0);
+		props->timePeriods.push_back(1.2 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
-		props->LeftBoundIsRate.push_back(false);
+		props->LeftBoundIsRate.push_back(true);
 		//props->LeftBoundIsRate.push_back(false);
 		props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(420.0 * 1.0e+5);
+		//props->pwf.push_back(280.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
-		//props->rates.push_back(-10.0);
+		props->rates.push_back(-2500.0);
 		props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		props->cs.push_back(0.0);
-		props->max_sol_volume = 50.0;
+		props->max_sol_volume = 5.0 * 0.15 / props->cs[0];
         
-		props->props_frac.l2 = 240.0;
+		props->props_frac.l2 = 12.0;
 		props->props_frac.w2 = 0.001;
 		props->props_frac.height = 18.87;
 		props->re = 200.0;
@@ -835,15 +835,15 @@ namespace issues
 		props->props_frac.p_init = 200.0 * BAR_TO_PA;
 		props->props_frac.c_init = 0.0;
 
-		props->cellsNum_x = 20;
-		props->cellsNum_y_frac = 20;
-		props->cellsNum_y_poro = 75;
+		props->cellsNum_x = 1;
+		props->cellsNum_y_frac = 1;
+		props->cellsNum_y_poro = 100;
 		props->cellsNum_z = 1;
 
         props->prod_props.x_size = props->prod_props.y_size = 1000.0;
         props->prod_props.z_size = props->props_frac.height;
         props->prod_props.nx = 110;
-        props->prod_props.ny = 100;
+        props->prod_props.ny = 75;
         props->R_dim = props->prod_props.R_dim = props->props_frac.l2 / 5.0;
 
 		acidrecfrac::Skeleton_Props props_sk;
@@ -857,7 +857,7 @@ namespace issues
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-		props_sk.perm = 0.5;
+		props_sk.perm = 5.0;
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->props_frac.height;
@@ -889,12 +889,12 @@ namespace issues
 
 		props->props_o.visc = 4.75;
 		props->props_o.dens_stc = 887.261;
-		props->props_o.beta = 1.0 * 1.e-9;
+		props->props_o.beta = 1.0 * 1.e-10;
 		props->props_o.p_ref = props_sk.p_ref;
 
 		props->props_w.visc = 12.0;
 		props->props_w.dens_stc = 1000.0;
-		props->props_w.beta = 1.0 * 1.e-9;
+		props->props_w.beta = 1.0 * 1.e-10;
 		props->props_w.p_ref = props_sk.p_ref;
 		props->props_w.D_e = 0.0;// 1.E-8;
 
@@ -1176,7 +1176,7 @@ namespace issues
     { 
         using namespace acidrecfrac;
         auto props = issues::getProps<Properties>();
-        int res = setOptions(props, ac, av);
+        //int res = setOptions(props, ac, av);
         Scene<AcidRecFrac, AcidRecFracSolver, Properties> scene;
         scene.load(*props);
 		scene.start();
@@ -1187,7 +1187,7 @@ namespace issues
         acidrecfrac_prod::RecFracProdSolver method(&model);
         method.start();
 
-		return res;
+		return 0;// res;
     };
 };
 

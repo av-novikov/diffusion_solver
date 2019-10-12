@@ -540,8 +540,9 @@ void AcidRecFrac::setPeriod(int period)
 		{
 			std::map<int, double>::iterator it;
 			for (it = Qcell.begin(); it != Qcell.end(); ++it)
-				it->second = 3.0 * Q_sum * cells_frac[it->first].hy / 2.0 / props_frac.w2 * 
-					(1.0 - (cells_frac[it->first].y / props_frac.w2) * (cells_frac[it->first].y / props_frac.w2));
+				it->second = Q_sum * cells_frac[it->first].hz * cells_frac[it->first].hy / height_perf;
+				/*it->second = 3.0 * Q_sum * cells_frac[it->first].hz * cells_frac[it->first].hy / 2.0 / props_frac.w2 / props_frac.height *
+					(1.0 - (cells_frac[it->first].y / props_frac.w2) * (cells_frac[it->first].y / props_frac.w2));*/
 		}
 		else
 		{
@@ -889,7 +890,7 @@ FracTapeVariable AcidRecFrac::solveFracIn(const FracCell& cell)
 	if (leftBoundIsRate)
 	{
 		if (cell.hy * cell.hz != 0.0)
-			res.p = ((next.p - beta.u_prev.p) +
+			res.p = ((next.p - nebr.p) +
 				Qcell[cell.num] / (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) / props_frac.w2 / props_frac.w2 * props_w.visc
 				/ (cell.hy * cell.hz) * beta.hx) / P_dim;
 		else

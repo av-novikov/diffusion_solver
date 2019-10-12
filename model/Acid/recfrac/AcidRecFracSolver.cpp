@@ -42,8 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 1.E-10;     MAX_INIT_RES[0].second = 5.E-10;         
-    MAX_INIT_RES[1].first = 1.E-9;      MAX_INIT_RES[1].second = 5.E-9;
+	MAX_INIT_RES[0].first = 2.E-7;     MAX_INIT_RES[0].second = 1.E-6;
+	MAX_INIT_RES[1].first = 2.E-6;      MAX_INIT_RES[1].second = 1.E-5;
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open(model->prefix + "P.dat", ofstream::out);
@@ -140,17 +140,17 @@ void AcidRecFracSolver::writeData()
 }
 void AcidRecFracSolver::analyzeNewtonConvergence()
 {
-    int control_period = 0;
-    const double control_time = 1.E-3 * 3600.0 / t_dim;
+    const double control_time = 1.E-4 * 3600.0 / t_dim;
+	int control_period = 0;
+	if (cur_t < control_time)
+		control_period = 0;
+	else
+		control_period = 1;
+
     DECREASE_STEP = false;
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
     {
-        if (cur_t < control_time)
-            control_period = 0;
-        else
-            control_period = 1;
-
         if (init_step_res[i] > MAX_INIT_RES[control_period].second)
         {
             DECREASE_STEP = true;
@@ -185,6 +185,10 @@ void AcidRecFracSolver::control()
 	}
 
     analyzeNewtonConvergence();
+	if (model->ht > 0.07 * cur_t && curTimePeriod == 0)
+	{
+		INCREASE_STEP = false;
+	}
 
     cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
     cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
@@ -370,7 +374,7 @@ bool AcidRecFracSolver::solveSmartStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE, isInit, 1);
+		solver.Solve(PRECOND::ILU_SIMPLE, true, 0);
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);
