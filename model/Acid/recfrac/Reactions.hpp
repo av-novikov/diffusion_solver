@@ -164,7 +164,7 @@ namespace acidrecfrac
 
 			activation_energy = 8.31 * 11320.0;
 			alpha = 0.618 / 1.5;
-			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha) * 2.E-4;
+			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha) * 1.E-4;
 			surf_init = 100000.0;
 		};
 	};

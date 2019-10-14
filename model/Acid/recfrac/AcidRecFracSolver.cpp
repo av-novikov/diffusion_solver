@@ -42,8 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-	MAX_INIT_RES[0].first = 2.E-7;     MAX_INIT_RES[0].second = 1.E-6;
-	MAX_INIT_RES[1].first = 2.E-6;      MAX_INIT_RES[1].second = 1.E-5;
+	MAX_INIT_RES[0].first = 1.E-8;     MAX_INIT_RES[0].second = 5.E-8;
+	MAX_INIT_RES[1].first = 1.E-7;      MAX_INIT_RES[1].second = 5.E-7;
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open(model->prefix + "P.dat", ofstream::out);
@@ -135,6 +135,18 @@ void AcidRecFracSolver::writeData()
 		cum_vol += (cell.props->m_init - cell.u_next.m) * cell.V * model->R_dim * model->R_dim * model->R_dim;
 	}
 	qcells << "\t" << cum_vol;
+
+	// 1d skin
+	double skin = 0.0;
+	for (const auto& cell : model->cells_poro)
+	{
+		if (cell.V > 0.0)
+		{
+			skin += model->props_sk[0].perm / cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value() * cell.hy;
+		}
+	}
+	skin -= model->re - model->props_frac.w2;
+	qcells << "\t" << skin * model->R_dim;
 
 	qcells << endl;
 }

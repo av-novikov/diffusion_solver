@@ -821,7 +821,7 @@ namespace issues
 		props->rightBoundIsPres = true;
 		//props->pwf.push_back(280.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
-		props->rates.push_back(-2500.0);
+		props->rates.push_back(-125.0);
 		props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		props->cs.push_back(0.0);
@@ -837,7 +837,7 @@ namespace issues
 
 		props->cellsNum_x = 1;
 		props->cellsNum_y_frac = 1;
-		props->cellsNum_y_poro = 100;
+		props->cellsNum_y_poro = 200;
 		props->cellsNum_z = 1;
 
         props->prod_props.x_size = props->prod_props.y_size = 1000.0;
