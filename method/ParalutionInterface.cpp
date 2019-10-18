@@ -111,7 +111,7 @@ void ParSolver::SolveBiCGStab_Simple(const int degree, bool isHarder)
 	}
 	else
 	{
-        p_ilut.Set(1.E-12, 20);
+        p_ilut.Set(1.E-25, 25);
 		bicgstab.SetPreconditioner(p_ilut);
 	}
 	

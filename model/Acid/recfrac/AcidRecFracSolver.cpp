@@ -386,7 +386,7 @@ bool AcidRecFracSolver::solveSmartStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE, true, 0);
+		solver.Solve(PRECOND::ILU_SIMPLE, false, 2);
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);
