@@ -213,20 +213,12 @@ namespace acidrecfrac
 			const auto& next = x_poro[idx];
 			const auto& nebr = x_poro[idx + 1];
 			const auto& props = *poro_cell.props;
-			double tmp1 = nebr.p.value();
-			double tmp2 = next.p.value();
-            double tmp3 = props.getPermCoseni(next.m, next.p).value();
-            double tmp4 = props_w.getKr(next.sw, next.m, &props).value();
-            double tmp5 = 1.0 / (poro_cell.hy + poro_beta.hy);
-            double tmp6 = next.sw.value();
-            double tmp7 = next.m.value();
-            if(next.sw.value() != 0.0)
-			    return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
+            /*if(next.sw.value() != 0.0)
+			      return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
     				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
 	    			(nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
-            else
-                return -props.getPermCoseni(next.m, next.p) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / 
-                next.m * (nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
+            else*/
+                return -props.getPermCoseni(next.m, next.p) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
 		};
         inline std::array<double, 3> getPoroWaterVelocity(const PoroCell& cell) const
         {
