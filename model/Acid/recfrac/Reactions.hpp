@@ -147,7 +147,7 @@ namespace acidrecfrac
 			reaction_const = 7.29 * 1.e+7;
 			surf_init = 100000.0;
 			//alpha = 0.63;
-			alpha = 1.0
+			alpha = 1.0;
 		};
 	};
 	static const int dolomite_components_num = 5;
@@ -166,7 +166,7 @@ namespace acidrecfrac
 			activation_energy = 8.31 * 11320.0;
 			//alpha = 0.618 / 1.5;
 			alpha = 1.0;
-			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha) * 2.E-6;
+			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha) * 5.E-2;
 			surf_init = 100000.0;
 		};
 	};

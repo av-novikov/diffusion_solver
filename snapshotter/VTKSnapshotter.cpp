@@ -1445,7 +1445,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			for (int j = 0; j < ny_poro - 1; j++)
 			{
 				const PoroCell& cell = model->cells_poro[j + (k + 1) * ny_poro + (i + 1) * nz * ny_poro];
-				if (cell.y * r_dim < 0.1)
+				if (cell.y * r_dim < 0.5)
 				{
 					assert(cell.type == PoroType::MIDDLE || (cell.type == PoroType::WELL_LAT && j == 0));
 					const auto& next = cell.u_next;

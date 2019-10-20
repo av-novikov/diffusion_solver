@@ -37,7 +37,7 @@ namespace acidrecfrac
 
 		inline adouble getPoro(adouble m0, adouble p) const
 		{
-			return m0 * exp(beta * (p - p_ref));
+			return m0;// *exp(beta * (p - p_ref));
 		};
 		/*inline adouble getPermCoseni(adouble m0, adouble p) const
 		{
