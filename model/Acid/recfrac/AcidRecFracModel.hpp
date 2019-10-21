@@ -29,7 +29,7 @@ namespace acidrecfrac
 
 	static const int var_poro_size = PoroVariable::size;
 	static const int var_frac_size = FracVariable::size;
-	const int NEBRS_NUM = 6;
+	const int NEBRS_NUM = 4;
 
 	class AcidRecFrac
 	{
@@ -119,7 +119,7 @@ namespace acidrecfrac
 			return i_idx_modi * cellsNum_z + k_idx_modi;*/
 
 			// Example
-			const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
+			/*const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
 			const int k_idx = int((cell.num - i_idx * (cellsNum_y_poro + 2) * (cellsNum_z + 2)) / (cellsNum_y_poro + 2));
 			
 			int k_idx_modi = k_idx - 1;
@@ -127,7 +127,8 @@ namespace acidrecfrac
 				k_idx_modi = 0;
 			if (k_idx_modi == cellsNum_z)
 				k_idx_modi = cellsNum_z - 1;
-			return k_idx_modi;
+			return k_idx_modi;*/
+			return 0;
 		}
 		template <class TCell>
 		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
@@ -170,7 +171,7 @@ namespace acidrecfrac
 			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
 			adouble tmp1;
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-			return /*var.sw */	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
+			return var.sw * tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
         inline adouble getReactionRateOutput(const PoroVariable& var, const Skeleton_Props& props) const
         {
@@ -178,7 +179,7 @@ namespace acidrecfrac
             adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
             adouble tmp1;
             condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
-            return /*var.sw */	tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
+            return var.sw * tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
         };
 		inline double getDarmkoller(const PoroCell& cell, const PoroVariable& var, const Skeleton_Props& props) const
 		{
@@ -234,7 +235,7 @@ namespace acidrecfrac
                 vel_y = transmissivity * (cells_poro[neighbor[1]].u_next.p - cells_poro[neighbor[0]].u_next.p) / (cells_poro[neighbor[1]].y - cells_poro[neighbor[0]].y);
             else
                 vel_y = getFlowLeak(cells_frac[getFracNebr(cell.num)]).value();
-            vel_z = transmissivity * (cells_poro[neighbor[5]].u_next.p - cells_poro[neighbor[4]].u_next.p) / (cells_poro[neighbor[5]].z - cells_poro[neighbor[4]].z);
+			vel_z = 0.0;// transmissivity * (cells_poro[neighbor[5]].u_next.p - cells_poro[neighbor[4]].u_next.p) / (cells_poro[neighbor[5]].z - cells_poro[neighbor[4]].z);
             return{ vel_x, vel_y, vel_z };
         };
 		/*inline double getFracDistance(const int idx1, const int idx2) const
@@ -271,10 +272,10 @@ namespace acidrecfrac
 		{
 			neighbor[0] = cur - 1;
 			neighbor[1] = cur + 1;
-			neighbor[2] = cur - (cellsNum_y_poro + 2) * (cellsNum_z + 2);
-			neighbor[3] = cur + (cellsNum_y_poro + 2) * (cellsNum_z + 2);
-			neighbor[4] = cur - (cellsNum_y_poro + 2);
-			neighbor[5] = cur + (cellsNum_y_poro + 2);
+			neighbor[2] = cur - (cellsNum_y_poro + 2) * cellsNum_z;
+			neighbor[3] = cur + (cellsNum_y_poro + 2) * cellsNum_z;
+			//neighbor[4] = cur - (cellsNum_y_poro + 2);
+			//neighbor[5] = cur + (cellsNum_y_poro + 2);
 		};
 		inline void getFracNeighborIdx(const int cur, int* const neighbor)
 		{
@@ -283,10 +284,10 @@ namespace acidrecfrac
 				neighbor[1] = getPoroNebr(cur);
 			else
 				neighbor[1] = cur + 1;
-			neighbor[2] = cur - (cellsNum_y_frac + 1) * (cellsNum_z + 2);
-			neighbor[3] = cur + (cellsNum_y_frac + 1) * (cellsNum_z + 2);
-			neighbor[4] = cur - (cellsNum_y_frac + 1);
-			neighbor[5] = cur + (cellsNum_y_frac + 1);
+			neighbor[2] = cur - (cellsNum_y_frac + 1) * cellsNum_z;
+			neighbor[3] = cur + (cellsNum_y_frac + 1) * cellsNum_z;
+			//neighbor[4] = cur - (cellsNum_y_frac + 1);
+			//neighbor[5] = cur + (cellsNum_y_frac + 1);
 		};
 		inline double upwindIsCur(const PoroCell& cell, const PoroCell& beta)
 		{

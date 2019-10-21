@@ -73,7 +73,7 @@ void Snapshotter<acidrecfrac::AcidRecFrac>::setModel(acidrecfrac::AcidRecFrac* _
 
     nx = model->cellsNum_x + 2;
     ny = model->cellsNum_y_frac + 1;
-    nz = model->cellsNum_z + 2;
+	nz = model->cellsNum_z;// +2;
 }
 template<>
 void Snapshotter<acidrecfrac_prod::RecFracProd>::setModel(acidrecfrac_prod::RecFracProd* _model)
@@ -88,7 +88,7 @@ void Snapshotter<acidrecfrac_prod::RecFracProd>::setModel(acidrecfrac_prod::RecF
 
     nx = model->cellsNum_x + 2;
     ny = model->cellsNum_y + 2;
-    nz = model->cellsNum_z + 2;
+	nz = model->cellsNum_z;// + 2;
 }
 template<>
 void Snapshotter<acidrecfracmov::AcidRecFracMov>::setModel(acidrecfracmov::AcidRecFracMov* _model)

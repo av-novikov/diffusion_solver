@@ -9,7 +9,7 @@
 
 namespace acidrecfrac_prod
 {
-	static const int stencil = 7;
+	static const int stencil = 5;
 
 	class RecFracProdSolver : public AbstractSolver<RecFracProd>
 	{

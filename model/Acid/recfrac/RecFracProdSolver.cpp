@@ -77,7 +77,7 @@ void RecFracProdSolver::writeData()
 	pvd << "0\" file=\"AcidRecFrac_prod_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
 	double q = 0.0, s = 0.0;
-	for (int i = 0; i < (model->cellsNum_y + 2) * (model->cellsNum_z + 2); i++)
+	for (int i = 0; i < (model->cellsNum_y + 2) * model->cellsNum_z; i++)
 	{
 		const auto& cell = model->cells[i];
 		if (cell.type == Type::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)

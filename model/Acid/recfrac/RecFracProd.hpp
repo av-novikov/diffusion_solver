@@ -136,7 +136,7 @@ namespace acidrecfrac_prod
             return i_idx_modi * cellsNum_z + k_idx_modi;*/
 
             // Example
-            const int i_idx = int(cell.num / ((cellsNum_y + 2) * (cellsNum_z + 2)));
+            /*const int i_idx = int(cell.num / ((cellsNum_y + 2) * (cellsNum_z + 2)));
             const int k_idx = int((cell.num - i_idx * (cellsNum_y + 2) * (cellsNum_z + 2)) / (cellsNum_y + 2));
 
             int k_idx_modi = k_idx - 1;
@@ -144,16 +144,17 @@ namespace acidrecfrac_prod
                 k_idx_modi = 0;
             if (k_idx_modi == cellsNum_z)
                 k_idx_modi = cellsNum_z - 1;
-            return k_idx_modi;
+            return k_idx_modi;*/
+			return 0;
         }
         inline void getPoroNeighborIdx(const int cur, int* const neighbor) const
         {
             neighbor[0] = cur - 1;
             neighbor[1] = cur + 1;
-            neighbor[2] = cur - (cellsNum_y + 2) * (cellsNum_z + 2);
-            neighbor[3] = cur + (cellsNum_y + 2) * (cellsNum_z + 2);
-            neighbor[4] = cur - (cellsNum_y + 2);
-            neighbor[5] = cur + (cellsNum_y + 2);
+            neighbor[2] = cur - (cellsNum_y + 2) * cellsNum_z;
+            neighbor[3] = cur + (cellsNum_y + 2) * cellsNum_z;
+            //neighbor[4] = cur - (cellsNum_y + 2);
+            //neighbor[5] = cur + (cellsNum_y + 2);
         };
 
         TapeVariable solvePoroMid(const Cell& cell);

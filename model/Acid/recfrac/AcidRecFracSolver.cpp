@@ -42,8 +42,8 @@ AcidRecFracSolver::AcidRecFracSolver(AcidRecFrac* _model) : AbstractSolver<AcidR
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 1.E-10;     MAX_INIT_RES[0].second = 5.E-10;         
-    MAX_INIT_RES[1].first = 1.E-9;      MAX_INIT_RES[1].second = 5.E-9;
+    MAX_INIT_RES[0].first = 5.E-10;     MAX_INIT_RES[0].second = 2.E-9;         
+    MAX_INIT_RES[1].first = 5.E-9;      MAX_INIT_RES[1].second = 2.E-8;
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open(model->prefix + "P.dat", ofstream::out);
@@ -96,7 +96,7 @@ void AcidRecFracSolver::writeData()
 	pvd_poro << "0\" file=\"AcidRecFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
 	double q = 0.0;
-	for (int i = 0; i < (model->cellsNum_y_frac + 1) * (model->cellsNum_z + 2); i++)
+	for (int i = 0; i < (model->cellsNum_y_frac + 1) * model->cellsNum_z; i++)
 	{
 		const auto& cell = model->cells_frac[i];
 		if (cell.type == FracType::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)
@@ -114,15 +114,15 @@ void AcidRecFracSolver::writeData()
 
 	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
 	double mean_trans = 0.0, Cfd_inv = 0.0, cur_trans;
-	int k_ind, i_ind;
+	int i_ind;// , k_ind;
 	for (int i = 0; i < model->trans.size(); i++)
 	{
 		cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
 		mean_trans += cur_trans / model->trans.size();
 
-		k_ind = int(i % model->cellsNum_z) + 1;
+		//k_ind = int(i % model->cellsNum_z) + 1;
 		i_ind = int(i / model->cellsNum_z) + 1;
-		const auto& pcell = model->cells_poro[(model->cellsNum_y_poro + 2) * (k_ind + (model->cellsNum_z + 2) * i_ind)];
+		const auto& pcell = model->cells_poro[(model->cellsNum_y_poro + 2) * (/*k_ind + (model->cellsNum_z + 2) */ i_ind)];
 		Cfd_inv += k0 * pcell.hx * model->R_dim / cur_trans;
 	}
 	Cfd_inv = 1.0 / Cfd_inv;
@@ -141,7 +141,7 @@ void AcidRecFracSolver::writeData()
 void AcidRecFracSolver::analyzeNewtonConvergence()
 {
     int control_period = 0;
-    const double control_time = 1.E-3 * 3600.0 / t_dim;
+    const double control_time = 1.E-5 * 3600.0 / t_dim;
     DECREASE_STEP = false;
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
@@ -188,7 +188,7 @@ void AcidRecFracSolver::control()
 
     cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
     cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
-    cfl_z = model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
+	cfl_z = 0.0;// model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
     MULT_UP = MULT_DOWN = 1.5;
     if (cfl_x + cfl_y + cfl_z > 0.98)
     {
@@ -237,7 +237,7 @@ void AcidRecFracSolver::start()
         cout << "time = " << cur_t * t_dim / 3600.0 << "\tht = " << model->ht * t_dim / 3600.0 << endl;
 		cfl_x = model->max_vel_x * model->ht / (model->props_frac.l2 / model->cellsNum_x);
 		cfl_y = model->max_vel_y * model->ht / (model->props_frac.w2 / model->cellsNum_y_frac);
-        cfl_z = model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
+		cfl_z = 0.0;// model->max_vel_z * model->ht / (model->props_frac.height / model->cellsNum_z);
 		model->max_vel_x = model->max_vel_y = model->max_vel_z = 0.0;
 		cfl = cfl_x + cfl_y + cfl_z;
         CFL << cfl_x << "\t" << cfl_y << "\t" << cfl_z << "\t" << cfl << std::endl;

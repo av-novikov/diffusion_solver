@@ -9,8 +9,8 @@
 
 namespace acidrecfrac
 {
-	static const int poro_stencil = 7;
-	static const int frac_stencil = 7;
+	static const int poro_stencil = 5;
+	static const int frac_stencil = 5;
 
 	class AcidRecFracSolver : public AbstractSolver<AcidRecFrac>
 	{
