@@ -94,7 +94,7 @@ void AcidRecFrac::makeDimLess()
 {
 	T_dim = props_sk[0].t_init;
 	//R_dim = props_frac.l2 / 8.0;
-	t_dim = 1.7 * 3600.0;
+	t_dim = 1.0 * 3600.0;
 	//t_dim = 3600.0;
 	P_dim = props_sk[0].p_init;
 	// Temporal properties
@@ -306,14 +306,14 @@ void AcidRecFrac::buildPoroGrid()
 
 	// Grid sparcity parameters
 	int mult_num = 2 * cellsNum_y_poro / 3;
-    double dist = 10.0 * props_frac.w2;
+    double dist = 3.0 * props_frac.w2;
 
-    double delta2 = 0.8 * dist;
+    double delta2 = 0.9 * dist;
 	double r_prev2 = re;
 	double logMax2 = log((re - delta2) / (dist - delta2));
 	double logStep2 = logMax2 / (double)(cellsNum_y_poro - mult_num);
 
-    double delta1 = 0.8 * props_frac.w2;
+    double delta1 = 0.9 * props_frac.w2;
     double r_prev1 = re;
     double logMax1 = log((dist - delta1) / (props_frac.w2 - delta1));
     double logStep1 = logMax1 / (double)mult_num;
@@ -891,7 +891,7 @@ FracTapeVariable AcidRecFrac::solveFracIn(const FracCell& cell)
 	if (leftBoundIsRate)
 	{
 		if (cell.hy * cell.hz != 0.0)
-			res.p = ((next.p - beta.u_prev.p) +
+			res.p = ((next.p - nebr.p) +
 				Qcell[cell.num] / (1.0 - (cell.y / props_frac.w2) * (cell.y / props_frac.w2)) / props_frac.w2 / props_frac.w2 * props_w.visc
 				/ (cell.hy * cell.hz) * beta.hx) / P_dim;
 		else

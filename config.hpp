@@ -807,28 +807,28 @@ namespace issues
 		Properties* props = new Properties;
         props->prefix = "snaps/";
 
-		props->ht = 0.000001;
+		props->ht = 0.00001;
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
  
-		props->timePeriods.push_back(0.5 * 3600.0);
-		props->timePeriods.push_back(1.0 * 3600.0);
+		props->timePeriods.push_back(1.5 * 3600.0);
+		//props->timePeriods.push_back(1.5 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
 		props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(false);
-		props->LeftBoundIsRate.push_back(true);
+		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(380.0 * 1.0e+5);
+		props->pwf.push_back(300.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
-		props->rates.push_back(0.0);
+		//props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
-		props->cs.push_back(0.0);
-		props->max_sol_volume = 50.0;
+		//props->cs.push_back(0.0);
+		props->max_sol_volume = 10.0;
         
 		props->props_frac.l2 = 120.0;
-		props->props_frac.w2 = 0.002;
+		props->props_frac.w2 = 0.001;
 		props->props_frac.height = 18.87;
 		props->re = 200.0;
 
@@ -837,7 +837,7 @@ namespace issues
 
 		props->cellsNum_x = 20;
 		props->cellsNum_y_frac = 20;
-		props->cellsNum_y_poro = 150;
+		props->cellsNum_y_poro = 100;
 		props->cellsNum_z = 1;
 
         props->prod_props.x_size = props->prod_props.y_size = 1000.0;
@@ -848,7 +848,7 @@ namespace issues
 
 		acidrecfrac::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
-		props_sk.m_max = 0.2;
+		props_sk.m_max = 0.3;
 		props_sk.A = 60.0;
 		props_sk.t_init = 300.0;
 		props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
@@ -857,7 +857,7 @@ namespace issues
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-		props_sk.perm = 50.0;
+		props_sk.perm = 0.5;
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->props_frac.height;

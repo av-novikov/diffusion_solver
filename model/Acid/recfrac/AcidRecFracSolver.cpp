@@ -228,7 +228,7 @@ void AcidRecFracSolver::start()
 
 	model->setPeriod(curTimePeriod);
 
-	while (cur_t < Tt)
+	while (cur_t < Tt && model->LeftBoundIsRate.size() > curTimePeriod)
 	{
         model->snapshot_all(step_idx++);
         cout << "---------------------NEW TIME STEP---------------------" << endl;
