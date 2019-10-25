@@ -811,7 +811,7 @@ namespace issues
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
  
-		props->timePeriods.push_back(1.5 * 3600.0);
+		props->timePeriods.push_back(3.0 * 3600.0);
 		//props->timePeriods.push_back(1.5 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
@@ -819,16 +819,16 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(300.0 * 1.0e+5);
+		props->pwf.push_back(550.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		//props->cs.push_back(0.0);
-		props->max_sol_volume = 10.0;
+		props->max_matrix_acid_volume = 1.0;
         
 		props->props_frac.l2 = 120.0;
-		props->props_frac.w2 = 0.001;
+		props->props_frac.w2 = 0.002;
 		props->props_frac.height = 18.87;
 		props->re = 200.0;
 
