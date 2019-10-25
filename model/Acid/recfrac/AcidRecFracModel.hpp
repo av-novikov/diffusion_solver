@@ -69,7 +69,8 @@ namespace acidrecfrac
 		std::map<int, double> Qcell;
 		std::vector<double> period, rate, pwf, cs;
 		std::vector<bool> LeftBoundIsRate;
-		double injected_sol_volume, injected_acid_volume, max_sol_volume;
+		double injected_sol_volume, injected_acid_volume, max_sol_volume, max_matrix_acid_volume;
+		double matrix_sol_volume, matrix_acid_volume;
 		bool leftBoundIsRate;
 		bool rightBoundIsPres;
 		// Snapshotter

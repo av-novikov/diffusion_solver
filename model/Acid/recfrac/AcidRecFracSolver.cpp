@@ -95,7 +95,17 @@ void AcidRecFracSolver::writeData()
 	pvd_frac << "0\" file=\"AcidRecFrac_frac_" + std::to_string(step_idx) + ".vtu\"/>\n";
 	pvd_poro << "0\" file=\"AcidRecFrac_poro_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
-	double q = 0.0;
+	double q = 0.0, matrix_rate = 0.0, matrix_acid_rate = 0.0, cur_vL;
+	for (int i = 2 * (model->cellsNum_y_frac + 1) * model->cellsNum_z - 1; i < (model->cellsNum_y_frac + 1) * (model->cellsNum_x + 1) * model->cellsNum_z; i += (model->cellsNum_y_frac + 1) * model->cellsNum_z)
+	{
+		const auto& cell = model->cells_frac[i];
+		assert(cell.type == FracType::FRAC_OUT);
+		cur_vL = model->getFlowLeak(cell).value();
+		matrix_rate += cur_vL * cell.hz * cell.hx;
+		matrix_acid_rate += cur_vL * cell.hz * cell.hx * cell.u_next.c;
+	}
+	model->matrix_sol_volume += matrix_rate * model->ht;
+	model->matrix_acid_volume += matrix_acid_rate * model->ht;
 	for (int i = 0; i < (model->cellsNum_y_frac + 1) * model->cellsNum_z; i++)
 	{
 		const auto& cell = model->cells_frac[i];
@@ -108,6 +118,8 @@ void AcidRecFracSolver::writeData()
 	qcells << "\t" << -q * model->Q_dim * 86400.0;
 	qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
 	qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
+	qcells << "\t" << model->matrix_sol_volume * model->Q_dim * model->t_dim;
+	qcells << "\t" << model->matrix_acid_volume * model->Q_dim * model->t_dim;
 
 	double p = model->cells_frac[model->cellsNum_y_frac + 2].u_next.p;
 	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
@@ -177,7 +189,7 @@ void AcidRecFracSolver::control()
 {
 	writeData();
 
-	if (/*cur_t >= model->period[curTimePeriod]*/ model->injected_sol_volume >= model->max_sol_volume && curTimePeriod == 0)
+	if (/*cur_t >= model->period[curTimePeriod]*/ model->matrix_acid_volume >= model->max_matrix_acid_volume && curTimePeriod == 0)
 	{
 		curTimePeriod++;
 		model->ht = model->ht_min;

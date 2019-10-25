@@ -12,7 +12,8 @@ AcidRecFrac::AcidRecFrac()
 	grav = 9.8;
 	Volume_frac = Volume_poro = 0.0;
 	injected_sol_volume = injected_acid_volume = 0.0;
-	max_vel_x = max_vel_y = max_vel_z = 0.0;
+	matrix_sol_volume = matrix_acid_volume = 0.0;
+	max_vel_x = max_vel_y =  max_vel_z = 0.0;
 }
 AcidRecFrac::~AcidRecFrac()
 {
@@ -66,6 +67,7 @@ void AcidRecFrac::setProps(Properties& props)
 		}
 	}
 	max_sol_volume = props.max_sol_volume;
+	max_matrix_acid_volume = props.max_matrix_acid_volume;
 
 	// Temporal properties
 	ht = props.ht;
@@ -125,6 +127,7 @@ void AcidRecFrac::makeDimLess()
 		pwf[i] /= P_dim;
 	}
 	max_sol_volume /= R_dim * R_dim * R_dim;
+	max_matrix_acid_volume /= R_dim * R_dim * R_dim;
 
 	grav /= (R_dim / t_dim / t_dim);
 	Component::p_std /= P_dim;
@@ -305,15 +308,15 @@ void AcidRecFrac::buildPoroGrid()
 	Volume_poro = 0.0;
 
 	// Grid sparcity parameters
-	int mult_num = 2 * cellsNum_y_poro / 3;
-    double dist = 3.0 * props_frac.w2;
+	int mult_num = 4 * cellsNum_y_poro / 5;
+	double dist = 0.003 / R_dim + props_frac.w2;
 
-    double delta2 = 0.9 * dist;
+    double delta2 = 0.98 * dist;
 	double r_prev2 = re;
 	double logMax2 = log((re - delta2) / (dist - delta2));
 	double logStep2 = logMax2 / (double)(cellsNum_y_poro - mult_num);
 
-    double delta1 = 0.9 * props_frac.w2;
+	double delta1 = -props_frac.w2;
     double r_prev1 = re;
     double logMax1 = log((dist - delta1) / (props_frac.w2 - delta1));
     double logStep1 = logMax1 / (double)mult_num;
@@ -627,7 +630,7 @@ void AcidRecFrac::calculateTrans()
 			k = pcell.props->getPermCoseni(pcell.u_next.m, pcell.u_next.p).value();
 			k0 = pcell.props->perm;
 			//if (fabs(m - m0) > EQUALITY_TOLERANCE)
-			if (fabs(k - k0) / k0 >= 1.5)
+			if (fabs(k - k0) / k0 >= 5.0)
 				cur_width += pcell.hy;
 		}
 		widths[tr_idx] = cur_width;
@@ -1036,9 +1039,9 @@ FracTapeVariable AcidRecFrac::solveFracMid(const FracCell& cell, const Regime re
 	//adouble fy_plus = vy_plus.value() * (ry_plus1 * c_y_plus + ry_plus2 * cell.u_prev.c) / (ry_plus1 + ry_plus2);
 	//adouble fy_minus = vy_minus.value() * (ry_minus1 * cell_y_minus.u_prev.c + ry_minus2 * cell.u_prev.c) / (ry_minus1 + ry_minus2);
 	adouble fx_plus = -next.c * vx_plus.value();
-	adouble fx_minus = cell_x_minus.u_prev.c * vx_minus.value();
+	adouble fx_minus = nebr_x_minus.c * vx_minus.value();
 	adouble fy_plus = next.c * vy_plus.value();
-	adouble fy_minus = cell_y_minus.u_prev.c * vy_minus.value();
+	adouble fy_minus = nebr_y_minus.c * vy_minus.value();
     /*adouble fz_plus, fz_minus;
     if(cell.u_prev.p > cell_z_plus.u_prev.p)
         fz_plus = -next.c * vz_plus.value();
