@@ -49,7 +49,7 @@ namespace basic1d
 		
 		double p_out;
 
-		double hx, hz;
+		double hx, hy, hz;
 		int cellsNum;
 	};
 	struct Liquid_Props
