@@ -18,6 +18,7 @@
 #include "model/Acid/recfrac/AcidRecFracModel.hpp"
 #include "model/Acid/recfrac/RecFracProdSolver.hpp"
 #include "model/Acid/recfrac/RecFracProd.hpp"
+#include "model/Acid/2drec/Acid2dRecModel.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
@@ -819,7 +820,7 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(550.0 * 1.0e+5);
+		props->pwf.push_back(600.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
@@ -1198,6 +1199,7 @@ double acidfrac::Component::T = 300.0;
 double acidellfrac::Component::T = 300.0;
 double acidrecfrac::Component::T = 300.0;
 double acidrecfracmov::Component::T = 300.0;
+double acid2drec::Component::T = 300.0;
 double blackoilnit_elliptic::Water_Props::dens_stc = 1000.0;
 double blackoilnit_elliptic::Oil_Props::dens_stc = 887.261;
 double blackoilnit_elliptic::Gas_Props::dens_stc = 0.8;

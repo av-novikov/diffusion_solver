@@ -6,6 +6,7 @@
 #include "model/cells/AcidVariables.hpp"
 #include "model/cells/HexCell.hpp"
 #include "util/Interpolate.h"
+#include "model/Acid/recfrac/AcidRecFracModel.hpp"
 
 namespace acid2drec
 {
@@ -15,7 +16,7 @@ namespace acid2drec
 	typedef TapeJustAcid TapeVariable;
 
 	typedef HexCell<Variable, Skeleton_Props> Cell;
-	typedef Cell::Type PoroType;
+	typedef Cell::Type Type;
 
 	typedef DolomiteReaction CurrentReaction;
 	typedef CurrentReaction::REACTS REACTS;
@@ -28,7 +29,7 @@ namespace acid2drec
 		template<typename> friend class Snapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractSolver;
-		friend class AcidRecFracSolver; 
+		friend class Acid2dRecSolver; 
 	public:
 		static const int var_size = var_size;
 	protected:
@@ -46,7 +47,7 @@ namespace acid2drec
 		int cellsNum, cellsNum_x, cellsNum_y;
 		double Volume;
 		std::vector<Cell> cells;
-		//double re;
+		double hx, hy, hz;
 		
 		// Temporary properties
 		double ht, ht_min, ht_max;
@@ -60,26 +61,21 @@ namespace acid2drec
 		bool rightBoundIsPres;
 		// Snapshotter
 		bool isWriteSnaps;
-		Snapshotter<Acid2dRecModel>* snapshotter;
-		std::vector<double> trans;
-		std::vector<double> widths;
-		double width;
+		Snapshotter<acid2drec::Acid2dRecModel>* snapshotter;
 
-		void buildFracGrid();
-		void buildPoroGrid();
+		void buildGrid();
 		void processGeometry();
 		void setProps(Properties& props);
 		void makeDimLess();
 		void setInitialState();
 		void setPerforated();
-		void calculateTrans();
 		// Service functions
 		// Schemes
-		TapeVariable solvePoro(const Cell& cell, const Regime reg);
-		TapeVariable solvePoroMid(const Cell& cell);
-		TapeVariable solvePoroLeft(const Cell& cell, const Regime reg);
-		TapeVariable solvePoroRight(const Cell& cell);
-		TapeVariable solvePoroBorder(const Cell& cell);
+		TapeVariable solve(const Cell& cell, const Regime reg);
+		TapeVariable solveMid(const Cell& cell);
+		TapeVariable solveLeft(const Cell& cell, const Regime reg);
+		TapeVariable solveRight(const Cell& cell);
+		TapeVariable solveBorder(const Cell& cell);
 		// Service calculations
 		const int getSkeletonId(const Cell& cell) const
 		{
@@ -112,27 +108,18 @@ namespace acid2drec
 			return k_idx_modi;*/
 			return 0;
 		}
-		template <class TCell>
-		inline int getUpwindIdx(const TCell& cell, const TCell& beta) const
+		inline int getUpwindIdx(const Cell& cell, const Cell& beta) const
 		{
 			if (cell.u_next.p < beta.u_next.p)
 				return beta.num;
 			else
 				return cell.num;
 		};
-		inline const size_t getFracNebr(const size_t poro_idx) const
-		{
-			return poro_idx / (cellsNum_y_poro + 2) * (cellsNum_y_frac + 1) + cellsNum_y_frac;
-		};
-		inline const size_t getPoroNebr(const size_t frac_idx)
-		{
-			return (frac_idx - cellsNum_y_frac) / (cellsNum_y_frac + 1) * (cellsNum_y_poro + 2);
-		};
 		inline adouble getAverage(adouble p1, const double l1, adouble p2, const double l2) const
 		{
 			return (p1 * (adouble)l2 + p2 * (adouble)l1) / (adouble)(l1 + l2);
 		};
-		inline adouble getPoroTrans(const PoroCell& cell, const PoroTapeVariable& next,	const PoroCell& beta, const PoroTapeVariable& nebr) const
+		inline adouble getTrans(const Cell& cell, const TapeVariable& next,	const Cell& beta, const TapeVariable& nebr) const
 		{
 			adouble k1, k2;
 			k1 = cell.props->getPermCoseni(next.m, next.p);
@@ -147,7 +134,7 @@ namespace acid2drec
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
 		};
-		inline adouble getReactionRate(const PoroTapeVariable& var, const Skeleton_Props& props) const
+		inline adouble getReactionRate(const TapeVariable& var, const Skeleton_Props& props) const
 		{
 			adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
 			adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
@@ -155,7 +142,7 @@ namespace acid2drec
 			condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
 			return var.sw * tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
 		};
-        inline adouble getReactionRateOutput(const PoroVariable& var, const Skeleton_Props& props) const
+        inline adouble getReactionRateOutput(const Variable& var, const Skeleton_Props& props) const
         {
             adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
             adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
@@ -163,10 +150,10 @@ namespace acid2drec
             condassign(tmp1, isAboveEQ, pow(tmp, reac.alpha), (adouble)0.0);
             return var.sw * tmp * reac.getReactionRate(props.m_init, props.m_max, var.m);
         };
-		inline double getDarmkoller(const PoroCell& cell, const PoroVariable& var, const Skeleton_Props& props) const
+		inline double getDarmkoller(const Cell& cell, const Variable& var, const Skeleton_Props& props) const
 		{
 			std::array<double, 3> vel;
-			vel = getPoroWaterVelocity(cell);
+			vel = getWaterVelocity(cell);
 
 			//adouble tmp = (var.xa - props.xa_eqbm) * props_w.getDensity(var.p, var.xa, var.xw, var.xs) / reac.comps[REACTS::ACID].mol_weight;
 			//adouble isAboveEQ = (tmp.value() > 0.0) ? (adouble)true : (adouble)false;
@@ -179,44 +166,20 @@ namespace acid2drec
             else
                 return 0.0;
 		};
-		inline const int getFracOut(const int idx) const
-		{
-			return int(idx / (cellsNum_y_frac + 1)) * (cellsNum_y_frac + 1) + cellsNum_y_frac;
-		};
-		inline const int getFirstPoro(const int idx) const
-		{;
-			return int(idx / (cellsNum_y_frac + 1)) * (cellsNum_y_poro + 2);
-		};
-		inline adouble getFlowLeak(const FracCell& cell) const 
-		{
-			const int idx = getFirstPoro(cell.num);
-			const auto& poro_cell = cells_poro[idx];
-			assert(poro_cell.type == PoroType::WELL_LAT);
-			const auto& poro_beta = cells_poro[idx + 1];
-			const auto& next = x_poro[idx];
-			const auto& nebr = x_poro[idx + 1];
-			const auto& props = *poro_cell.props;
-            /*if(next.sw.value() != 0.0)
-			      return -props.getPermCoseni(next.m, next.p) * props_w.getKr(next.sw, next.m, &props) /
-    				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) / next.m / next.sw *
-	    			(nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
-            else*/
-                return -props.getPermCoseni(next.m, next.p) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (nebr.p - next.p) * 2.0 / (poro_cell.hy + poro_beta.hy);
-		};
-        inline std::array<double, 3> getPoroWaterVelocity(const PoroCell& cell) const
+        inline std::array<double, 3> getWaterVelocity(const Cell& cell) const
         {
             int neighbor[NEBRS_NUM];
-            getPoroNeighborIdx(cell.num, neighbor);
+            getNeighborIdx(cell.num, neighbor);
             const auto& next = cell.u_next;
 
             double transmissivity = -cell.props->getPermCoseni(next.m, next.p).value() * 
                 props_w.getKr(next.sw, next.m, cell.props).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value();
             double vel_x, vel_y, vel_z;
-            vel_x = transmissivity * (cells_poro[neighbor[3]].u_next.p - cells_poro[neighbor[2]].u_next.p) / (cells_poro[neighbor[3]].x - cells_poro[neighbor[2]].x);
-            if (cell.type != PoroType::WELL_LAT)
-                vel_y = transmissivity * (cells_poro[neighbor[1]].u_next.p - cells_poro[neighbor[0]].u_next.p) / (cells_poro[neighbor[1]].y - cells_poro[neighbor[0]].y);
-            else
-                vel_y = getFlowLeak(cells_frac[getFracNebr(cell.num)]).value();
+            vel_x = transmissivity * (cells[neighbor[3]].u_next.p - cells[neighbor[2]].u_next.p) / (cells[neighbor[3]].x - cells[neighbor[2]].x);
+            //if (cell.type != PoroType::WELL_LAT)
+                vel_y = transmissivity * (cells[neighbor[1]].u_next.p - cells[neighbor[0]].u_next.p) / (cells[neighbor[1]].y - cells[neighbor[0]].y);
+            //else
+            //    vel_y = getFlowLeak(cells_frac[getFracNebr(cell.num)]).value();
 			vel_z = 0.0;// transmissivity * (cells_poro[neighbor[5]].u_next.p - cells_poro[neighbor[4]].u_next.p) / (cells_poro[neighbor[5]].z - cells_poro[neighbor[4]].z);
             return{ vel_x, vel_y, vel_z };
         };
@@ -250,28 +213,16 @@ namespace acid2drec
 							x[2] * (p[0] * x[1] * (x[1] - x[2]) + p[1] * x[0] * (x[2] - x[0]))) / den;
 			return a * cur_x * cur_x + b * cur_x + c;
 		};*/
-		inline void getPoroNeighborIdx(const int cur, int* const neighbor) const
+		inline void getNeighborIdx(const int cur, int* const neighbor) const
 		{
 			neighbor[0] = cur - 1;
 			neighbor[1] = cur + 1;
-			neighbor[2] = cur - (cellsNum_y_poro + 2) * cellsNum_z;
-			neighbor[3] = cur + (cellsNum_y_poro + 2) * cellsNum_z;
+			neighbor[2] = cur - (cellsNum_y + 2);
+			neighbor[3] = cur + (cellsNum_y + 2);
 			//neighbor[4] = cur - (cellsNum_y_poro + 2);
 			//neighbor[5] = cur + (cellsNum_y_poro + 2);
 		};
-		inline void getFracNeighborIdx(const int cur, int* const neighbor)
-		{
-			neighbor[0] = cur - 1;
-			if(cells_frac[cur].type == FracType::FRAC_OUT)
-				neighbor[1] = getPoroNebr(cur);
-			else
-				neighbor[1] = cur + 1;
-			neighbor[2] = cur - (cellsNum_y_frac + 1) * cellsNum_z;
-			neighbor[3] = cur + (cellsNum_y_frac + 1) * cellsNum_z;
-			//neighbor[4] = cur - (cellsNum_y_frac + 1);
-			//neighbor[5] = cur + (cellsNum_y_frac + 1);
-		};
-		inline double upwindIsCur(const PoroCell& cell, const PoroCell& beta)
+		inline double upwindIsCur(const Cell& cell, const Cell& beta)
 		{
 			if (cell.u_next.p < beta.u_next.p)
 				return 0.0;
@@ -282,15 +233,14 @@ namespace acid2drec
 		// Dimensions
 		double t_dim, R_dim, P_dim, T_dim, Q_dim, grav;
 
-		AcidRecFrac();
-		~AcidRecFrac();
+		Acid2dRecModel();
+		~Acid2dRecModel();
 
 		void load(Properties& props)
 		{
 			setProps(props);
-			setSnapshotter("", this);
-			buildFracGrid();
-			buildPoroGrid();
+			setSnapshotter("");
+			buildGrid();
 			processGeometry();
 			setPerforated();
 			setInitialState();
@@ -298,24 +248,21 @@ namespace acid2drec
 			snapshotter->dump_all(0);
 		};
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
-		void setSnapshotter(std::string type, AcidRecFrac* model)
+		void setSnapshotter(std::string type)
 		{
-			snapshotter = new VTKSnapshotter<AcidRecFrac>(prefix);
-			snapshotter->setModel(model);
+			snapshotter = new VTKSnapshotter<Acid2dRecModel>(prefix);
+			snapshotter->setModel(this);
 			isWriteSnaps = true;
 		};
-
 		void setPeriod(int period);
 
 		adouble* h;
-		PoroTapeVariable* x_poro;
-		FracTapeVariable* x_frac;
+		TapeVariable* x;
 
-		int getCellsNum() { return cellsNum_frac + cellsNum_poro; };
+		int getCellsNum() { return cellsNum; };
 		double getRate(const int idx) const;
-        std::vector<PoroCell>& getPoroMesh() { return cells_poro; };
-		const std::vector<double>& getFracWidths() { return widths; };
+        std::vector<Cell>& getMesh() { return cells; };
 	};
 };
 
-#endif /* ACIDRECFRACMODEL_HPP_ */
+#endif /* ACID2DRECMODEL_HPP_ */

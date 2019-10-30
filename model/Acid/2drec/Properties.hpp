@@ -169,7 +169,7 @@ namespace acid2drec
         ProdProps prod_props;
 
 		size_t cellsNum_x, cellsNum_y;
-		double re;
+		double hx, hy, hz;
 
 		double max_sol_volume, max_matrix_acid_volume;
 		std::vector<double> cs;
