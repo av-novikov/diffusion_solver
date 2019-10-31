@@ -61,7 +61,7 @@ void Acid2dRecModel::setProps(Properties& props)
 		}
 	}
 	max_sol_volume = props.max_sol_volume;
-	max_matrix_acid_volume = props.max_matrix_acid_volume;
+	max_acid_volume = props.max_acid_volume;
 
 	// Temporal properties
 	ht = props.ht;
@@ -111,6 +111,7 @@ void Acid2dRecModel::makeDimLess()
 		sk.height /= R_dim;
 	}
 
+	hx /= R_dim;	hy /= R_dim;	hz /= R_dim;
 	Q_dim = R_dim * R_dim * R_dim / t_dim;
 	for (int i = 0; i < periodsNum; i++)
 	{
@@ -119,7 +120,7 @@ void Acid2dRecModel::makeDimLess()
 		pwf[i] /= P_dim;
 	}
 	max_sol_volume /= R_dim * R_dim * R_dim;
-	max_matrix_acid_volume /= R_dim * R_dim * R_dim;
+	max_acid_volume /= R_dim * R_dim * R_dim;
 
 	grav /= (R_dim / t_dim / t_dim);
 	Component::p_std /= P_dim;
@@ -148,146 +149,52 @@ void Acid2dRecModel::makeDimLess()
 		comp.rho_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 		comp.mol_weight /= (P_dim * t_dim * t_dim * R_dim);
 	}
-
-	hx /= R_dim;	hy /= R_dim;	hz /= R_dim;
 }
 void Acid2dRecModel::buildGrid()
 {
-	//int counter = 0;
-	//cells.reserve(cellsNum);
-	//Volume = 0.0;
-	//
-	//double cur_hx = 0.0, cur_hy = 0.0, cur_hz = 0.0;
-	//double cx = 0.0, cy = 0.0, cz = 0.0;
-	//Type cur_type;
+	Volume = hx * hy * hz;
+	double cx = 0.0, cy = 0.0, cz = hz / 2.0;
+	const double cell_hx = hx / (double)cellsNum_x, cell_hy = hy / (double)cellsNum_y, cell_hz = hz;
+	int counter = 0;
 
-	////dist_x = props_frac.l2 / 100.0;
-	////double x_prev = dist_x;
-	////double x_logMax = log((props_frac.l2 + dist_x) / dist_x);
-	////double x_logStep = x_logMax / (double)cellsNum_x;
-
-	//// Left border
-	//cur_type = Type::FRAC_IN;
-	//hx = 0.0;	 cx = 0.0;
-	//const int k = 1;
-	///*for (int k = 0; k < cellsNum_z + 2; k++)
-	//{
-	//	if (k == 0)
-	//		hz = cz = 0.0;
-	//	else if (k == cellsNum_z + 1)
-	//	{
-	//		hz = 0.0;
-	//		cz = props_frac.height;
-	//	}
-	//	else
-	//	{*/
-	//		//hz = props_frac.height / cellsNum_z;
-	//		//cz += hz / 2.0;
-	//		hz = props_sk[k - 1].height;
-	//		cz = hz / 2.0;
-	//	//}
-
-	//	for (int i = 0; i < cellsNum_y_frac + 1; i++)
-	//	{
-	//		if (i == 0)
-	//			hy = cy = 0.0;
-	//		else
-	//		{
-	//			hy = props_frac.w2 / (double)cellsNum_y_frac;
-	//			cy = ((double)i - 0.5) * hy;
-	//		}
-
-	//		cells_frac.push_back( FracCell(counter++, cx, cy, cz, hx, hy, hz, cur_type) );
-	//		auto& cell = cells_frac.back();
-	//	}
-	////}
-	//// Middle
-	//hx = props_frac.l2 / cellsNum_x;	 cx = hx / 2;
-	//for (int j = 0; j < cellsNum_x; j++)
-	//{
-	//	//cx = x_prev * (exp(x_logStep) + 1.0) / 2.0 - dist_x;
-	//	//hx = x_prev * (exp(x_logStep) - 1.0);
-	//	//x_prev *= exp(x_logStep);
-
-	//	/*for (int k = 0; k < cellsNum_z + 2; k++)
-	//	{
-	//		if (k == 0)
-	//			hz = cz = 0.0;
-	//		else if (k == cellsNum_z + 1)
-	//		{
-	//			hz = 0.0;
-	//			cz = props_frac.height;
-	//		}
-	//		else
-	//		{*/
-	//			//hz = props_frac.height / cellsNum_z;
-	//			//cz += hz / 2.0;
-	//			hz = props_sk[k - 1].height;
-	//			cz = hz / 2.0;
-	//		//}
-
-	//		for (int i = 0; i < cellsNum_y_frac + 1; i++)
-	//		{
-	//			if (i == 0)
-	//				hy = cy = 0.0;
-	//			else
-	//			{
-	//				hy = props_frac.w2 / (double)cellsNum_y_frac;
-	//				cy = ((double)i - 0.5) * hy;
-	//			}
-
-	//			if (i == cellsNum_y_frac)
-	//				cur_type = FracType::FRAC_OUT;
-	//			else if (i == 0)
-	//				cur_type = FracType::FRAC_BORDER;
-	//			else
-	//				cur_type = FracType::FRAC_MID;
-
-	//			//if(k == 0 || k == cellsNum_z + 1)
-	//			//	cur_type = FracType::FRAC_BORDER;
-
-	//			cells_frac.push_back(FracCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
-	//			auto& cell = cells_frac.back();
-	//			Volume_frac += cell.V;
-	//		}
-	//	//}
-	//	cx += hx;
-	//}
-	//// Right cells
-	//cur_type = FracType::FRAC_BORDER;
-	//cx = props_frac.l2;	 hx = 0.0;
-	///*for (int k = 0; k < cellsNum_z + 2; k++)
-	//{
-	//	if (k == 0)
-	//		hz = cz = 0.0;
-	//	else if (k == cellsNum_z + 1)
-	//	{
-	//		hz = 0.0;
-	//		cz = props_frac.height;
-	//	}
-	//	else
-	//	{*/
-	//		//hz = props_frac.height / cellsNum_z;
-	//		//cz += hz / 2.0;
-	//		hz = props_sk[k - 1].height;
-	//		cz = hz / 2.0;
-	//	//}
-
-	//	for (int i = 0; i < cellsNum_y_frac + 1; i++)
-	//	{
-	//		if (i == 0)
-	//			hy = cy = 0.0;
-	//		else
-	//		{
-	//			hy = props_frac.w2 / (double)cellsNum_y_frac;
-	//			cy = ((double)i - 0.5) * hy;
-	//		}
-
-	//		cells_frac.push_back(FracCell(counter++, cx, cy, cz, hx, hy, hz, cur_type));
-	//		auto& cell = cells_frac.back();
-	//		//cell.nebrs[0] = cell.num - (cellsNum_y_frac + 1) * (cellsNum_z + 2);
-	//	}
-	////}
+	// x = 0
+	cells.push_back(Cell(counter++, cx, cy, cz, 0.0, 0.0, cell_hz, Type::BORDER));
+	cy = cell_hy / 2.0;
+	for (int j = 0; j < cellsNum_y; j++)
+	{
+		cells.push_back(Cell(counter++, cx, cy, cz, 0.0, cell_hy, cell_hz, Type::LEFT));
+		cy += cell_hy;
+	}
+	cy -= cell_hy / 2.0;
+	cells.push_back(Cell(counter++, cx, cy, cz, 0.0, 0.0, cell_hz, Type::BORDER));
+	// middle x
+	cx = -cell_hx / 2.0;
+	for (int i = 0; i < cellsNum_x; i++)
+	{
+		cx += cell_hx;
+		cy = 0.0;
+		cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, 0.0, cell_hz, Type::BORDER));
+		cy += cell_hy / 2.0;
+		for (int j = 0; j < cellsNum_y; j++)
+		{
+			cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, cell_hy, cell_hz, Type::MIDDLE));
+			cy += cell_hy;
+		}
+		cy -= cell_hy / 2.0;
+		cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, 0.0, cell_hz, Type::BORDER));
+	}
+	// x = hx
+	cx = hx;
+	cy = 0.0;
+	cells.push_back(Cell(counter++, cx, cy, cz, 0.0, 0.0, cell_hz, Type::BORDER));
+	cy += cell_hy / 2.0;
+	for (int j = 0; j < cellsNum_y; j++)
+	{
+		cells.push_back(Cell(counter++, cx, cy, cz, 0.0, cell_hy, cell_hz, Type::RIGHT));
+		cy += cell_hy;
+	}
+	cy -= cell_hy / 2.0;
+	cells.push_back(Cell(counter++, cx, cy, cz, 0.0, 0.0, cell_hz, Type::BORDER));
 }
 void Acid2dRecModel::processGeometry()
 {
@@ -298,7 +205,7 @@ void Acid2dRecModel::setPerforated()
 	vector<pair<int, int> >::iterator it;
 	for (const auto& cell : cells)
 	{
-		if (cell.type == Type::SIDE_LEFT)
+		if (cell.type == Type::LEFT)
 		{
 			Qcell[cell.num] = 0.0;
 			height_perf += cell.hx * cell.hz;
@@ -392,7 +299,7 @@ TapeVariable Acid2dRecModel::solve(const Cell& cell, const Regime reg)
 }
 TapeVariable Acid2dRecModel::solveMid(const Cell& cell)
 {
-	assert(cell.type == PoroType::MIDDLE);
+	assert(cell.type == Type::MIDDLE);
 	const auto& props = *cell.props;
 	auto& next = x[cell.num];
 	const auto& prev = cell.u_prev;
@@ -486,7 +393,7 @@ TapeVariable Acid2dRecModel::solveMid(const Cell& cell)
 }
 TapeVariable Acid2dRecModel::solveLeft(const Cell& cell, const Regime reg)
 {
-	assert(cell.type == PoroType::WELL_LAT);
+	assert(cell.type == Type::WELL_LAT);
 	const auto& props = *cell.props;
 
 	const auto& beta_poro1 = cells[cell.num + 1];
@@ -523,7 +430,7 @@ TapeVariable Acid2dRecModel::solveLeft(const Cell& cell, const Regime reg)
 }
 TapeVariable Acid2dRecModel::solveRight(const Cell& cell)
 {
-	assert(cell.type == PoroType::RIGHT);
+	assert(cell.type == Type::RIGHT);
 	const auto& beta = cells[cell.num - 1];
 	const auto& props = *cell.props;
 
@@ -542,8 +449,8 @@ TapeVariable Acid2dRecModel::solveRight(const Cell& cell)
 }
 TapeVariable Acid2dRecModel::solveBorder(const Cell& cell)
 {
-	assert(cell.type == PoroType::SIDE_LEFT || cell.type == PoroType::SIDE_RIGHT || 
-			cell.type == PoroType::TOP || cell.type == PoroType::BOTTOM);
+	assert(cell.type == Type::SIDE_LEFT || cell.type == Type::SIDE_RIGHT || 
+			cell.type == Type::TOP || cell.type == Type::BOTTOM);
 	int beta_idx = -1;
 	if (cell.type == Type::SIDE_LEFT)
 		beta_idx = cell.num + cellsNum_y + 2;

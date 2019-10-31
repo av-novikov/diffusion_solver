@@ -166,12 +166,11 @@ namespace acid2drec
 		Water_Props props_w;
 		Oil_Props props_o;
 		Gas_Props props_g;
-        ProdProps prod_props;
 
 		size_t cellsNum_x, cellsNum_y;
 		double hx, hy, hz;
 
-		double max_sol_volume, max_matrix_acid_volume;
+		double max_sol_volume, max_acid_volume;
 		std::vector<double> cs;
 		std::vector<bool> LeftBoundIsRate;
 		std::vector< std::pair<double, double> > rho_co2;

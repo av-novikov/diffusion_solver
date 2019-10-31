@@ -1117,6 +1117,97 @@ namespace issues
 
 		return props;
 	}
+	template<> acid2drec::Properties* getProps<acid2drec::Properties>()
+	{
+		typedef acid2drec::Properties Properties;
+		Properties* props = new Properties;
+		props->prefix = "snaps/";
+
+		props->ht = 0.00001;
+		props->ht_min = props->ht;
+		props->ht_max = 10.0;
+
+		props->timePeriods.push_back(3.0 * 3600.0);
+		//props->timePeriods.push_back(1.5 * 3600.0);
+		//props->timePeriods.push_back(10.0 * 3600.0);
+		//props->leftBoundIsRate = false;
+		props->LeftBoundIsRate.push_back(false);
+		//props->LeftBoundIsRate.push_back(false);
+		//props->LeftBoundIsRate.push_back(true);
+		props->rightBoundIsPres = true;
+		props->pwf.push_back(600.0 * 1.0e+5);
+		//props->pwf.push_back(300.0 * 1.0e+5);
+		//props->rates.push_back(-10.0);
+		//props->rates.push_back(0.0);
+		props->cs.push_back(0.15);
+		//props->cs.push_back(0.0);
+		props->max_sol_volume = 1.0;
+
+		props->hx = 0.1;
+		props->hy = 0.2;
+		props->hz = 0.1;
+		props->cellsNum_x = 20;
+		props->cellsNum_y = 20;
+		props->R_dim = props->hx;
+
+		acid2drec::Skeleton_Props props_sk;
+		props_sk.m_init = 0.09;
+		props_sk.m_max = 0.3;
+		props_sk.A = 60.0;
+		props_sk.t_init = 300.0;
+		props_sk.p_init = props_sk.p_out = props_sk.p_ref = 200.0 * 1.E+5;
+		props_sk.sw_init = 0.01;					props_sk.so_init = 0.99;
+		props_sk.xa_eqbm = 0.0;
+		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
+		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
+		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
+		props_sk.perm = 0.5;
+		props_sk.dens_stc = 2000.0;
+		props_sk.beta = 4.35113e-10;
+		props_sk.height = props->hz;
+		props->props_sk.push_back(props_sk);
+		/*default_random_engine generator;
+		normal_distribution<double> distribution(0.15, 0.02);
+		for (int i = 0; i < props->cellsNum_x * props->cellsNum_z; i++)
+		{
+		acidrecfrac::Skeleton_Props prop = props_sk;
+		double tmp = distribution(generator);
+		prop.m_init = (tmp > 0.01) ? tmp : 0.01;
+		prop.perm = props_sk.getPermCoseni(prop.m_init, 0.0).value();
+		props->props_sk.push_back(prop);
+		}*/
+		/*props_sk.height = 3.05;
+		props_sk.m_init = 0.08;
+		props_sk.perm = 0.3;
+		props->props_sk.push_back(props_sk);
+
+		props_sk.height = 0.91;
+		props_sk.m_init = 0.1;
+		props_sk.perm = 1;
+		props->props_sk.push_back(props_sk);
+
+		props_sk.height = 0.61;
+		props_sk.m_init = 0.12;
+		props_sk.perm = 1;
+		props->props_sk.push_back(props_sk);*/
+
+		props->props_o.visc = 4.75;
+		props->props_o.dens_stc = 887.261;
+		props->props_o.beta = 1.0 * 1.e-9;
+		props->props_o.p_ref = props_sk.p_ref;
+
+		props->props_w.visc = 2.0;
+		props->props_w.dens_stc = 1000.0;
+		props->props_w.beta = 1.0 * 1.e-9;
+		props->props_w.p_ref = props_sk.p_ref;
+		props->props_w.D_e = 0.0;// 1.E-8;
+
+		props->props_g.visc = 0.06;
+		props->props_g.dens_stc = 0.8;
+		props->props_g.co2 = acid2drec::getCO2();
+
+		return props;
+	}
 
     template <typename Properties>
     int setOptions(Properties& props, int ac, char* av[])
@@ -1171,6 +1262,7 @@ namespace issues
 		Scene<TModel, TSolver, TProps> scene;
 		scene.load(*props);
 		scene.start();
+		return 0;
 	};
     template <>
     int run<acidrecfrac::Properties, acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver>(int ac, char* av[])

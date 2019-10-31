@@ -50,6 +50,9 @@
 #include "model/Acid/recfracmov/AcidRecFracMovModel.hpp"
 #include "model/Acid/recfracmov/AcidRecFracMovSolver.hpp"
 
+#include "model/Acid/2drec/Acid2dRecModel.hpp"
+#include "model/Acid/2drec/Acid2dRecSolver.hpp"
+
 #include "model/WaxNIT/1d/WaxNIT1d.hpp"
 #include "model/WaxNIT/1d/WaxNIT1dSolver.hpp"
 
@@ -209,6 +212,12 @@ void Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::Bla
 	paralution::init_paralution();
 	method = new blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>(model);
 }
+void Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver, acid2drec::Properties>::load(acid2drec::Properties& props)
+{
+	model->load(props);
+	paralution::init_paralution();
+	method = new acid2drec::Acid2dRecSolver(model);
+}
 
 #ifdef USE_HYPRE
 Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::~Scene()
@@ -275,5 +284,6 @@ template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Pro
 template class Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>;
 template class Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>;
 template class Scene<acidrecfracmov::AcidRecFracMov, acidrecfracmov::AcidRecFracMovSolver, acidrecfracmov::Properties>;
+template class Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver, acid2drec::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
 template class Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>;

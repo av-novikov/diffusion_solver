@@ -56,7 +56,7 @@ namespace acid2drec
 		std::map<int, double> Qcell;
 		std::vector<double> period, rate, pwf, cs;
 		std::vector<bool> LeftBoundIsRate;
-		double injected_sol_volume, injected_acid_volume, max_sol_volume, max_matrix_acid_volume;
+		double injected_sol_volume, injected_acid_volume, max_sol_volume, max_acid_volume;
 		bool leftBoundIsRate;
 		bool rightBoundIsPres;
 		// Snapshotter
@@ -239,7 +239,7 @@ namespace acid2drec
 		void load(Properties& props)
 		{
 			setProps(props);
-			setSnapshotter("");
+			setSnapshotter("", this);
 			buildGrid();
 			processGeometry();
 			setPerforated();
@@ -248,10 +248,10 @@ namespace acid2drec
 			snapshotter->dump_all(0);
 		};
 		void snapshot_all(int i) { snapshotter->dump_all(i); }
-		void setSnapshotter(std::string type)
+		void setSnapshotter(std::string type, Acid2dRecModel* _model)
 		{
 			snapshotter = new VTKSnapshotter<Acid2dRecModel>(prefix);
-			snapshotter->setModel(this);
+			snapshotter->setModel(_model);
 			isWriteSnaps = true;
 		};
 		void setPeriod(int period);
