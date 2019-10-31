@@ -162,7 +162,7 @@ void Acid2dRecModel::buildGrid()
 	cy = cell_hy / 2.0;
 	for (int j = 0; j < cellsNum_y; j++)
 	{
-		cells.push_back(Cell(counter++, cx, cy, cz, 0.0, cell_hy, cell_hz, Type::LEFT));
+		cells.push_back(Cell(counter++, cx, cy, cz, 0.0, cell_hy, cell_hz, Type::BORDER));
 		cy += cell_hy;
 	}
 	cy -= cell_hy / 2.0;
@@ -173,7 +173,7 @@ void Acid2dRecModel::buildGrid()
 	{
 		cx += cell_hx;
 		cy = 0.0;
-		cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, 0.0, cell_hz, Type::BORDER));
+		cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, 0.0, cell_hz, Type::LEFT));
 		cy += cell_hy / 2.0;
 		for (int j = 0; j < cellsNum_y; j++)
 		{
@@ -181,7 +181,7 @@ void Acid2dRecModel::buildGrid()
 			cy += cell_hy;
 		}
 		cy -= cell_hy / 2.0;
-		cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, 0.0, cell_hz, Type::BORDER));
+		cells.push_back(Cell(counter++, cx, cy, cz, cell_hx, 0.0, cell_hz, Type::RIGHT));
 	}
 	// x = hx
 	cx = hx;
@@ -190,7 +190,7 @@ void Acid2dRecModel::buildGrid()
 	cy += cell_hy / 2.0;
 	for (int j = 0; j < cellsNum_y; j++)
 	{
-		cells.push_back(Cell(counter++, cx, cy, cz, 0.0, cell_hy, cell_hz, Type::RIGHT));
+		cells.push_back(Cell(counter++, cx, cy, cz, 0.0, cell_hy, cell_hz, Type::BORDER));
 		cy += cell_hy;
 	}
 	cy -= cell_hy / 2.0;
@@ -251,7 +251,7 @@ void Acid2dRecModel::setInitialState()
 	{
 		cell.props = &props_sk[getSkeletonId(cell)];
 		cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
-		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init - grav * props_w.dens_stc * cell.z;
+		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init;
 		
 		if (cell.type == Type::WELL_LAT)
 		{

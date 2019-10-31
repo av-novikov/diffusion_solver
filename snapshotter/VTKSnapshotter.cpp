@@ -1677,15 +1677,22 @@ void VTKSnapshotter<acid2drec::Acid2dRecModel>::dump_all(int i)
 	using namespace acid2drec;
 	// Grid
 	auto grid = vtkSmartPointer<vtkStructuredGrid>::New();
-	grid->SetDimensions(nx - 1, ny - 1, nz);
+	grid->SetDimensions(ny + 1, nx - 1, nz);
 	// Frac points
 	auto points = vtkSmartPointer<vtkPoints>::New();
+	double cell_hy = model->cells[ny + 1].hy;
 	for (int i = 0; i < nx - 1; i++)
+	{
+		const auto& cell1 = model->cells[i * ny];
+		points->InsertNextPoint(r_dim * (cell1.x + cell1.hx / 2.0), r_dim * (cell1.y - 0.2 * cell_hy), r_dim * (cell1.z - cell1.hz / 2.0));
 		for (int j = 0; j < ny - 1; j++)
 		{
 			const auto& cell = model->cells[j + i * ny];
 			points->InsertNextPoint(r_dim * (cell.x + cell.hx / 2.0), r_dim * (cell.y + cell.hy / 2.0), r_dim * (cell.z - cell.hz / 2.0));
 		}
+		const auto& cell2 = model->cells[ny - 1 + i * ny];
+		points->InsertNextPoint(r_dim * (cell2.x + cell2.hx / 2.0), r_dim * (cell2.y + 0.2 * cell_hy), r_dim * (cell2.z - cell2.hz / 2.0));
+	}
 	grid->SetPoints(points);
 	// Data
 	auto poro = vtkSmartPointer<vtkDoubleArray>::New();
@@ -1716,11 +1723,10 @@ void VTKSnapshotter<acid2drec::Acid2dRecModel>::dump_all(int i)
 
 	for (int i = 0; i < nx - 2; i++)
 	{
-		for (int j = 0; j < ny - 2; j++)
+		for (int j = 0; j < ny; j++)
 		{
 			const auto& cell = model->cells[j + (i + 1) * ny];
 			const auto& next = cell.u_next;
-			vtkSmartPointer<vtkQuad> hex = vtkSmartPointer<vtkQuad>::New();
 
 			poro->InsertNextValue(next.m);
 			perm->InsertNextValue(M2toMilliDarcy(cell.props->getPermCoseni(next.m, next.p).value() * r_dim * r_dim));

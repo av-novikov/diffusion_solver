@@ -1147,7 +1147,7 @@ namespace issues
 		props->hy = 0.2;
 		props->hz = 0.1;
 		props->cellsNum_x = 20;
-		props->cellsNum_y = 20;
+		props->cellsNum_y = 40;
 		props->R_dim = props->hx;
 
 		acid2drec::Skeleton_Props props_sk;
