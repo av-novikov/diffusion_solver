@@ -723,11 +723,6 @@ PoroTapeVariable AcidRecFrac::solvePoroMid(const PoroCell& cell)
 			dist1 = cell.hy / 2.0;
 			dist2 = beta.hy / 2.0;
 		}
-		else if (i < 4)
-		{
-			dist1 = cell.hz / 2.0;
-			dist2 = beta.hz / 2.0;
-		}
 		else
 		{
 			dist1 = cell.hx / 2.0;
