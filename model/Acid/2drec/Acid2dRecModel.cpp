@@ -92,7 +92,7 @@ void Acid2dRecModel::makeDimLess()
 	//R_dim = props_frac.l2 / 8.0;
 	t_dim = 1.0 * 3600.0;
 	//t_dim = 3600.0;
-	P_dim = 1.E+5;// props_sk[0].p_init;
+	P_dim = 100.0 * 1.E+5;// props_sk[0].p_init;
 	// Temporal properties
 	ht /= t_dim;
 	ht_min /= t_dim;
@@ -268,7 +268,7 @@ double Acid2dRecModel::getRate(const int idx) const
 	const Cell& beta = cells[cell.num + 1];
 	const auto& next = x[cell.num];
 	const auto& nebr = x[beta.num];
-	return getTrans(cell, next, beta, nebr).value() * (next.p.value() - nebr.p.value());
+	return getTrans(cell, next, beta, nebr).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * (next.p.value() - nebr.p.value());
 };
 
 TapeVariable Acid2dRecModel::solve(const Cell& cell, const Regime reg)
@@ -358,7 +358,7 @@ TapeVariable Acid2dRecModel::solveLeft(const Cell& cell, const Regime reg)
 	auto& nebr = x[beta.num];
 
 	TapeVariable res;
-	res.m = ((next.m - nebr.m) /*- (nebr_poro1.m - nebr_poro2.m) *
+	res.m = ((props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) /*- (nebr_poro1.m - nebr_poro2.m) *
 		(dist0 + dist_poro1) / (dist_poro1 + dist_poro2)*/) / P_dim;
 	//res.p = ((next.p - nebr1.p) - (nebr1.p - nebr2.p) *
 	//	(dist0 + dist1) / (dist1 + dist2)) / P_dim * 2.0;
@@ -374,7 +374,7 @@ TapeVariable Acid2dRecModel::solveLeft(const Cell& cell, const Regime reg)
 			auto& p_next = x[it.first];
 			const auto& p_beta = cells[it.first + 1];
 			auto& p_nebr = x[it.first + 1];
-			res.p += getTrans(p_cell, p_next, p_beta, p_nebr) * (next.p - nebr.p);
+			res.p += getTrans(p_cell, p_next, p_beta, p_nebr) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (next.p - nebr.p);
 		}
 	}
 	else
@@ -399,7 +399,7 @@ TapeVariable Acid2dRecModel::solveRight(const Cell& cell)
 
 	adouble rightIsPres = rightBoundIsPres;
 	TapeVariable res;
-	res.m = (next.m - nebr.m) / P_dim;
+	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
 	if (rightBoundIsPres)
 		res.p = (next.p - props.p_out) / P_dim;
 	else
@@ -425,7 +425,7 @@ TapeVariable Acid2dRecModel::solveBorder(const Cell& cell)
 	const auto& nebr = x[beta.num];
 
 	TapeVariable res;
-	res.m = (next.m - nebr.m) / P_dim;
+	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
 	res.p = (next.p - nebr.p) / P_dim;
 	res.sw = (next.sw - nebr.sw) / P_dim;
 	res.xw = (next.xw - nebr.xw) / P_dim;

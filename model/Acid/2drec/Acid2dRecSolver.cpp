@@ -74,36 +74,27 @@ void Acid2dRecSolver::writeData()
 		pvd << cur_t * t_dim / 3600.0;
 	pvd << "0\" file=\"Acid2dRec_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
-	/*double q = 0.0, matrix_rate = 0.0, matrix_acid_rate = 0.0, cur_vL;
-	for (int i = 2 * (model->cellsNum_y_frac + 1) * model->cellsNum_z - 1; i < (model->cellsNum_y_frac + 1) * (model->cellsNum_x + 1) * model->cellsNum_z; i += (model->cellsNum_y_frac + 1) * model->cellsNum_z)
+	double rate = 0.0, acid_rate = 0.0, cur_rate, pres = 0.0;
+	for (int i = model->cellsNum_y + 2; i < (model->cellsNum_y + 2) * (model->cellsNum_x + 1); i += model->cellsNum_y + 2)
 	{
-		const auto& cell = model->cells_frac[i];
-		assert(cell.type == FracType::FRAC_OUT);
-		cur_vL = model->getFlowLeak(cell).value();
-		matrix_rate += cur_vL * cell.hz * cell.hx;
-		matrix_acid_rate += cur_vL * cell.hz * cell.hx * cell.u_next.c;
+		const auto& cell = model->cells[i];
+		assert(cell.type == Type::BOTTOM);
+		cur_rate = model->getRate(cell.num);
+		rate += cur_rate;
+		acid_rate += cur_rate * cell.u_next.xa;
+		pres += cell.u_next.p;
 	}
-	model->matrix_sol_volume += matrix_rate * model->ht;
-	model->matrix_acid_volume += matrix_acid_rate * model->ht;
-	for (int i = 0; i < (model->cellsNum_y_frac + 1) * model->cellsNum_z; i++)
-	{
-		const auto& cell = model->cells_frac[i];
-		if (cell.type == FracType::FRAC_IN && cell.hy != 0.0 && cell.hz != 0.0)
-			q += model->getRate(cell.num);
-	}
-	model->injected_sol_volume -= q * model->ht;
-	model->injected_acid_volume -= q * model->c * model->ht;
+	model->injected_sol_volume += rate * model->ht;
+	model->injected_acid_volume += acid_rate * model->ht;
+
 	qcells << cur_t * t_dim / 3600.0;
-	qcells << "\t" << -q * model->Q_dim * 86400.0;
+	qcells << "\t" << rate * model->Q_dim * 86400.0;
 	qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
 	qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
-	qcells << "\t" << model->matrix_sol_volume * model->Q_dim * model->t_dim;
-	qcells << "\t" << model->matrix_acid_volume * model->Q_dim * model->t_dim;
 
-	double p = model->cells_frac[model->cellsNum_y_frac + 2].u_next.p;
-	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
+	P << cur_t * t_dim / 3600.0 << "\t" << pres / model->cellsNum_x * model->P_dim / BAR_TO_PA << endl;
 
-	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
+	/*const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
 	double mean_trans = 0.0, Cfd_inv = 0.0, cur_trans;
 	int i_ind;// , k_ind;
 	for (int i = 0; i < model->trans.size(); i++)
@@ -118,16 +109,16 @@ void Acid2dRecSolver::writeData()
 	//}
 	/*Cfd_inv = 1.0 / Cfd_inv;
 
-	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << endl;
+	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << endl;*/
 
 	double cum_vol = 0.0;
-	for (const auto& cell : model->cells_poro)
+	for (const auto& cell : model->cells)
 	{
 		cum_vol += (cell.props->m_init - cell.u_next.m) * cell.V * model->R_dim * model->R_dim * model->R_dim;
 	}
 	qcells << "\t" << cum_vol;
 
-	qcells << endl;*/
+	qcells << endl;
 }
 void Acid2dRecSolver::analyzeNewtonConvergence()
 {

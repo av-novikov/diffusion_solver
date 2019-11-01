@@ -1123,7 +1123,7 @@ namespace issues
 		Properties* props = new Properties;
 		props->prefix = "snaps/";
 
-		props->ht = 0.00001;
+		props->ht = 0.0001;
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
 
@@ -1135,7 +1135,7 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(1.0 * 1.0e+5);
+		props->pwf.push_back(10.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
@@ -1147,8 +1147,8 @@ namespace issues
 		props->hy = 0.2;
 		props->hz = 0.1;
 		props->cellsNum_x = 1;
-		props->cellsNum_y = 40;
-		props->R_dim = props->hx;
+		props->cellsNum_y = 100;
+		props->R_dim = 10.0 * props->hx;
 
 		acid2drec::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
@@ -1161,7 +1161,7 @@ namespace issues
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;
 		props_sk.xa_init = props_sk.xa_eqbm;	props_sk.xw_init = 1.0 - props_sk.xa_eqbm;
 		props_sk.s_wc = 0.0;					props_sk.s_oc = 0.0;		props_sk.s_gc = 0.0;
-		props_sk.perm = 0.5;
+		props_sk.perm = 5.0;
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->hz;
