@@ -1135,18 +1135,18 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(600.0 * 1.0e+5);
+		props->pwf.push_back(1.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		//props->cs.push_back(0.0);
-		props->max_sol_volume = 1.0;
+		props->max_acid_volume = 1.0;
 
 		props->hx = 0.1;
 		props->hy = 0.2;
 		props->hz = 0.1;
-		props->cellsNum_x = 20;
+		props->cellsNum_x = 1;
 		props->cellsNum_y = 40;
 		props->R_dim = props->hx;
 
@@ -1155,7 +1155,7 @@ namespace issues
 		props_sk.m_max = 0.3;
 		props_sk.A = 60.0;
 		props_sk.t_init = 300.0;
-		props_sk.p_init = props_sk.p_out = props_sk.p_ref = 200.0 * 1.E+5;
+		props_sk.p_init = props_sk.p_out = props_sk.p_ref = 0.0;
 		props_sk.sw_init = 0.01;					props_sk.so_init = 0.99;
 		props_sk.xa_eqbm = 0.0;
 		props_sk.xa_init = 0.0;					props_sk.xw_init = 1.0;

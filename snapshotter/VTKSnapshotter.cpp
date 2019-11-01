@@ -1737,17 +1737,6 @@ void VTKSnapshotter<acid2drec::Acid2dRecModel>::dump_all(int i)
 			conc_w->InsertNextValue(next.xw);
 			conc_s->InsertNextValue(next.xs);
 			conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
-
-			//hex->GetPointIds()->SetId(0, j + i * (ny - 1));
-			//hex->GetPointIds()->SetId(1, j + 1 + i * (ny - 1));
-			//hex->GetPointIds()->SetId(2, j + 1 + (i + 1) * (ny - 1));
-			//hex->GetPointIds()->SetId(3, j + (i + 1) * (ny - 1));
-
-			//hex->GetPointIds()->SetId(4, j + (k + 1) * ny_poro + i * np_poro);
-			//hex->GetPointIds()->SetId(5, j + 1 + (k + 1) * ny_poro + i * np_poro);
-			//hex->GetPointIds()->SetId(6, j + 1 + (k + 1) * ny_poro + (i + 1) * np_poro);
-			//hex->GetPointIds()->SetId(7, j + (k + 1) * ny_poro + (i + 1) * np_poro);
-			//hexs_poro->InsertNextCell(hex);
 		}
 	}
 	vtkCellData* fd = grid->GetCellData();
