@@ -41,8 +41,8 @@ Acid2dRecSolver::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolver<Acid2d
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 5.E-10;     MAX_INIT_RES[0].second = 2.E-9;         
-    MAX_INIT_RES[1].first = 5.E-9;      MAX_INIT_RES[1].second = 2.E-8;
+    MAX_INIT_RES[0].first = 5.E-9;     MAX_INIT_RES[0].second = 2.E-8;         
+    MAX_INIT_RES[1].first = 5.E-8;      MAX_INIT_RES[1].second = 2.E-7;
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open(model->prefix + "P.dat", ofstream::out);

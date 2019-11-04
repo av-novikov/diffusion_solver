@@ -1135,20 +1135,20 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(10.0 * 1.0e+5);
+		props->pwf.push_back(100.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		//props->cs.push_back(0.0);
-		props->max_acid_volume = 1.0;
+		props->max_acid_volume = 1.E-3;
 
 		props->hx = 0.1;
 		props->hy = 0.2;
 		props->hz = 0.1;
 		props->cellsNum_x = 1;
 		props->cellsNum_y = 100;
-		props->R_dim = 10.0 * props->hx;
+		props->R_dim = 5000.0 * props->hx;
 
 		acid2drec::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
