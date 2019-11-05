@@ -263,8 +263,8 @@ void Acid2dRecModel::setInitialState()
 double Acid2dRecModel::getRate(const int idx) const
 {
 	const Cell& cell = cells[idx];
-	assert(cell.type == Type::LEFT);
-	assert(cell.hy != 0.0 && cell.hz != 0.0);
+	assert(cell.type == Type::BOTTOM);
+	assert(cell.hx != 0.0 && cell.hz != 0.0);
 	const Cell& beta = cells[cell.num + 1];
 	const auto& next = x[cell.num];
 	const auto& nebr = x[beta.num];

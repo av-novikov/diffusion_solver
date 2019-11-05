@@ -31,12 +31,12 @@ namespace acidfrac
 		double xa_init;
 		double xw_init;
 
-		inline adouble getPoro(adouble m0, adouble p) const
+		inline adouble getPoro(const adouble& m0, const adouble& p) const
 		{
 			return m0;
 			//return m0 * (1.0 + beta * (p - p_init));
 		};
-		inline adouble getPermCoseni(adouble m0, adouble p) const
+		inline adouble getPermCoseni(const adouble& m0, const adouble& p) const
 		{
 			//return d_pore_r * d_pore_r * m * m * m / (1 - m) / (1 - m) / 150.0;
 			adouble m = getPoro(m0, p);
@@ -48,7 +48,7 @@ namespace acidfrac
 			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
 		};
 
-		inline adouble getDensity(adouble p) const
+		inline adouble getDensity(const adouble& p) const
 		{
 			return dens_stc;
 		};
@@ -61,7 +61,7 @@ namespace acidfrac
 		double D_e;
 
 		Interpolate* kr;
-		inline adouble getKr(adouble sw, adouble m, const Skeleton_Props* props) const
+		inline adouble getKr(const adouble& sw, const adouble& m, const Skeleton_Props* props) const
 		{
 			adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
 			adouble isAboveCritical = (sw > 1.0 - props->s_oc) ? true : false;
@@ -71,11 +71,11 @@ namespace acidfrac
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
-		inline adouble getViscosity(adouble p, adouble xa, adouble xw, adouble xs) const
+		inline adouble getViscosity(const adouble& p, const adouble& xa, const adouble& xw, const adouble& xs) const
 		{
 			return visc;
 		};
-		inline adouble getDensity(adouble p, adouble xa, adouble xw, adouble xs) const
+		inline adouble getDensity(const adouble& p, const adouble& xa, const adouble& xw, const adouble& xs) const
 		{
 			return dens_stc;
 		};
@@ -85,17 +85,17 @@ namespace acidfrac
 		double gas_dens_stc;
 		//LiquidComponent oil;
 		Interpolate* b;
-		inline adouble getB(adouble p) const
+		inline adouble getB(const adouble& p) const
 		{
 			return exp((adouble)beta * (p_ref - p));
 		};
-		inline adouble getDensity(adouble p) const
+		inline adouble getDensity(const adouble& p) const
 		{
 			return dens_stc / getB(p);
 		};
 
 		Interpolate* kr;
-		inline adouble getKr(adouble sw, adouble m, const Skeleton_Props* props) const
+		inline adouble getKr(const adouble& sw, const adouble& m, const Skeleton_Props* props) const
 		{
 			adouble isAboveZero = (1 - sw - props->s_oc > 0.0) ? true : false;
 			adouble isAboveCritical = (1 - sw > 1.0 - props->s_wc) ? true : false;
@@ -105,7 +105,7 @@ namespace acidfrac
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
-		inline adouble getViscosity(adouble p) const
+		inline adouble getViscosity(const adouble& p) const
 		{
 			return visc;
 		};
@@ -115,7 +115,7 @@ namespace acidfrac
 		GasComponent co2;
 
 		Interpolate* kr;
-		inline adouble getKr(adouble sw, adouble so, const Skeleton_Props* props) const
+		inline adouble getKr(const adouble& sw, const adouble& so, const Skeleton_Props* props) const
 		{
 			adouble isAboveZero = (1.0 - so - sw - props->s_gc > 0.0) ? true : false;
 			adouble isAboveCritical = (1.0 - so - sw > 1.0 - props->s_wc - props->s_oc) ? true : false;
@@ -124,12 +124,12 @@ namespace acidfrac
 			condassign(tmp, isAboveCritical, (adouble)0.5);
 			return tmp;
 		};
-		inline adouble getViscosity(adouble p) const
+		inline adouble getViscosity(const adouble& p) const
 		{
 			return visc;
 		};
 		Interpolate* rho;
-		inline adouble getDensity(adouble p) const
+		inline adouble getDensity(const adouble& p) const
 		{
 			return rho->Solve(p);
 			//return co2.getDensity(p);

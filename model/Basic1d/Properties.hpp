@@ -20,7 +20,7 @@ namespace basic1d
 
 		double m_init;
 		double p_ref;
-		inline adouble getPoro(adouble p) const
+		inline adouble getPoro(const adouble& p) const
 		{
 			return (adouble)(m_init)* ((adouble)(1.0) + (adouble)(beta)* (p - p_ref));
 		};
@@ -68,7 +68,7 @@ namespace basic1d
 
 		// Gas-oil ratio
 		Interpolate* Rs;
-		inline adouble getRs(adouble p, adouble p_bub, adouble SATUR) const
+		inline adouble getRs(const adouble& p, const adouble& p_bub, const adouble& SATUR) const
 		{
 			adouble tmp;
 			condassign(tmp, SATUR, Rs->Solve(p), Rs->Solve(p_bub));
@@ -86,7 +86,7 @@ namespace basic1d
 		double b_bore;
 		// Fluid volume factor
 		Interpolate* b;
-		inline adouble getB(adouble p) const
+		inline adouble getB(const adouble& p) const
 		{
 			return b->Solve(p);
 		};

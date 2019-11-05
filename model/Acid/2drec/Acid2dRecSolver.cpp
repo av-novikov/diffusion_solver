@@ -168,6 +168,9 @@ void Acid2dRecSolver::control()
 
     analyzeNewtonConvergence();
 
+	//if (INCREASE_STEP && model->ht > 0.1 * cur_t)
+	//	INCREASE_STEP = false;
+
     MULT_UP = MULT_DOWN = 1.5;
     if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
                         (model->ht <= 0.5 * model->ht_max && curTimePeriod == 1)))
