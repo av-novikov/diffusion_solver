@@ -114,11 +114,11 @@ namespace acidfrac
 			S = cell.props->hz * cell.props->hx;
 			return 2.0 * k1 * k2 * S / (k1 * beta.hx + k2 * cell.hx);
 		};
-		inline adouble getPoroAverage(adouble p1, const PoroCell& cell1, adouble p2, const PoroCell& cell2) const
+		inline adouble getPoroAverage(const adouble& p1, const PoroCell& cell1, const adouble& p2, const PoroCell& cell2) const
 		{
 			return (p1 * (adouble)cell2.hx + p2 * (adouble)cell1.hx) / (adouble)(cell1.hx + cell2.hx);
 		};
-		inline adouble getFracAverage(const adouble p1, const FracCell& cell1, const adouble p2, const FracCell& cell2) const
+		inline adouble getFracAverage(const adouble& p1, const FracCell& cell1, const adouble& p2, const FracCell& cell2) const
 		{
 			if (cell1.x - cell2.x > EQUALITY_TOLERANCE)
 			{

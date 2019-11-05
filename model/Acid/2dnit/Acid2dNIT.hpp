@@ -53,7 +53,7 @@ namespace acid2dnit
 		void calcSkin();
 
 		// Service functions
-		inline adouble getAverage(adouble p1, const Cell& cell1, adouble p2, const Cell& cell2) const
+		inline adouble getAverage(const adouble& p1, const Cell& cell1, const adouble& p2, const Cell& cell2) const
 		{
 			double r1, r2;
 			if (abs(cell1.num - cell2.num) == 1) 

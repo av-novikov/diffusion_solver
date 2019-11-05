@@ -185,7 +185,7 @@ void Acid2dRecSolver::start()
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-30, 1.e-18, 1.e+4);
+	solver.Init(strNum, 1.e-50, 1.e-24, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 

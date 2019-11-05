@@ -147,7 +147,7 @@ namespace acidrecfrac
 		{
 			return (frac_idx - cellsNum_y_frac) / (cellsNum_y_frac + 1) * (cellsNum_y_poro + 2);
 		};
-		inline adouble getAverage(adouble p1, const double l1, adouble p2, const double l2) const
+		inline adouble getAverage(const adouble& p1, const double l1, const adouble& p2, const double l2) const
 		{
 			return (p1 * (adouble)l2 + p2 * (adouble)l1) / (adouble)(l1 + l2);
 		};

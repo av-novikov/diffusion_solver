@@ -334,8 +334,10 @@ TapeVariable Acid2dRecModel::solveMid(const Cell& cell)
 		upwd_idx = getUpwindIdx(cell, beta);
 		const auto& upwd = x[upwd_idx];
 
-		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), dist1, props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), dist2);
-		adouble dens_o = getAverage(props_o.getDensity(next.p), dist1, props_o.getDensity(nebr.p), dist2);
+		adouble dens_w = getAverage(props_w.getDensity(next.p, next.xa, next.xw, next.xs), dist1, 
+									props_w.getDensity(nebr.p, nebr.xa, nebr.xw, nebr.xs), dist2);
+		adouble dens_o = getAverage(props_o.getDensity(next.p), dist1,
+									props_o.getDensity(nebr.p), dist2);
 		adouble buf_w = ht / cell.V * getTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
 			dens_w * props_w.getKr(upwd.sw, upwd.m, cells[upwd_idx].props) / props_w.getViscosity(upwd.p, upwd.xa, upwd.xw, upwd.xs);
 		adouble buf_o = ht / cell.V * getTrans(cell, next, beta, nebr) * (next.p - nebr.p) *
