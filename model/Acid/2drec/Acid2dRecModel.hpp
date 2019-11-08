@@ -5,8 +5,8 @@
 #include "model/Acid/2drec/Properties.hpp"
 #include "model/cells/AcidVariables.hpp"
 #include "model/cells/HexCell.hpp"
+#include "snapshotter/VTKSnapshotter.h"
 #include "util/Interpolate.h"
-#include "model/Acid/recfrac/AcidRecFracModel.hpp"
 
 namespace acid2drec
 {
@@ -29,7 +29,7 @@ namespace acid2drec
 		template<typename> friend class Snapshotter;
 		template<typename> friend class VTKSnapshotter;
 		template<typename> friend class AbstractSolver;
-		friend class Acid2dRecSolver; 
+		template<typename> friend class Acid2dRecSolver;
 	public:
 		static const int var_size = var_size;
 	protected:

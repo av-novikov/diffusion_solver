@@ -212,13 +212,40 @@ void Scene<blackoilnit_elliptic::BlackOilNIT_Elliptic, blackoilnit_elliptic::Bla
 	paralution::init_paralution();
 	method = new blackoilnit_elliptic::BlackOilNITEllipticSolver<ParSolver>(model);
 }
-void Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver, acid2drec::Properties>::load(acid2drec::Properties& props)
+void Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<ParSolver>, acid2drec::Properties>::load(acid2drec::Properties& props)
 {
 	model->load(props);
 	paralution::init_paralution();
-	method = new acid2drec::Acid2dRecSolver(model);
+	method = new acid2drec::Acid2dRecSolver<ParSolver>(model);
+}
+void Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<ParSolver>, acid2drec::Properties>::load(acid2drec::Properties& props, int argc, char* argv[])
+{
+	model->load(props);
+	paralution::init_paralution();
+	method = new acid2drec::Acid2dRecSolver<ParSolver>(model);
 }
 
+Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<HypreSolver>, acid2drec::Properties>::~Scene()
+{
+	MPI_Finalize();
+
+	delete model;
+	delete method;
+}
+void Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<HypreSolver>, acid2drec::Properties>::load(acid2drec::Properties& props, int argc, char* argv[])
+{
+	model->load(props);
+	MPI_Init(&argc, &argv);
+	method = new acid2drec::Acid2dRecSolver<HypreSolver>(model);
+}
+
+Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<ParSolver>, acid2drec::Properties>::~Scene()
+{
+	paralution::stop_paralution();
+
+	delete model;
+	delete method;
+}
 #ifdef USE_HYPRE
 Scene<oilnit_elliptic::OilNIT_Elliptic, oilnit_elliptic::OilNITEllipticSolver<HypreSolver>, oilnit_elliptic::Properties>::~Scene()
 {
@@ -284,6 +311,7 @@ template class Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Pro
 template class Scene<acidellfrac::AcidEllFrac, acidellfrac::AcidEllFracSolver, acidellfrac::Properties>;
 template class Scene<acidrecfrac::AcidRecFrac, acidrecfrac::AcidRecFracSolver, acidrecfrac::Properties>;
 template class Scene<acidrecfracmov::AcidRecFracMov, acidrecfracmov::AcidRecFracMovSolver, acidrecfracmov::Properties>;
-template class Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver, acid2drec::Properties>;
+template class Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<ParSolver>, acid2drec::Properties>;
+template class Scene<acid2drec::Acid2dRecModel, acid2drec::Acid2dRecSolver<HypreSolver>, acid2drec::Properties>;
 template class Scene<wax_nit::WaxNIT, wax_nit::WaxNITSolver, wax_nit::Properties>;
 template class Scene<wax_nit1d::WaxNIT1d, wax_nit1d::WaxNIT1dSolver, wax_nit1d::Properties>;

@@ -1,7 +1,6 @@
 #ifndef HYPREINTERFACE_HPP_
 #define HYPREINTERFACE_HPP_
 
-#ifdef USE_HYPRE
 #include <mpi.h>
 #include "_hypre_utilities.h"
 #include "HYPRE_krylov.h"
@@ -25,18 +24,22 @@ private:
 	int ilower, iupper, nrows;
 	double *x_values, *x_sol;
 	int* rows;
-	double relTol, dropTol;
+	double absTol, relTol, dropTol;
 
+	bool first;
+	int res;
 public:
 
 	HypreSolver();
 	~HypreSolver();
 
-	void Init(const int vecSize, const double _relTol, const double _dropTol);
-	void Assemble(int* cols, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
+	void Init(const int vecSize, const double _absTol, const double _relTol, const double _dropTol);
+	void Assemble(int* cols, const int* ind_i, const int* ind_j, const double* a, const int counter, const int* ind_rhs, const double* rhs);
 	void Solve();
 	const Vector& getSolution();
+
+	int itersNum;
+	double init_res, final_res;
 };
-#endif /* USE_HYPRE */
 
 #endif /* HYPREINTERFACE_HPP_ */
