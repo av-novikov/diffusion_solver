@@ -78,8 +78,8 @@ namespace acid2drec
 			adouble isAboveZero = (sw - props->s_wc > 0.0) ? true : false;
 			adouble isAboveCritical = (sw > 1.0 - props->s_oc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, ((props->m_max - m) * pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc)) / (props->m_max - props->m_init), (adouble)0.0);
-			//condassign(tmp, isAboveZero, pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
+			//condassign(tmp, isAboveZero, ((props->m_max - m) * pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc)) / (props->m_max - props->m_init), (adouble)0.0);
+			condassign(tmp, isAboveZero, pow((sw - props->s_wc) / (1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};
@@ -89,7 +89,7 @@ namespace acid2drec
 		};
 		inline adouble getDensity(const adouble& p, const adouble& xa, const adouble& xw, const adouble& xs) const
 		{
-			return dens_stc;
+			return getRho(p);// dens_stc;
 		};
 		inline adouble getRho(const adouble& p) const
 		{
@@ -120,8 +120,8 @@ namespace acid2drec
 			adouble isAboveZero = (1 - sw - props->s_oc > 0.0) ? true : false;
 			adouble isAboveCritical = (1 - sw > 1.0 - props->s_wc) ? true : false;
 			adouble tmp;
-			condassign(tmp, isAboveZero, ((props->m_max - m) * pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc)) / (props->m_max - props->m_init), (adouble)0.0);
-			//condassign(tmp, isAboveZero, pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
+			//condassign(tmp, isAboveZero, ((props->m_max - m) * pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0) + (m - props->m_init) * (1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc)) / (props->m_max - props->m_init), (adouble)0.0);
+			condassign(tmp, isAboveZero, pow((1 - sw - props->s_oc) / (1.0 - props->s_wc - props->s_oc), 3.0), (adouble)0.0);
 			condassign(tmp, isAboveCritical, (adouble)1.0);
 			return tmp;
 		};

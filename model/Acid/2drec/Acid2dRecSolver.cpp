@@ -330,6 +330,7 @@ bool Acid2dRecSolver::solveSmartStep()
         else
             return false;
 		iterations++;
+		model->snapshot_all(iterations);
 	}
 
 	checkVariables();
