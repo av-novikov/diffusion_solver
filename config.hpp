@@ -1,6 +1,9 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
+#include "method/ParalutionInterface.h"
+#include "method/HypreInterface.hpp"
+
 #include "model/Bingham1d/Bingham1d.hpp"
 #include "model/Bingham1d/BingSolver.hpp"
 #include "model/BlackOilNIT_Elliptic/BlackOilNIT_Elliptic.hpp"
@@ -1123,7 +1126,7 @@ namespace issues
 		Properties* props = new Properties;
 		props->prefix = "snaps/";
 
-		props->ht = 0.0001;
+		props->ht = 0.00000001;
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
 
@@ -1135,13 +1138,13 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(100.0 * 1.0e+5);
+		props->pwf.push_back(50.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		//props->cs.push_back(0.0);
-		props->max_acid_volume = 1.E-3;
+		props->max_acid_volume = 1.E-1;
 
 		props->hx = 0.1;
 		props->hy = 0.2;
@@ -1193,12 +1196,12 @@ namespace issues
 
 		props->props_o.visc = 4.75;
 		props->props_o.dens_stc = 887.261;
-		props->props_o.beta = 1.0 * 1.e-9;
+		props->props_o.beta = 1.0 * 1.e-10;
 		props->props_o.p_ref = props_sk.p_ref;
 
 		props->props_w.visc = 2.0;
 		props->props_w.dens_stc = 1000.0;
-		props->props_w.beta = 1.0 * 1.e-9;
+		props->props_w.beta = 1.0 * 1.e-10;
 		props->props_w.p_ref = props_sk.p_ref;
 		props->props_w.D_e = 0.0;// 1.E-8;
 
@@ -1260,7 +1263,7 @@ namespace issues
 	{
 		TProps* props = issues::getProps<TProps>();
 		Scene<TModel, TSolver, TProps> scene;
-		scene.load(*props);
+		scene.load(*props, ac, av);
 		scene.start();
 		return 0;
 	};

@@ -383,9 +383,9 @@ TapeVariable Acid2dRecModel::solveLeft(const Cell& cell, const Regime reg)
 	{
 		res.p = (next.p - Pwf) / P_dim;
 	}
-	res.xa = (next.xa - c) / P_dim;
 	res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
 	res.xw = (next.xw - (1.0 - next.xa)) / P_dim;
+	res.xa = (next.xa - c) / P_dim;
 	res.xs = next.xs / P_dim;
 
 	return res;

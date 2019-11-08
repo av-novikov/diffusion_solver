@@ -111,7 +111,7 @@ void ParSolver::SolveBiCGStab_Simple(const int degree, bool isHarder)
 	}
 	else
 	{
-        p_ilut.Set(1.E-30, 50);
+        p_ilut.Set(1.E-100, 100);
 		bicgstab.SetPreconditioner(p_ilut);
 	}
 	
@@ -128,7 +128,7 @@ void ParSolver::SolveBiCGStab_Simple(const int degree, bool isHarder)
     iter_num = bicgstab.GetIterationCount();
     final_res = bicgstab.GetCurrentResidual();
 	status = static_cast<RETURN_TYPE>(bicgstab.GetSolverStatus());
-	//writeSystem();
+	writeSystem();
 	bicgstab.Clear();
 }
 void ParSolver::SolveGMRES()

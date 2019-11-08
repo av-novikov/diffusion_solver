@@ -12,7 +12,8 @@ using std::map;
 using std::ofstream;
 using namespace acid2drec;
 
-Acid2dRecSolver::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolver<Acid2dRecModel>(_model)
+template<class SolType>
+Acid2dRecSolver<SolType>::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolver<Acid2dRecModel>(_model)
 {
 	strNum = model->cellsNum * var_size;
 	x = new double[strNum];
@@ -51,7 +52,8 @@ Acid2dRecSolver::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolver<Acid2d
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
 }
-Acid2dRecSolver::~Acid2dRecSolver()
+template<class SolType>
+Acid2dRecSolver<SolType>::~Acid2dRecSolver()
 {
 	delete[] x, y;
 	delete[] ind_i, ind_j, ind_rhs;
@@ -65,7 +67,8 @@ Acid2dRecSolver::~Acid2dRecSolver()
 	pvd << "</VTKFile>\n";
 	pvd.close();
 }
-void Acid2dRecSolver::writeData()
+template<class SolType>
+void Acid2dRecSolver<SolType>::writeData()
 {
 	pvd << "\t\t<DataSet part=\"0\" timestep=\"";
 	if (cur_t == 0.0)
@@ -120,7 +123,8 @@ void Acid2dRecSolver::writeData()
 
 	qcells << endl;
 }
-void Acid2dRecSolver::analyzeNewtonConvergence()
+template<class SolType>
+void Acid2dRecSolver<SolType>::analyzeNewtonConvergence()
 {
     int control_period = 0;
     const double control_time = 1.E-5 * 3600.0 / t_dim;
@@ -155,7 +159,8 @@ void Acid2dRecSolver::analyzeNewtonConvergence()
         }
     }
 }
-void Acid2dRecSolver::control()
+template<class SolType>
+void Acid2dRecSolver<SolType>::control()
 {
 	writeData();
 
@@ -180,12 +185,13 @@ void Acid2dRecSolver::control()
 
 	cur_t += model->ht;
 }
-void Acid2dRecSolver::start()
+template<class SolType>
+void Acid2dRecSolver<SolType>::start()
 {
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-50, 1.e-24, 1.e+4);
+	solver.Init(strNum, 1.e-50, 1.e-18, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 
@@ -210,7 +216,8 @@ void Acid2dRecSolver::start()
 	model->snapshot_all(step_idx);
 	writeData();
 }
-bool Acid2dRecSolver::doNextSmartStep()
+template<class SolType>
+bool Acid2dRecSolver<SolType>::doNextSmartStep()
 {
     init_step_res.clear();
     final_step_res.clear();
@@ -219,7 +226,14 @@ bool Acid2dRecSolver::doNextSmartStep()
         return false;
     return true;
 }
-void Acid2dRecSolver::copySolution(const paralution::LocalVector<double>& sol)
+template<class SolType>
+template<class VecType>
+void Acid2dRecSolver<SolType>::copySolution(const VecType& sol)
+{
+}
+template<>
+template<>
+void Acid2dRecSolver<ParSolver>::copySolution(const paralution::LocalVector<double>& sol)
 {
 	for (int i = 0; i < model->cellsNum; i++)
 	{
@@ -228,7 +242,19 @@ void Acid2dRecSolver::copySolution(const paralution::LocalVector<double>& sol)
 			cell.u_next.values[j] += sol[i * var_size + j];
 	}
 }
-void Acid2dRecSolver::checkStability()
+template<>
+template<>
+void Acid2dRecSolver<HypreSolver>::copySolution(const HypreSolver::Vector& sol)
+{
+	for (int i = 0; i < model->cellsNum; i++)
+	{
+		auto& cell = model->cells[i];
+		for (int j = 0; j < var_size; j++)
+			cell.u_next.values[j] += sol[i * var_size + j];
+	}
+}
+template<class SolType>
+void Acid2dRecSolver<SolType>::checkStability()
 {
 	auto barelyMobilLeft = [this](double s_cur, double s_crit) -> double
 	{
@@ -263,7 +289,8 @@ void Acid2dRecSolver::checkStability()
 		checkMaxResidual(data.u_next, data.u_iter);
 	}*/
 }
-void Acid2dRecSolver::checkVariables()
+template<class SolType>
+void Acid2dRecSolver<SolType>::checkVariables()
 {
 	for (auto cell : model->cells)
 	{
@@ -281,7 +308,13 @@ void Acid2dRecSolver::checkVariables()
 			cell.u_next.xw = 0.0;
 	}
 }
-bool Acid2dRecSolver::solveSmartStep()
+template<class SolType>
+bool Acid2dRecSolver<SolType>::solveSmartStep()
+{
+	return true;
+}
+template<>
+bool Acid2dRecSolver<HypreSolver>::solveSmartStep()
 {
 	int cellIdx, varIdx;
 	err_newton = 1.0;
@@ -289,7 +322,65 @@ bool Acid2dRecSolver::solveSmartStep()
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
 	bool isHarder = (curTimePeriod == 0) ? false : true;
-    bool isInit = false;// (cur_t < 0.001 / t_dim) ? false : true;
+	bool isInit = false;// (cur_t < 0.001 / t_dim) ? true : false;
+
+	auto continueIterations = [this]()
+	{
+		bool result = false;
+
+		for (const auto& val : dAverVal)
+			if (val > CONV_VAR)
+				result = true;
+
+		return result * (err_newton > CONV_W2) * (iterations < MAX_ITER);
+	};
+	while (continueIterations())
+	{
+		copyIterLayer();
+
+		computeJac();
+		fill();
+		solver.Assemble(cols, ind_i, ind_j, a, elemNum, ind_rhs, rhs);
+		solver.Solve();
+		init_step_res.push_back(solver.init_res);
+		final_step_res.push_back(solver.final_res);
+		//iter_num.push_back(solver.iter_num);
+
+		//if (init_step_res.back() >= 2.0 * final_step_res.back())
+		//{
+			copySolution(solver.getSolution());
+
+			checkStability();
+			err_newton = convergance(cellIdx, varIdx);
+			if (iterations == 0)
+				err_newton_first = err_newton;
+
+			averValue(averVal);
+			for (int i = 0; i < Acid2dRecModel::var_size; i++)
+				dAverVal[i] = fabs(averVal[i] - averValPrev[i]);
+			averValPrev = averVal;
+		//}
+		//else
+		//	return false;
+		iterations++;
+		model->snapshot_all(iterations);
+	}
+
+	checkVariables();
+
+	cout << "Newton Iterations = " << iterations << endl;
+	return true;
+}
+template<>
+bool Acid2dRecSolver<ParSolver>::solveSmartStep()
+{
+	int cellIdx, varIdx;
+	err_newton = 1.0;
+	averValue(averValPrev);
+	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
+	iterations = 0;
+	bool isHarder = (curTimePeriod == 0) ? false : true;
+	bool isInit = false;// (cur_t < 0.001 / t_dim) ? true : false;
 
 	auto continueIterations = [this]()
 	{
@@ -330,6 +421,7 @@ bool Acid2dRecSolver::solveSmartStep()
         else
             return false;
 		iterations++;
+		model->snapshot_all(iterations);
 	}
 
 	checkVariables();
@@ -337,7 +429,8 @@ bool Acid2dRecSolver::solveSmartStep()
 	cout << "Newton Iterations = " << iterations << endl;
     return true;
 }
-void Acid2dRecSolver::computeJac()
+template<class SolType>
+void Acid2dRecSolver<SolType>::computeJac()
 {
 	const Regime reg = (curTimePeriod == 0) ? INJECTION : STOP;
 	trace_on(0);
@@ -375,11 +468,22 @@ void Acid2dRecSolver::computeJac()
 
 	trace_off();
 }
-void Acid2dRecSolver::fill()
+template<class SolType>
+void Acid2dRecSolver<SolType>::fill()
 {
 	sparse_jac(0, strNum, strNum, repeat,
 		x, &elemNum, (unsigned int**)(&ind_i), (unsigned int**)(&ind_j), &a, options);
 
-	for(int i = 0; i < strNum; i++)
+	for (int i = 0; i < strNum; i++)
+	{
+		cols[i] = 0;
 		rhs[i] = -y[i];
+	}
+
+	for (int i = 0; i < elemNum; i++)
+		cols[ind_i[i]]++;
+
 }
+
+template class Acid2dRecSolver<ParSolver>;
+template class Acid2dRecSolver<HypreSolver>;

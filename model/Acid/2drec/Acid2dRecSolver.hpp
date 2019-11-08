@@ -6,11 +6,13 @@
 #include "model/AbstractSolver.hpp"
 #include "model/Acid/2drec/Acid2dRecModel.hpp"
 #include "method/ParalutionInterface.h"
+#include "method/HypreInterface.hpp"
 
 namespace acid2drec
 {
 	static const int stencil = 5;
 
+	template<class SolType>
 	class Acid2dRecSolver : public AbstractSolver<Acid2dRecModel>
 	{
 	protected:
@@ -33,7 +35,7 @@ namespace acid2drec
 		int step_idx;
 
 		std::ofstream S, P, qcells, pvd;
-		ParSolver solver;
+		SolType solver;
 
 		int strNum;
 		int* ind_i;
@@ -52,7 +54,8 @@ namespace acid2drec
 		void checkStability();
 		void computeJac();
 		void fill();
-		void copySolution(const paralution::LocalVector<double>& sol);
+		template<class VecType>
+		void copySolution(const VecType& sol);
 		void fillIndices()
 		{
 			int counter = 0;
