@@ -1126,7 +1126,7 @@ namespace issues
 		Properties* props = new Properties;
 		props->prefix = "snaps/";
 
-		props->ht = 0.00000001;
+		props->ht = 0.00001;
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
 

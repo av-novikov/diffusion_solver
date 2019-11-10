@@ -44,6 +44,7 @@ Acid2dRecSolver<SolType>::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolv
 
     MAX_INIT_RES[0].first = 5.E-9;     MAX_INIT_RES[0].second = 2.E-8;         
     MAX_INIT_RES[1].first = 5.E-8;      MAX_INIT_RES[1].second = 2.E-7;
+
 	MULT_UP = MULT_DOWN = 1.5;
 
 	P.open(model->prefix + "P.dat", ofstream::out);
@@ -173,8 +174,8 @@ void Acid2dRecSolver<SolType>::control()
 
     analyzeNewtonConvergence();
 
-	//if (INCREASE_STEP && model->ht > 0.1 * cur_t)
-	//	INCREASE_STEP = false;
+	if (INCREASE_STEP && model->ht > 0.08 * cur_t)
+		INCREASE_STEP = false;
 
     MULT_UP = MULT_DOWN = 1.5;
     if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
@@ -191,7 +192,7 @@ void Acid2dRecSolver<SolType>::start()
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-50, 1.e-18, 1.e+4);
+	solver.Init(strNum, 1.e-30, 1.e-14, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 
@@ -363,7 +364,7 @@ bool Acid2dRecSolver<HypreSolver>::solveSmartStep()
 		//else
 		//	return false;
 		iterations++;
-		model->snapshot_all(iterations);
+		//model->snapshot_all(iterations+1);
 	}
 
 	checkVariables();
