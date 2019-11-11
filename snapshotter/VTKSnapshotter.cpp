@@ -1715,9 +1715,9 @@ void VTKSnapshotter<acid2drec::Acid2dRecModel>::dump_all(int i)
 	conc_s->SetName("SaltConcentration");
 	//auto reaction = vtkSmartPointer<vtkDoubleArray>::New();
 	//reaction->SetName("ReactionSpeed");
-	//auto vel = vtkSmartPointer<vtkDoubleArray>::New();
-	//vel->SetName("Velocity");
-	//vel->SetNumberOfComponents(3);
+	auto vel = vtkSmartPointer<vtkDoubleArray>::New();
+	vel->SetName("WaterVelocity");
+	vel->SetNumberOfComponents(3);
 	//auto darmkoller = vtkSmartPointer<vtkDoubleArray>::New();
 	//darmkoller->SetName("Darmkoller");
 
@@ -1737,6 +1737,8 @@ void VTKSnapshotter<acid2drec::Acid2dRecModel>::dump_all(int i)
 			conc_w->InsertNextValue(next.xw);
 			conc_s->InsertNextValue(next.xs);
 			conc_co2->InsertNextValue(1.0 - next.xw - next.xa - next.xs);
+			const auto vels = model->getWaterVelocity(cell);
+			vel->InsertNextTuple(vels.data());
 		}
 	}
 	vtkCellData* fd = grid->GetCellData();
@@ -1749,6 +1751,7 @@ void VTKSnapshotter<acid2drec::Acid2dRecModel>::dump_all(int i)
 	fd->AddArray(conc_w);
 	fd->AddArray(conc_s);
 	fd->AddArray(conc_co2);
+	fd->AddArray(vel);
 	//fd->AddArray(reaction);
 	//fd->AddArray(vel);
 	//fd->AddArray(darmkoller);

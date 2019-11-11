@@ -158,7 +158,7 @@ namespace acid2drec
             else
                 return 0.0;
 		};
-        inline std::array<double, 3> getWaterVelocity(const Cell& cell) const
+		inline std::array<double, 3> getWaterVelocity(const Cell& cell) const
         {
             int neighbor[NEBRS_NUM];
             getNeighborIdx(cell.num, neighbor);
@@ -175,36 +175,6 @@ namespace acid2drec
 			vel_z = 0.0;// transmissivity * (cells_poro[neighbor[5]].u_next.p - cells_poro[neighbor[4]].u_next.p) / (cells_poro[neighbor[5]].z - cells_poro[neighbor[4]].z);
             return{ vel_x, vel_y, vel_z };
         };
-		/*inline double getFracDistance(const int idx1, const int idx2) const
-		{
-			const auto& cell1 = cells_frac[idx1];
-			const auto& cell2 = cells_frac[idx2];
-			return point::distance(cell1.c, cell2.c, (cell1.c + cell2.c) / 2.0);
-		};*/
-		/*inline adouble getFlowLeakNew(const FracCell& cell)
-		{
-			const auto& grid = poro_grids[frac2poro[cells_frac[getRowOuter(cell.num)].num]];
-			const auto& beta = cells_frac[grid.frac_nebr->num];
-			assert(beta.type == FracType::FRAC_OUT);
-			
-			const auto& next = x_poro[grid.start_idx];
-			const auto& nebr = x_frac[beta.num];
-			
-			return -props_frac.w2 * props_frac.w2 / 3.0 / props_w.visc * (next.p - nebr.p) / (grid.cells[0].x - beta.y);
-		}
-		inline adouble getQuadAppr(const std::array<adouble, 3> p, const std::array<double, 3> x, const double cur_x) const
-		{
-			const double den = (x[0] - x[1]) * (x[0] - x[2]) * (x[1] - x[2]);
-			adouble a = (	p[2] * (x[0] - x[1]) +
-							p[0] * (x[1] - x[2]) + 
-							p[1] * (x[2] - x[0])				) / den;
-			adouble b = (	p[2] * (x[1] * x[1] - x[0] * x[0]) + 
-							p[0] * (x[2] * x[2] - x[1] * x[1]) + 
-							p[1] * (x[0] * x[0] - x[2] * x[2])	) / den;
-			adouble c = (	p[2] * x[0] * x[1] * (x[0] - x[1]) +
-							x[2] * (p[0] * x[1] * (x[1] - x[2]) + p[1] * x[0] * (x[2] - x[0]))) / den;
-			return a * cur_x * cur_x + b * cur_x + c;
-		};*/
 		inline void getNeighborIdx(const int cur, int* const neighbor) const
 		{
 			neighbor[0] = cur - 1;

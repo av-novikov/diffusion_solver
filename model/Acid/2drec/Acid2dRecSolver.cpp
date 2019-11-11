@@ -98,22 +98,12 @@ void Acid2dRecSolver<SolType>::writeData()
 
 	P << cur_t * t_dim / 3600.0 << "\t" << pres / model->cellsNum_x * model->P_dim / BAR_TO_PA << endl;
 
-	/*const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
-	double mean_trans = 0.0, Cfd_inv = 0.0, cur_trans;
-	int i_ind;// , k_ind;
-	for (int i = 0; i < model->trans.size(); i++)
+	double perm = 0.0;
+	for (int i = 1; i < model->cellsNum_y + 1; i++)
 	{
-		cur_trans = model->trans[i] * model->widths[i] * model->R_dim * k0;
-		mean_trans += cur_trans / model->trans.size();
-
-		//k_ind = int(i % model->cellsNum_z) + 1;
-		i_ind = int(i / model->cellsNum_z) + 1;
-		const auto& pcell = model->cells_poro[(model->cellsNum_y_poro + 2) * (/*k_ind + (model->cellsNum_z + 2) // i_ind)];
-	//	Cfd_inv += k0 * pcell.hx * model->R_dim / cur_trans;
-	//}
-	/*Cfd_inv = 1.0 / Cfd_inv;
-
-	trans << cur_t * t_dim / 3600.0 << "\t" << mean_trans << "\t" << Cfd_inv << endl;*/
+		const auto& cell = model->cells[model->cellsNum_y + 2 + i];
+		perm += cell.hy / cell.props->getPermCoseni(cell.u_next.m, cell.u_next.p).value();
+	}
 
 	double cum_vol = 0.0;
 	for (const auto& cell : model->cells)
@@ -121,6 +111,7 @@ void Acid2dRecSolver<SolType>::writeData()
 		cum_vol += (cell.props->m_init - cell.u_next.m) * cell.V * model->R_dim * model->R_dim * model->R_dim;
 	}
 	qcells << "\t" << cum_vol;
+	qcells << "\t" << model->hy / model->props_sk[0].perm / perm;
 
 	qcells << endl;
 }
