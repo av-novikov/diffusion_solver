@@ -95,8 +95,8 @@ void HypreSolver::Solve()
 	res = HYPRE_ParCSRBiCGSTABSetPrintLevel(solver, 10);
 	res = HYPRE_ParCSRBiCGSTABSetLogging(solver, 10);
 
-	res = HYPRE_EuclidSetLevel(precond, 1);
-	//res = HYPRE_EuclidSetILUT(precond, 1.E-10);
+	//res = HYPRE_EuclidSetLevel(precond, 1);
+	res = HYPRE_EuclidSetILUT(precond, 1.E-10);
 	res = HYPRE_ParCSRBiCGSTABSetPrecond(solver, (HYPRE_PtrToParSolverFcn)HYPRE_EuclidSolve,
 		(HYPRE_PtrToParSolverFcn)HYPRE_EuclidSetup, precond);
 	HYPRE_Solver precon_gotten;

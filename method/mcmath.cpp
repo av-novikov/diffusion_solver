@@ -1,5 +1,6 @@
 #include <time.h>
 #include "method/mcmath.h"
+#include "util/utils.h"
 
 
 //#include "math/deriv.h"
@@ -727,8 +728,6 @@ void MC_Cholesky :: Cholesky_Decomposition(const int _infoID)
   isspd = (ni == nj);
  //   Assert(ni == nj);
 
- 
-
   {  double d,s;
       // Main loop.
      for (int j = 0; j < ni; j++){
@@ -742,7 +741,6 @@ void MC_Cholesky :: Cholesky_Decomposition(const int _infoID)
             d = d + s*s;
             isspd = isspd && (ptMatrix[k][j] == ptMatrix[j][k]); 
          }
-
 
          d = ptMatrix[j][j] - d;
          isspd = isspd && (d > 0.0);

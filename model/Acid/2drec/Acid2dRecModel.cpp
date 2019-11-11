@@ -1,6 +1,8 @@
 #include "model/Acid/2drec/Acid2dRecModel.hpp"
 #include <assert.h>
+#include "method/mcmath.h"
 #include <numeric>
+#include <random>
 
 using namespace acid2drec;
 
@@ -20,9 +22,9 @@ Acid2dRecModel::~Acid2dRecModel()
 }
 void Acid2dRecModel::setProps(Properties& props)
 {
+	fieldData = props.fieldData;
     prefix = props.prefix;
 	props_sk = props.props_sk;
-	skeletonsNum = props.props_sk.size();
 
 	rightBoundIsPres = props.rightBoundIsPres;
 	hx = props.hx;	hy = props.hy;	hz = props.hz;
@@ -34,9 +36,19 @@ void Acid2dRecModel::setProps(Properties& props)
 
 	cellsNum = (cellsNum_y + 2) * (cellsNum_x + 2);
 
-	skeletonsNum = props.props_sk.size();
+	if(!fieldData)
+		skeletonsNum = props.props_sk.size();
+	else
+	{
+		skeletonsNum = cellsNum_x * cellsNum_y;
+		for (int i = 1; i < skeletonsNum; i++)
+		{
+			props_sk.push_back(props_sk[0]);
+		}
+	}
 	for (int j = 0; j < skeletonsNum; j++)
 	{
+		props_sk[j].id = j;
 		props_sk[j].perm = MilliDarcyToM2(props_sk[j].perm);
 	}
 
@@ -244,11 +256,63 @@ void Acid2dRecModel::setPeriod(int period)
 	}
 	c = cs[period];
 }
+void Acid2dRecModel::calcCorrelatedPermeability(const double sigma, const double lam)
+{
+	std::random_device rd{};
+	std::mt19937 gen{ rd() };
+	std::normal_distribution<double> d{ 0, sigma };
+
+	const int size = cellsNum_x * cellsNum_y;
+	MCMatrix covar(size, size);
+	MCVector ran(size), res(size);
+	double dist, cur_cov;
+	int i1, j1, i2, j2;
+	for (int i = 0; i < size; i++)
+	{
+		i1 = i / cellsNum_y;
+		j1 = i % cellsNum_y;
+		const Cell& cell1 = cells[j1 + 1 + (i1 + 1) * (cellsNum_y + 2)];
+		for (int j = i; j < size; j++)
+		{
+			i2 = j / cellsNum_y;
+			j2 = j % cellsNum_y;
+			const Cell& cell2 = cells[j2 + 1 + (i2 + 1) * (cellsNum_y + 2)];
+			assert(cell1.V > 0.0 && cell2.V > 0.0);
+ 			dist = sqrt((cell2.x - cell1.x) * (cell2.x - cell1.x) +
+						(cell2.y - cell1.y) * (cell2.y - cell1.y));
+			cur_cov = exp(-dist / lam);
+			covar[i][j] = covar[j][i] = cur_cov;
+		}
+		ran[i] = d(gen);
+	}
+
+	MC_Cholesky chol(covar);
+	chol.Cholesky_Decomposition();
+	assert(chol.isSPD());
+	if (chol.isSPD())
+		res = chol.Cholesky_Matrix.Transpose() * ran;
+
+	for (int i = 0; i < size; i++)
+	{
+		auto& sk = props_sk[i];
+		sk.perm *= exp(res[i]);
+		if (sk.perm < 0.0)
+			sk.perm = 0.0;
+	}
+}
 void Acid2dRecModel::setInitialState() 
 {
+	if (fieldData)
+	{
+		const double perm_av = props_sk[0].perm;
+		calcCorrelatedPermeability(0.5, 0.05 / R_dim);
+	}
+
 	for (auto& cell : cells)
 	{
-		cell.props = &props_sk[getSkeletonId(cell)];
+		const int prop_id = getSkeletonId(cell);
+		auto& sk = props_sk[prop_id];
+		cell.props = &props_sk[prop_id];
 		cell.u_prev.m = cell.u_iter.m = cell.u_next.m = cell.props->m_init;
 		cell.u_prev.p = cell.u_iter.p = cell.u_next.p = cell.props->p_init;
 		cell.u_prev.sw = cell.u_iter.sw = cell.u_next.sw = cell.props->sw_init;
@@ -419,7 +483,7 @@ TapeVariable Acid2dRecModel::solveBorder(const Cell& cell)
 	if (cell.type == Type::LEFT)
 		beta_idx = cell.num + cellsNum_y + 2;
 	else if (cell.type == Type::RIGHT)
-		beta_idx = cell.num - cellsNum_y + 2;
+		beta_idx = cell.num - cellsNum_y - 2;
 	const auto& beta = cells[beta_idx];
 	const auto& props = *cell.props;
 

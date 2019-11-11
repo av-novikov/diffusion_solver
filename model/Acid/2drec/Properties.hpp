@@ -2,6 +2,7 @@
 #define ACID2DREC_PROPERTIES_HPP_
 
 #include <array>
+#include <valarray>
 
 #include "model/Basic1d/Properties.hpp"
 #include "model/Acid/2drec/Reactions.hpp"
@@ -18,11 +19,11 @@ namespace acid2drec
 		double w2, l2, height;
 		double p_init, c_init;
 	};
-	struct Skeleton_Props : public basic1d::Skeleton_Props
+	struct Skeleton_Props
 	{
+		int id;
 		//SolidComponent cur_mineral;
 		double xa_eqbm;
-
 		// Initial values
 		double p_init;
 		double t_init;
@@ -51,19 +52,27 @@ namespace acid2drec
 			//adouble m = getPoro(m0, p);
 			return perm * exp(A * (m0 - m_init));
 		};
-        inline adouble getPoroCoseni(const adouble& k) const
-        {
-            return m_init + 1.0 / A * log(k / perm);
-        };
-		inline double getInitDiam(double m_init, double k0)
-		{
-			return sqrt(150.0 * k0 * (1.0 - m_init) * (1.0 - m_init) / m_init / m_init / m_init);
-		};
-
 		inline adouble getDensity(const adouble& p) const
 		{
 			return dens_stc;
 		};
+
+		double beta;
+		double dens_stc;
+		double perm;
+		double m_init;
+		double p_ref;
+		// Top and bottom depth of perforation
+		double h1, h2;
+		// Height of formation [m]
+		double height;
+		// Connate saturations
+		double s_wc, s_oc, s_gc;
+
+		double p_out;
+
+		double hx, hy, hz;
+		int cellsNum;
 	};
 	struct Water_Props : public basic1d::Liquid_Props
 	{
@@ -177,6 +186,7 @@ namespace acid2drec
         double R_dim;
 
         std::string prefix;
+		bool fieldData;
 	};
 };
 

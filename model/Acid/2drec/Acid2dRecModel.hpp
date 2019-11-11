@@ -47,6 +47,7 @@ namespace acid2drec
 		int cellsNum, cellsNum_x, cellsNum_y;
 		double Volume;
 		std::vector<Cell> cells;
+		std::valarray<double> permArr;
 		double hx, hy, hz;
 		
 		// Temporary properties
@@ -61,6 +62,7 @@ namespace acid2drec
 		bool rightBoundIsPres;
 		// Snapshotter
 		bool isWriteSnaps;
+		bool fieldData;
 		Snapshotter<acid2drec::Acid2dRecModel>* snapshotter;
 
 		void buildGrid();
@@ -69,6 +71,7 @@ namespace acid2drec
 		void makeDimLess();
 		void setInitialState();
 		void setPerforated();
+		void calcCorrelatedPermeability(const double sigma, const double lam);
 		// Service functions
 		// Schemes
 		TapeVariable solve(const Cell& cell, const Regime reg);
@@ -79,34 +82,23 @@ namespace acid2drec
 		// Service calculations
 		const int getSkeletonId(const Cell& cell) const
 		{
-			// Random
-			/*const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
-			const int k_idx = int((cell.num - i_idx * (cellsNum_y_poro + 2) * (cellsNum_z + 2)) / (cellsNum_y_poro + 2));
-			int i_idx_modi = i_idx - 1;
-			if (i_idx_modi < 0)
-				i_idx_modi = 0;
-			if (i_idx_modi == cellsNum_x)
-				i_idx_modi = cellsNum_x - 1;
+			if (fieldData)
+			{
+				int i_idx = cell.num / (cellsNum_y + 2);
+				int j_idx = cell.num % (cellsNum_y + 2);
+				if (i_idx == 0)
+					i_idx += 1;
+				if (i_idx == cellsNum_x + 1)
+					i_idx -= 1;
+				if (j_idx == 0)
+					j_idx += 1;
+				if (j_idx == cellsNum_y + 1)
+					j_idx -= 1;
 
-			int k_idx_modi = k_idx - 1;
-			if (k_idx_modi < 0)
-				k_idx_modi = 0;
-			if (k_idx_modi == cellsNum_z)
-				k_idx_modi = cellsNum_z - 1;
-
-			return i_idx_modi * cellsNum_z + k_idx_modi;*/
-
-			// Example
-			/*const int i_idx = int(cell.num / ((cellsNum_y_poro + 2) * (cellsNum_z + 2)));
-			const int k_idx = int((cell.num - i_idx * (cellsNum_y_poro + 2) * (cellsNum_z + 2)) / (cellsNum_y_poro + 2));
-			
-			int k_idx_modi = k_idx - 1;
-			if (k_idx_modi < 0)
-				k_idx_modi = 0;
-			if (k_idx_modi == cellsNum_z)
-				k_idx_modi = cellsNum_z - 1;
-			return k_idx_modi;*/
-			return 0;
+				return (i_idx - 1) * cellsNum_y + (j_idx - 1);
+			}
+			else
+				return 0;
 		}
 		inline int getUpwindIdx(const Cell& cell, const Cell& beta) const
 		{
@@ -229,6 +221,8 @@ namespace acid2drec
 			else
 				return 1.0;
 		};
+
+
 	public:
 		// Dimensions
 		double t_dim, R_dim, P_dim, T_dim, Q_dim, grav;

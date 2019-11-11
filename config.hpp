@@ -1138,7 +1138,7 @@ namespace issues
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(50.0 * 1.0e+5);
+		props->pwf.push_back(200.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
@@ -1149,10 +1149,11 @@ namespace issues
 		props->hx = 0.1;
 		props->hy = 0.2;
 		props->hz = 0.1;
-		props->cellsNum_x = 1;
-		props->cellsNum_y = 100;
+		props->cellsNum_x = 40;
+		props->cellsNum_y = 80;
 		props->R_dim = 5000.0 * props->hx;
 
+		props->fieldData = true;
 		acid2drec::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
 		props_sk.m_max = 0.3;

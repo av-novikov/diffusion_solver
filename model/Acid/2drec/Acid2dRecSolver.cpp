@@ -42,8 +42,8 @@ Acid2dRecSolver<SolType>::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolv
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 5.E-9;     MAX_INIT_RES[0].second = 2.E-8;         
-    MAX_INIT_RES[1].first = 5.E-8;      MAX_INIT_RES[1].second = 2.E-7;
+    MAX_INIT_RES[0].first = 5.E-9;	MAX_INIT_RES[0].second = 2.E-8;         
+    MAX_INIT_RES[1].first = 5.E-8;	MAX_INIT_RES[1].second = 2.E-7;
 
 	MULT_UP = MULT_DOWN = 1.5;
 
@@ -174,8 +174,8 @@ void Acid2dRecSolver<SolType>::control()
 
     analyzeNewtonConvergence();
 
-	if (INCREASE_STEP && model->ht > 0.08 * cur_t)
-		INCREASE_STEP = false;
+	//if (INCREASE_STEP && model->ht > 0.05 * cur_t)
+	//	INCREASE_STEP = false;
 
     MULT_UP = MULT_DOWN = 1.5;
     if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
@@ -381,7 +381,7 @@ bool Acid2dRecSolver<ParSolver>::solveSmartStep()
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
 	bool isHarder = (curTimePeriod == 0) ? false : true;
-	bool isInit = false;// (cur_t < 0.001 / t_dim) ? true : false;
+	bool isInit = true;// (cur_t < 0.001 / t_dim) ? true : false;
 
 	auto continueIterations = [this]()
 	{
@@ -422,7 +422,7 @@ bool Acid2dRecSolver<ParSolver>::solveSmartStep()
         else
             return false;
 		iterations++;
-		model->snapshot_all(iterations);
+		//model->snapshot_all(iterations);
 	}
 
 	checkVariables();
