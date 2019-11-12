@@ -217,7 +217,7 @@ void Acid2dRecModel::setPerforated()
 	vector<pair<int, int> >::iterator it;
 	for (const auto& cell : cells)
 	{
-		if (cell.type == Type::LEFT)
+		if (cell.type == Type::BOTTOM)
 		{
 			Qcell[cell.num] = 0.0;
 			height_perf += cell.hx * cell.hz;
