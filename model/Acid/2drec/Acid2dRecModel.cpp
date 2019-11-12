@@ -52,7 +52,7 @@ void Acid2dRecModel::setProps(Properties& props)
 		props_sk[j].perm = MilliDarcyToM2(props_sk[j].perm);
 	}
 
-	periodsNum = props.timePeriods.size();
+	periodsNum = props.LeftBoundIsRate.size();
 	rate.resize(periodsNum);
 	pwf.resize(periodsNum);
 	int rate_idx = 0, pres_idx = 0;

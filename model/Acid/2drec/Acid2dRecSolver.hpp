@@ -33,6 +33,7 @@ namespace acid2drec
 		std::array<double, var_size> averVal, averValPrev, dAverVal;
 		double err_newton_first, err_newton;
 		int step_idx;
+		double rel_tol, abs_tol;
 
 		std::ofstream S, P, qcells, pvd;
 		SolType solver;

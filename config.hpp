@@ -1128,29 +1128,31 @@ namespace issues
 
 		props->ht = 0.00001;
 		props->ht_min = props->ht;
-		props->ht_max = 10.0;
+		props->ht_max = 1000.0;
 
-		props->timePeriods.push_back(0.15 * 3600.0);
+		props->timePeriods.push_back(0.01 * 3600.0);
+		props->timePeriods.push_back(10.0 * 3600.0);
 		//props->timePeriods.push_back(1.5 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
+		props->LeftBoundIsRate.push_back(true);
 		props->LeftBoundIsRate.push_back(true);
 		//props->LeftBoundIsRate.push_back(false);
 		//props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
 		//props->pwf.push_back(200.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
-		props->rates.push_back(-0.1);
-		//props->rates.push_back(0.0);
+		props->rates.push_back(0.001);
+		props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
-		//props->cs.push_back(0.0);
+		props->cs.push_back(0.0);
 		props->max_acid_volume = 1.E-4;
 
 		props->hx = 0.1;
 		props->hy = 0.2;
 		props->hz = 0.1;
 		props->cellsNum_x = 1;
-		props->cellsNum_y = 150;
+		props->cellsNum_y = 200;
 		props->R_dim = 5000.0 * props->hx;
 
 		props->fieldData = false;

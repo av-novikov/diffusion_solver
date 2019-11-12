@@ -42,8 +42,8 @@ Acid2dRecSolver<SolType>::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolv
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 5.E-9;	MAX_INIT_RES[0].second = 2.E-8;         
-    MAX_INIT_RES[1].first = 5.E-9;	MAX_INIT_RES[1].second = 2.E-8;
+    MAX_INIT_RES[0].first = 1.E-8;	MAX_INIT_RES[0].second = 5.E-8;         
+    MAX_INIT_RES[1].first = 5.E-8;	MAX_INIT_RES[1].second = 2.E-7;
 
 	MULT_UP = MULT_DOWN = 1.5;
 
@@ -119,7 +119,7 @@ template<class SolType>
 void Acid2dRecSolver<SolType>::analyzeNewtonConvergence()
 {
     int control_period = 0;
-    const double control_time = 1.E-5 * 3600.0 / t_dim;
+    const double control_time = 1.E-3 * 3600.0 / t_dim;
     DECREASE_STEP = false;
     INCREASE_STEP = true;
     for (int i = 0; i < int(init_step_res.size()) - 1; i++)
@@ -156,7 +156,8 @@ void Acid2dRecSolver<SolType>::control()
 {
 	writeData();
 
-	if (/*cur_t >= model->period[curTimePeriod]*/ model->injected_acid_volume >= model->max_acid_volume && curTimePeriod == 0)
+	if ((model->injected_acid_volume >= model->max_acid_volume && curTimePeriod == 0) ||
+		(cur_t >= model->period[curTimePeriod] && curTimePeriod == 1))
 	{
 		curTimePeriod++;
 		model->ht = model->ht_min;
@@ -165,12 +166,15 @@ void Acid2dRecSolver<SolType>::control()
 
     analyzeNewtonConvergence();
 
-	//if (INCREASE_STEP && model->ht > 0.05 * cur_t)
+	//if (INCREASE_STEP && model->ht > 0.15 * cur_t)
 	//	INCREASE_STEP = false;
 
-    MULT_UP = MULT_DOWN = 1.5;
-    if(INCREASE_STEP && ((model->ht <= 5.0 * model->ht_max && curTimePeriod == 0) || 
-                        (model->ht <= 0.5 * model->ht_max && curTimePeriod == 1)))
+	MULT_UP = MULT_DOWN = 1.5;
+	if (init_step_res.size() > 0 && init_step_res[0] < 1.E-25)
+		MULT_UP = 3.0;
+
+    if (INCREASE_STEP && ((model->ht <= model->ht_max && curTimePeriod == 0) || 
+                        (model->ht <= model->ht_max && curTimePeriod == 1)))
         model->ht = model->ht * MULT_UP;
     else if (DECREASE_STEP)
         model->ht = model->ht / MULT_DOWN;
@@ -183,7 +187,9 @@ void Acid2dRecSolver<SolType>::start()
 	step_idx = 0;
 
 	fillIndices();
-	solver.Init(strNum, 1.e-30, 1.e-14, 1.e+4);
+	rel_tol = 1.E-14;
+	abs_tol = 1.E-30;
+	solver.Init(strNum, abs_tol, rel_tol, 1.e+4);
 
 	model->setPeriod(curTimePeriod);
 
@@ -372,7 +378,7 @@ bool Acid2dRecSolver<ParSolver>::solveSmartStep()
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
 	bool isHarder = (curTimePeriod == 0) ? false : true;
-	bool isInit = true;// (cur_t < 0.001 / t_dim) ? true : false;
+	bool isInit = (curTimePeriod == 0) ? true : false;
 
 	auto continueIterations = [this]()
 	{
@@ -391,7 +397,7 @@ bool Acid2dRecSolver<ParSolver>::solveSmartStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE, isInit, 1);
+		solver.Solve(PRECOND::ILU_SIMPLE, isInit, 0);
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);

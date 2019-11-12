@@ -192,7 +192,6 @@ namespace acid2drec
 				return 1.0;
 		};
 
-
 	public:
 		// Dimensions
 		double t_dim, R_dim, P_dim, T_dim, Q_dim, grav;
