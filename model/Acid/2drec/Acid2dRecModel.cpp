@@ -230,11 +230,6 @@ void Acid2dRecModel::setPeriod(int period)
 	if (leftBoundIsRate)
 	{
 		Q_sum = rate[period];
-		if (Q_sum == 0.0)
-		{
-			for(auto& cell : cells)
-				cell.u_prev.xa = cell.u_iter.xa = cell.u_next.xa = 0.0;
-		}
 
 		if (period == 0 || rate[period - 1] < EQUALITY_TOLERANCE) 
 		{
