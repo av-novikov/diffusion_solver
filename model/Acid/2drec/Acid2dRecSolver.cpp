@@ -42,8 +42,8 @@ Acid2dRecSolver<SolType>::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolv
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 1.E-8;	MAX_INIT_RES[0].second = 5.E-8;         
-    MAX_INIT_RES[1].first = 5.E-8;	MAX_INIT_RES[1].second = 2.E-7;
+    MAX_INIT_RES[0].first = 2.E-8;	MAX_INIT_RES[0].second = 1.E-7;         
+    MAX_INIT_RES[1].first = 2.E-8;	MAX_INIT_RES[1].second = 1.E-7;
 
 	MULT_UP = MULT_DOWN = 1.5;
 
@@ -397,7 +397,7 @@ bool Acid2dRecSolver<ParSolver>::solveSmartStep()
 		computeJac();
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
-		solver.Solve(PRECOND::ILU_SIMPLE, isInit, 0);
+		solver.Solve(PRECOND::ILU_SIMPLE, false, 1);
         init_step_res.push_back(solver.init_res);
         final_step_res.push_back(solver.final_res);
         iter_num.push_back(solver.iter_num);
