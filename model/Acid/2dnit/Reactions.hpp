@@ -121,7 +121,7 @@ namespace acid2dnit
 		double surf_init;
 		double activation_energy;
 		double reaction_const;
-		inline adouble getReactionRate(double m0, double m_max, adouble m, adouble t) const
+		inline adouble getReactionRate(double m0, double m_max, const adouble& m, const adouble& t) const
 		{
 			return reaction_const * surf_init * pow((m_max - m) / (m_max - m0), 2) *
 				exp(-activation_energy / Component::R / t);
