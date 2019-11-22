@@ -62,7 +62,8 @@ namespace acid2drec
 		bool rightBoundIsPres;
 		// Snapshotter
 		bool isWriteSnaps;
-		bool fieldData;
+		bool fieldData, permFromFile;
+		std::string permFile;
 		Snapshotter<acid2drec::Acid2dRecModel>* snapshotter;
 
 		void buildGrid();
@@ -82,7 +83,7 @@ namespace acid2drec
 		// Service calculations
 		const int getSkeletonId(const Cell& cell) const
 		{
-			if (fieldData)
+			if (fieldData || permFromFile)
 			{
 				int i_idx = cell.num / (cellsNum_y + 2);
 				int j_idx = cell.num % (cellsNum_y + 2);

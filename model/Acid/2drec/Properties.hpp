@@ -184,8 +184,9 @@ namespace acid2drec
 		std::vector< std::pair<double, double> > rho_co2;
         double R_dim;
 
-        std::string prefix;
+        std::string prefix, permFile;
 		bool fieldData;
+		bool permFromFile;
 	};
 };
 

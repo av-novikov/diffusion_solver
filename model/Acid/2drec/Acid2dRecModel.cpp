@@ -23,6 +23,8 @@ Acid2dRecModel::~Acid2dRecModel()
 void Acid2dRecModel::setProps(Properties& props)
 {
 	fieldData = props.fieldData;
+	permFromFile = props.permFromFile;
+	permFile = props.permFile;
     prefix = props.prefix;
 	props_sk = props.props_sk;
 
@@ -36,9 +38,7 @@ void Acid2dRecModel::setProps(Properties& props)
 
 	cellsNum = (cellsNum_y + 2) * (cellsNum_x + 2);
 
-	if(!fieldData)
-		skeletonsNum = props.props_sk.size();
-	else
+	if(fieldData || permFromFile)
 	{
 		skeletonsNum = cellsNum_x * cellsNum_y;
 		for (int i = 1; i < skeletonsNum; i++)
@@ -46,6 +46,24 @@ void Acid2dRecModel::setProps(Properties& props)
 			props_sk.push_back(props_sk[0]);
 		}
 	}
+	else
+		skeletonsNum = props.props_sk.size();
+	if (permFromFile)
+	{
+		int idx_i, idx_j;
+		string buf;
+		ifstream perm(permFile.c_str(), std::ifstream::in);
+		while (buf != "PERMX") perm >> buf;
+		for (int i = 0; i < cellsNum_x * cellsNum_y; i++)
+		{
+			idx_i = i % cellsNum_x;
+			idx_j = i / cellsNum_x;
+			perm >> buf;
+			props_sk[idx_i * cellsNum_y + idx_j].perm = std::stod(buf);
+		}
+		perm.close();
+	}
+
 	for (int j = 0; j < skeletonsNum; j++)
 	{
 		props_sk[j].id = j;
