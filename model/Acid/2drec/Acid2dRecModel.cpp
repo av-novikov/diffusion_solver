@@ -322,9 +322,14 @@ void Acid2dRecModel::setInitialState()
 double Acid2dRecModel::getRate(const int idx) const
 {
 	const Cell& cell = cells[idx];
-	assert(cell.type == Type::BOTTOM);
+	assert(cell.type == Type::BOTTOM || cell.type == Type::TOP);
 	assert(cell.hx != 0.0 && cell.hz != 0.0);
-	const Cell& beta = cells[cell.num + 1];
+	int beta_idx;
+	if (cell.type == Type::BOTTOM)
+		beta_idx = cell.num + 1;
+	else
+		beta_idx = cell.num - 1;
+	const Cell& beta = cells[beta_idx];
 	const auto& next = x[cell.num];
 	const auto& nebr = x[beta.num];
 	return getTrans(cell, next, beta, nebr).value() / props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * (next.p.value() - nebr.p.value());

@@ -78,21 +78,27 @@ void Acid2dRecSolver<SolType>::writeData()
 		pvd << cur_t * t_dim / 3600.0;
 	pvd << "0\" file=\"Acid2dRec_" + std::to_string(step_idx) + ".vtu\"/>\n";
 
-	double rate = 0.0, acid_rate = 0.0, cur_rate, pres = 0.0;
+	double rate = 0.0, acid_rate = 0.0, rate_in, rate_out, pres = 0.0, reac_rate = 0.0, darm = 0.0;
 	for (int i = model->cellsNum_y + 2; i < (model->cellsNum_y + 2) * (model->cellsNum_x + 1); i += model->cellsNum_y + 2)
 	{
-		const auto& cell = model->cells[i];
-		assert(cell.type == Type::BOTTOM);
-		cur_rate = model->getRate(cell.num);
-		rate += cur_rate;
-		acid_rate += cur_rate * cell.u_next.xa;
-		pres += cell.u_next.p;
+		const auto& cell_in = model->cells[i];
+		const auto& cell_out = model->cells[i + model->cellsNum_y + 1];
+		assert(cell_in.type == Type::BOTTOM && cell_out.type == Type::TOP);
+		rate_in = model->getRate(cell_in.num);
+		rate_out = model->getRate(cell_out.num);
+		rate += rate_in;
+		acid_rate += rate_in * cell_in.u_next.xa - rate_out * cell_out.u_next.xa;
+		pres += cell_in.u_next.p;
 	}
 	model->injected_sol_volume += rate * model->ht;
 	model->injected_acid_volume += acid_rate * model->ht;
-
+	
+	reac_rate = model->reac.getReactionRate(model->props_sk[0].m_init, model->props_sk[0].m_max, model->props_sk[0].m_init).value();
 	qcells << cur_t * t_dim / 3600.0;
+	if (fabs(rate) > EQUALITY_TOLERANCE)
+		darm = reac_rate / (rate / model->Volume);
 	qcells << "\t" << rate * model->Q_dim * 86400.0;
+	qcells << "\t" << darm;
 	qcells << "\t" << model->injected_sol_volume * model->Q_dim * model->t_dim;
 	qcells << "\t" << model->injected_acid_volume * model->Q_dim * model->t_dim;
 
