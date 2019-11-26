@@ -42,8 +42,8 @@ Acid2dRecSolver<SolType>::Acid2dRecSolver(Acid2dRecModel* _model) : AbstractSolv
 	CONV_W2 = 1.e-5;		CONV_VAR = 1.e-10;
 	MAX_ITER = 20;
 
-    MAX_INIT_RES[0].first = 2.E-8;	MAX_INIT_RES[0].second = 1.E-7;         
-    MAX_INIT_RES[1].first = 2.E-8;	MAX_INIT_RES[1].second = 1.E-7;
+    MAX_INIT_RES[0].first = 5.E-8;	MAX_INIT_RES[0].second = 2.E-7;         
+    MAX_INIT_RES[1].first = 5.E-8;	MAX_INIT_RES[1].second = 2.E-7;
 
 	MULT_UP = MULT_DOWN = 1.5;
 
@@ -76,7 +76,7 @@ void Acid2dRecSolver<SolType>::writeData()
 		pvd << std::to_string(0.0);
 	else
 		pvd << cur_t * t_dim / 3600.0;
-	pvd << "0\" file=\"Acid2dRec_" + std::to_string(step_idx) + ".vtu\"/>\n";
+	pvd << "0\" file=\"Acid2dRec_" + std::to_string(step_idx) + ".vts\"/>\n";
 
 	double rate = 0.0, acid_rate = 0.0, rate_in, rate_out, pres = 0.0, reac_rate = 0.0, darm = 0.0;
 	for (int i = model->cellsNum_y + 2; i < (model->cellsNum_y + 2) * (model->cellsNum_x + 1); i += model->cellsNum_y + 2)
