@@ -95,7 +95,7 @@ void Acid2dRecSolver<SolType>::writeData()
 	
 	reac_rate = model->reac.getReactionRate(model->props_sk[0].m_init, model->props_sk[0].m_max, model->props_sk[0].m_init).value();
 	qcells << cur_t * t_dim / 3600.0;
-	if (fabs(rate) > EQUALITY_TOLERANCE)
+	if (fabs(rate) > 0.0)
 		darm = reac_rate / (rate / model->Volume);
 	qcells << "\t" << rate * model->Q_dim * 86400.0;
 	qcells << "\t" << darm;
