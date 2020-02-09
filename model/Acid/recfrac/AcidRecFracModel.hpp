@@ -31,6 +31,50 @@ namespace acidrecfrac
 	static const int var_frac_size = FracVariable::size;
 	const int NEBRS_NUM = 4;
 
+	class Wormhole
+	{
+	protected:
+		double length;
+		double r_in;
+		
+		const double getRadiusAtDistance(const double y) const
+		{
+			if (length > 0.0 && y <= length)
+			{
+				return r_in * (1.0 - y / length);
+			}
+			else
+				return 0.0;
+		}
+		static const double getVelocity(const double vel_y)
+		{
+			const double B = 1.0 - exp(-4.0 * vel_y * vel_y / v_opt / v_opt);
+			return pow(v_opt * vel_y * vel_y, 1.0 / 3.0) / pvbt_opt * B * B;
+		};
+	public:
+		Wormhole() { length = 0.0;	r_in = 0.0; }
+		~Wormhole() {};
+
+		static double n_per_m2;
+		static double v_opt;
+		static double pvbt_opt;
+
+		void calcTimeStep(const double dt, const double vel_y)
+		{
+			length += getVelocity(vel_y) * dt;
+			r_in = length / 10.0;
+		};
+		double getTransAtDistance(const double y) const
+		{
+			const double r = getRadiusAtDistance(y);
+			return r * r / 8.0 * M_PI * r * r;
+		}
+		double getLength() const
+		{
+			return length;
+		};
+	};
+
 	class AcidRecFrac
 	{
 		template<typename> friend class Snapshotter;
@@ -78,6 +122,7 @@ namespace acidrecfrac
 		Snapshotter<AcidRecFrac>* snapshotter;
 		std::vector<double> trans;
 		std::vector<double> widths;
+		std::vector<Wormhole> worms;
 		double width;
 
 		void buildFracGrid();
@@ -88,6 +133,7 @@ namespace acidrecfrac
 		void setInitialState();
 		void setPerforated();
 		void calculateTrans();
+		void calculateWorms();
 		// Service functions
 		// Schemes
 		PoroTapeVariable solvePoro(const PoroCell& cell, const Regime reg);
@@ -162,7 +208,14 @@ namespace acidrecfrac
 			if (fabs(cell.x - beta.x) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hy * cell.hz / (k1 * beta.hx + k2 * cell.hx);
 			if (fabs(cell.y - beta.y) > EQUALITY_TOLERANCE)
-				return 2.0 * k1 * k2 * cell.hx * cell.hz / (k1 * beta.hy + k2 * cell.hy);
+			{
+				const auto& worm = worms[int(cell.num / (cellsNum_z * (cellsNum_y_poro + 2))) - 1];
+				double wTrans = 0.0, Trans = 2.0 * k1.value() * k2.value() / (k1.value() * beta.hy + k2.value() * cell.hy);
+				const double y = cell.y + cell.hy / 2.0 * sign(beta.y - cell.y) - props_frac.w2;
+				if (worm.getLength() > y)
+ 					wTrans = worm.getTransAtDistance(y) / fabs(cell.y - beta.y) * Wormhole::n_per_m2;
+				return cell.hx * cell.hz * (wTrans + 2.0 * k1 * k2 / (k1 * beta.hy + k2 * cell.hy));
+			}
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hx * cell.hy / (k1 * beta.hz + k2 * cell.hz);
 		};

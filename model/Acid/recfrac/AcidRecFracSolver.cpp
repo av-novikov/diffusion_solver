@@ -276,6 +276,7 @@ bool AcidRecFracSolver::doNextSmartStep()
     if (!solveSmartStep())
         return false;
 	model->calculateTrans();
+	model->calculateWorms();
     return true;
 }
 void AcidRecFracSolver::copySolution(const paralution::LocalVector<double>& sol)

@@ -1443,6 +1443,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
     vel_poro->SetNumberOfComponents(3);
 	auto darmkoller = vtkSmartPointer<vtkDoubleArray>::New();
 	darmkoller->SetName("Darmkoller");
+	auto wormhole = vtkSmartPointer<vtkIntArray>::New();
+	wormhole->SetName("wormhole");
 
     double sum_width, sum_trans;
 	int np_poro = ny_poro * nz;
@@ -1493,6 +1495,12 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 						darmkoller->InsertNextValue(0.0);
                     }
 
+					const auto& worm = model->worms[int(cell.num / (model->cellsNum_z * (model->cellsNum_y_poro + 2))) - 1];
+					if (worm.getLength() + w2 > cell.y)
+						wormhole->InsertNextValue(1);
+					else
+						wormhole->InsertNextValue(0);
+
 					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
 					hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
 					hex->GetPointIds()->SetId(2, j + 1 + k * ny_poro + (i + 1) * np_poro);
@@ -1540,6 +1548,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
     fd_poro->AddArray(reaction_poro);
     fd_poro->AddArray(vel_poro);
 	fd_poro->AddArray(darmkoller);
+	fd_poro->AddArray(wormhole);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();

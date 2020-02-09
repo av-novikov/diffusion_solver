@@ -1131,7 +1131,7 @@ namespace issues
 		props->ht_max = 1000.0;
 
 		props->timePeriods.push_back(0.1 * 3600.0);
-		props->timePeriods.push_back(30.0 * 3600.0);
+		props->timePeriods.push_back(3000.0 * 3600.0);
 		//props->timePeriods.push_back(1.5 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
@@ -1142,7 +1142,7 @@ namespace issues
 		props->rightBoundIsPres = true;
 		//props->pwf.push_back(200.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
-		props->rates.push_back(0.1);
+		props->rates.push_back(0.0001);
 		props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		props->cs.push_back(0.0);
@@ -1157,7 +1157,7 @@ namespace issues
 
 		props->fieldData = false;
 		props->permFromFile = true;
-		props->permFile = "props/core_perm/5cm/perm1.permx.inc";
+		props->permFile = "props/core_perm/2cm/perm2.permx.inc";
 		acid2drec::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
 		props_sk.m_max = 0.3;
@@ -1292,6 +1292,10 @@ namespace issues
     };
 };
 
+
+double acidrecfrac::Wormhole::v_opt = 0.0001286;
+double acidrecfrac::Wormhole::pvbt_opt = 2.256574;
+double acidrecfrac::Wormhole::n_per_m2 = 0.0;
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
 double acid2dnit::Component::T = 300.0;

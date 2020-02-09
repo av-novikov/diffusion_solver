@@ -134,6 +134,9 @@ void AcidRecFrac::makeDimLess()
 	Component::R /= (P_dim * R_dim * R_dim * R_dim / T_dim);
 	Component::T /= T_dim;
 
+	Wormhole::v_opt /= R_dim / t_dim;
+	Wormhole::n_per_m2 /= 1.0 / R_dim / R_dim;
+
 	props_w.visc /= (P_dim * t_dim);
 	props_w.dens_stc /= (P_dim * t_dim * t_dim / R_dim / R_dim);
 	props_w.beta /= (1.0 / P_dim);
@@ -597,6 +600,7 @@ void AcidRecFrac::setInitialState()
 	h = new adouble[ var_frac_size * cellsNum_frac + var_poro_size * cellsNum_poro ];
 	trans.resize(cellsNum_x * cellsNum_z, 1.0);
 	widths.resize(cellsNum_x * cellsNum_z, props_frac.w2);
+	worms.resize(cellsNum_x * cellsNum_z);
 }
 void AcidRecFrac::calculateTrans()
 {
@@ -653,6 +657,19 @@ void AcidRecFrac::calculateTrans()
 				sum += (k / pcell.props->perm) * (pcell.hy / widths[tr_idx]);
 		}
 		trans[tr_idx] = (sum > 0.0) ? sum : 1.0;
+	}
+}
+void AcidRecFrac::calculateWorms()
+{
+	int i_ind;
+	for (int w_idx = 0; w_idx < worms.size(); w_idx++)
+	{
+		//k_ind = int(tr_idx % cellsNum_z) + 1;
+		i_ind = int(w_idx / cellsNum_z) + 1;
+		const auto& pcell = cells_poro[(cellsNum_y_poro + 2) * (/*k_ind + (cellsNum_z + 2) */ i_ind)];
+		const auto vel = getPoroWaterVelocity(pcell);
+		if (pcell.u_next.xa > 0.1 * c && c > 0.0 && vel[1] > 0.0)
+			worms[w_idx].calcTimeStep(ht, vel[1] / pcell.u_next.m);
 	}
 }
 double AcidRecFrac::getRate(const int idx) const
