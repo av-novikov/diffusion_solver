@@ -124,6 +124,8 @@ namespace acidrecfrac
 		std::vector<double> widths;
 		std::vector<Wormhole> worms;
 		double width;
+		// stop time
+		double t_stop, ref_rate, p_cur_ref;
 
 		void buildFracGrid();
 		void buildPoroGrid();
@@ -141,8 +143,8 @@ namespace acidrecfrac
 		PoroTapeVariable solvePoroLeft(const PoroCell& cell, const Regime reg);
 		PoroTapeVariable solvePoroRight(const PoroCell& cell);
 		PoroTapeVariable solvePoroBorder(const PoroCell& cell);
-		FracTapeVariable solveFrac(const FracCell& cell, const Regime reg);
-		FracTapeVariable solveFracIn(const FracCell& cell);
+		FracTapeVariable solveFrac(const FracCell& cell, const Regime reg, const double cur_t);
+		FracTapeVariable solveFracIn(const FracCell& cell, const Regime reg, const double cur_t);
 		FracTapeVariable solveFracMid(const FracCell& cell, const Regime reg);
 		FracTapeVariable solveFracBorder(const FracCell& cell);
 		// Service calculations

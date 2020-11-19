@@ -30,8 +30,8 @@ Acid2dNITSolver::Acid2dNITSolver(Acid2dNIT* _model) : basic2d::Basic2dSolver<Aci
 	pvd << "<VTKFile type = \"Collection\" version = \"1.0\" byte_order = \"LittleEndian\" header_type = \"UInt64\">\n";
 	pvd << "\t<Collection>\n";
 
-    MAX_INIT_RES[0].first = 1.E-9;
-    MAX_INIT_RES[1].second = 3.E-9;
+    MAX_INIT_RES[0].first = 5.E-4;
+    MAX_INIT_RES[0].second = 5.E-5;
     MULT_UP = MULT_DOWN = 1.5;
 }
 Acid2dNITSolver::~Acid2dNITSolver()
@@ -120,7 +120,7 @@ void Acid2dNITSolver::analyzeNewtonConvergence()
 {
     DECREASE_STEP = false;
     INCREASE_STEP = true;
-    for (int i = 0; i < int(init_step_res.size()) - 1; i++)
+    for (int i = 0; i < int(init_step_res.size()); i++)
     {
         if (init_step_res[i] > MAX_INIT_RES[0].second)
         {
@@ -134,13 +134,13 @@ void Acid2dNITSolver::analyzeNewtonConvergence()
             INCREASE_STEP = false;
             break;
         }
-        if (init_step_res[i + 1] >= init_step_res[i])
+        /*if (init_step_res[i + 1] >= init_step_res[i])
         {
             INCREASE_STEP = false;
             if (iterations > 4)
                 DECREASE_STEP = true;
             break;
-        }
+        }*/
     }
 }
 void Acid2dNITSolver::control()
@@ -167,7 +167,7 @@ void Acid2dNITSolver::control()
     }
 
     analyzeNewtonConvergence();
-    MULT_UP = MULT_DOWN = 1.5;
+    MULT_UP = MULT_DOWN = 3.5;
 
     if (INCREASE_STEP && ((model->ht <= model->ht_max && curTimePeriod == 0) ||
         (model->ht <= 3.0 * model->ht_max && curTimePeriod == 1)))
@@ -246,6 +246,8 @@ void Acid2dNITSolver::solveStep()
 	averValue(averValPrev);
 	std::fill(dAverVal.begin(), dAverVal.end(), 1.0);
 	iterations = 0;
+	init_step_res.clear();
+	final_step_res.clear();
 
 	auto continueIterations = [this]()
 	{
@@ -263,6 +265,8 @@ void Acid2dNITSolver::solveStep()
 		fill();
 		solver.Assemble(ind_i, ind_j, a, elemNum, ind_rhs, rhs);
 		solver.Solve(PRECOND::ILU_SIMPLE);
+		init_step_res.push_back(solver.init_res);
+		final_step_res.push_back(solver.final_res);
 		copySolution(solver.getSolution());
 
 		checkStability();

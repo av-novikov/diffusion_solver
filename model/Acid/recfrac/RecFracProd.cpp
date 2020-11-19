@@ -96,6 +96,8 @@ void RecFracProd::makeDimLess()
 		sk.hz /= R_dim;
 		sk.t_init /= T_dim;
 		sk.height /= R_dim;
+		sk.s_compres /= P_dim;
+		sk.s_failure /= P_dim;
 	}
 	Q_dim = R_dim * R_dim * R_dim / t_dim;
 	for (int i = 0; i < periodsNum; i++)
@@ -335,17 +337,25 @@ void RecFracProd::setPeriod(int period)
 const std::array<double, 3> RecFracProd::calcAvgFracPerm(const std::vector<PoroCell>& cells_poro, const int j, const int k) const
 {
 	const int tr_idx = j > 0 ? j - 1 : 0;
-	double m = 0.0, kx = 0.0, ky = 0.0, k0, vol = 0.0, s = 0, L = 0;
-	const auto& init_cell = cells_poro[0];
+	double m = 0.0, kx = 0.0, ky = 0.0, k0, vol = 0.0, s = 0, L = 0, y_start;
+	y_start = cells_poro[0].y;
 	for (int i = 0; i < prev_cellsNum_y; i++)
 	{
-		auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * prev_cellsNum_z)];
-		if (cell0.y - init_cell.y <= widths[tr_idx])
+		const auto& cell0 = cells_poro[i + (prev_cellsNum_y + 2) * (k + j * prev_cellsNum_z)];
+		const auto& props = *cell0.props;
+		
+		if (props.isCompacted(cell0.u_next.m, cell0.u_next.p))
+		{
+			y_start += cell0.hy;
+			continue;
+		}
+
+		if (cell0.y - y_start <= widths[tr_idx])
 		{
 			vol += cell0.V;
 			s += cell0.hy * cell0.hz;
 			L += cell0.hy;
-			k0 = cell0.props->getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
+			k0 = props.getPermCoseni(cell0.u_next.m, cell0.u_next.p).value();
 
 			m += cell0.V * cell0.u_next.m;
 			kx += cell0.hy * cell0.hz * k0;

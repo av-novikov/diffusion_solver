@@ -61,7 +61,7 @@ void ParSolver::Solve(const PRECOND key)
 	if (key == PRECOND::ILU_SERIOUS)
 		SolveBiCGStab();
 	else if (key == PRECOND::ILU_SIMPLE)
-		SolveBiCGStab_Simple(0);
+		SolveBiCGStab_Simple(1);
 	else if (key == PRECOND::ILU_GMRES)
 		SolveGMRES();
 

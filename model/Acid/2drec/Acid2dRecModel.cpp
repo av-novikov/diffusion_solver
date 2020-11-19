@@ -318,7 +318,7 @@ void Acid2dRecModel::setInitialState()
 	if (fieldData)
 	{
 		const double perm_av = props_sk[0].perm;
-		calcCorrelatedPermeability(0.5, 0.05 / R_dim);
+		calcCorrelatedPermeability(0.5, 0.1 / R_dim);
 	}
 
 	for (auto& cell : cells)
@@ -371,6 +371,8 @@ TapeVariable Acid2dRecModel::solveMid(const Cell& cell)
 	auto& next = x[cell.num];
 	const auto& prev = cell.u_prev;
 	adouble rate = getReactionRate(next, props);
+	//if (cell.num % (cellsNum_y + 2) == 1)
+	//	rate *= 0.0;
 
 	TapeVariable res;
 	adouble m = props.getPoro(next.m, next.p);
@@ -469,6 +471,11 @@ TapeVariable Acid2dRecModel::solveLeft(const Cell& cell, const Regime reg)
 	res.xw = (next.xw - (1.0 - next.xa)) / P_dim;
 	res.xa = (next.xa - c) / P_dim;
 	res.xs = next.xs / P_dim;
+	//res.p = (next.p - nebr.p) / P_dim;
+	//res.sw = (next.sw - nebr.sw) / P_dim;
+	//res.xw = (next.xw - nebr.xw) / P_dim;
+	//res.xa = (next.xa - nebr.xa) / P_dim;
+	//res.xs = (next.xs - nebr.xs) / P_dim;
 
 	return res;
 }
@@ -507,13 +514,41 @@ TapeVariable Acid2dRecModel::solveBorder(const Cell& cell)
 
 	const auto& next = x[cell.num];
 	const auto& nebr = x[beta.num];
-
+	
 	TapeVariable res;
-	res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
-	res.p = (next.p - nebr.p) / P_dim;
-	res.sw = (next.sw - nebr.sw) / P_dim;
-	res.xw = (next.xw - nebr.xw) / P_dim;
-	res.xa = (next.xa - nebr.xa) / P_dim;
-	res.xs = (next.xs - nebr.xs) / P_dim;
+	//if (cell.num != 1)
+	//{
+		res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
+		res.p = (next.p - nebr.p) / P_dim;
+		res.sw = (next.sw - nebr.sw) / P_dim;
+		res.xw = (next.xw - nebr.xw) / P_dim;
+		res.xa = (next.xa - nebr.xa) / P_dim;
+		res.xs = (next.xs - nebr.xs) / P_dim;
+	/*}
+	else 
+	{
+		res.m = (props.getPoro(next.m, next.p) - props.getPoro(nebr.m, nebr.p)) / P_dim;
+		if (leftBoundIsRate)
+		{
+			res.p = -Q_sum;
+			for (const auto& it : Qcell)
+			{
+				const auto& p_cell = cells[it.first];
+				auto& p_next = x[it.first];
+				const auto& p_beta = cells[it.first + 1];
+				auto& p_nebr = x[it.first + 1];
+				res.p += getTrans(p_cell, p_next, p_beta, p_nebr) / props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (next.p - nebr.p);
+			}
+		}
+		else
+		{
+			res.p = (next.p - Pwf) / P_dim;
+		}
+		res.sw = (next.sw - (1.0 - props.s_oc)) / P_dim;
+		res.xw = (next.xw - (1.0 - next.xa)) / P_dim;
+		res.xa = (next.xa - c) / P_dim;
+		res.xs = next.xs / P_dim;
+	}*/
+
 	return res;
 }

@@ -436,12 +436,15 @@ void Acid2dNIT::solve_eqLeft(const Cell& cell)
 		ht * reac.indices[REACTS::DOLOMITE] * reac.comps[REACTS::DOLOMITE].mol_weight * getReactionRate(next, props);
 	if (leftBoundIsRate)
 	{
-		double tmp = props_w.getDensity(next.p, next.xa, next.xw, next.xs).value() * getTrans(cell, next, beta1, nebr1).value() /
-			props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value() * (nebr1.p - next.p).value() +
-			props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs).value() * rate;
-		h[1] = /*props_w.getDensity(next.p, next.xa, next.xw, next.xs) * getTrans(cell, next.m, beta1, nebr1.m) /
-			props_w.getViscosity(next.p, next.xa, next.xw, next.xs) */ (nebr1.p - next.p) /*+
-			props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs) * rate*/;
+		double tmp = getTrans(cell, next, beta1, nebr1).value();// /
+			//props_w.getViscosity(next.p, next.xa, next.xw, next.xs).value();// *(nebr1.p - next.p).value() +
+			//props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs).value() * rate;
+		if (cell.num == 0 || cell.num == cellsNum_z + 1)
+			h[1] = nebr1.p - next.p;
+		else
+			h[1] = props_w.getDensity(next.p, next.xa, next.xw, next.xs) * getTrans(cell, next, beta1, nebr1) /
+				props_w.getViscosity(next.p, next.xa, next.xw, next.xs) * (nebr1.p - next.p) +
+				props_w.getDensity(Component::p_std, next.xa, next.xw, next.xs) * rate;
 	}
 	else
 		h[1] = next.p - Pwf;

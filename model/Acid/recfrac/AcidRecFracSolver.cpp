@@ -121,7 +121,7 @@ void AcidRecFracSolver::writeData()
 	qcells << "\t" << model->matrix_sol_volume * model->Q_dim * model->t_dim;
 	qcells << "\t" << model->matrix_acid_volume * model->Q_dim * model->t_dim;
 
-	double p = model->cells_frac[model->cellsNum_y_frac + 2].u_next.p;
+	double p = model->cells_frac[1].u_next.p;
 	P << cur_t * t_dim / 3600.0 << "\t" << p * model->P_dim / BAR_TO_PA << endl;
 
 	const double k0 = M2toMilliDarcy(model->props_sk[0].perm * model->R_dim * model->R_dim);
@@ -448,7 +448,7 @@ void AcidRecFracSolver::computeJac()
 	// Fracture
 	for (const auto& cell : model->cells_frac)
 	{
-		const auto res = model->solveFrac(cell, reg);
+		const auto res = model->solveFrac(cell, reg, cur_t);
 		model->h[cell.num * var_frac_size] = res.p;
 		model->h[cell.num * var_frac_size + 1] = res.c;
 	}

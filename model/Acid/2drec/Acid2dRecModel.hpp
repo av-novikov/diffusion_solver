@@ -121,7 +121,12 @@ namespace acid2drec
 				return 0.0;
 
 			if (fabs(cell.x - beta.x) > EQUALITY_TOLERANCE)
+			{
+			//	if (cell.num % (cellsNum_y + 2) == 1)
+			//		k1 = k2 = cell.hy * cell.hy / 3.0 / 100000.0;
+			//		return 2.0 * k1 * k2 * cell.hy * cell.hz / (k1 * beta.hx + k2 * cell.hx);
 				return 2.0 * k1 * k2 * cell.hy * cell.hz / (k1 * beta.hx + k2 * cell.hx);
+			}
 			if (fabs(cell.y - beta.y) > EQUALITY_TOLERANCE)
 				return 2.0 * k1 * k2 * cell.hx * cell.hz / (k1 * beta.hy + k2 * cell.hy);
 			if (fabs(cell.z - beta.z) > EQUALITY_TOLERANCE)

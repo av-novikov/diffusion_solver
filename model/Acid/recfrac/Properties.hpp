@@ -64,6 +64,16 @@ namespace acidrecfrac
 		{
 			return dens_stc;
 		};
+		inline double getStress(const double m, const double p = 0) const 
+		{
+			return s_compres * (1.0 - m_init) / (1.0 - m);
+		};
+		inline bool isCompacted(const double m, const double p = 0) const
+		{
+			return (s_failure <= getStress(m, p));
+		};
+
+		double s_failure, s_compres;
 	};
 	struct Water_Props : public basic1d::Liquid_Props
 	{

@@ -815,25 +815,35 @@ namespace issues
 		props->ht_min = props->ht;
 		props->ht_max = 10.0;
  
-		props->timePeriods.push_back(3.0 * 3600.0);
-		//props->timePeriods.push_back(1.5 * 3600.0);
+		props->timePeriods.push_back(60.0 * 3600.0);
+		props->timePeriods.push_back(60.0 * 3600.0);
 		//props->timePeriods.push_back(10.0 * 3600.0);
 		//props->leftBoundIsRate = false;
 		props->LeftBoundIsRate.push_back(false);
-		//props->LeftBoundIsRate.push_back(false);
-		//props->LeftBoundIsRate.push_back(true);
+		props->LeftBoundIsRate.push_back(false);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(600.0 * 1.0e+5);
-		//props->pwf.push_back(300.0 * 1.0e+5);
+		props->pwf.push_back(255.0 * 1.0e+5);
+		props->pwf.push_back(255.0 * 1.0e+5);
 		//props->rates.push_back(-10.0);
 		//props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
-		//props->cs.push_back(0.0);
+		props->cs.push_back(0.0);
 		props->max_matrix_acid_volume = 1.0;
         
-		props->props_frac.l2 = 120.0;
-		props->props_frac.w2 = 0.002;
+		props->props_frac.l2 = 60.0;
+		
+		auto get_width = [](double p_net, double h) -> double
+		{
+			const double nu = 0.2;
+			const double E = 1.6E+10;
+			const double E1 = E / (1 - nu) / (1 - nu);
+			const double w = 2 * h * p_net / E1;
+			return w;
+		};
+
 		props->props_frac.height = 18.87;
+		const double p_net = props->pwf[0] - 250.0 * 1.E+5;
+		props->props_frac.w2 = get_width(p_net, props->props_frac.height) / 2.0;
 		props->re = 200.0;
 
 		props->props_frac.p_init = 200.0 * BAR_TO_PA;
@@ -852,7 +862,7 @@ namespace issues
 
 		acidrecfrac::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
-		props_sk.m_max = 0.3;
+		props_sk.m_max = 0.4;
 		props_sk.A = 60.0;
 		props_sk.t_init = 300.0;
 		props_sk.p_init = props_sk.p_out = props_sk.p_ref = props->props_frac.p_init;
@@ -865,6 +875,9 @@ namespace issues
 		props_sk.dens_stc = 2000.0;
 		props_sk.beta = 4.35113e-10;
 		props_sk.height = props->props_frac.height;
+		props_sk.s_compres = 800.0 * BAR_TO_PA;
+		props_sk.s_failure = 1000.0 * BAR_TO_PA;
+
 		props->props_sk.push_back(props_sk);
 		/*default_random_engine generator;
 		normal_distribution<double> distribution(0.15, 0.02);
@@ -1010,26 +1023,27 @@ namespace issues
 	{
 		acid2dnit::Properties* props = new acid2dnit::Properties;
 
-		props->cellsNum_r = 100;
+		props->cellsNum_r = 200;
 		props->cellsNum_z = 1;
 
-		props->timePeriods.push_back(0.5 * 3600.0);
-		props->timePeriods.push_back(2.0 * 3600.0);
+		props->timePeriods.push_back(50 * 3600.0);
+		props->timePeriods.push_back(50 * 3600.0);
 		//props->leftBoundIsRate = false;
-		props->LeftBoundIsRate.push_back(false);
+		props->LeftBoundIsRate.push_back(true);
 		props->LeftBoundIsRate.push_back(true);
 		props->rightBoundIsPres = true;
-		props->pwf.push_back(400.0 * 1.0e+5);
-		//props->pwf.push_back(200.0 * 1.0e+5);
+		//props->pwf.push_back(400.0 * 1.0e+5);
+		//props->pwf.push_back(300.0 * 1.0e+5);
+		props->rates.push_back(10.0);
 		props->rates.push_back(0.0);
 		props->xa.push_back(0.15);
 		props->xa.push_back(1.E-5);
 		props->temps.push_back(300.0);
 		props->temps.push_back(300.0);
 
-		props->ht = 0.01;
-		props->ht_min = 0.01;
-		props->ht_max = 10.0;
+		props->ht = 0.001;
+		props->ht_min = 0.00001;
+		props->ht_max = 100.0;
 
 		props->alpha = 7200.0;
 
@@ -1042,7 +1056,7 @@ namespace issues
 		acid2dnit::Skeleton_Props tmp;
 		tmp.cellsNum_z = 1;
 		tmp.m_init = 0.1;
-		tmp.m_max = 0.4;
+		tmp.m_max = 0.15;
 		tmp.A = 60.0;
 		tmp.p_init = tmp.p_out = tmp.p_ref = tmp.p_sat = 200.0 * 1.0e+5;
 		tmp.t_init = 300.0;
@@ -1129,7 +1143,7 @@ namespace issues
 		props->ht = 0.00001;
 		props->ht_min = props->ht;
 		props->ht_max = 1000.0;
-
+		 
 		props->timePeriods.push_back(0.1 * 3600.0);
 		props->timePeriods.push_back(3000.0 * 3600.0);
 		//props->timePeriods.push_back(1.5 * 3600.0);
@@ -1142,7 +1156,7 @@ namespace issues
 		props->rightBoundIsPres = true;
 		//props->pwf.push_back(200.0 * 1.0e+5);
 		//props->pwf.push_back(300.0 * 1.0e+5);
-		props->rates.push_back(0.0001);
+		props->rates.push_back(100.0);
 		props->rates.push_back(0.0);
 		props->cs.push_back(0.15);
 		props->cs.push_back(0.0);
@@ -1157,7 +1171,7 @@ namespace issues
 
 		props->fieldData = false;
 		props->permFromFile = true;
-		props->permFile = "props/core_perm/2cm/perm2.permx.inc";
+		props->permFile = "props/core_perm/2cm/perm4.permx.inc";
 		acid2drec::Skeleton_Props props_sk;
 		props_sk.m_init = 0.09;
 		props_sk.m_max = 0.3;
@@ -1295,7 +1309,7 @@ namespace issues
 
 double acidrecfrac::Wormhole::v_opt = 0.0001286;
 double acidrecfrac::Wormhole::pvbt_opt = 2.256574;
-double acidrecfrac::Wormhole::n_per_m2 = 0.0;
+double acidrecfrac::Wormhole::n_per_m2 = 0.0;// 1.E+5;
 double acid1d::Component::T = 300.0;
 double acid2d::Component::T = 300.0;
 double acid2dnit::Component::T = 300.0;

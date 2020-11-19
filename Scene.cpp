@@ -164,6 +164,13 @@ void Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properti
 	paralution::init_paralution();
 	method = new acid2dnit::Acid2dNITSolver(model);
 }
+void Scene<acid2dnit::Acid2dNIT, acid2dnit::Acid2dNITSolver, acid2dnit::Properties>::load(acid2dnit::Properties& props, int argc, char* argv[])
+{
+	model->load(props);
+	model->setSnapshotter("VTK", model);
+	paralution::init_paralution();
+	method = new acid2dnit::Acid2dNITSolver(model);
+}
 void Scene<acidfrac::AcidFrac, acidfrac::AcidFracSolver, acidfrac::Properties>::load(acidfrac::Properties& props)
 {
 	model->load(props);

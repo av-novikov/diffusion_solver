@@ -165,7 +165,7 @@ namespace acid2drec
 			activation_energy = 8.31 * 11320.0;
 			//alpha = 0.618 / 1.5;
 			alpha = 1.0;
-			reaction_const = 9.4 * pow(10, 11 - 3.0 * alpha);
+			reaction_const = 9.4 * pow(10, 11 - 3.0 * 0.4);
 			surf_init = 100000.0;
 		};
 	};

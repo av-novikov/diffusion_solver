@@ -1330,6 +1330,8 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	width->SetName("Width");
 	auto type = vtkSmartPointer<vtkDoubleArray>::New();
 	type->SetName("Type");
+	auto isCompacted_frac = vtkSmartPointer<vtkIntArray>::New();
+	isCompacted_frac->SetName("isCompacted");
     //auto reaction_frac = vtkSmartPointer<vtkDoubleArray>::New();
    // reaction_frac->SetName("ReactionSpeed");
 
@@ -1359,6 +1361,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 			width->InsertNextValue(model->widths[k] * r_dim);
 			v_leak->InsertNextValue(0.0);
 			type->InsertNextValue(cell.type);
+			isCompacted_frac->InsertNextValue(1);
             //reaction_frac->InsertNextValue(0.0);
 
 			hex->GetPointIds()->SetId(0, j + k * ny);
@@ -1399,6 +1402,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 				width->InsertNextValue(model->widths[k + (i - 1) * model->cellsNum_z] * r_dim);
 				v_leak->InsertNextValue(model->getFlowLeak(cell).value() * r_dim / t_dim);
 				type->InsertNextValue(cell.type);
+				isCompacted_frac->InsertNextValue(1);
 
 				hex->GetPointIds()->SetId(0, j + k * ny + i * np);
 				hex->GetPointIds()->SetId(1, j + 1 + k * ny + i * np);
@@ -1445,14 +1449,18 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	darmkoller->SetName("Darmkoller");
 	auto wormhole = vtkSmartPointer<vtkIntArray>::New();
 	wormhole->SetName("wormhole");
+	auto isCompacted_poro = vtkSmartPointer<vtkIntArray>::New();
+	isCompacted_poro->SetName("isCompacted");
 
     double sum_width, sum_trans;
 	int np_poro = ny_poro * nz;
+	double y_prev;
 	for (int i = 0; i < nx - 2; i++)
 	{
 		for (int k = 0; k < nz; k++)
 		{
             sum_width = sum_trans = 0.0;
+			y_prev = w2;
 			for (int j = 0; j < ny_poro - 1; j++)
 			{
 				const PoroCell& cell = model->cells_poro[j + k * ny_poro + (i + 1) * nz * ny_poro];
@@ -1496,10 +1504,24 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
                     }
 
 					const auto& worm = model->worms[int(cell.num / (model->cellsNum_z * (model->cellsNum_y_poro + 2))) - 1];
+					const double width = model->widths[int(cell.num / (model->cellsNum_z * (model->cellsNum_y_poro + 2))) - 1];
 					if (worm.getLength() + w2 > cell.y)
 						wormhole->InsertNextValue(1);
 					else
 						wormhole->InsertNextValue(0);
+					const bool isCompacted = cell.props->isCompacted(next.m, next.p);
+					if (!isCompacted)
+					{
+						if (cell.y - y_prev < width)
+							isCompacted_poro->InsertNextValue(2);
+						else
+							isCompacted_poro->InsertNextValue(isCompacted);
+					}
+					else
+					{
+						y_prev += cell.hy;
+						isCompacted_poro->InsertNextValue(isCompacted);
+					}
 
 					hex->GetPointIds()->SetId(0, j + k * ny_poro + i * np_poro);
 					hex->GetPointIds()->SetId(1, j + 1 + k * ny_poro + i * np_poro);
@@ -1531,6 +1553,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
 	fd_frac->AddArray(width);
 	fd_frac->AddArray(v_leak);
 	fd_frac->AddArray(type);
+	fd_frac->AddArray(isCompacted_frac);
     //fd_frac->AddArray(reaction_frac);
 
 	grid_poro->SetCells(VTK_QUAD, hexs_poro);
@@ -1549,6 +1572,7 @@ void VTKSnapshotter<acidrecfrac::AcidRecFrac>::dump_all(int i)
     fd_poro->AddArray(vel_poro);
 	fd_poro->AddArray(darmkoller);
 	fd_poro->AddArray(wormhole);
+	fd_poro->AddArray(isCompacted_poro);
 
 	// Writing
 	auto writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
