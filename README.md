@@ -1,7 +1,7 @@
 # diffusion_solver
-diffusion_solver is programm tool for numerical calculations of different diffusion problems in reservoir simulation area.
-It provides different fluid models (oil, saturated oil, gas) in radial or multi-layers radial cases.
-The equation is evaluated with FVM.
-Results are availible in vtk formats.
+diffusion_solver is programm tool for numerical calculations of different flow and transport problems of hydrocarbon reservoir simulation.
+Single, two and three phase flow considered with linear and non-linear constitutive equations for fluid velocity and properties.
+Finite Volume Method is used a as main numerical strategy for discrete system. Direct and iterative linear solvers were employed to address the problem on linear stage.
+Output is done in vtk format.
 
-The project is made under VS 2008.
+The project was developed under VS C++ compiler.
